@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Domain check</title>
+<script type="module" src="../js/core/preview-guard.js"></script>
+<link rel="stylesheet" href="../mobile-enhancements.css">
+<link rel="stylesheet" href="../nav-styles.css">
+<link rel="stylesheet" href="../dark-mode.css">
+<style>
+  body { margin: 0; font: 15px/1.5 Inter, system-ui, -apple-system, sans-serif; background: var(--bg-primary, #f7fafc); color: var(--text-dark, #1f2937); }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 96px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 32px 0 8px; }
+  h3 { font-size: 15px; margin: 16px 0 6px; }
+  p { margin: 0 0 8px; }
+  .muted { color: var(--text-light, #64748b); font-size: 13px; }
+  .card { background: var(--card-bg, #fff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; overflow-x: auto; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+  .summary .card { margin: 0; }
+  .summary b { display: block; font-size: 13px; color: var(--text-light, #64748b); font-weight: 600; }
+  .summary span { font-size: 18px; font-weight: 700; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: 4px 8px; border-top: 1px solid var(--border-color, #e2e8f0); vertical-align: top; text-align: left; white-space: nowrap; }
+  th { font-weight: 600; color: var(--text-light, #64748b); border-top: 0; }
+  td.wrap { white-space: normal; }
+  .pass { color: #2d6a16; font-weight: 700; }
+  .fail { color: #b91c1c; font-weight: 700; }
+  .warn { color: #a16207; font-weight: 700; }
+  .diff { background: rgba(220, 38, 38, 0.12); }
+  .tag { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 12px; font-weight: 600; background: rgba(100, 116, 139, 0.15); margin-right: 4px; }
+  .tag.order { background: rgba(234, 179, 8, 0.2); }
+  .tag.records { background: rgba(220, 38, 38, 0.15); }
+  .tag.teams { background: rgba(124, 58, 237, 0.15); }
+  details { margin: 6px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  button { min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--border-color, #cbd5e1); background: var(--card-bg, #fff); color: inherit; font: inherit; cursor: pointer; }
+  pre { white-space: pre-wrap; font-size: 12px; margin: 0; }
+</style>
+</head>
+<body>
+<div class="page-container">
+<div class="filters-nav"></div>
+<main>
+  <h1>Domain check</h1>
+  <p class="muted">Runs js/domain (dates, stats, standings, eligibility) against the old page code on every season's real data. Read-only: nothing here writes to Firestore. Run before every push that touches js/domain.</p>
+
+  <div data-page-loading class="card" id="progress">Loading seasons...</div>
+
+  <div data-page-content hidden>
+    <div class="summary" id="summary"></div>
+    <p style="margin-top:12px"><button type="button" id="copyReport">Copy text report</button> <span class="muted" id="copyNote"></span></p>
+
+    <h2>Fixed cases</h2>
+    <p class="muted">Hand-built inputs with known answers: the tiebreaker chain, dates and times.</p>
+    <div class="card"><table id="fixtures"></table></div>
+
+    <h2>Standings by season</h2>
+    <p class="muted">Pass = js/domain/standings.js gives the same order, W-L-T and runs allowed as current-season.html (the chain: H2H for 2 teams, runs allowed for 3+, then run differential). One intended difference: a winner stored as a team ID ('master_batters', all of 2019 Summer) now counts. In a season that has those, the old pages run with them read as names, and the season is tagged "explained". The other columns show where the old pages disagree with current-season on the same data. playoffs, bracket, projections and playoff-clinching only ever run on the current season, so their results on past seasons show what they would do, not what anyone saw.</p>
+    <div class="card"><table id="standingsTable"></table></div>
+    <div id="standingsDetail"></div>
+
+    <h2>Game dates</h2>
+    <p class="muted">Pass = toDateKey gives the same day as current-season's parser for every game. "UTC parse off by a day" counts games the 23 pages that use new Date(game.date) show on the wrong day.</p>
+    <div class="card"><table id="datesTable"></table></div>
+
+    <h2>Stats by season</h2>
+    <p class="muted">Formula = js/domain/stats.js vs the aggregate-stats.html code on the same inputs (must be exact). Stored = recomputed from each player's stored season counts vs the value saved in aggregatedPlayerStats (shows seasons written by an older pipeline or edited by hand).</p>
+    <div class="card"><table id="statsTable"></table></div>
+    <div id="statsDetail"></div>
+
+    <h2>Playoff eligibility</h2>
+    <p class="muted">Rules per season and every games/subs combination from 0-13 games and 0-3 subs, old tracker logic vs js/domain/eligibility.js.</p>
+    <div class="card"><table id="eligTable"></table></div>
+  </div>
+</main>
+</div>
+
+<script type="module">
+  import { initPage, pageReady, showPageError } from '../js/core/app.js';
+  import { db, collection, getDocs } from '../js/core/firebase.js';
+  import { getSeasons, formatSeasonLabel } from '../js/core/config.js';
+  import { escapeHtml as esc, formatRecord } from '../js/ui/format.js';
+  import * as dates from '../js/domain/dates.js';
+  import * as stats from '../js/domain/stats.js';
+  import * as standings from '../js/domain/standings.js';
+  import * as elig from '../js/domain/eligibility.js';
+  import * as legacy from './legacy/legacy-domain.js';
+
+  const $ = (id) => document.getElementById(id);
+  const report = []; // plain-text lines for Copy report
+  const status = (ok, warn = false) => ok ? '<span class="pass">PASS</span>' : warn ? '<span class="warn">CHECK</span>' : '<span class="fail">FAIL</span>';
+  const rec = (t) => `${formatRecord(t.wins, t.losses, t.ties)} RA ${t.runsAgainst}`;
+  const progress = (msg) => { $('progress').textContent = msg; };
+
+  // -------------------------------------------------------------------------
+  // Fixed cases
+  // -------------------------------------------------------------------------
+
+  function fixtureGames(list, extra = {}) {
+    return list.map(([home, away, hs, as, more = {}], i) => ({
+      id: `f${i}`, homeTeamName: home, awayTeamName: away, homeScore: hs, awayScore: as,
+      winner: hs > as ? home.toLowerCase() : as > hs ? away.toLowerCase() : 'Tie',
+      gameType: 'regular', date: '2026-06-01', time: '7:45 PM', ...extra, ...more
+    }));
+  }
+
+  function runFixtures() {
+    const order = (games) => standings.computeStandings(games, { asOf: '2026-06-30', extras: false }).map((r) => r.team).join(' ');
+    const cases = [
+      ['2 tied: head-to-head beats runs allowed', order(fixtureGames([['A', 'B', 1, 0], ['C', 'A', 10, 0], ['B', 'D', 1, 0]])), 'C A B D'],
+      ['3 tied: runs allowed, head-to-head skipped', order(fixtureGames([['A', 'B', 5, 4], ['B', 'C', 1, 0], ['C', 'A', 10, 0]])), 'C B A'],
+      ['2 tied, head-to-head split: runs allowed', order(fixtureGames([['A', 'B', 1, 0], ['B', 'A', 1, 0], ['A', 'C', 5, 4], ['B', 'D', 2, 0]])), 'B A D C'],
+      ['Runs allowed level: run differential', order(fixtureGames([['A', 'C', 5, 0], ['B', 'D', 3, 0]])), 'A B D C'],
+      ['Tie game counts as half a win', order(fixtureGames([['A', 'C', 1, 0], ['A', 'D', 2, 2], ['B', 'C', 1, 0], ['B', 'D', 1, 0], ['E', 'B', 1, 0]])), 'E A B D C'],
+      ['Ignores playoff, unplayed and future games', order([
+        ...fixtureGames([['A', 'B', 1, 0]]),
+        ...fixtureGames([['B', 'A', 9, 0]], { gameType: 'playoff' }),
+        ...fixtureGames([['B', 'A', 9, 0]], { date: '2026-07-04' }),
+        { id: 'u', homeTeamName: 'B', awayTeamName: 'A', winner: '', gameType: 'regular', date: '2026-06-02' }
+      ]), 'A B'],
+      ['Legacy field names (home team / game_type)', order([
+        { id: 'l1', 'home team': 'Gold', 'away team': 'Teal', 'home score': 3, 'away score': 4, winner: 'Teal', date: '6/1/2026' },
+        { id: 'l2', 'home team': 'Gold', 'away team': 'Teal', 'home score': 9, 'away score': 0, winner: 'Gold', game_type: 'Playoff', date: '6/9/2026' }
+      ]), 'Teal Gold'],
+      ['Winner stored as a team ID', order([{ id: 't1', homeTeamName: 'KPMG', homeTeamId: 'kpmg', awayTeamName: 'Master Batters', awayTeamId: 'master_batters', homeScore: 2, awayScore: 9, winner: 'master_batters', gameType: 'regular', date: '2026-06-01' }]), 'Master Batters KPMG'],
+      ['Games back', String(standings.computeStandings(fixtureGames([['A', 'B', 1, 0], ['A', 'C', 1, 0], ['C', 'B', 1, 0]]), { asOf: '2026-06-30' }).map((r) => r.gamesBack).join(' ')), '0 1 2'],
+      ['toDateKey YYYY-MM-DD', dates.toDateKey('2026-06-14'), '2026-06-14'],
+      ['toDateKey M/D/YYYY', dates.toDateKey('6/14/2026'), '2026-06-14'],
+      ['toDateKey Timestamp 9:30 PM ET', dates.toDateKey({ seconds: Date.UTC(2026, 5, 15, 1, 30) / 1000 }), '2026-06-14'],
+      ['toDateKey invalid day', dates.toDateKey('2026-02-30'), ''],
+      ['formatGameDate', dates.formatGameDate('2026-06-14'), 'Sun, Jun 14'],
+      ['formatGameDate long', dates.formatGameDate('2026-06-14', 'long'), 'Sunday, June 14, 2026'],
+      ['formatTime 24h', dates.formatTime('19:45'), '7:45 PM'],
+      ['formatTime lower case', dates.formatTime('7:45pm'), '7:45 PM'],
+      ['formatTime TBD', dates.formatTime('TBD'), 'TBD'],
+      ['compareGames doubleheader', ['8:45 PM', '6:30 PM'].map((time) => ({ date: '2026-06-14', time })).sort(dates.compareGames).map((g) => g.time).join(', '), '6:30 PM, 8:45 PM'],
+      ['battingLine OBP', stats.battingLine({ atBats: 10, hits: 4, walks: 2 }).obp.toFixed(3), '0.500'],
+      ['SLG with hit types', stats.battingLine({ atBats: 10, hits: 4, doubles: 1, homeRuns: 1 }).slg.toFixed(3), '0.800'],
+      ['ERA on 7 innings', stats.era(5, 10.5).toFixed(2), '3.33'],
+      ['ERA no innings', String(stats.era(3, 0)), 'null'],
+      ['Eligibility rules fall', elig.describeRules(elig.eligibilityRules('2025-fall')), '4 games to qualify \u00b7 1 sub allowed per player'],
+      ['Eligibility rules summer', elig.describeRules(elig.eligibilityRules('2026-summer')), '8 games to qualify \u00b7 no subs allowed']
+    ];
+    const failed = cases.filter(([, got, want]) => got !== want).length;
+    $('fixtures').innerHTML = '<tr><th>Case</th><th>Got</th><th>Expected</th><th></th></tr>' + cases.map(([name, got, want]) =>
+      `<tr><td>${esc(name)}</td><td>${esc(got)}</td><td>${esc(want)}</td><td>${status(got === want)}</td></tr>`).join('');
+    report.push(`Fixed cases: ${cases.length - failed}/${cases.length} pass`);
+    cases.filter(([, g, w]) => g !== w).forEach(([n, g, w]) => report.push(`  FAIL ${n}: got "${g}", expected "${w}"`));
+    return { failed, total: cases.length };
+  }
+
+  // -------------------------------------------------------------------------
+  // Standings
+  // -------------------------------------------------------------------------
+
+  // How a list differs from the reference: { teams, records, order, text }
+  function describeDiff(ref, other) {
+    const refBy = new Map(ref.map((t, i) => [t.team, { ...t, pos: i + 1 }]));
+    const otherBy = new Map(other.map((t, i) => [t.team, { ...t, pos: i + 1 }]));
+    const missing = ref.filter((t) => !otherBy.has(t.team)).map((t) => t.team || '(blank)');
+    const extra = other.filter((t) => !refBy.has(t.team)).map((t) => t.team || '(blank)');
+    const recordDiffs = [];
+    const posDiffs = [];
+    for (const [team, r] of refBy) {
+      const o = otherBy.get(team);
+      if (!o) continue;
+      if (r.wins !== o.wins || r.losses !== o.losses || r.ties !== o.ties || r.runsAgainst !== o.runsAgainst) {
+        recordDiffs.push(`${team} ${rec(o)} (ref ${rec(r)})`);
+      }
+      if (r.pos !== o.pos) posDiffs.push(`${team} ${o.pos} (ref ${r.pos})`);
+    }
+    const parts = [];
+    if (missing.length || extra.length) parts.push(`teams: ${missing.length ? 'missing ' + missing.join(', ') : ''}${missing.length && extra.length ? '; ' : ''}${extra.length ? 'extra ' + extra.join(', ') : ''}`);
+    if (recordDiffs.length) parts.push(`records: ${recordDiffs.join('; ')}`);
+    if (posDiffs.length) parts.push(`order: ${posDiffs.join('; ')}`);
+    return {
+      same: !parts.length,
+      teams: !!(missing.length || extra.length),
+      records: recordDiffs.length > 0,
+      order: posDiffs.length > 0,
+      text: parts.join(' | ')
+    };
+  }
+
+  function dataNotes(games) {
+    const notes = [];
+    const norm = standings.normalizeGames(games);
+    const unmatched = norm.filter((g) => g.unmatchedWinner);
+    if (unmatched.length) notes.push(`${unmatched.length} winner(s) name neither team: ${[...new Set(unmatched.map((g) => `"${g.unmatchedWinner}" (${g.home} v ${g.away})`))].slice(0, 4).join(', ')}`);
+    const legacyPlayoff = games.filter((g) => g.game_type === 'Playoff' && !g.gameType).length;
+    if (legacyPlayoff) notes.push(`${legacyPlayoff} playoff game(s) marked only by game_type (pages reading gameType count them as regular)`);
+    const otherTypes = [...new Set(norm.map((g) => g.type).filter((t) => t !== 'regular' && t !== 'playoff'))];
+    if (otherTypes.length) notes.push(`other gameType values (left out of standings): ${otherTypes.join(', ')}`);
+    const noName = games.filter((g) => !g.homeTeamName && !g.awayTeamName).length;
+    if (noName) notes.push(`${noName} game(s) without homeTeamName/awayTeamName (pages without the 'home team' fallback see blank teams)`);
+    const noDate = norm.filter((g) => !g.dateKey).length;
+    if (noDate) notes.push(`${noDate} game(s) without a readable date`);
+    const playedNoScore = norm.filter((g) => standings.isDecided(g) && !g.hasScores).length;
+    if (playedNoScore) notes.push(`${playedNoScore} decided game(s) without both scores (count as 0 runs)`);
+    return notes;
+  }
+
+  // The one intended difference: winners stored as a team ID count in the new
+  // code. Rewrite those winners as team names so the old code can be checked
+  // against the new on equal terms.
+  function withWinnerNames(games) {
+    let changed = 0;
+    const fixed = games.map((g) => {
+      const w = String(g.winner || '').trim().toLowerCase();
+      const home = g.homeTeamName || g['home team'];
+      const away = g.awayTeamName || g['away team'];
+      const asOld = String(g.winner).charAt(0).toUpperCase() + String(g.winner).slice(1); // what the old pages compare
+      const names = (name, id) => name && asOld !== name && (w === name.toLowerCase() || (id && w === String(id).toLowerCase()));
+      if (w && names(home, g.homeTeamId)) { changed++; return { ...g, winner: home }; }
+      if (w && names(away, g.awayTeamId)) { changed++; return { ...g, winner: away }; }
+      return g;
+    });
+    return { fixed, changed };
+  }
+
+  function runStandings(seasonData, now) {
+    const asOf = dates.todayKey(now);
+    const rows = [];
+    const details = [];
+    let passCount = 0;
+    const explainedSeasons = [];
+    const disagreeSeasons = [];
+
+    for (const { season, games: rawGames } of seasonData) {
+      const fresh = standings.computeStandings(rawGames, { asOf });
+      const rawRef = legacy.currentSeason(rawGames, now);
+      const { fixed, changed } = withWinnerNames(rawGames);
+      const games = changed ? fixed : rawGames; // old pages run on the corrected winners
+      const ref = changed ? legacy.currentSeason(games, now) : rawRef;
+      const vsRef = describeDiff(ref, fresh);
+      const explained = changed && vsRef.same && !describeDiff(rawRef, fresh).same;
+      if (vsRef.same) passCount++;
+      if (explained) explainedSeasons.push(`${season.id}: ${changed} winner(s) stored as a team ID or in other case; with them read as names, new = current-season`);
+
+      // extras vs current-season
+      const oldX = legacy.currentSeasonExtras(games, now);
+      const extraDiffs = [];
+      for (const o of oldX) {
+        const n = fresh.find((t) => t.team === o.team);
+        if (!n) continue;
+        for (const f of ['last5', 'remainingCount', 'clinched']) if (o[f] !== n[f]) extraDiffs.push(`${o.team} ${f} ${n[f]} (old ${o[f]})`);
+        for (const f of ['scheduleStrength', 'remainingScheduleStrength']) if (Math.abs(o[f] - n[f]) > 1e-9) extraDiffs.push(`${o.team} ${f}`);
+      }
+
+      const pageResults = legacy.LEGACY_STANDINGS.filter((p) => p.id !== 'current-season').map((p) => {
+        let list;
+        try { list = p.run(games, now); } catch (err) { return { ...p, error: err.message }; }
+        // playoffs.html only keeps the top 11
+        const refCut = p.id === 'playoffs' ? ref.slice(0, 11) : ref;
+        return { ...p, list, diff: describeDiff(refCut, list) };
+      });
+      const disagreeing = pageResults.filter((p) => p.error || !p.diff.same);
+      if (disagreeing.length) disagreeSeasons.push(season.id);
+
+      const notes = dataNotes(rawGames);
+      if (changed) notes.unshift(`old pages run here with ${changed} winner(s) stored as a team ID or lower case, read as names (the one intended difference)`);
+      const decided = standings.normalizeGames(games).filter((g) => g.type === 'regular' && standings.isDecided(g)).length;
+      const ok = vsRef.same && !extraDiffs.length;
+
+      rows.push(`<tr>
+        <td>${esc(formatSeasonLabel(season.id))}</td>
+        <td>${games.length} / ${decided}</td>
+        <td>${fresh.length}</td>
+        <td>${status(ok)}${explained ? ' <span class="tag">explained</span>' : ''}</td>
+        <td class="wrap">${disagreeing.length ? disagreeing.map((p) => `${esc(p.id)} ${p.error ? '<span class="tag records">error</span>' : ['teams', 'records', 'order'].filter((k) => p.diff[k]).map((k) => `<span class="tag ${k}">${k}</span>`).join('')}`).join('<br>') : '<span class="pass">all agree</span>'}</td>
+        <td class="wrap muted">${notes.map(esc).join('<br>')}</td>
+      </tr>`);
+
+      // detail: side-by-side order
+      const cols = [{ id: 'new', list: fresh }, { id: 'current-season', list: ref }, ...pageResults.filter((p) => p.list).map((p) => ({ id: p.id, list: p.list }))];
+      const depth = Math.max(...cols.map((c) => c.list.length));
+      let grid = `<tr><th>#</th>${cols.map((c) => `<th>${esc(c.id)}</th>`).join('')}</tr>`;
+      for (let i = 0; i < depth; i++) {
+        grid += `<tr><td>${i + 1}</td>${cols.map((c) => {
+          const t = c.list[i];
+          if (!t) return '<td></td>';
+          const r = fresh[i];
+          const differs = !r || r.team !== t.team || r.wins !== t.wins || r.losses !== t.losses || r.ties !== t.ties;
+          return `<td class="${differs ? 'diff' : ''}">${esc(t.team || '(blank)')} ${esc(formatRecord(t.wins, t.losses, t.ties))}</td>`;
+        }).join('')}</tr>`;
+      }
+      const tiebreaks = fresh.filter((t) => t.tiebreak && t.tiebreak !== null).map((t) => `${t.team} over next by ${t.tiebreak}`);
+      details.push(`<details${(!ok || disagreeing.length) ? '' : ''}><summary>${esc(formatSeasonLabel(season.id))} ${ok ? '' : '<span class="fail">(new differs)</span>'} ${disagreeing.length ? `<span class="warn">(${disagreeing.length} old page${disagreeing.length > 1 ? 's' : ''} disagree)</span>` : ''}</summary>
+        <div class="card">
+          ${!vsRef.same ? `<p class="fail">New vs current-season: ${esc(vsRef.text)}</p>` : ''}
+          ${extraDiffs.length ? `<p class="fail">Extra columns: ${esc(extraDiffs.join('; '))}</p>` : ''}
+          ${tiebreaks.length ? `<p class="muted">Tiebreaks used: ${esc(tiebreaks.join('; '))}</p>` : ''}
+          ${pageResults.filter((p) => p.error || !p.diff.same).map((p) => `<p><b>${esc(p.id)}</b> (${esc(p.note)}): ${esc(p.error || p.diff.text)}</p>`).join('')}
+          <table>${grid}</table>
+        </div></details>`);
+
+      report.push(`${season.id}: new ${ok ? 'matches' : 'DIFFERS from'} current-season${explained ? ' once team-ID winners are read as names' : ''} (${fresh.length} teams, ${decided} decided regular games)`);
+      if (!vsRef.same) report.push(`  new vs current-season: ${vsRef.text}`);
+      if (extraDiffs.length) report.push(`  extras: ${extraDiffs.join('; ')}`);
+      pageResults.filter((p) => p.error || !p.diff.same).forEach((p) => report.push(`  ${p.id}: ${p.error || p.diff.text}`));
+      notes.forEach((n) => report.push(`  data: ${n}`));
+    }
+
+    $('standingsTable').innerHTML = '<tr><th>Season</th><th>Games / decided</th><th>Teams</th><th>New = current-season</th><th>Old pages that disagree with current-season</th><th>Data notes</th></tr>' + rows.join('');
+    $('standingsDetail').innerHTML = details.join('');
+    explainedSeasons.forEach((line) => report.push(`Explained: ${line}`));
+    return { pass: passCount, total: seasonData.length, disagreeSeasons, explainedSeasons };
+  }
+
+  // -------------------------------------------------------------------------
+  // Dates
+  // -------------------------------------------------------------------------
+
+  function runDates(seasonData) {
+    let totalFail = 0;
+    let totalUtcOff = 0;
+    const rows = seasonData.map(({ season, games }) => {
+      let checked = 0; let mismatch = 0; let utcOff = 0; let timestamps = 0; let badTimes = 0;
+      const examples = [];
+      for (const g of games) {
+        if (!g.date) continue;
+        checked++;
+        if (typeof g.date === 'object') timestamps++;
+        const newKey = dates.toDateKey(g.date);
+        const old = legacy.csParseGameDate(legacy.csDateString(g.date));
+        const oldKey = Number.isNaN(old.getTime()) || old.getTime() === 0 ? '' : `${old.getFullYear()}-${String(old.getMonth() + 1).padStart(2, '0')}-${String(old.getDate()).padStart(2, '0')}`;
+        if (newKey !== oldKey) { mismatch++; if (examples.length < 3) examples.push(`${JSON.stringify(g.date)} new ${newKey} old ${oldKey}`); }
+        if (typeof g.date === 'string') {
+          const u = legacy.utcParseGameDate(g.date);
+          if (!Number.isNaN(u.getTime())) {
+            const uk = `${u.getFullYear()}-${String(u.getMonth() + 1).padStart(2, '0')}-${String(u.getDate()).padStart(2, '0')}`;
+            if (uk !== newKey) utcOff++;
+          }
+        }
+        if (g.time && dates.parseTimeMinutes(g.time) === null && !/^tbd$/i.test(String(g.time).trim())) badTimes++;
+        else if (g.time && legacy.csParseTimeMinutes(g.time) !== dates.timeSortValue(g.time) && legacy.csParseTimeMinutes(g.time) !== 9999) badTimes++;
+      }
+      totalFail += mismatch;
+      totalUtcOff += utcOff;
+      if (mismatch) report.push(`Dates ${season.id}: ${mismatch} mismatches, e.g. ${examples.join('; ')}`);
+      return `<tr><td>${esc(formatSeasonLabel(season.id))}</td><td>${checked}</td><td>${timestamps}</td><td>${status(!mismatch)} ${mismatch ? esc(examples.join('; ')) : ''}</td><td>${utcOff}</td><td>${badTimes}</td></tr>`;
+    });
+    $('datesTable').innerHTML = '<tr><th>Season</th><th>Games with a date</th><th>Timestamps</th><th>New = current-season parser</th><th>UTC parse off by a day</th><th>Unreadable times</th></tr>' + rows.join('');
+    report.push(`Dates: ${totalFail} mismatches; ${totalUtcOff} games the new Date(game.date) pages put on the wrong day`);
+    return { failed: totalFail, utcOff: totalUtcOff };
+  }
+
+  // -------------------------------------------------------------------------
+  // Stats
+  // -------------------------------------------------------------------------
+
+  const close = (a, b, tol) => Math.abs((Number(a) || 0) - (Number(b) || 0)) <= tol;
+
+  function runStats(seasonData, playerDocs) {
+    const docs = playerDocs.filter((d) => d.migrated !== true);
+    let formulaFails = 0;
+    const rows = [];
+    const details = [];
+
+    // historical runs per game by season type, for the bWAR "historical" option
+    const rpgFor = (games) => {
+      const completed = games.filter((g) => g.status === 'completed');
+      return stats.leagueRunsPerGame(completed.some((g) => g.winner && String(g.winner).trim()) ? completed : games);
+    };
+    const typeOf = (id) => (id.includes('fall') ? 'fall' : id.includes('summer') ? 'summer' : null);
+    const histRpg = {};
+    for (const t of ['fall', 'summer']) {
+      let runs = 0; let n = 0;
+      for (const { season, games } of seasonData) {
+        if (typeOf(season.id) !== t) continue;
+        const completed = games.filter((g) => g.status === 'completed' && g.winner && String(g.winner).trim());
+        const use = completed.length ? completed : games.filter((g) => g.winner && String(g.winner).trim());
+        for (const g of use) { runs += stats.num(g.homeScore ?? g['home score']) + stats.num(g.awayScore ?? g['away score']); n++; }
+      }
+      histRpg[t] = n ? runs / n : null;
+    }
+
+    for (const { season, games } of seasonData) {
+      const sid = season.id;
+      // every non-sub season record (all team keys) and the first key per doc (bWAR's choice)
+      const records = [];
+      const firstKey = [];
+      const pitching = [];
+      for (const d of docs) {
+        const keys = Object.keys(d.seasons || {}).filter((k) => k.startsWith(sid) && !k.endsWith('-sub'));
+        keys.forEach((k) => records.push({ name: d.name || d.id, key: k, ...d.seasons[k] }));
+        if (keys.length) firstKey.push({ name: d.name || d.id, ...d.seasons[keys[0]] });
+        Object.keys(d.pitchingSeasons || {}).filter((k) => k.startsWith(sid)).forEach((k) => pitching.push({ name: d.name || d.id, ...d.pitchingSeasons[k] }));
+      }
+      if (!records.length && !pitching.length) continue;
+
+      // AVG / OBP vs stored
+      let rateChecked = 0; const rateOff = [];
+      for (const r of records) {
+        const line = stats.battingLine(r);
+        if (r.battingAverage !== undefined && r.battingAverage !== null && r.battingAverage !== '') {
+          rateChecked++;
+          if (!close(line.avg, r.battingAverage, 0.0006) || (r.onBasePercentage !== undefined && !close(line.obp, r.onBasePercentage, 0.0006))) {
+            rateOff.push(`${r.name}: AVG ${line.avg.toFixed(3)}/${Number(r.battingAverage).toFixed(3)} OBP ${line.obp.toFixed(3)}/${Number(r.onBasePercentage || 0).toFixed(3)}`);
+          }
+        }
+      }
+
+      // acesBPI: formula (new vs aggregator code) and stored
+      const counts = records.map((r) => ({ ...stats.battingCounts(r), sub: r.sub }));
+      const newBPI = stats.acesBPIForSeason(records);
+      const oldBPI = legacy.aggregatorBPI(counts);
+      const bpiFormulaBad = newBPI.filter((v, i) => v !== null && Math.abs(v - oldBPI[i]) > 1e-9).length;
+      formulaFails += bpiFormulaBad;
+      let bpiStoredChecked = 0; const bpiOff = [];
+      records.forEach((r, i) => {
+        const stored = r.acesBPI;
+        if (typeof stored !== 'number' || newBPI[i] === null) return;
+        bpiStoredChecked++;
+        if (!close(newBPI[i], stored, 0.01)) bpiOff.push(`${r.name}: ${newBPI[i].toFixed(2)} vs stored ${stored.toFixed(2)}`);
+      });
+
+      // bWAR: formula and stored (season R/G, else historical R/G)
+      const withPA = firstKey.filter((p) => { const c = stats.battingCounts(p); return c.atBats + c.walks > 0; });
+      const rpg = rpgFor(games);
+      const hist = histRpg[typeOf(sid)] ?? null;
+      const newW = stats.bwarForSeason(withPA, { runsPerGame: rpg }).values;
+      const newWHist = hist !== null ? stats.bwarForSeason(withPA, { runsPerGame: hist }).values : newW;
+      const oldW = legacy.aggregatorBwar(withPA.map((p) => { const c = stats.battingCounts(p); return { pa: c.atBats + c.walks, h: c.hits, bb: c.walks, hr: c.homeRuns }; }), rpg);
+      const bwarFormulaBad = newW.filter((v, i) => Math.abs(v - oldW[i]) > 1e-9).length;
+      formulaFails += bwarFormulaBad;
+      let bwarChecked = 0; const bwarOff = [];
+      withPA.forEach((p, i) => {
+        if (typeof p.bwarSimp !== 'number') return;
+        bwarChecked++;
+        if (!close(newW[i], p.bwarSimp, 0.01) && !close(newWHist[i], p.bwarSimp, 0.01)) bwarOff.push(`${p.name}: ${newW[i].toFixed(2)} (hist ${newWHist[i].toFixed(2)}) vs stored ${p.bwarSimp.toFixed(2)}`);
+      });
+
+      // ERA vs stored
+      let eraChecked = 0; const eraOff = [];
+      for (const p of pitching) {
+        const stored = p.earnedRunAverage ?? p.era ?? p.ERA;
+        if (stored === undefined || stored === null || stored === 'N/A') continue;
+        eraChecked++;
+        const fresh = stats.era(p.runsAllowed ?? p.runs_allowed, p.inningsPitched ?? p.IP) ?? 0;
+        if (!close(fresh, stored, 0.006)) eraOff.push(`${p.name}: ${fresh.toFixed(2)} vs stored ${Number(stored).toFixed(2)} (${p.runsAllowed} R, ${p.inningsPitched} IP)`);
+      }
+
+      const formulaOk = !bpiFormulaBad && !bwarFormulaBad;
+      const cell = (checked, off) => checked ? `${checked - off.length}/${checked} ${off.length ? '<span class="warn">CHECK</span>' : '<span class="pass">OK</span>'}` : '<span class="muted">none stored</span>';
+      rows.push(`<tr><td>${esc(formatSeasonLabel(sid))}</td><td>${records.length}</td><td>${status(formulaOk)}</td><td>${cell(rateChecked, rateOff)}</td><td>${cell(bpiStoredChecked, bpiOff)}</td><td>${cell(bwarChecked, bwarOff)} <span class="muted">R/G ${rpg === null ? '-' : rpg.toFixed(2)}</span></td><td>${cell(eraChecked, eraOff)}</td></tr>`);
+      const offs = [['AVG/OBP', rateOff], ['acesBPI', bpiOff], ['bWAR', bwarOff], ['ERA', eraOff]].filter(([, l]) => l.length);
+      if (offs.length) {
+        details.push(`<details><summary>${esc(formatSeasonLabel(sid))}: stored values that differ</summary><div class="card">${offs.map(([k, l]) => `<p><b>${k}</b> (${l.length})</p><pre>${esc(l.slice(0, 25).join('\n'))}${l.length > 25 ? `\n... ${l.length - 25} more` : ''}</pre>`).join('')}</div></details>`);
+      }
+      report.push(`Stats ${sid}: formula ${formulaOk ? 'exact' : 'DIFFERS'}; stored AVG/OBP ${rateChecked - rateOff.length}/${rateChecked}, acesBPI ${bpiStoredChecked - bpiOff.length}/${bpiStoredChecked}, bWAR ${bwarChecked - bwarOff.length}/${bwarChecked}, ERA ${eraChecked - eraOff.length}/${eraChecked}`);
+      offs.forEach(([k, l]) => report.push(`  ${k} e.g. ${l.slice(0, 3).join('; ')}`));
+    }
+
+    $('statsTable').innerHTML = '<tr><th>Season</th><th>Records</th><th>Formula</th><th>AVG/OBP stored</th><th>acesBPI stored</th><th>bWAR stored</th><th>ERA stored</th></tr>' + rows.join('');
+    $('statsDetail').innerHTML = details.join('');
+    return { formulaFails };
+  }
+
+  // -------------------------------------------------------------------------
+  // Eligibility
+  // -------------------------------------------------------------------------
+
+  function runEligibility(seasons) {
+    let fails = 0;
+    const rows = seasons.map((season) => {
+      const oldRules = legacy.trackerRules(season, season.id);
+      const newRules = elig.eligibilityRules(season);
+      const rulesOk = oldRules.GAMES_REQUIRED === newRules.gamesRequired && oldRules.SUBS_ALLOWED === newRules.subsAllowed;
+      let gridBad = 0;
+      for (let g = 0; g <= 13; g++) {
+        for (let s = 0; s <= 3; s++) {
+          const o = legacy.trackerStatus({ gamesPlayed: g, subCount: s }, oldRules);
+          const n = elig.eligibilityStatus({ gamesPlayed: g, subCount: s }, newRules);
+          if (o.eligible !== n.eligible || o.close !== n.nearlyEligible || o.subUsed !== n.subUsed || o.subOver !== n.subOver) gridBad++;
+        }
+      }
+      const ok = rulesOk && !gridBad;
+      if (!ok) { fails++; report.push(`Eligibility ${season.id}: rules ${rulesOk ? 'ok' : 'DIFFER'}, ${gridBad} grid differences`); }
+      return `<tr><td>${esc(formatSeasonLabel(season.id))}</td><td>${esc(elig.describeRules(newRules))}</td><td>${status(ok)}</td></tr>`;
+    });
+    $('eligTable').innerHTML = '<tr><th>Season</th><th>Rules</th><th>Old = new</th></tr>' + rows.join('');
+    report.push(`Eligibility: ${seasons.length - fails}/${seasons.length} seasons match`);
+    return { fails };
+  }
+
+  // -------------------------------------------------------------------------
+  // Run
+  // -------------------------------------------------------------------------
+
+  try {
+    await initPage({ title: 'Domain check' });
+    const now = new Date();
+
+    progress('Loading seasons...');
+    const seasons = (await getSeasons()).slice().reverse(); // oldest first
+    let loaded = 0;
+    const seasonData = await Promise.all(seasons.map(async (season) => {
+      const snap = await getDocs(collection(db, 'seasons', season.id, 'games'));
+      progress(`Loading games... ${++loaded}/${seasons.length} seasons`);
+      return { season, games: snap.docs.map((d) => ({ id: d.id, ...d.data() })) };
+    }));
+    progress('Loading player stats...');
+    const playerSnap = await getDocs(collection(db, 'aggregatedPlayerStats'));
+    const playerDocs = playerSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    report.push(`Domain check ${now.toISOString()} on ${location.host}: ${seasons.length} seasons, ${seasonData.reduce((n, s) => n + s.games.length, 0)} games, ${playerDocs.length} player docs`);
+    const fx = runFixtures();
+    const st = runStandings(seasonData, now);
+    const dt = runDates(seasonData);
+    const ss = runStats(seasonData, playerDocs);
+    const el = runEligibility(seasons);
+
+    const cards = [
+      ['Fixed cases', `${fx.total - fx.failed}/${fx.total}`, !fx.failed],
+      ['Standings: new = current-season', `${st.pass}/${st.total} seasons`, st.pass === st.total],
+      ['Old pages disagree', st.disagreeSeasons.length ? `${st.disagreeSeasons.length} season(s)` : 'none', null],
+      ['Dates', dt.failed ? `${dt.failed} mismatches` : 'all match', !dt.failed],
+      ['Stat formulas', ss.formulaFails ? `${ss.formulaFails} differ` : 'exact', !ss.formulaFails],
+      ['Eligibility', el.fails ? `${el.fails} season(s) differ` : 'all match', !el.fails]
+    ];
+    $('summary').innerHTML = cards.map(([label, value, ok]) =>
+      `<div class="card"><b>${esc(label)}</b><span class="${ok === null ? 'warn' : ok ? 'pass' : 'fail'}">${esc(value)}</span></div>`).join('');
+    const allPass = !fx.failed && st.pass === st.total && !dt.failed && !ss.formulaFails && !el.fails;
+    report.splice(1, 0, `OVERALL: ${allPass ? 'PASS' : 'FAIL'}; old pages disagree in: ${st.disagreeSeasons.join(', ') || 'none'}`);
+
+    $('copyReport').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(report.join('\n'));
+        $('copyNote').textContent = 'Copied.';
+      } catch {
+        $('copyNote').textContent = 'Clipboard blocked; the report is in the console.';
+      }
+      console.info(report.join('\n'));
+    });
+    window.__domainReport = report.join('\n');
+
+    pageReady();
+  } catch (err) {
+    showPageError(err);
+  }
+</script>
+</body>
+</html>
