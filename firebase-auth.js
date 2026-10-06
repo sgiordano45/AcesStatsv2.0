@@ -422,9 +422,6 @@ export function onAuthChange(callback) {
         console.warn('⚠️ FCM token refresh skipped:', err.message || err);
       });
       
-      // Check if user should see dashboard today (once per calendar day)
-      checkDailyDashboardVisit();
-      
       // Check for weekly profile setup redirect (if no notifications)
       try {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -437,59 +434,6 @@ export function onAuthChange(callback) {
       }
     }
   });
-}
-
-/**
- * Redirect authenticated users to dashboard once per calendar day
- * Preserves their intended destination with a "Continue" button on dashboard
- */
-function checkDailyDashboardVisit() {
-  try {
-    const today = new Date().toLocaleDateString('en-CA'); // Local date YYYY-MM-DD
-    const lastVisit = localStorage.getItem('lastDashboardVisit');
-    const currentPath = window.location.pathname;
-    const currentSearch = window.location.search;
-    
-    // Skip if already visited dashboard today
-    if (lastVisit === today) {
-      return;
-    }
-    
-    // Skip if already on dashboard (dashboard will set the flag)
-    if (currentPath.includes('my-dashboard.html')) {
-      return;
-    }
-    
-    // Skip auth-related pages
-    const skipPages = [
-      'signin.html', 
-      'signup.html', 
-      'reset-password.html', 
-      'verify-email.html',
-      'link-player.html'
-    ];
-    if (skipPages.some(page => currentPath.includes(page))) {
-      return;
-    }
-    
-    // Skip if coming from a notification click
-    if (currentSearch.includes('from=notification') || currentSearch.includes('from=push')) {
-      // Mark as visited so we don't redirect later in their session
-      localStorage.setItem('lastDashboardVisit', today);
-      return;
-    }
-    
-    // Build the continue URL (preserve their intended destination)
-    const continueUrl = encodeURIComponent(currentPath + currentSearch);
-    
-    // Redirect to dashboard with continue parameter
-    console.log('📋 Daily dashboard check - redirecting');
-    window.location.href = `/my-dashboard.html?continue=${continueUrl}`;
-    
-  } catch (err) {
-    // Silent fail - don't block user if localStorage isn't available
-    console.warn('Daily dashboard check skipped:', err);
-  }
 }
 
 // ========================================
@@ -539,7 +483,7 @@ async function trackUserVisit(user) {
 // ========================================
 
 const SETUP_REDIRECT_INTERVAL_DAYS = 7;
-const SETUP_GUIDE_PATH = '/profile.html';
+const SETUP_GUIDE_PATH = 'profile.html';
 
 /**
  * Check if user should be redirected to profile setup
