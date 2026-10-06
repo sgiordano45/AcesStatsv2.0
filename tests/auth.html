@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Auth check</title>
+<script type="module" src="../js/core/preview-guard.js"></script>
+<link rel="stylesheet" href="../mobile-enhancements.css">
+<link rel="stylesheet" href="../nav-styles.css">
+<link rel="stylesheet" href="../dark-mode.css">
+<style>
+  body { margin: 0; font: 15px/1.5 Inter, system-ui, -apple-system, sans-serif; background: var(--bg-primary, #f7fafc); color: var(--text-dark, #1f2937); }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 96px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 28px 0 8px; }
+  .muted { color: var(--text-light, #64748b); font-size: 13px; }
+  .card { background: var(--card-bg, #fff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: 4px 8px; border-top: 1px solid var(--border-color, #e2e8f0); vertical-align: top; text-align: left; }
+  th { color: var(--text-light, #64748b); font-weight: 600; border-top: 0; }
+  td.wrap { white-space: normal; word-break: break-word; }
+  .pass { color: #2d6a16; font-weight: 700; }
+  .fail { color: #b91c1c; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="page-container">
+<div class="filters-nav"></div>
+<main>
+  <h1>Auth check</h1>
+  <p class="muted">Compares the pre-split firebase-auth.js (tests/legacy/firebase-auth-legacy.js) with the shim and js/core + js/data: the export list, every role check run on every users doc against every team ID, and the reads (profile, team staff, pending link requests) with the same arguments. Read-only: no write function is called, and the legacy onAuthChange is not used (it would track a visit and could redirect).</p>
+
+  <div data-page-loading class="card" id="progress">Loading...</div>
+
+  <div data-page-content hidden>
+    <div class="card"><b id="summary"></b> <span class="muted" id="args"></span></div>
+    <h2>Results</h2>
+    <div class="card"><table id="results"></table></div>
+  </div>
+</main>
+</div>
+
+<script type="module">
+  import { initPage, pageReady, showPageError } from '../js/core/app.js';
+  import { authReady } from '../js/core/auth.js';
+  import { db, collection, getDocs } from '../js/core/firebase.js';
+  import { getAllTeams } from '../js/data/teams.js';
+  import { escapeHtml as esc } from '../js/ui/format.js';
+  import * as legacy from './legacy/firebase-auth-legacy.js';
+  import * as shim from '../firebase-auth.js';
+  import * as core from '../js/core/auth.js';
+  import * as account from '../js/core/account.js';
+  import * as users from '../js/data/users.js';
+  import * as teamStaff from '../js/data/team-staff.js';
+  import * as links from '../js/data/player-links.js';
+
+  const $ = (id) => document.getElementById(id);
+  const rows = [];
+  let failed = 0;
+
+  const stable = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) && typeof x.toDate !== 'function')
+    ? Object.fromEntries(Object.keys(x).sort().map((key) => [key, x[key]])) : x);
+
+  function firstDiff(a, b) {
+    let i = 0;
+    while (i < a.length && a[i] === b[i]) i++;
+    return `at char ${i}: old "${a.slice(Math.max(0, i - 40), i + 60)}" / new "${b.slice(Math.max(0, i - 40), i + 60)}"`;
+  }
+
+  function row(name, args, result, ok, detail = '') {
+    if (!ok) failed++;
+    rows.push(`<tr><td>${esc(name)}</td><td class="wrap muted">${esc(args)}</td><td>${esc(result)}</td><td>${ok ? '<span class="pass">same</span>' : `<span class="fail">DIFFERENT</span><div class="muted">${esc(detail)}</div>`}</td></tr>`);
+    $('results').innerHTML = '<tr><th>Check</th><th>Arguments</th><th>Result</th><th>Old vs new</th></tr>' + rows.join('');
+    $('summary').textContent = failed ? `${failed} of ${rows.length} differ` : `All ${rows.length} match`;
+    $('summary').className = failed ? 'fail' : 'pass';
+  }
+
+  async function settle(fn, args) {
+    try { return stable(await fn(...args)); } catch (e) { return `ERROR ${e?.code || e?.message || e}`; }
+  }
+
+  // One read compared old vs new.
+  async function check(name, args) {
+    const a = await settle(legacy[name], args);
+    const b = await settle(shim[name], args);
+    row(name, args.map((x) => JSON.stringify(x)).join(', '), a.startsWith('ERROR') ? a : `${a.length} chars`, a === b, a === b ? '' : firstDiff(a, b));
+  }
+
+  // A pure function compared over many argument lists; one row per function.
+  function sweep(name, argLists) {
+    let diff = null;
+    for (const args of argLists) {
+      let a, b;
+      try { a = stable(legacy[name](...args)); } catch (e) { a = `ERROR ${e.message}`; }
+      try { b = stable(shim[name](...args)); } catch (e) { b = `ERROR ${e.message}`; }
+      if (a !== b) { diff = `${JSON.stringify(args).slice(0, 200)}: old ${a} / new ${b}`; break; }
+    }
+    row(name, `${argLists.length} argument lists`, '', !diff, diff || '');
+  }
+
+  try {
+    await initPage({ title: 'Auth check' });
+    const { user } = await authReady();
+
+    // 1. Same export names; each one is the module's own function, not a copy.
+    progress('Exports...');
+    const oldNames = Object.keys(legacy).sort();
+    const newNames = Object.keys(shim).sort();
+    const missing = oldNames.filter((k) => !newNames.includes(k));
+    const extra = newNames.filter((k) => !oldNames.includes(k));
+    row('firebase-auth.js exports', `${oldNames.length} old / ${newNames.length} new`, '', !missing.length && !extra.length,
+      `missing: ${missing.join(', ') || '-'}; extra: ${extra.join(', ') || '-'}`);
+    const homes = [core, account, users, teamStaff, links];
+    const stray = newNames.filter((k) => !['getPrimaryDisplayRole', 'migrateUserToNewRoleSystem', 'onAuthStateChanged', 'signOut', 'signInWithPopup', 'GoogleAuthProvider', 'updateProfile'].includes(k)
+      && !homes.some((m) => m[k] === shim[k]));
+    row('shim re-exports the module functions', `${newNames.length} names`, '', !stray.length, `not from js/: ${stray.join(', ')}`);
+    row('same auth instance', '', '', legacy.auth === shim.auth && window.auth === shim.auth, 'auth objects differ');
+    row('ROLE_PERMISSIONS, USER_ROLES', '', '', stable(legacy.ROLE_PERMISSIONS) === stable(shim.ROLE_PERMISSIONS) && stable(legacy.USER_ROLES) === stable(shim.USER_ROLES), 'constants differ');
+
+    // 2. Role checks on every users doc x every team ID.
+    progress('Role checks on every user...');
+    const snap = await getDocs(collection(db, 'users'));
+    const profiles = [null, undefined, {}, ...snap.docs.map((d) => d.data())];
+    const teams = await getAllTeams();
+    const teamIds = [null, 'none', ...new Set(teams.flatMap((t) => [t.id, t.name, t.id?.toLowerCase(), t.name?.toUpperCase()]).values())].filter((x) => x !== undefined);
+    const perms = [...new Set(Object.values(legacy.ROLE_PERMISSIONS).flatMap((p) => Object.keys(p)))];
+    const each = (fn) => profiles.flatMap(fn);
+    sweep('isUserCaptain', profiles.map((p) => [p]));
+    sweep('hasLeagueRole', profiles.map((p) => [p]));
+    sweep('isAdmin', profiles.map((p) => [p]));
+    sweep('isLeagueStaff', profiles.map((p) => [p]));
+    sweep('canAccessCaptainFeatures', profiles.map((p) => [p]));
+    sweep('getUserTeamIds', profiles.map((p) => [p]));
+    sweep('getActiveTeamRoles', profiles.map((p) => [p]));
+    sweep('getCaptainTeams', profiles.map((p) => [p]));
+    sweep('getPrimaryDisplayRole', profiles.map((p) => [p]));
+    sweep('getProfilePageForUser', profiles.map((p) => [p]));
+    sweep('hasSpecialRole', each((p) => ['photographer', 'oddsmaker', 'historian', 'contributor'].map((r) => [p, r])));
+    sweep('isTeamCaptain', each((p) => teamIds.map((t) => [p, t])));
+    sweep('isTeamStaff', each((p) => teamIds.map((t) => [p, t])));
+    sweep('canManageTeam', each((p) => teamIds.map((t) => [p, t])));
+    sweep('canSubmitForTeam', each((p) => [[p], ...teamIds.map((t) => [p, t])]));
+    sweep('canSubmitForGame', each((p) => teams.slice(0, 6).map((t, i) => [p, { homeTeamId: t.id, awayTeamId: teams[(i + 3) % teams.length]?.id }])));
+    sweep('hasPermission', each((p) => perms.flatMap((perm) => [[p, perm], ...teamIds.slice(2, 6).map((t) => [p, perm, { teamId: t }])])));
+    const real = profiles.filter((p) => p && p.userRole);
+    sweep('canManageUser', real.slice(0, 40).flatMap((a) => real.slice(0, 40).map((b) => [a, b, teamIds[2]])));
+
+    // 3. Account helpers that only read the signed-in Firebase user.
+    progress('Account helpers...');
+    const fakeUsers = [null,
+      { emailVerified: false, providerData: [{ providerId: 'password' }] },
+      { emailVerified: true, providerData: [{ providerId: 'password' }] },
+      { emailVerified: false, providerData: [{ providerId: 'google.com' }] }];
+    sweep('needsEmailVerification', fakeUsers.map((u) => [u]));
+    row('getCurrentUser', '', user ? user.email : 'signed out', legacy.getCurrentUser()?.uid === shim.getCurrentUser()?.uid, 'different user');
+    row('getVerificationInfo', '', stable(shim.getVerificationInfo()), stable(legacy.getVerificationInfo()) === stable(shim.getVerificationInfo()), 'different');
+
+    // 4. Reads.
+    progress('Reads...');
+    if (user) {
+      await check('getUserProfile', [user.uid]);
+      await check('getUserProfile', ['no-such-user']);
+      await check('getPendingPlayerLinkRequests', [null]);
+      for (const t of teams.slice(0, 4)) {
+        await check('getPendingPlayerLinkRequests', [t.id]);
+        await check('getTeamStaffRequests', [t.id]);
+        await check('getTeamStaffMembers', [t.id]);
+      }
+    } else {
+      row('reads', 'sign in to run', '', true);
+    }
+
+    $('args').textContent = `${profiles.length - 3} users, ${teamIds.length} team IDs, ${perms.length} permissions; signed in as ${user?.email || '-'}`;
+    window.__authReport = () => ({ failed, total: rows.length, text: $('results').innerText });
+    pageReady();
+  } catch (err) {
+    showPageError(err);
+  }
+
+  function progress(msg) { const el = $('progress'); if (el) el.textContent = msg; }
+</script>
+</body>
+</html>
