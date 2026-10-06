@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="manifest" href="/manifest.json">
+<script type="module" src="js/core/preview-guard.js"></script>
+<link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pictures Gallery - Mountainside Aces</title>
@@ -749,7 +750,7 @@ async function fetchMediaManifest() {
   
   // First, try to load from media-manifest.json
   try {
-    const manifestUrl = '/media-manifest.json';
+    const manifestUrl = 'media-manifest.json';
     console.log(`🔍 Attempting to fetch: ${window.location.origin}${manifestUrl}`);
     
     const response = await fetch(manifestUrl);
@@ -817,7 +818,7 @@ async function fetchMediaManifest() {
     
     for (const pattern of patterns) {
       for (const ext of imageExtensions) {
-        const path = `/media/${team}/${pattern}${ext}`;
+        const path = `media/${team}/${pattern}${ext}`;
         if (await checkFileExists(path)) {
           console.log(`    ✅ Found: ${path}`);
           discovered.push({
@@ -831,7 +832,7 @@ async function fetchMediaManifest() {
       }
       
       for (const ext of videoExtensions) {
-        const path = `/media/${team}/${pattern}${ext}`;
+        const path = `media/${team}/${pattern}${ext}`;
         if (await checkFileExists(path)) {
           console.log(`    ✅ Found: ${path}`);
           discovered.push({

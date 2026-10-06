@@ -1141,7 +1141,7 @@
 
     const AUTO_UPDATE_DELAY_MS = 1000; // 1 second
 
-    navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+    navigator.serviceWorker.register('service-worker.js', { scope: './' })
       .then(registration => {
         console.log('✅ Service Worker registered');
 

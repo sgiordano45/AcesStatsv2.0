@@ -7,8 +7,9 @@ const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
 
-// Base path for GitHub Pages subdirectory deployment
-const BASE_PATH = '';
+// Base path derived from the worker's own location:
+// '' on acessoftballreference.com, '/AcesStatsv2.0' on the GitHub Pages preview
+const BASE_PATH = new URL('./', self.location).pathname.replace(/\/$/, '');
 
 // Only CSS files use cache-first (small, stable, helps visual consistency)
 // JS files now use network-first so updates roll out immediately!
@@ -125,8 +126,8 @@ messaging.onBackgroundMessage((payload) => {
     
     const notificationOptions = {
       body: notificationBody,
-      icon: '/icon-192.png',
-      badge: '/badge-72.png',
+      icon: `${BASE_PATH}/icons/icon-192.png`,
+      badge: `${BASE_PATH}/badge-72.png`,
       // Make tag unique to prevent silent replacement (iOS PWA fix)
       tag: `${payload.data?.type || 'default'}_${payload.data?.gameId || ''}_${Date.now()}`,
       data: payload.data || {},
@@ -433,7 +434,11 @@ self.addEventListener('notificationclick', (event) => {
     });
   }
 
-  const clickAction = event.notification.data?.clickAction || '/';
+  const rawClickAction = event.notification.data?.clickAction || '/';
+  // Root-relative links from notifications get the base path (no-op on the live domain)
+  const clickAction = rawClickAction.startsWith('/') && !rawClickAction.startsWith(BASE_PATH + '/')
+    ? BASE_PATH + rawClickAction
+    : rawClickAction;
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })

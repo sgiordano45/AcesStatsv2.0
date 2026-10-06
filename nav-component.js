@@ -11,7 +11,7 @@ import { NAV_STRUCTURE, ALL_PAGES, PAGE_CONFIGS, DEFAULT_CONFIG, loadPageVisibil
     if (isPWA) {
       const currentPath = window.location.pathname + window.location.search;
       // Don't save index.html as "last page" — that's the default start_url
-      if (currentPath !== '/' && currentPath !== '/index.html') {
+      if (!/\/(index\.html)?$/.test(currentPath)) {
         localStorage.setItem('pwa_last_page', currentPath);
         localStorage.setItem('pwa_last_page_ts', Date.now().toString());
       }

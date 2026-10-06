@@ -251,7 +251,7 @@ export function onForegroundMessage(callback) {
     if (Notification.permission === 'granted') {
       new Notification(payload.notification.title, {
         body: payload.notification.body,
-        icon: '/icon-192.png',
+        icon: 'icons/icon-192.png',
         tag: payload.data?.type || 'default',
         data: payload.data
       });

@@ -24,7 +24,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hitting',
     type: 'tiered',
     icon: '🔥',
-    iconPath: '/assets/badges/hitting/hit-streak',
+    iconPath: 'assets/badges/hitting/hit-streak',
     tiers: {
       bronze: { name: 'Hot Bat', threshold: 3, description: 'Hit in 3 consecutive games' },
       silver: { name: 'Hot Streak', threshold: 5, description: 'Hit in 5 consecutive games' },
@@ -38,7 +38,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hitting',
     type: 'tiered',
     icon: '💥',
-    iconPath: '/assets/badges/hitting/multi-hit',
+    iconPath: 'assets/badges/hitting/multi-hit',
     tiers: {
       bronze: { name: 'Seeing It Well', threshold: 3, description: '3+ hits in a single game' },
       silver: { name: 'Locked In', threshold: 4, description: '4+ hits in a single game' },
@@ -52,7 +52,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hitting',
     type: 'tiered',
     icon: '🏆',
-    iconPath: '/assets/badges/hitting/season-hits',
+    iconPath: 'assets/badges/hitting/season-hits',
     tiers: {
       bronze: { name: 'Contact Hitter', threshold: 15, description: '15+ hits in a season' },
       silver: { name: 'Hit Machine', threshold: 25, description: '25+ hits in a season' },
@@ -66,7 +66,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hitting',
     type: 'tiered',
     icon: '🏃',
-    iconPath: '/assets/badges/hitting/season-runs',
+    iconPath: 'assets/badges/hitting/season-runs',
     tiers: {
       bronze: { name: 'Run Scorer', threshold: 10, description: '10+ runs in a season' },
       silver: { name: 'Rally Starter', threshold: 18, description: '18+ runs in a season' },
@@ -80,7 +80,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hitting',
     type: 'tiered',
     icon: '👁️',
-    iconPath: '/assets/badges/hitting/season-walks',
+    iconPath: 'assets/badges/hitting/season-walks',
     tiers: {
       bronze: { name: 'Good Eye', threshold: 5, description: '5+ walks in a season' },
       silver: { name: 'Patient Hitter', threshold: 10, description: '10+ walks in a season' },
@@ -94,7 +94,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hitting',
     type: 'tiered',
     icon: '🎆',
-    iconPath: '/assets/badges/hitting/big-game',
+    iconPath: 'assets/badges/hitting/big-game',
     tiers: {
       bronze: { name: 'Big Day', threshold: 2, description: '2+ runs scored in a single game' },
       silver: { name: 'Crooked Number', threshold: 3, description: '3+ runs scored in a single game' },
@@ -108,7 +108,7 @@ export const BADGE_DEFINITIONS = {
     category: 'milestone',
     type: 'single',
     icon: '⛓️',
-    iconPath: '/assets/badges/milestone/iron-man',
+    iconPath: 'assets/badges/milestone/iron-man',
     description: 'Play in every regular season and playoff game for your team',
     requirement: 'Appear in all team games (regular season + playoffs) — awarded at end of season',
     seasonEndOnly: true
@@ -120,7 +120,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hitting',
     type: 'single',
     icon: '🍽️',
-    iconPath: '/assets/badges/hitting/table-setter',
+    iconPath: 'assets/badges/hitting/table-setter',
     description: 'More walks than games played',
     requirement: 'Walks > Games Played'
   },
@@ -134,7 +134,7 @@ export const BADGE_DEFINITIONS = {
     category: 'pitching',
     type: 'tiered',
     icon: '🔒',
-    iconPath: '/assets/badges/pitching/scoreless',
+    iconPath: 'assets/badges/pitching/scoreless',
     tiers: {
       bronze: { name: 'Clean Inning', threshold: 1, description: '1 scoreless outing (min 1 IP)' },
       silver: { name: 'Shutdown', threshold: 3, description: '3 scoreless outings' },
@@ -148,7 +148,7 @@ export const BADGE_DEFINITIONS = {
     category: 'pitching',
     type: 'tiered',
     icon: '💪',
-    iconPath: '/assets/badges/pitching/season-innings',
+    iconPath: 'assets/badges/pitching/season-innings',
     tiers: {
       bronze: { name: 'Reliable Arm', threshold: 25, description: '25+ innings pitched in a season' },
       silver: { name: 'Workhorse', threshold: 50, description: '50+ innings pitched in a season' },
@@ -162,7 +162,7 @@ export const BADGE_DEFINITIONS = {
     category: 'pitching',
     type: 'tiered',
     icon: '🛡️',
-    iconPath: '/assets/badges/pitching/low-run',
+    iconPath: 'assets/badges/pitching/low-run',
     tiers: {
       bronze: { name: 'Bend Don\'t Break', threshold: 1, description: 'Allow 2 or fewer runs in a game (min 2 IP)' },
       silver: { name: 'Quality Outing', threshold: 3, description: '3 games allowing 2 or fewer runs (min 2 IP each)' },
@@ -176,7 +176,7 @@ export const BADGE_DEFINITIONS = {
     category: 'pitching',
     type: 'single',
     icon: '🏰',
-    iconPath: '/assets/badges/pitching/ironclad',
+    iconPath: 'assets/badges/pitching/ironclad',
     description: 'Allow 0 runs across 3+ innings in a single game',
     requirement: '0 RA with 3+ IP in one game'
   },
@@ -187,7 +187,7 @@ export const BADGE_DEFINITIONS = {
     category: 'pitching',
     type: 'single',
     icon: '👑',
-    iconPath: '/assets/badges/pitching/staff-ace',
+    iconPath: 'assets/badges/pitching/staff-ace',
     description: 'Lowest runs allowed per inning among qualifying pitchers (min 10 IP)',
     requirement: 'Best RA/IP ratio (min 10 IP)'
   },
@@ -201,7 +201,7 @@ export const BADGE_DEFINITIONS = {
     category: 'two-way',
     type: 'tiered',
     icon: '☯️',
-    iconPath: '/assets/badges/two-way/two-way',
+    iconPath: 'assets/badges/two-way/two-way',
     tiers: {
       bronze: { name: 'Dual Threat', threshold: { hits: 10, ip: 10 }, description: '10+ hits AND 10+ innings pitched' },
       silver: { name: 'Two-Way Player', threshold: { hits: 15, ip: 15 }, description: '15+ hits AND 15+ innings pitched' },
@@ -218,7 +218,7 @@ export const BADGE_DEFINITIONS = {
     category: 'pitching',
     type: 'single',
     icon: '💎',
-    iconPath: '/assets/badges/pitching/kryptonite',
+    iconPath: 'assets/badges/pitching/kryptonite',
     description: 'Allow 2 or fewer runs against the same opponent twice',
     requirement: '≤2 RA vs same team 2+ times'
   },
@@ -229,7 +229,7 @@ export const BADGE_DEFINITIONS = {
     category: 'pitching',
     type: 'single',
     icon: '🎭',
-    iconPath: '/assets/badges/pitching/nemesis',
+    iconPath: 'assets/badges/pitching/nemesis',
     description: 'Face the same opponent 3+ times while pitching',
     requirement: 'Pitch 3+ games vs same opponent'
   },
@@ -243,7 +243,7 @@ export const BADGE_DEFINITIONS = {
     category: 'milestone',
     type: 'single',
     icon: '📅',
-    iconPath: '/assets/badges/milestone/opening-day-hero',
+    iconPath: 'assets/badges/milestone/opening-day-hero',
     description: 'Get a hit on the league\'s Opening Day',
     requirement: 'Hit in the season\'s first game day'
   },
@@ -257,7 +257,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hidden',
     type: 'single',
     icon: '🏗️',
-    iconPath: '/assets/badges/hidden/the-architect',
+    iconPath: 'assets/badges/hidden/the-architect',
     description: 'Score a run in 10 different games',
     revealText: '"Building something special"',
     hidden: true
@@ -269,7 +269,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hidden',
     type: 'single',
     icon: '🌩️',
-    iconPath: '/assets/badges/hidden/quiet-storm',
+    iconPath: 'assets/badges/hidden/quiet-storm',
     description: 'Lead the team in runs without leading in hits',
     revealText: '"Doing damage without the headlines"',
     hidden: true
@@ -281,7 +281,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hidden',
     type: 'single',
     icon: '🔄',
-    iconPath: '/assets/badges/hidden/deja-vu',
+    iconPath: 'assets/badges/hidden/deja-vu',
     description: 'Same stat line (H/BB/R) in 3 different games (min 1 H, BB, or R)',
     revealText: '"Haven\'t we been here before?"',
     hidden: true
@@ -293,7 +293,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hidden',
     type: 'single',
     icon: '🎯',
-    iconPath: '/assets/badges/hidden/perfect-ten',
+    iconPath: 'assets/badges/hidden/perfect-ten',
     description: 'Exactly 10 hits, 10 runs, and 10 walks in a season',
     revealText: '"Perfectly balanced, as all things should be"',
     hidden: true
@@ -305,7 +305,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hidden',
     type: 'single',
     icon: '👻',
-    iconPath: '/assets/badges/hidden/invisible-man',
+    iconPath: 'assets/badges/hidden/invisible-man',
     description: '5+ walks with 0 hits in a game',
     revealText: '"They couldn\'t find the zone"',
     hidden: true
@@ -317,7 +317,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hidden',
     type: 'single',
     icon: '🍀',
-    iconPath: '/assets/badges/hidden/lucky-seven',
+    iconPath: 'assets/badges/hidden/lucky-seven',
     description: 'Exactly 7 hits against the same opponent across all matchups',
     revealText: '"They just can\'t figure you out"',
     hidden: true
@@ -329,7 +329,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hidden',
     type: 'single',
     icon: '⚡',
-    iconPath: '/assets/badges/hidden/the-streak-lives',
+    iconPath: 'assets/badges/hidden/the-streak-lives',
     description: 'Get a hit in the final game to extend a hit streak to 6+',
     revealText: '"Kept it alive when it mattered most"',
     hidden: true
@@ -341,7 +341,7 @@ export const BADGE_DEFINITIONS = {
     category: 'hidden',
     type: 'multi',
     icon: '🦸',
-    iconPath: '/assets/badges/hidden/zero-to-hero',
+    iconPath: 'assets/badges/hidden/zero-to-hero',
     description: 'Score 3+ runs in a game after being hitless in the previous 3 games',
     revealText: '"A tale of redemption"',
     hidden: true
@@ -356,7 +356,7 @@ export const BADGE_DEFINITIONS = {
     category: 'milestone',
     type: 'single',
     icon: '🏆',
-    iconPath: '/assets/badges/milestone/playoff-performer',
+    iconPath: 'assets/badges/milestone/playoff-performer',
     description: 'Get a hit in every playoff game played',
     requirement: 'Hit in all playoff games (min 2 games)'
   },
@@ -367,7 +367,7 @@ export const BADGE_DEFINITIONS = {
     category: 'milestone',
     type: 'single',
     icon: '🎖️',
-    iconPath: '/assets/badges/milestone/postseason-ace',
+    iconPath: 'assets/badges/milestone/postseason-ace',
     description: 'Pitch a scoreless outing in the playoffs',
     requirement: 'Scoreless playoff appearance (min 1 IP)'
   },
@@ -378,7 +378,7 @@ export const BADGE_DEFINITIONS = {
     category: 'pitching',
     type: 'single',
     icon: '⚔️',
-    iconPath: '/assets/badges/pitching/giant-slayer',
+    iconPath: 'assets/badges/pitching/giant-slayer',
     description: 'Hold a top-3 team to their lowest run total of the season',
     requirement: 'Pitch when top team scores season-low'
   }

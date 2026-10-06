@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="manifest" href="/manifest.json">
+<script type="module" src="js/core/preview-guard.js"></script>
+<link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#2d5016">
@@ -25,7 +26,7 @@
     var lastTs = parseInt(localStorage.getItem('pwa_last_page_ts') || '0', 10);
     
     // Only restore if within last 24 hours (86400000ms)
-    if (lastPage && lastPage !== '/index.html' && lastPage !== '/' && 
+    if (lastPage && !/\/(index\.html)?$/.test(lastPage) && 
         (Date.now() - lastTs) < 86400000) {
       window.location.replace(lastPage);
       return;
@@ -4766,9 +4767,9 @@ updateOnlineStatus();
 <script src="theme-toggle.js"></script>
 
 <!-- Load offline queue manager -->
-<script src="/offline-queue.js"></script>
+<script src="offline-queue.js"></script>
 
 <!-- Load offline-aware Firebase wrapper -->
-<script src="/firebase-offline-wrapper.js"></script>
+<script src="firebase-offline-wrapper.js"></script>
 </body>
 </html>

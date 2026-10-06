@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script type="module" src="js/core/preview-guard.js"></script>
 <meta charset="UTF-8">
 <!-- PWA Session Persistence -->
 <script>
-(function(){try{var p=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;if(p){var c=window.location.pathname+window.location.search;if(c!=='/'&&c!=='/index.html'){localStorage.setItem('pwa_last_page',c);localStorage.setItem('pwa_last_page_ts',Date.now().toString())}}}catch(e){}})();
+(function(){try{var p=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;if(p){var c=window.location.pathname+window.location.search;if(!/\/(index\.html)?$/.test(c)){localStorage.setItem('pwa_last_page',c);localStorage.setItem('pwa_last_page_ts',Date.now().toString())}}}catch(e){}})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boxes Pool - Mountainside Aces</title>

@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="manifest" href="/manifest.json">
+<script type="module" src="js/core/preview-guard.js"></script>
+<link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">Player Stats</title>
@@ -4421,7 +4422,8 @@
   function getBadgeIcon(badge, size = 48) {
     // Check if badge has an iconPath for custom image
     if (badge.iconPath) {
-      const imgPath = badge.iconPath.endsWith('.png') ? badge.iconPath : `${badge.iconPath}.png`;
+      const iconBase = badge.iconPath.replace(/^\//, ''); // stored paths may be root-absolute
+      const imgPath = iconBase.endsWith('.png') ? iconBase : `${iconBase}.png`;
       return `<img src="${imgPath}" alt="${badge.name || ''}" style="width: ${size}px; height: ${size}px; object-fit: contain;" onerror="this.outerHTML='<span style=\\'font-size: ${size * 0.8}px;\\'>${badge.icon || '🎖️'}</span>'">`;
     }
     // Fallback to emoji
