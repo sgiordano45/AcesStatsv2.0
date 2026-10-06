@@ -35,7 +35,7 @@
 })();
 </script>
 
-<title>Mountainside Aces - Softball Statistics Hub</title>
+<title>Softball Statistics Hub - Mountainside Aces</title>
 <link rel="stylesheet" href="mobile-enhancements.css">
 <link rel="stylesheet" href="nav-styles.css">
 <link rel="stylesheet" href="style.css">
@@ -1957,7 +1957,7 @@
 <body>
 
   <!-- Loading Spinner -->
-  <div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-overlay" id="loadingOverlay" data-page-loading>
     <div class="softball-spinner"></div>
   </div>
 
@@ -2673,15 +2673,6 @@
     </div>
   </div>
 
-  <script>
-    // Hide loading spinner after page loads
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        document.getElementById('loadingOverlay').classList.add('hidden');
-      }, 800);
-    });
-  </script>
-
   <script src="mobile-enhancements.js"></script>
   
   <!-- Auth State Management -->
@@ -3205,6 +3196,7 @@
     getSeasonGames,
     getAllSeasons
   } from './firebase-data.js';
+  import { capitalize } from './js/ui/format.js';
 
   class GlobalSearch {
     constructor() {
@@ -3235,7 +3227,6 @@
       try {
         console.log('🔍 Loading search data from Firebase...');
         
-        const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
         
         const [allPlayerStats, seasons] = await Promise.all([
           getAllPlayerStatsOptimized(),
@@ -3828,6 +3819,7 @@
     isGameCurrentlyLive,
     getLiveGameData
   } from './live-game-indicator.js';
+  import { capitalize } from './js/ui/format.js';
 
   // Banner messages are now loaded from Firebase instead of hardcoded
   let announcements = [];
@@ -3918,7 +3910,6 @@
       // Load banner messages from Firebase first
       await loadBannerMessages();
       
-      const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
       
       const currentSeasonData = await getCurrentSeason();
       // 2026+ UPDATE: Only fetch games - upcoming games come from same collection
@@ -4191,7 +4182,6 @@
       const nextWeek = new Date(today);
       nextWeek.setDate(nextWeek.getDate() + 7);
       
-      const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
       
       // Map ALL games (including completed ones for today)
       const allGames = seasonGames
@@ -4599,8 +4589,16 @@
   }
   </script>
 <script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
+  // Page shell. Runs after the modules above, so firebase-config.js has
+  // already created the Firebase app that js/core/firebase.js reuses.
+  // The home page's sections load on their own; the spinner only waits for
+  // auth and site config. The personalization block above stays on
+  // firebase-auth.js's onAuthChange for now: it applies admin "view as",
+  // which js/core/auth.js doesn't do yet.
+  import { initPage, pageReady } from './js/core/app.js';
+
+  await initPage({ title: 'Softball Statistics Hub' });
+  pageReady();
 </script>
 
 <!-- Firebase Visibility Filter for Index Page Cards -->
@@ -4683,88 +4681,6 @@
     console.log('✅ Index page cards filtered by visibility');
   });
 </script>
-
-<!-- Online/Offline Status Indicator -->
-<!-- Service Worker registration handled by mobile-enhancements.js -->
-
-<script>
-// Show online/offline status indicator
-function updateOnlineStatus() {
-  const existingIndicator = document.getElementById('onlineStatusIndicator');
-  if (existingIndicator) {
-    existingIndicator.remove();
-  }
-
-  if (!navigator.onLine) {
-    const indicator = document.createElement('div');
-    indicator.id = 'onlineStatusIndicator';
-    indicator.className = 'online-status-indicator offline';
-    indicator.innerHTML = `
-      <span class="status-icon">📡</span>
-      <span class="status-text">Offline Mode</span>
-    `;
-
-    if (!document.getElementById('online-status-styles')) {
-      const styles = document.createElement('style');
-      styles.id = 'online-status-styles';
-      styles.textContent = `
-        .online-status-indicator {
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: #1e293b;
-          color: white;
-          padding: 10px 16px;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 500;
-          z-index: 9998;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-          animation: fadeIn 0.3s ease;
-        }
-        .online-status-indicator.offline {
-          background: #dc2626;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @media (max-width: 768px) {
-          .online-status-indicator {
-            top: 10px;
-            right: 10px;
-            font-size: 12px;
-            padding: 8px 12px;
-          }
-        }
-      `;
-      document.head.appendChild(styles);
-    }
-
-    document.body.appendChild(indicator);
-  }
-}
-
-// Listen for online/offline events
-window.addEventListener('online', () => {
-  console.log('🌐 Connection restored');
-  updateOnlineStatus();
-});
-
-window.addEventListener('offline', () => {
-  console.log('📡 Connection lost - offline mode active');
-  updateOnlineStatus();
-});
-
-// Check status on load
-updateOnlineStatus();
-</script>
-
-<!-- Theme Toggle Script -->
-<script src="theme-toggle.js"></script>
 
 <!-- Load offline queue manager -->
 <script src="offline-queue.js"></script>
