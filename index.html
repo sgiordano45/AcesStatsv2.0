@@ -3823,6 +3823,11 @@
     getLiveGameData
   } from './live-game-indicator.js';
   import { capitalize } from './js/ui/format.js';
+  import { parseGameDate, timeSortValue, formatTime, formatGameDate } from './js/domain/dates.js';
+
+  // Game day at local midnight from js/domain/dates.js. A missing or unreadable
+  // date stays an Invalid Date, so it drops out of the comparisons as before.
+  const gameDay = (value) => parseGameDate(value) ?? new Date(NaN);
 
   // Banner messages are now loaded from Firebase instead of hardcoded
   let announcements = [];
@@ -3951,12 +3956,12 @@
       
       const completedGames = mappedGames
         .filter(game => {
-          const gameDate = new Date(game.date);
+          const gameDate = gameDay(game.date);
           return game.winner &&
                  game.winner.trim() !== "" &&
                  gameDate < today;
         })
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .sort((a, b) => gameDay(b.date) - gameDay(a.date))
         .slice(0, 5);
 
       recentScores = completedGames.map(game => ({
@@ -3968,26 +3973,14 @@
       // 2026+ UPDATE: Get upcoming games from games collection (no separate previews collection)
       const upcomingGames = mappedGames
         .filter(game => {
-          const gameDate = new Date(game.date);
+          const gameDate = gameDay(game.date);
           // Upcoming = future date OR no winner yet
           return gameDate >= today && (!game.winner || game.winner.trim() === "");
         })
         .sort((a, b) => {
-          const dateDiff = new Date(a.date) - new Date(b.date);
+          const dateDiff = gameDay(a.date) - gameDay(b.date);
           if (dateDiff !== 0) return dateDiff;
-          // Same date: parse 12-hour time string to minutes for comparison
-          const toMinutes = (t) => {
-            if (!t) return 9999;
-            const m = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-            if (!m) return 9999;
-            let h = parseInt(m[1], 10);
-            const min = parseInt(m[2], 10);
-            const ampm = m[3].toUpperCase();
-            if (ampm === 'AM' && h === 12) h = 0;
-            if (ampm === 'PM' && h !== 12) h += 12;
-            return h * 60 + min;
-          };
-          return toMinutes(a.time) - toMinutes(b.time);
+          return timeSortValue(a.time) - timeSortValue(b.time);
         })
         .slice(0, 5);
 
@@ -4055,25 +4048,10 @@
   }
 
   // Helper to convert 24-hour time to 12-hour format
+  // 12- or 24-hour input -> '7:45 PM' (js/domain/dates.js); 'TBD' and blanks pass through
   function formatTime12Hour(timeStr) {
     if (!timeStr || timeStr === 'TBD') return timeStr;
-    
-    // Check if already in 12-hour format (contains AM/PM)
-    if (timeStr.toUpperCase().includes('AM') || timeStr.toUpperCase().includes('PM')) {
-      return timeStr;
-    }
-    
-    // Try to parse 24-hour format (e.g., "18:00" or "18:30")
-    const match = timeStr.match(/^(\d{1,2}):(\d{2})$/);
-    if (match) {
-      let hours = parseInt(match[1], 10);
-      const minutes = match[2];
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12 || 12;
-      return `${hours}:${minutes} ${ampm}`;
-    }
-    
-    return timeStr;
+    return formatTime(timeStr);
   }
 
   function formatUpcomingGame(game) {
@@ -4082,11 +4060,7 @@
     const gameDate = game.date;
     const gameTime = formatTime12Hour(game.time) || "TBD";
     
-    const dateObj = new Date(gameDate);
-    const formattedDate = dateObj.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
+    const formattedDate = formatGameDate(gameDate, 'monthDay');
     
     const timeDisplay = gameTime && gameTime.trim() !== "" ? ` ${gameTime}` : "";
     
@@ -4193,7 +4167,7 @@
           if (g.date && g.date.seconds) {
             gameDate = new Date(g.date.seconds * 1000);
           } else if (g.date) {
-            gameDate = new Date(g.date);
+            gameDate = parseGameDate(g.date);
           }
           
           const homeTeam = g.homeTeamName || g["home team"] || capitalize(g.homeTeamId) || "";
@@ -4212,18 +4186,6 @@
         })
         .filter(g => g.date !== null);
       
-      // Helper to convert 12-hour time string to sortable minutes
-      const toMinutes = (t) => {
-        if (!t) return 9999;
-        const m = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-        if (!m) return 9999;
-        let h = parseInt(m[1], 10);
-        const min = parseInt(m[2], 10);
-        const ampm = m[3].toUpperCase();
-        if (ampm === 'AM' && h === 12) h = 0;
-        if (ampm === 'PM' && h !== 12) h += 12;
-        return h * 60 + min;
-      };
 
       // Separate into categories
       const todaysGames = allGames
@@ -4232,7 +4194,7 @@
           gameDate.setHours(0, 0, 0, 0);
           return gameDate.getTime() === today.getTime();
         })
-        .sort((a, b) => toMinutes(a.time) - toMinutes(b.time));
+        .sort((a, b) => timeSortValue(a.time) - timeSortValue(b.time));
       
       const upcomingGames = allGames
         .filter(g => {
@@ -4263,25 +4225,10 @@
       const currentLiveGames = getLiveGames();
       
       // Helper to convert 24-hour time to 12-hour format
+      // 12- or 24-hour input -> '7:45 PM' (js/domain/dates.js); 'TBD' and blanks pass through
       function formatTime12Hour(timeStr) {
         if (!timeStr || timeStr === 'TBD') return timeStr;
-        
-        // Check if already in 12-hour format (contains AM/PM)
-        if (timeStr.toUpperCase().includes('AM') || timeStr.toUpperCase().includes('PM')) {
-          return timeStr;
-        }
-        
-        // Try to parse 24-hour format (e.g., "18:00" or "18:30")
-        const match = timeStr.match(/^(\d{1,2}):(\d{2})$/);
-        if (match) {
-          let hours = parseInt(match[1], 10);
-          const minutes = match[2];
-          const ampm = hours >= 12 ? 'PM' : 'AM';
-          hours = hours % 12 || 12;
-          return `${hours}:${minutes} ${ampm}`;
-        }
-        
-        return timeStr;
+        return formatTime(timeStr);
       }
       
       // Helper to generate game card HTML

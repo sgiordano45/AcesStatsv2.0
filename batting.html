@@ -575,6 +575,7 @@ td a:hover {
   } from './firebase-data.js';
   import { initPage, pageReady, showPageState, showPageError } from './js/core/app.js';
   import { capitalize, formatPlayerName } from './js/ui/format.js';
+  import { QUALIFIERS } from './js/domain/stats.js';
 
   // Global variables
   let allPlayerData = [];
@@ -801,7 +802,7 @@ td a:hover {
       
     // Find all-time leaders (use all data, not just filtered)
     const allTimeData = allPlayerData;
-    const qualifiedPlayers = allTimeData.filter(p => p.atBats >= 10);
+    const qualifiedPlayers = allTimeData.filter(p => p.atBats >= QUALIFIERS.ALL_TIME_MIN_AB);
     
     if (allTimeData.length > 0) {
       // Counting stats leaders

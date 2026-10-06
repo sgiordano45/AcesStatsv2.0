@@ -3724,6 +3724,9 @@
   import { initPage, pageReady, showPageState, showPageError, onAuthChange, siteUrl } from './js/core/app.js';
   import { isAdmin } from './js/core/auth.js';
   import { capitalize, formatPlayerName } from './js/ui/format.js';
+  // Aliased: this script has locals named battingAverage / onBasePercentage.
+  import { battingAverage as calcAvg, onBasePct as calcObp, era as calcEra, QUALIFIERS } from './js/domain/stats.js';
+  import { parseGameDate } from './js/domain/dates.js';
 
   // Track current user and whether they can edit this player's photo
   let currentUser = null;
@@ -3808,8 +3811,8 @@
       });
       
       const plateAppearances = totalAtBats + totalWalks;
-      const battingAverage = totalAtBats > 0 ? totalHits / totalAtBats : 0;
-      const onBasePercentage = plateAppearances > 0 ? (totalHits + totalWalks) / plateAppearances : 0;
+      const battingAverage = calcAvg(totalHits, totalAtBats);
+      const onBasePercentage = calcObp(totalHits, totalWalks, totalAtBats);
       const avgAcesWar = acesWarValues.length > 0 ? acesWarValues.reduce((a, b) => a + b, 0) / acesWarValues.length : 0;
       
       allPlayersArray.push({
@@ -3835,8 +3838,8 @@
       { name: "Career Hits", stat: "totalHits", format: (val) => val.toString(), minimum: 0 },
       { name: "Career Runs", stat: "totalRuns", format: (val) => val.toString(), minimum: 0 },
       { name: "Career Walks", stat: "totalWalks", format: (val) => val.toString(), minimum: 0 },
-      { name: "Career Batting Average", stat: "battingAverage", format: (val) => val.toFixed(3), minimum: 150, minimumField: "plateAppearances" },
-      { name: "Career On-Base Percentage", stat: "onBasePercentage", format: (val) => val.toFixed(3), minimum: 150, minimumField: "plateAppearances" },
+      { name: "Career Batting Average", stat: "battingAverage", format: (val) => val.toFixed(3), minimum: QUALIFIERS.CAREER_MIN_PA, minimumField: "plateAppearances" },
+      { name: "Career On-Base Percentage", stat: "onBasePercentage", format: (val) => val.toFixed(3), minimum: QUALIFIERS.CAREER_MIN_PA, minimumField: "plateAppearances" },
       { name: "Career Average AcesBPI", stat: "avgAcesWar", format: (val) => val.toFixed(2), minimum: 0, filter: (p) => p.acesWarValues.length > 0 }
     ];
     
@@ -4962,8 +4965,8 @@
       }
     });
 
-    const BA = atBats > 0 ? hits / atBats : 0;
-    const OBP = atBats + walks > 0 ? (hits + walks) / (atBats + walks) : 0;
+    const BA = calcAvg(hits, atBats);
+    const OBP = calcObp(hits, walks, atBats);
     const avgAcesWar = acesWarCount > 0 ? acesWarSum / acesWarCount : 0;
 
     return { games, atBats, hits, runs, walks, BA, OBP, avgAcesWar };
@@ -4984,7 +4987,7 @@
     }
     
     // For rate stats (BA, OBP), require 10+ ABs
-    const qualifiedForRates = regularStats.filter(s => s.atBats >= 10);
+    const qualifiedForRates = regularStats.filter(s => s.atBats >= QUALIFIERS.ALL_TIME_MIN_AB);
     
     const careerBests = [];
     
@@ -5206,13 +5209,12 @@
   
   function calculateSplitsAvg(hits, atBats) {
     if (atBats === 0) return '.000';
-    return (hits / atBats).toFixed(3).replace(/^0/, '');
+    return calcAvg(hits, atBats).toFixed(3).replace(/^0/, '');
   }
   
   function calculateSplitsOBP(hits, walks, atBats) {
-    const pa = atBats + walks;
-    if (pa === 0) return '.000';
-    return ((hits + walks) / pa).toFixed(3).replace(/^0/, '');
+    if (atBats + walks === 0) return '.000';
+    return calcObp(hits, walks, atBats).toFixed(3).replace(/^0/, '');
   }
   
   function highlightBetter(val1, val2, higherIsBetter = true) {
@@ -5239,10 +5241,10 @@
     } else if (dateValue instanceof Date) {
       date = dateValue;
     } else {
-      date = new Date(dateValue);
+      date = parseGameDate(dateValue); // ET date string, read with local components
     }
     
-    if (isNaN(date.getTime())) return 'N/A';
+    if (!date || isNaN(date.getTime())) return 'N/A';
     
     return date.toLocaleDateString('en-US', {
       month: 'short',
@@ -5339,8 +5341,8 @@
       
       // Sort by date descending
       splitsGameStats.sort((a, b) => {
-        const dateA = a.gameDate?.seconds || (a.gameDateFormatted ? new Date(a.gameDateFormatted).getTime() / 1000 : 0);
-        const dateB = b.gameDate?.seconds || (b.gameDateFormatted ? new Date(b.gameDateFormatted).getTime() / 1000 : 0);
+        const dateA = a.gameDate?.seconds || (parseGameDate(a.gameDateFormatted)?.getTime() ?? 0) / 1000;
+        const dateB = b.gameDate?.seconds || (parseGameDate(b.gameDateFormatted)?.getTime() ?? 0) / 1000;
         return dateB - dateA;
       });
       
@@ -5544,8 +5546,8 @@
     // Recalculate averages
     ['home', 'away', 'regular', 'playoff'].forEach(key => {
       const s = career[key];
-      s.battingAverage = s.atBats > 0 ? s.hits / s.atBats : 0;
-      s.onBasePercentage = (s.atBats + s.walks) > 0 ? (s.hits + s.walks) / (s.atBats + s.walks) : 0;
+      s.battingAverage = calcAvg(s.hits, s.atBats);
+      s.onBasePercentage = calcObp(s.hits, s.walks, s.atBats);
     });
     return career;
   }
@@ -5617,8 +5619,8 @@
     }
 
     [summer, fall].forEach(s => {
-      s.battingAverage = s.atBats > 0 ? s.hits / s.atBats : 0;
-      s.onBasePercentage = (s.atBats + s.walks) > 0 ? (s.hits + s.walks) / (s.atBats + s.walks) : 0;
+      s.battingAverage = calcAvg(s.hits, s.atBats);
+      s.onBasePercentage = calcObp(s.hits, s.walks, s.atBats);
     });
 
     return { summer, fall };
@@ -5641,8 +5643,8 @@
     });
     // Recalculate averages
     Object.values(career).forEach(opp => {
-      opp.battingAverage = opp.atBats > 0 ? opp.hits / opp.atBats : 0;
-      opp.onBasePercentage = (opp.atBats + opp.walks) > 0 ? (opp.hits + opp.walks) / (opp.atBats + opp.walks) : 0;
+      opp.battingAverage = calcAvg(opp.hits, opp.atBats);
+      opp.onBasePercentage = calcObp(opp.hits, opp.walks, opp.atBats);
     });
     return career;
   }
@@ -5657,8 +5659,8 @@
       const sa = a[key] || { games: 0, atBats: 0, hits: 0, runs: 0, walks: 0 };
       const sb = b[key] || { games: 0, atBats: 0, hits: 0, runs: 0, walks: 0 };
       const g = { games: sa.games + sb.games, atBats: sa.atBats + sb.atBats, hits: sa.hits + sb.hits, runs: sa.runs + sb.runs, walks: sa.walks + sb.walks };
-      g.battingAverage = g.atBats > 0 ? g.hits / g.atBats : 0;
-      g.onBasePercentage = (g.atBats + g.walks) > 0 ? (g.hits + g.walks) / (g.atBats + g.walks) : 0;
+      g.battingAverage = calcAvg(g.hits, g.atBats);
+      g.onBasePercentage = calcObp(g.hits, g.walks, g.atBats);
       merged[key] = g;
     });
     return merged;
@@ -5679,8 +5681,8 @@
           walks: (merged[opp].walks || 0) + (stats.walks || 0)
         };
         const m = merged[opp];
-        m.battingAverage = m.atBats > 0 ? m.hits / m.atBats : 0;
-        m.onBasePercentage = (m.atBats + m.walks) > 0 ? (m.hits + m.walks) / (m.atBats + m.walks) : 0;
+        m.battingAverage = calcAvg(m.hits, m.atBats);
+        m.onBasePercentage = calcObp(m.hits, m.walks, m.atBats);
       }
     });
     return merged;
@@ -6138,8 +6140,8 @@
 
   // ERA for 7-inning games: (RA / IP) * 7
   function fmtERA(ra, ip) {
-    if (!ip || ip === 0) return 'N/A';
-    return ((ra / ip) * 7).toFixed(2);
+    const value = calcEra(ra, ip);
+    return value === null ? 'N/A' : value.toFixed(2);
   }
 
   function pitchingDateLabel(game) {
@@ -6148,11 +6150,11 @@
       return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
     }
     if (game.gameDateFormatted) {
-      // gameDateFormatted may be an ISO string like "2025-10-05" — parse and reformat
-      // Append T12:00 to avoid UTC midnight timezone shift (new Date("2025-10-05") = Oct 4 in US timezones)
+      // gameDateFormatted may be an ISO string like "2025-10-05"; js/domain/dates.js
+      // reads it with local components, so it can't slip to the day before.
       const raw = game.gameDateFormatted;
-      const d = new Date(raw.includes('T') ? raw : `${raw}T12:00:00`);
-      if (!isNaN(d.getTime())) {
+      const d = parseGameDate(raw);
+      if (d) {
         return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
       }
       return raw; // unparseable — show as-is

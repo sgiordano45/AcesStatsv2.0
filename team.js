@@ -10,6 +10,7 @@ import {
 } from './firebase-data.js';
 import { initPage, pageReady, showPageState, showPageError, siteUrl } from './js/core/app.js';
 import { capitalize } from './js/ui/format.js';
+import { battingAverage, onBasePct } from './js/domain/stats.js';
 
 let teamData = [];
 let teamPitchingData = [];
@@ -395,10 +396,8 @@ function renderBattingTable(data) {
     const acesWarDisplay = (p.AcesWar === "N/A" || isNaN(p.AcesWar))
       ? "N/A"
       : Number(p.AcesWar).toFixed(2);
-    const BA = p.atBats > 0 ? (p.hits / p.atBats).toFixed(3) : ".000";
-    const OBP = (p.atBats + p.walks) > 0
-      ? ((p.hits + p.walks) / (p.atBats + p.walks)).toFixed(3)
-      : ".000";
+    const BA = p.atBats > 0 ? battingAverage(p.hits, p.atBats).toFixed(3) : ".000";
+    const OBP = (p.atBats + p.walks) > 0 ? onBasePct(p.hits, p.walks, p.atBats).toFixed(3) : ".000";
 
     const row = document.createElement("tr");
     row.innerHTML = `
