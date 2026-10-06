@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2027 Summer Schedule Proposal — Mountainside Aces</title>
+<style>
+:root {
+  --primary:#2d5016;--secondary:#1a6b4a;--bg:#f7fafc;
+  --card:#fff;--text:#2d3748;--muted:#718096;--border:#e2e8f0;
+  --dh-bg:#dbeafe;--dh-bd:#3b82f6;--dh-tx:#1d4ed8;
+  --sin-bg:#dcfce7;--sin-bd:#22c55e;--sin-tx:#15803d;
+  --short-bg:#fef9c3;--short-bd:#f59e0b;--short-tx:#92400e;
+  --shadow:0 2px 8px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);}
+.header{background:linear-gradient(135deg,#2d5016,#1a6b4a);color:white;padding:2.5rem 2rem;text-align:center;}
+.header h1{font-size:2rem;font-weight:800;margin-bottom:.3rem;}
+.header p{opacity:.9;font-size:.95rem;}
+.badge{display:inline-block;background:rgba(255,215,0,.25);border:1px solid rgba(255,215,0,.5);color:#ffd700;padding:.2rem .8rem;border-radius:20px;font-size:.75rem;font-weight:700;text-transform:uppercase;margin-bottom:.6rem;}
+.container{max-width:1300px;margin:0 auto;padding:2rem;}
+
+/* Explainer */
+.explainer{background:white;border-left:4px solid #f59e0b;border-radius:8px;padding:1.25rem 1.5rem;margin-bottom:1.75rem;}
+.explainer h3{font-size:.95rem;font-weight:700;color:#92400e;margin-bottom:.5rem;}
+.explainer p{font-size:.875rem;line-height:1.65;margin-bottom:.5rem;}
+.ring-diagram{display:flex;align-items:center;gap:.35rem;margin-top:.75rem;flex-wrap:wrap;}
+.rd-night{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:.4rem .7rem;font-size:.75rem;display:flex;align-items:center;gap:.3rem;}
+.tag{border-radius:4px;padding:.1rem .4rem;font-weight:700;font-size:.72rem;}
+.tag.sin{background:var(--sin-bg);border:1px solid var(--sin-bd);color:var(--sin-tx);}
+.tag.dh{background:var(--dh-bg);border:1px solid var(--dh-bd);color:var(--dh-tx);}
+.tag.short{background:var(--short-bg);border:1px solid var(--short-bd);color:var(--short-tx);}
+.rd-arr{color:#94a3b8;font-size:.85rem;}
+
+/* Config */
+.config-card{background:white;border-radius:12px;padding:1.75rem;box-shadow:var(--shadow);margin-bottom:2rem;}
+.config-card h2{font-size:1rem;font-weight:700;color:var(--primary);margin-bottom:1.25rem;}
+.config-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:1rem;margin-bottom:1.25rem;}
+.form-group label{display:block;font-weight:600;font-size:.73rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:.35rem;}
+.form-group input{width:100%;padding:.6rem .75rem;border:2px solid var(--border);border-radius:8px;font-size:.9rem;color:var(--text);}
+.form-group input:focus{outline:none;border-color:var(--secondary);}
+.teams-row{margin-bottom:1.25rem;}
+.teams-row label{display:block;font-weight:600;font-size:.73rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:.45rem;}
+.teams-grid{display:flex;flex-wrap:wrap;gap:.45rem;}
+.team-chip{padding:.3rem .8rem;border-radius:20px;font-size:.8rem;font-weight:700;cursor:pointer;user-select:none;transition:opacity .2s;border:2px solid transparent;}
+.team-chip.off{opacity:.3;}
+.count-note{font-size:.82rem;margin-top:.5rem;font-weight:600;}
+.count-note.ok{color:var(--sin-tx);}
+.count-note.warn{color:#b45309;}
+.count-note.err{color:#dc2626;}
+.controls-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.btn{padding:.65rem 1.6rem;border:none;border-radius:8px;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-p{background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.2);}
+.btn-s{background:var(--border);color:var(--text);}
+.status-msg{font-size:.875rem;color:var(--secondary);font-weight:600;}
+
+/* Pills */
+.pills{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:1rem;margin-bottom:2rem;}
+.pill{background:white;border-radius:10px;padding:1rem;box-shadow:var(--shadow);text-align:center;}
+.pill .v{font-size:1.65rem;font-weight:800;color:var(--primary);}
+.pill .l{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:.2rem;}
+
+/* Schedule */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.sec-hdr h2{font-size:1.3rem;font-weight:800;color:var(--primary);}
+.legend{display:flex;gap:.75rem;font-size:.78rem;font-weight:600;flex-wrap:wrap;}
+.leg{display:flex;align-items:center;gap:.35rem;}
+.leg-dot{width:9px;height:9px;border-radius:50%;border:2px solid;}
+
+.week-card{background:white;border-radius:12px;box-shadow:var(--shadow);margin-bottom:1.25rem;overflow:hidden;}
+.week-hdr{background:var(--primary);color:white;padding:.7rem 1.25rem;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:.9rem;}
+.week-hdr .meta{font-size:.78rem;opacity:.85;font-weight:500;}
+.week-bridges{background:#f0fdf4;border-bottom:1px solid #bbf7d0;padding:.4rem 1.25rem;font-size:.78rem;color:var(--sin-tx);}
+.nights-grid{display:grid;grid-template-columns:repeat(4,1fr);}
+.night-col{padding:1rem 1.1rem;border-right:1px solid var(--border);}
+.night-col:last-child{border-right:none;}
+.night-col.short-night{background:#fffbeb;}
+.night-date{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.65rem;display:flex;align-items:center;gap:.4rem;}
+.short-badge{background:var(--short-bg);border:1px solid var(--short-bd);color:var(--short-tx);padding:0 .35rem;border-radius:3px;font-size:.65rem;font-weight:700;}
+.chain-vis{display:flex;align-items:center;gap:.2rem;margin-bottom:.65rem;flex-wrap:nowrap;overflow:hidden;}
+.c-chip{padding:.18rem .45rem;border-radius:4px;font-size:.68rem;font-weight:700;white-space:nowrap;border:1.5px solid;flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.c-chip.dh{background:var(--dh-bg);border-color:var(--dh-bd);color:var(--dh-tx);}
+.c-chip.sin{background:var(--sin-bg);border-color:var(--sin-bd);color:var(--sin-tx);}
+.c-chip.short{background:var(--short-bg);border-color:var(--short-bd);color:var(--short-tx);}
+.c-sep{color:#cbd5e1;font-size:.6rem;flex-shrink:0;}
+.game-list{list-style:none;display:flex;flex-direction:column;gap:.28rem;}
+.game-item{font-size:.77rem;line-height:1.3;}
+.game-time{font-size:.68rem;color:var(--muted);display:block;}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1.4fr;gap:1.5rem;margin-top:2rem;}
+.stats-card{background:white;border-radius:12px;box-shadow:var(--shadow);padding:1.25rem;overflow-x:auto;}
+.stats-card h3{font-size:.95rem;font-weight:700;color:var(--primary);margin-bottom:.9rem;padding-bottom:.5rem;border-bottom:2px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-size:.82rem;}
+th{text-align:left;padding:.4rem .55rem;font-weight:700;font-size:.72rem;color:var(--muted);text-transform:uppercase;border-bottom:2px solid var(--border);white-space:nowrap;}
+td{padding:.4rem .55rem;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+.mx td,.mx th{text-align:center;padding:.18rem .25rem;font-size:.68rem;min-width:24px;}
+.m0{color:#cbd5e1;}.m1{background:#dbeafe;color:#1d4ed8;font-weight:700;border-radius:3px;}
+.m2{background:#bbf7d0;color:#15803d;font-weight:700;border-radius:3px;}
+.m3{background:#fef9c3;color:#854d0e;font-weight:700;border-radius:3px;}
+.m4{background:#fee2e2;color:#b91c1c;font-weight:700;border-radius:3px;}
+.ms{color:#cbd5e1;}
+.bar-bg{width:44px;height:5px;background:#e2e8f0;border-radius:3px;display:inline-block;overflow:hidden;vertical-align:middle;}
+.bar-fill{height:100%;border-radius:3px;}
+
+@media(max-width:900px){.nights-grid{grid-template-columns:1fr 1fr}.stats-grid{grid-template-columns:1fr}}
+@media(max-width:580px){.nights-grid{grid-template-columns:1fr}.night-col{border-right:none;border-bottom:1px solid var(--border)}}
+#out{display:none;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">Proposal</div>
+  <h1>2027 Summer Schedule</h1>
+  <p>Ring-chain format · 4 nights/week · Every team plays every week · Equal games guaranteed</p>
+</div>
+
+<div class="container">
+
+<div class="explainer">
+  <h3>How the Ring-Chain Works (11 teams)</h3>
+  <p>Each week, 4 teams are <strong style="color:var(--sin-tx)">bridge teams</strong> — they play once as a chain endpoint on two different nights (2 games total across 2 nights). The other 7 teams are <strong style="color:var(--dh-tx)">DH teams</strong> — they take the middle position in one chain and play both games on the same night. <strong>Every team plays exactly 2 games every week</strong> (1 home + 1 away). Roles rotate each week for balance.</p>
+  <p>Nights 1–3 are full 4-team chains (3 games). Night 4 is a short 3-team chain (2 games) that closes the ring — it has one <strong style="color:var(--short-tx)">short-DH</strong> team and reuses two bridge teams as its endpoints.</p>
+  <div class="ring-diagram">
+    <div class="rd-night"><span class="tag sin">B1</span>→<span class="tag dh">DH</span>→<span class="tag dh">DH</span>→<span class="tag sin">B2</span><span style="color:var(--muted);margin-left:.2rem">Mon</span></div>
+    <span class="rd-arr">▶</span>
+    <div class="rd-night"><span class="tag sin">B2</span>→<span class="tag dh">DH</span>→<span class="tag dh">DH</span>→<span class="tag sin">B3</span><span style="color:var(--muted);margin-left:.2rem">Tue</span></div>
+    <span class="rd-arr">▶</span>
+    <div class="rd-night"><span class="tag sin">B3</span>→<span class="tag dh">DH</span>→<span class="tag dh">DH</span>→<span class="tag sin">B4</span><span style="color:var(--muted);margin-left:.2rem">Wed</span></div>
+    <span class="rd-arr">▶</span>
+    <div class="rd-night"><span class="tag sin">B4</span>→<span class="tag short">DH★</span>→<span class="tag sin">B1</span><span style="color:var(--muted);margin-left:.2rem">Thu (short)</span></div>
+  </div>
+</div>
+
+<div class="config-card">
+  <h2>⚙️ Season Configuration</h2>
+  <div class="config-grid">
+    <div class="form-group"><label>Start Date (Monday)</label><input type="date" id="startDate" value="2027-05-17"></div>
+    <div class="form-group"><label>Weeks</label><input type="number" id="numWeeks" value="10" min="4" max="20"></div>
+    <div class="form-group"><label>Slot 1 (earliest)</label><input type="text" id="slot1" value="6:45 PM"></div>
+    <div class="form-group"><label>Slot 2</label><input type="text" id="slot2" value="7:45 PM"></div>
+    <div class="form-group"><label>Slot 3</label><input type="text" id="slot3" value="8:45 PM"></div>
+    <div class="form-group"><label>Seed (for replay)</label><input type="number" id="seed" placeholder="blank = random"></div>
+  </div>
+  <div class="teams-row">
+    <label>Teams — select 11 or 12</label>
+    <div class="teams-grid" id="teamsGrid"></div>
+    <div class="count-note" id="countNote"></div>
+  </div>
+  <div class="controls-row">
+    <button class="btn btn-p" onclick="generate()">🎲 Generate Schedule</button>
+    <button class="btn btn-s" onclick="generate()" id="regenBtn" style="display:none">🔄 Regenerate</button>
+    <span class="status-msg" id="statusMsg"></span>
+  </div>
+</div>
+
+<div id="out">
+  <div class="pills" id="pills"></div>
+  <div class="sec-hdr">
+    <h2>📅 Schedule</h2>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--sin-bg);border-color:var(--sin-bd)"></div><span style="color:var(--sin-tx)">Bridge (1 game, 2 nights)</span></div>
+      <div class="leg"><div class="leg-dot" style="background:var(--dh-bg);border-color:var(--dh-bd)"></div><span style="color:var(--dh-tx)">DH (2 games, 1 night)</span></div>
+      <div class="leg"><div class="leg-dot" style="background:var(--short-bg);border-color:var(--short-bd)"></div><span style="color:var(--short-tx)">Short-DH Thu (2 games)</span></div>
+    </div>
+  </div>
+  <div id="weeks"></div>
+  <div class="stats-grid">
+    <div class="stats-card"><h3>📊 Games Per Team</h3><div id="teamTable"></div></div>
+    <div class="stats-card"><h3>🔢 Matchup Coverage</h3><div id="matrix"></div>
+      <p style="font-size:.7rem;color:var(--muted);margin-top:.6rem">
+        <span style="background:#dbeafe;padding:1px 5px;border-radius:3px;font-weight:700;color:#1d4ed8">1</span>
+        <span style="background:#bbf7d0;padding:1px 5px;border-radius:3px;font-weight:700;color:#15803d;margin-left:3px">2</span>
+        <span style="background:#fef9c3;padding:1px 5px;border-radius:3px;font-weight:700;color:#854d0e;margin-left:3px">3</span>
+        <span style="background:#fee2e2;padding:1px 5px;border-radius:3px;font-weight:700;color:#b91c1c;margin-left:3px">4+</span>
+        = times played
+      </p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ─── Team data ───────────────────────────────────────────────────────────────
+const ALL_TEAMS = ['Army','Black','Blue','Carolina','Gold','Green','Orange','Purple','Red','Silver','Teal','White'];
+const COLORS = {
+  Army:    {bg:'#4b5563',tx:'#fff',bd:'#374151'},
+  Black:   {bg:'#111827',tx:'#fff',bd:'#1f2937'},
+  Blue:    {bg:'#1d4ed8',tx:'#fff',bd:'#1e40af'},
+  Carolina:{bg:'#7dd3fc',tx:'#1e3a5f',bd:'#38bdf8'},
+  Gold:    {bg:'#fbbf24',tx:'#7c2d00',bd:'#f59e0b'},
+  Green:   {bg:'#16a34a',tx:'#fff',bd:'#15803d'},
+  Orange:  {bg:'#f97316',tx:'#fff',bd:'#ea580c'},
+  Purple:  {bg:'#7c3aed',tx:'#fff',bd:'#6d28d9'},
+  Red:     {bg:'#dc2626',tx:'#fff',bd:'#b91c1c'},
+  Silver:  {bg:'#94a3b8',tx:'#1e293b',bd:'#64748b'},
+  Teal:    {bg:'#0d9488',tx:'#fff',bd:'#0f766e'},
+  White:   {bg:'#f1f5f9',tx:'#1e293b',bd:'#cbd5e1'}
+};
+
+let selectedTeams = ALL_TEAMS.filter(t => t !== 'Teal'); // default 11 (Teal as potential new team)
+
+// ─── RNG ────────────────────────────────────────────────────────────────────
+let _rng = Math.random;
+function initRNG(s){ if(!s){_rng=Math.random;return;} let x=s>>>0; _rng=()=>{x^=x<<13;x^=x>>17;x^=x<<5;return(x>>>0)/4294967296;}; }
+const rand = () => _rng();
+function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+// ─── Pair key ────────────────────────────────────────────────────────────────
+const pk = (a,b) => a<=b?`${a}|${b}`:`${b}|${a}`;
+
+// ─── Perfect matchings of an even-length array ───────────────────────────────
+// 8 items → 105 matchings, 6 items → 15 matchings
+function matchings(items){
+  if(items.length===0) return [[]];
+  const [h,...rest]=items, out=[];
+  for(let i=0;i<rest.length;i++){
+    const p=rest[i], rem=[...rest.slice(0,i),...rest.slice(i+1)];
+    for(const sub of matchings(rem)) out.push([[h,p],...sub]);
+  }
+  return out;
+}
+
+// ─── Score helpers ───────────────────────────────────────────────────────────
+// 4-team chain score: negative sum of times adjacent pairs have played
+function sc4(c,pc){ return -((pc[pk(c[0],c[1])]||0)+(pc[pk(c[1],c[2])]||0)+(pc[pk(c[2],c[3])]||0)); }
+// 3-team chain score
+function sc3(c,pc){ return -((pc[pk(c[0],c[1])]||0)+(pc[pk(c[1],c[2])]||0)); }
+
+// ─── Evaluate + build a 12-team ring (4 full nights) ────────────────────────
+function ring12(bridges, dhPairs, pc){
+  let score=0; const nights=[];
+  for(let i=0;i<4;i++){
+    const BL=bridges[i], BR=bridges[(i+1)%4];
+    const [Da,Db]=dhPairs[i];
+    const s1=sc4([BL,Da,Db,BR],pc), s2=sc4([BL,Db,Da,BR],pc);
+    score+=Math.max(s1,s2);
+    nights.push(s1>=s2?[BL,Da,Db,BR]:[BL,Db,Da,BR]);
+  }
+  return {score,nights};
+}
+
+// ─── Evaluate + build an 11-team ring (3 full + 1 short night) ──────────────
+// bridges[0..3]: 4 bridge teams
+// dhPairs[0..2]: 3 pairs for nights 0-2
+// d7: the short-chain DH team for night 3
+// Ring: Night0=[B0,D,D,B1], Night1=[B1,D,D,B2], Night2=[B2,D,D,B3], Night3=[B3,d7,B0] (3-team)
+function ring11(bridges, dhPairs, d7, pc){
+  let score=0; const nights=[];
+  for(let i=0;i<3;i++){
+    const BL=bridges[i], BR=bridges[i+1];
+    const [Da,Db]=dhPairs[i];
+    const s1=sc4([BL,Da,Db,BR],pc), s2=sc4([BL,Db,Da,BR],pc);
+    score+=Math.max(s1,s2);
+    nights.push(s1>=s2?[BL,Da,Db,BR]:[BL,Db,Da,BR]);
+  }
+  // Night 3: 3-team chain — try both endpoint orderings
+  const B3=bridges[3], B0=bridges[0];
+  const s1=sc3([B3,d7,B0],pc), s2=sc3([B0,d7,B3],pc);
+  score+=Math.max(s1,s2);
+  nights.push(s1>=s2?[B3,d7,B0]:[B0,d7,B3]);
+  return {score,nights};
+}
+
+// ─── Generate one week ───────────────────────────────────────────────────────
+function genWeek(teams, pc, dhN, brN, shortDHN){
+  const n=teams.length;
+
+  // Select bridges: teams with highest (dhNights - bridgeNights) are "owed" bridge time
+  const sorted=[...teams].sort((a,b)=>{
+    const da=(dhN[a]||0)-(brN[a]||0), db=(dhN[b]||0)-(brN[b]||0);
+    return db-da||(rand()-.5);
+  });
+  // Always use top 2 (most DH-heavy); randomly pick 2 more from next 4
+  const bridges=[...sorted.slice(0,2),...shuffle(sorted.slice(2,6)).slice(0,2)];
+  const dhs=teams.filter(t=>!bridges.includes(t));
+
+  let best=null, bestScore=-Infinity;
+
+  // Try 8 different bridge permutations
+  for(let bi=0;bi<8;bi++){
+    const bPerm=bi===0?bridges:shuffle(bridges);
+
+    if(n===12){
+      // Try all 105 matchings of 8 DH teams
+      for(const m of matchings(shuffle(dhs))){
+        const {score,nights}=ring12(bPerm,m,pc);
+        if(score>bestScore){bestScore=score;best={nights,bridges:bPerm};}
+      }
+
+    } else if(n===11){
+      // For this bridge permutation, find best d7 (the short-chain DH)
+      // d7 plays against bPerm[3] and bPerm[0]; pick d7 to maximise new matchups + fairness
+      const B3=bPerm[3], B0=bPerm[0];
+      let bestD7=dhs[0], bestD7Score=-Infinity;
+      for(const d of dhs){
+        const s=-((pc[pk(d,B3)]||0)+(pc[pk(d,B0)]||0))*10 - (shortDHN[d]||0)*8;
+        if(s>bestD7Score){bestD7Score=s;bestD7=d;}
+      }
+
+      const normalDHs=dhs.filter(t=>t!==bestD7); // 6 teams → 15 matchings of 3 pairs
+      const all15=matchings(shuffle(normalDHs));
+
+      for(const m of all15){
+        // Try all 6 assignments of the 3 pairs to nights 0,1,2
+        const [p0,p1,p2]=m;
+        const assignments=[[p0,p1,p2],[p0,p2,p1],[p1,p0,p2],[p1,p2,p0],[p2,p0,p1],[p2,p1,p0]];
+        for(const asgn of assignments){
+          const {score,nights}=ring11(bPerm,asgn,bestD7,pc);
+          if(score>bestScore){bestScore=score;best={nights,bridges:bPerm,d7:bestD7};}
+        }
+      }
+    }
+  }
+
+  return best;
+}
+
+// ─── Main schedule generator ─────────────────────────────────────────────────
+function generateSchedule(teams, numWeeks, slots, startDateStr){
+  const n=teams.length;
+  const pc={};
+  const dhN   = Object.fromEntries(teams.map(t=>[t,0]));
+  const brN   = Object.fromEntries(teams.map(t=>[t,0]));
+  const shortN= Object.fromEntries(teams.map(t=>[t,0]));
+  const totG  = Object.fromEntries(teams.map(t=>[t,0]));
+  const homG  = Object.fromEntries(teams.map(t=>[t,0]));
+  const sched = [];
+
+  const DAY=['Monday','Tuesday','Wednesday','Thursday'];
+  const base=new Date(startDateStr+'T12:00:00');
+  while(base.getDay()!==1) base.setDate(base.getDate()+1);
+
+  for(let w=0;w<numWeeks;w++){
+    const wStart=new Date(base); wStart.setDate(wStart.getDate()+w*7);
+    const {nights:chains, bridges, d7}=genWeek(teams,pc,dhN,brN,shortN);
+    const brSet=new Set(bridges);
+
+    const nights=chains.map((chain,ni)=>{
+      const date=new Date(wStart); date.setDate(date.getDate()+ni);
+      const is3=chain.length===3;
+
+      // Build games from chain
+      // 4-team: A(away)@B(home), B(away)@C(home), C(away)@D(home)
+      // 3-team: A(away)@B(home), B(away)@C(home)
+      const games=[];
+      for(let i=0;i<chain.length-1;i++){
+        games.push({away:chain[i],home:chain[i+1],time:slots[i]});
+      }
+
+      // Update counts
+      for(const g of games){
+        const k=pk(g.home,g.away); pc[k]=(pc[k]||0)+1;
+        totG[g.home]++; totG[g.away]++; homG[g.home]++;
+      }
+
+      // Role tracking:
+      // Endpoints (chain[0] and chain[last]) are bridge positions
+      // Middle positions (chain[1] and chain[2] for 4-team; chain[1] for 3-team) are DH
+      const last=chain.length-1;
+      if(brSet.has(chain[0])) brN[chain[0]]++;
+      if(brSet.has(chain[last])) brN[chain[last]]++;
+      // Middle positions
+      for(let i=1;i<last;i++){
+        dhN[chain[i]]++;
+        if(is3) shortN[chain[i]]++;
+      }
+
+      return{
+        day:DAY[ni], date:new Date(date),
+        dateStr:date.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}),
+        chain, games, is3
+      };
+    });
+
+    sched.push({week:w+1, wStart:new Date(wStart), nights, bridges:[...bridges]});
+  }
+  return{sched,pc,dhN,brN,shortN,totG,homG};
+}
+
+// ─── Rendering ───────────────────────────────────────────────────────────────
+function cStyle(name){
+  const c=COLORS[name]||{bg:'#e2e8f0',tx:'#2d3748',bd:'#cbd5e1'};
+  return `background:${c.bg};color:${c.tx};border-color:${c.bd}`;
+}
+
+function renderSchedule(sched){
+  document.getElementById('weeks').innerHTML='';
+  for(const {week,wStart,nights,bridges} of sched){
+    const wLabel=wStart.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+    const totalG=nights.reduce((s,n)=>s+n.games.length,0);
+    const bNames=bridges.map(b=>`<span style="${cStyle(b)};padding:1px 6px;border-radius:4px;font-size:.73rem;border:1.5px solid;font-weight:700">${b}</span>`).join(' ');
+
+    const nightsHtml=nights.map(({dateStr,chain,games,is3})=>{
+      const last=chain.length-1;
+      const chainHtml=chain.map((t,i)=>{
+        const isEndpoint=(i===0||i===last);
+        const cls=isEndpoint?'sin':(is3?'short':'dh');
+        return`${i>0?'<span class="c-sep">▶</span>':''}<span class="c-chip ${cls}">${t}</span>`;
+      }).join('');
+      const gHtml=games.map(g=>`<li class="game-item"><span class="game-time">${g.time}</span>${g.away} @ ${g.home}</li>`).join('');
+      return`<div class="night-col${is3?' short-night':''}">
+        <div class="night-date">${dateStr}${is3?'<span class="short-badge">SHORT</span>':''}</div>
+        <div class="chain-vis">${chainHtml}</div>
+        <ul class="game-list">${gHtml}</ul>
+      </div>`;
+    }).join('');
+
+    const div=document.createElement('div');
+    div.className='week-card';
+    div.innerHTML=`
+      <div class="week-hdr"><span>Week ${week}</span><span class="meta">${wLabel} · ${totalG} games</span></div>
+      <div class="week-bridges">🌉 Bridge teams this week: ${bNames}</div>
+      <div class="nights-grid">${nightsHtml}</div>`;
+    document.getElementById('weeks').appendChild(div);
+  }
+}
+
+function renderStats(teams,totG,dhN,brN,shortN,homG,pc){
+  // Team table
+  const rows=teams.slice().sort((a,b)=>a.localeCompare(b)).map(t=>{
+    const total=totG[t]||0, dh=dhN[t]||0, br=brN[t]||0;
+    const nights=dh+br, dhPct=nights?Math.round(dh/nights*100):0;
+    const c=COLORS[t]||{bg:'#e2e8f0',bd:'#cbd5e1'};
+    return`<tr>
+      <td><span style="display:inline-block;width:9px;height:9px;background:${c.bg};border:1.5px solid ${c.bd};border-radius:2px;margin-right:5px;vertical-align:middle"></span><strong>${t}</strong></td>
+      <td style="text-align:center;font-weight:700">${total}</td>
+      <td style="text-align:center">${homG[t]||0}</td>
+      <td style="text-align:center">${total-(homG[t]||0)}</td>
+      <td style="text-align:center">${dh}</td><td style="text-align:center">${br}</td>
+      <td style="text-align:center">${shortN[t]||0}</td>
+      <td><span class="bar-bg"><span class="bar-fill" style="width:${dhPct}%;background:#3b82f6"></span></span> <span style="font-size:.72rem">${dhPct}%</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('teamTable').innerHTML=`<table>
+    <thead><tr><th>Team</th><th>Games</th><th>Home</th><th>Away</th><th>DH Nights</th><th>Bridge Nights</th><th>Short-DH</th><th>DH%</th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
+
+  // Matchup matrix
+  const ab=t=>t.slice(0,3).toUpperCase();
+  const head=teams.map(t=>`<th title="${t}">${ab(t)}</th>`).join('');
+  const body=teams.map(row=>{
+    const cells=teams.map(col=>{
+      if(row===col) return`<td class="ms">—</td>`;
+      const n=pc[pk(row,col)]||0;
+      const cls=n===0?'m0':n===1?'m1':n===2?'m2':n===3?'m3':'m4';
+      return`<td class="${cls}" title="${row} vs ${col}: ${n}">${n||'·'}</td>`;
+    }).join('');
+    return`<tr><th style="text-align:right;padding-right:4px" title="${row}">${ab(row)}</th>${cells}</tr>`;
+  }).join('');
+  document.getElementById('matrix').innerHTML=`<table class="mx"><thead><tr><th></th>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function renderPills(teams,totG,pc,sched){
+  const vals=Object.values(totG);
+  const min=Math.min(...vals), max=Math.max(...vals);
+  const totalGames=Object.values(totG).reduce((a,b)=>a+b,0)/2;
+  const covered=Object.values(pc).filter(v=>v>0).length;
+  const possible=teams.length*(teams.length-1)/2;
+  const gLabel=min===max?`${min} each`:`${min}–${max}`;
+  document.getElementById('pills').innerHTML=`
+    <div class="pill"><div class="v">${sched.length}</div><div class="l">Weeks</div></div>
+    <div class="pill"><div class="v">${sched.length*4}</div><div class="l">Game Nights</div></div>
+    <div class="pill"><div class="v">${totalGames}</div><div class="l">Total Games</div></div>
+    <div class="pill"><div class="v">${gLabel}</div><div class="l">Per Team</div></div>
+    <div class="pill"><div class="v">${covered}/${possible}</div><div class="l">Matchups Covered</div></div>`;
+}
+
+// ─── Entry point ─────────────────────────────────────────────────────────────
+function generate(){
+  const n=selectedTeams.length;
+  if(n!==11&&n!==12){alert('Please select exactly 11 or 12 teams.');return;}
+  const sd=document.getElementById('startDate').value;
+  if(!sd){alert('Please enter a start date.');return;}
+  const nw=parseInt(document.getElementById('numWeeks').value)||10;
+  const slots=[
+    document.getElementById('slot1').value||'6:45 PM',
+    document.getElementById('slot2').value||'7:45 PM',
+    document.getElementById('slot3').value||'8:45 PM'
+  ];
+  initRNG(parseInt(document.getElementById('seed').value)||0);
+
+  const {sched,pc,dhN,brN,shortN,totG,homG}=generateSchedule(selectedTeams,nw,slots,sd);
+
+  document.getElementById('out').style.display='block';
+  document.getElementById('regenBtn').style.display='inline-block';
+  const vals=Object.values(totG);
+  const min=Math.min(...vals),max=Math.max(...vals);
+  document.getElementById('statusMsg').textContent=
+    `✅ ${nw} weeks · ${min===max?min+' games/team':''+min+'–'+max+' games/team'}`;
+
+  renderPills(selectedTeams,totG,pc,sched);
+  renderSchedule(sched);
+  renderStats(selectedTeams,totG,dhN,brN,shortN,homG,pc);
+  document.getElementById('out').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ─── Team chips ───────────────────────────────────────────────────────────────
+function updateCountNote(){
+  const n=selectedTeams.length;
+  const note=document.getElementById('countNote');
+  if(n===11){note.className='count-note ok';note.textContent=`✓ ${n} teams — 11-team ring (Mon–Wed: 3 games each, Thu: 2 games)`;}
+  else if(n===12){note.className='count-note ok';note.textContent=`✓ ${n} teams — 12-team ring (all 4 nights: 3 games each)`;}
+  else{note.className='count-note err';note.textContent=`✗ ${n} teams selected — need exactly 11 or 12`;}
+}
+
+function initTeams(){
+  const grid=document.getElementById('teamsGrid');
+  ALL_TEAMS.forEach(name=>{
+    const c=COLORS[name]||{bg:'#e2e8f0',tx:'#2d3748',bd:'#cbd5e1'};
+    const chip=document.createElement('div');
+    chip.className='team-chip'+(selectedTeams.includes(name)?'':' off');
+    chip.dataset.team=name; chip.textContent=name;
+    chip.style.cssText=`background:${c.bg};color:${c.tx};border-color:${c.bd}`;
+    chip.addEventListener('click',()=>{
+      const idx=selectedTeams.indexOf(name);
+      if(idx>=0){selectedTeams.splice(idx,1);chip.classList.add('off');}
+      else{selectedTeams.push(name);chip.classList.remove('off');}
+      updateCountNote();
+    });
+    grid.appendChild(chip);
+  });
+  updateCountNote();
+}
+initTeams();
+</script>
+</body>
+</html>

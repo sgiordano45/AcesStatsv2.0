@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Practice Scheduler - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --going-bg: #d1fae5; --going-border: #10b981; --going-text: #065f46;
+    --maybe-bg: #fef3c7; --maybe-border: #f59e0b; --maybe-text: #92400e;
+    --no-bg: #fee2e2;    --no-border: #ef4444;    --no-text: #991b1b;
+    --none-bg: #f1f5f9;  --none-border: #cbd5e1;  --none-text: #64748b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  }
+  #root { min-height: 100vh; }
+
+  .loading-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex; align-items: center; justify-content: center; z-index: 9999;
+  }
+  .loading-overlay.hidden { display: none; }
+  .softball-spinner::before {
+    content: '\26BE';
+    font-size: 80px;
+    animation: spin 1.5s ease-in-out infinite;
+    display: block;
+  }
+  @keyframes spin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+  }
+
+  /* Modal backdrop */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 1rem;
+  }
+  .modal-box {
+    background: white; border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    width: 100%; max-width: 560px;
+    max-height: 90vh; overflow-y: auto;
+    padding: 2rem;
+  }
+  .modal-box.wide { max-width: 900px; }
+
+  /* Slot time picker row */
+  .slot-row {
+    display: flex; gap: 0.5rem; align-items: center;
+    margin-bottom: 0.75rem;
+  }
+  .slot-row input { flex: 1; }
+  .slot-remove-btn {
+    background: #fee2e2; color: #991b1b; border: none;
+    border-radius: 8px; padding: 0.5rem 0.75rem;
+    cursor: pointer; font-size: 0.9rem; font-weight: 700;
+    transition: background 0.2s;
+  }
+  .slot-remove-btn:hover { background: #fecaca; }
+
+  /* RSVP chip buttons */
+  .rsvp-chip {
+    padding: 0.5rem 1.1rem; border-radius: 999px;
+    border: 2px solid transparent; cursor: pointer;
+    font-size: 0.85rem; font-weight: 700;
+    transition: all 0.15s;
+  }
+  .rsvp-chip.going   { background: var(--going-bg);  border-color: var(--going-border);  color: var(--going-text); }
+  .rsvp-chip.maybe   { background: var(--maybe-bg);  border-color: var(--maybe-border);  color: var(--maybe-text); }
+  .rsvp-chip.no      { background: var(--no-bg);     border-color: var(--no-border);     color: var(--no-text); }
+  .rsvp-chip.unset   { background: var(--none-bg);   border-color: var(--none-border);   color: var(--none-text); }
+  .rsvp-chip.selected { transform: scale(1.08); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+
+  /* Results grid */
+  .grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .results-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 0.82rem; min-width: 420px;
+  }
+  .results-table th {
+    background: #f8fafc; padding: 0.6rem 0.75rem;
+    text-align: center; font-weight: 700; color: var(--text-dark);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+  }
+  .results-table th.name-col { text-align: left; min-width: 130px; }
+  .results-table td {
+    padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9;
+    text-align: center;
+  }
+  .results-table td.name-cell { text-align: left; font-weight: 600; color: var(--text-dark); }
+  .results-table tr:last-child td { border-bottom: none; }
+  .results-table tr:hover td { background: #f8fafc; }
+
+  .cell-going { background: var(--going-bg);  color: var(--going-text);  font-weight: 700; border-radius: 6px; padding: 3px 8px; display: inline-block; }
+  .cell-maybe { background: var(--maybe-bg);  color: var(--maybe-text);  font-weight: 700; border-radius: 6px; padding: 3px 8px; display: inline-block; }
+  .cell-no    { background: var(--no-bg);     color: var(--no-text);     font-weight: 700; border-radius: 6px; padding: 3px 8px; display: inline-block; }
+  .cell-none  { color: #cbd5e1; font-size: 0.75rem; }
+
+  .slot-summary-bar {
+    display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.3rem;
+  }
+  .summary-pill {
+    font-size: 0.72rem; font-weight: 700; padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .pill-going { background: var(--going-bg); color: var(--going-text); }
+  .pill-maybe { background: var(--maybe-bg); color: var(--maybe-text); }
+  .pill-no    { background: var(--no-bg);    color: var(--no-text); }
+
+  /* Status badges */
+  .badge { display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+  .badge-open     { background: #dbeafe; color: #1e40af; }
+  .badge-closed   { background: #f1f5f9; color: #475569; }
+  .badge-confirmed{ background: var(--going-bg); color: var(--going-text); }
+
+  /* Misc form */
+  .form-label { display: block; font-weight: 600; color: var(--text-dark);
+    margin-bottom: 0.35rem; font-size: 0.9rem; }
+  .form-input {
+    width: 100%; padding: 0.6rem 0.85rem; border-radius: 8px;
+    border: 1.5px solid var(--border-color); font-size: 0.95rem;
+    color: var(--text-dark); background: #fff;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { outline: none; border-color: var(--primary-color); }
+  .form-group { margin-bottom: 1.1rem; }
+
+  .btn {
+    padding: 0.65rem 1.4rem; border-radius: 10px; border: none;
+    font-size: 0.95rem; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem;
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary   { background: linear-gradient(135deg, #2d5016, #1a6b4a); color: white; box-shadow: 0 3px 10px rgba(45,80,22,0.25); }
+  .btn-primary:hover:not(:disabled)   { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(45,80,22,0.35); }
+  .btn-danger    { background: #fee2e2; color: #991b1b; }
+  .btn-danger:hover:not(:disabled)    { background: #fecaca; }
+  .btn-ghost     { background: #f1f5f9; color: var(--text-dark); }
+  .btn-ghost:hover:not(:disabled)     { background: #e2e8f0; }
+  .btn-confirm   { background: var(--going-bg); color: var(--going-text); border: 2px solid var(--going-border); }
+  .btn-confirm:hover:not(:disabled)   { background: #a7f3d0; }
+  .btn-sm { padding: 0.4rem 0.9rem; font-size: 0.82rem; }
+
+  /* Poll card */
+  .poll-card {
+    background: var(--card-bg); border-radius: 16px;
+    box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+    margin-bottom: 1.25rem; overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .poll-card:hover { box-shadow: var(--shadow-md); }
+  .poll-card-header {
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+  }
+  .poll-card-body { padding: 1.25rem 1.5rem; }
+  .poll-title { font-size: 1.1rem; font-weight: 800; color: var(--text-dark); margin: 0 0 0.3rem; }
+  .poll-meta  { font-size: 0.8rem; color: var(--text-light); }
+
+  /* Confirmed slot highlight */
+  .confirmed-slot-banner {
+    background: var(--going-bg); border: 2px solid var(--going-border);
+    border-radius: 10px; padding: 0.85rem 1.1rem;
+    color: var(--going-text); font-weight: 700; font-size: 0.95rem;
+    display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem;
+  }
+
+  /* Team selector tabs */
+  .team-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .team-tab {
+    padding: 0.5rem 1.2rem; border-radius: 999px; border: 2px solid var(--border-color);
+    background: white; font-weight: 700; cursor: pointer; font-size: 0.88rem;
+    color: var(--text-light); transition: all 0.15s;
+  }
+  .team-tab.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 3rem 1rem;
+    background: var(--card-bg); border-radius: 16px;
+    box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+  }
+  .empty-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+  .empty-title { font-size: 1.1rem; font-weight: 700; color: var(--text-dark); margin: 0 0 0.4rem; }
+  .empty-sub   { font-size: 0.9rem; color: var(--text-light); margin: 0; }
+
+  .page-header {
+    background: linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%);
+    padding: 2rem 1.5rem 1.75rem; color: white;
+  }
+  .page-header h1 { margin: 0 0 0.3rem; font-size: 1.6rem; font-weight: 800; }
+  .page-header p  { margin: 0; opacity: 0.85; font-size: 0.95rem; }
+  .page-content   { max-width: 860px; margin: 0 auto; padding: 1.75rem 1.25rem 4rem; }
+
+  @media (max-width: 600px) {
+    .poll-card-header { flex-direction: column; }
+    .modal-box { padding: 1.25rem; }
+    .page-header { padding: 1.5rem 1rem 1.25rem; }
+    .page-header h1 { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="softball-spinner"></div>
+</div>
+<div id="root"></div>
+
+<!-- ============================
+     REACT APP
+============================= -->
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useCallback } = React;
+
+// ---- helpers ----
+function formatDeadline(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+function formatSlotLabel(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+function isPast(ts) {
+  if (!ts) return false;
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d < new Date();
+}
+function genId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+const ANSWER_LABEL = { going: 'Going', maybe: 'Maybe', no: "Can't" };
+const ANSWER_EMOJI = { going: '✅', maybe: '🙏', no: '❌' };
+
+// Emoji constants — must be JS string expressions, not bare JSX text, to render correctly
+const E = {
+  back:      '←',
+  bullet:    '•',
+  calendar:  '🗓️',
+  check:     '✅',
+  clipboard: '📋',
+  date:      '📅',
+  team:      '👥',
+  pin:       '📍',
+  chat:      '💬',
+  pencil:    '✏️',
+  star:      '★',
+  ball:      '🏀',
+  chart:     '📊',
+  lock:      '🔒',
+  trash:     '🗑️',
+  rocket:    '🚀',
+  tennis:    '🎾',
+  arrowUp:   '▲',
+  clock:     '⏰',
+};
+
+// ---- StatusBadge ----
+function StatusBadge({ status }) {
+  if (status === 'open')      return <span className="badge badge-open">🟢 Open</span>;
+  if (status === 'confirmed') return <span className="badge badge-confirmed">✅ Confirmed</span>;
+  return <span className="badge badge-closed">🔒 Closed</span>;
+}
+
+// ---- SlotSummaryBar ----
+function SlotSummaryBar({ responses, slotId }) {
+  let going = 0, maybe = 0, no = 0;
+  Object.values(responses).forEach(r => {
+    const a = r.answers?.[slotId];
+    if (a === 'going') going++;
+    else if (a === 'maybe') maybe++;
+    else if (a === 'no') no++;
+  });
+  return (
+    <div className="slot-summary-bar">
+      <span className="summary-pill pill-going">✅ {going} Going</span>
+      <span className="summary-pill pill-maybe">🙏 {maybe} Maybe</span>
+      <span className="summary-pill pill-no">❌ {no} No</span>
+    </div>
+  );
+}
+
+// ---- ResultsGrid ----
+function ResultsGrid({ poll, responses, roster }) {
+  // Build sorted responder list: rostered first, then others
+  const rosterUids = new Set((roster || []).map(p => p.uid).filter(Boolean));
+  const responderUids = Object.keys(responses);
+
+  // Merge: roster members first (show even if no response), then non-roster responders
+  const rosterRows = (roster || []).map(p => ({
+    uid: p.uid || p.legacyId || p.name,
+    name: p.displayName || p.name,
+    response: p.uid ? responses[p.uid] : null
+  }));
+  const extraRows = responderUids
+    .filter(uid => !rosterUids.has(uid))
+    .map(uid => ({ uid, name: responses[uid].displayName || uid, response: responses[uid] }));
+
+  const allRows = [...rosterRows, ...extraRows];
+  if (allRows.length === 0) {
+    return <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginTop: '0.5rem' }}>No responses yet.</p>;
+  }
+
+  return (
+    <div className="grid-wrap">
+      <table className="results-table">
+        <thead>
+          <tr>
+            <th className="name-col">Player</th>
+            {poll.slots.map(slot => (
+              <th key={slot.id} style={poll.confirmedSlotId === slot.id ? { background: '#d1fae5', color: '#065f46' } : {}}>
+                {slot.label || formatSlotLabel(slot.dateTime)}
+                {poll.confirmedSlotId === slot.id && <div style={{ fontSize: '0.7rem', marginTop: 2 }}>★ Confirmed</div>}
+              </th>
+            ))}
+          </tr>
+          <tr style={{ background: '#f8fafc' }}>
+            <td className="name-cell" style={{ fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-light)', paddingTop: '0.3rem', paddingBottom: '0.3rem' }}>Totals</td>
+            {poll.slots.map(slot => {
+              let g = 0, m = 0;
+              Object.values(responses).forEach(r => {
+                if (r.answers?.[slot.id] === 'going') g++;
+                if (r.answers?.[slot.id] === 'maybe') m++;
+              });
+              return (
+                <td key={slot.id} style={{ paddingTop: '0.3rem', paddingBottom: '0.3rem' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--going-text)', fontWeight: 700 }}>✅ {g}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--maybe-text)', fontWeight: 700 }}>🙏 {m}</div>
+                </td>
+              );
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {allRows.map(row => (
+            <tr key={row.uid}>
+              <td className="name-cell">{row.name}</td>
+              {poll.slots.map(slot => {
+                const ans = row.response?.answers?.[slot.id];
+                if (!ans) return <td key={slot.id}><span className="cell-none">—</span></td>;
+                return (
+                  <td key={slot.id}>
+                    <span className={`cell-${ans}`}>{ANSWER_EMOJI[ans]} {ANSWER_LABEL[ans]}</span>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ---- RSVPModal ----
+function RSVPModal({ poll, existing, onSave, onClose, saving }) {
+  const initAnswers = {};
+  poll.slots.forEach(s => { initAnswers[s.id] = existing?.answers?.[s.id] || null; });
+  const [answers, setAnswers] = useState(initAnswers);
+
+  const setAnswer = (slotId, val) => setAnswers(prev => ({ ...prev, [slotId]: val }));
+  const allAnswered = poll.slots.every(s => answers[s.id] !== null);
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box" onClick={e => e.stopPropagation()}>
+        <h2 style={{ margin: '0 0 0.25rem', fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-dark)' }}>
+          RSVP: {poll.title}
+        </h2>
+        {poll.location && <p style={{ margin: '0 0 1.25rem', color: 'var(--text-light)', fontSize: '0.88rem' }}>📍 {poll.location}</p>}
+        {!poll.location && <div style={{ marginBottom: '1.25rem' }} />}
+
+        {poll.notes && (
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '0.7rem 1rem', marginBottom: '1.1rem', fontSize: '0.87rem', color: '#166534' }}>
+            {E.clipboard} {poll.notes}
+          </div>
+        )}
+
+        <p style={{ fontWeight: 700, color: 'var(--text-dark)', margin: '0 0 0.75rem', fontSize: '0.93rem' }}>
+          Respond to each time slot:
+        </p>
+
+        {poll.slots.map(slot => (
+          <div key={slot.id} style={{ marginBottom: '1.1rem', padding: '1rem', background: '#f8fafc', borderRadius: 12, border: '1px solid var(--border-color)' }}>
+            <div style={{ fontWeight: 700, color: 'var(--text-dark)', marginBottom: '0.6rem', fontSize: '0.93rem' }}>
+              {E.date} {slot.label || formatSlotLabel(slot.dateTime)}
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {['going', 'maybe', 'no'].map(val => (
+                <button
+                  key={val}
+                  className={`rsvp-chip ${val}${answers[slot.id] === val ? ' selected' : ''}`}
+                  onClick={() => setAnswer(slot.id, val)}
+                >
+                  {ANSWER_EMOJI[val]} {ANSWER_LABEL[val]}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.25rem', flexWrap: 'wrap' }}>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button
+            className="btn btn-primary"
+            disabled={!allAnswered || saving}
+            onClick={() => onSave(answers)}
+          >
+            {saving ? 'Saving...' : '💬 Submit RSVP'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- ConfirmSlotModal ----
+function ConfirmSlotModal({ poll, responses, onConfirm, onClose, saving }) {
+  const [selected, setSelected] = useState(null);
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box" onClick={e => e.stopPropagation()}>
+        <h2 style={{ margin: '0 0 1rem', fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-dark)' }}>
+          Confirm a Time Slot
+        </h2>
+        <p style={{ margin: '0 0 1.1rem', color: 'var(--text-light)', fontSize: '0.9rem' }}>
+          Select the slot you want to confirm. All rostered players will be notified.
+        </p>
+
+        {poll.slots.map(slot => (
+          <div
+            key={slot.id}
+            onClick={() => setSelected(slot.id)}
+            style={{
+              padding: '0.9rem 1.1rem', borderRadius: 12, marginBottom: '0.75rem',
+              border: `2px solid ${selected === slot.id ? 'var(--going-border)' : 'var(--border-color)'}`,
+              background: selected === slot.id ? 'var(--going-bg)' : '#f8fafc',
+              cursor: 'pointer', transition: 'all 0.15s'
+            }}
+          >
+            <div style={{ fontWeight: 700, color: 'var(--text-dark)', marginBottom: '0.4rem' }}>
+              {slot.label || formatSlotLabel(slot.dateTime)}
+            </div>
+            <SlotSummaryBar responses={responses} slotId={slot.id} />
+          </div>
+        ))}
+
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.25rem', flexWrap: 'wrap' }}>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button
+            className="btn btn-confirm"
+            disabled={!selected || saving}
+            onClick={() => onConfirm(selected)}
+          >
+            {saving ? 'Confirming...' : '✅ Confirm This Slot'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- CreatePollModal ----
+function CreatePollModal({ teams, defaultTeam, onSave, onClose, saving }) {
+  const [title, setTitle]       = useState('');
+  const [location, setLocation] = useState('');
+  const [notes, setNotes]       = useState('');
+  const [teamId, setTeamId]     = useState(defaultTeam || (teams[0]?.id || ''));
+  const [deadline, setDeadline] = useState('');
+  const [slots, setSlots]       = useState([{ id: genId(), dateTime: '' }, { id: genId(), dateTime: '' }]);
+
+  const addSlot = () => {
+    if (slots.length >= 5) return;
+    setSlots(prev => [...prev, { id: genId(), dateTime: '' }]);
+  };
+  const removeSlot = (id) => setSlots(prev => prev.filter(s => s.id !== id));
+  const updateSlot = (id, val) => setSlots(prev => prev.map(s => s.id === id ? { ...s, dateTime: val } : s));
+
+  const valid = title.trim() && deadline && slots.filter(s => s.dateTime).length >= 1;
+
+  const handleSave = () => {
+    const filledSlots = slots
+      .filter(s => s.dateTime)
+      .map(s => ({
+        id: s.id,
+        dateTime: s.dateTime,
+        label: formatSlotLabel(s.dateTime)
+      }));
+    onSave({ title: title.trim(), location: location.trim(), notes: notes.trim(), teamId, deadline, slots: filledSlots });
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box" onClick={e => e.stopPropagation()}>
+        <h2 style={{ margin: '0 0 1.25rem', fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-dark)' }}>
+          {E.calendar} Create Practice Poll
+        </h2>
+
+        {teams.length > 1 && (
+          <div className="form-group">
+            <label className="form-label">Team</label>
+            <select className="form-input" value={teamId} onChange={e => setTeamId(e.target.value)}>
+              {teams.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+            </select>
+          </div>
+        )}
+
+        <div className="form-group">
+          <label className="form-label">Poll Title *</label>
+          <input className="form-input" placeholder="e.g. Weekend Practice" value={title} onChange={e => setTitle(e.target.value)} />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Location (optional)</label>
+          <input className="form-input" placeholder="e.g. Field 3 at Mountainside" value={location} onChange={e => setLocation(e.target.value)} />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Notes (optional)</label>
+          <input className="form-input" placeholder="e.g. Bring batting helmets" value={notes} onChange={e => setNotes(e.target.value)} />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Response Deadline *</label>
+          <input className="form-input" type="datetime-local" value={deadline} onChange={e => setDeadline(e.target.value)} />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label" style={{ marginBottom: '0.6rem' }}>
+            Time Slots * <span style={{ color: 'var(--text-light)', fontWeight: 400 }}>(up to 5)</span>
+          </label>
+          {slots.map((slot, i) => (
+            <div className="slot-row" key={slot.id}>
+              <input
+                className="form-input"
+                type="datetime-local"
+                value={slot.dateTime}
+                onChange={e => updateSlot(slot.id, e.target.value)}
+                placeholder={`Slot ${i + 1}`}
+              />
+              {slots.length > 1 && (
+                <button className="slot-remove-btn" onClick={() => removeSlot(slot.id)}>✕</button>
+              )}
+            </div>
+          ))}
+          {slots.length < 5 && (
+            <button className="btn btn-ghost btn-sm" onClick={addSlot} style={{ marginTop: '0.25rem' }}>
+              + Add Slot
+            </button>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" disabled={!valid || saving} onClick={handleSave}>
+            {saving ? 'Creating...' : '🚀 Create & Notify Team'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- PollCard ----
+function PollCard({ poll, responses, roster, currentUser, canManage, onRSVP, onConfirm, onClose, onDelete, onRefreshResponses }) {
+  const [expanded, setExpanded] = useState(false);
+  const myResponse = responses[currentUser?.uid];
+  const deadline = poll.deadline?.toDate ? poll.deadline.toDate() : new Date(poll.deadline);
+  const deadlinePast = deadline < new Date();
+  const canRespond = poll.status === 'open' && !deadlinePast;
+  const confirmedSlot = poll.slots?.find(s => s.id === poll.confirmedSlotId);
+
+  const responseCount = Object.keys(responses).length;
+
+  return (
+    <div className="poll-card">
+      <div className="poll-card-header">
+        <div style={{ flex: 1 }}>
+          <p className="poll-title">{poll.title}</p>
+          <p className="poll-meta">
+            {poll.teamId && <span style={{ textTransform: 'capitalize', marginRight: 8 }}>
+              {E.team} {poll.teamId} team
+            </span>}
+            {poll.location && <span style={{ marginRight: 8 }}>{E.pin} {poll.location}</span>}
+            {deadline && (
+              <span>{E.clock} Deadline: {deadline.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+            )}
+          </p>
+          <p className="poll-meta" style={{ marginTop: 4 }}>
+            {responseCount} response{responseCount !== 1 ? 's' : ''}
+            {myResponse && <span style={{ marginLeft: 8, color: 'var(--going-text)', fontWeight: 700 }}>✓ You responded</span>}
+          </p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem', flexShrink: 0 }}>
+          <StatusBadge status={poll.status} />
+          {canRespond && (
+            <button className="btn btn-primary btn-sm" onClick={() => onRSVP(poll)}>
+              {myResponse ? '✏️ Edit RSVP' : '💬 RSVP'}
+            </button>
+          )}
+          {canManage && poll.status === 'open' && (
+            <button className="btn btn-confirm btn-sm" onClick={() => onConfirm(poll)}>
+              {E.star} Confirm Slot
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="poll-card-body">
+        {/* Confirmed banner */}
+        {poll.status === 'confirmed' && confirmedSlot && (
+          <div className="confirmed-slot-banner">
+            {E.ball} Practice confirmed: {confirmedSlot.label || formatSlotLabel(confirmedSlot.dateTime)}
+            {poll.location && <span> • {poll.location}</span>}
+          </div>
+        )}
+
+        {/* Slot summaries for players */}
+        {!canManage && (
+          <div>
+            {(poll.slots || []).map(slot => (
+              <div key={slot.id} style={{ marginBottom: '0.75rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-dark)', marginBottom: '0.3rem' }}>
+                  {E.date} {slot.label || formatSlotLabel(slot.dateTime)}
+                </div>
+                <SlotSummaryBar responses={responses} slotId={slot.id} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Captain view: toggle grid */}
+        {canManage && (
+          <div>
+            <button
+              className="btn btn-ghost btn-sm"
+              style={{ marginBottom: '0.85rem' }}
+              onClick={() => {
+                if (!expanded) onRefreshResponses(poll.id);
+                setExpanded(e => !e);
+              }}
+            >
+              {expanded ? '▲ Hide Grid' : '📊 View Response Grid'}
+            </button>
+            {expanded && (
+              <ResultsGrid poll={poll} responses={responses} roster={roster} />
+            )}
+          </div>
+        )}
+
+        {/* Captain management actions */}
+        {canManage && (
+          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginTop: '1rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border-color)' }}>
+            {poll.status === 'open' && (
+              <button className="btn btn-ghost btn-sm" onClick={() => onClose(poll.id)}>
+                🔒 Close Poll
+              </button>
+            )}
+            <button className="btn btn-danger btn-sm" onClick={() => {
+              if (window.confirm('Delete this poll? This cannot be undone.')) onDelete(poll.id);
+            }}>
+              🗑️ Delete
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---- Main App ----
+function PracticePollApp() {
+  const [loading, setLoading]             = useState(true);
+  const [currentUser, setCurrentUser]     = useState(null);
+  const [userProfile, setUserProfile]     = useState(null);
+  const [polls, setPolls]                 = useState([]);
+  const [responses, setResponses]         = useState({}); // { pollId: { uid: responseDoc } }
+  const [roster, setRoster]               = useState([]); // for grid
+  const [activeTeam, setActiveTeam]       = useState(null);
+  const [captainTeams, setCaptainTeams]   = useState([]);
+  const [playerTeam, setPlayerTeam]       = useState(null);
+
+  const [showCreate, setShowCreate]       = useState(false);
+  const [rsvpPoll, setRsvpPoll]           = useState(null);
+  const [confirmPoll, setConfirmPoll]     = useState(null);
+  const [saving, setSaving]               = useState(false);
+  const [error, setError]                 = useState(null);
+
+  // --- auth init (mirrors roster-management pattern) ---
+  useEffect(() => {
+    window.PollApp_init = async (user) => {
+      try {
+        setCurrentUser(user);
+
+        const [seasonData, teamsData, profileResult] = await Promise.all([
+          window.PollFirebase.getCurrentSeason(),
+          window.PollFirebase.getAllTeams(),
+          window.PollFirebase.getUserProfile(user.uid)
+        ]);
+
+        const profile = profileResult?.success ? profileResult.data : (profileResult || {});
+        setUserProfile(profile);
+
+        const allTeamIds = teamsData.map(t => t.name || t.id || t).filter(t => t && t.toLowerCase() !== 'kings').sort();
+        const cTeams = [];
+        const role = profile.userRole || profile.role;
+
+        if (role === 'admin' || role === 'league-staff') {
+          allTeamIds.forEach(t => cTeams.push({ id: t.toLowerCase(), label: capitalize(t) }));
+        } else {
+          if (profile.teamRoles) {
+            Object.entries(profile.teamRoles).forEach(([teamId, teamRole]) => {
+              if ((teamRole.role === 'captain' || teamRole.role === 'team-staff') && teamRole.status === 'active') {
+                cTeams.push({ id: teamId, label: capitalize(teamId) });
+              }
+            });
+          }
+          if (profile.isCaptain && profile.linkedTeam && !cTeams.find(t => t.id === profile.linkedTeam)) {
+            cTeams.push({ id: profile.linkedTeam, label: capitalize(profile.linkedTeam) });
+          }
+        }
+        setCaptainTeams(cTeams);
+
+        const pTeam = profile.linkedTeam || null;
+        setPlayerTeam(pTeam);
+        setActiveTeam(cTeams[0]?.id || pTeam);
+
+      } catch(e) {
+        console.error('Poll init error:', e);
+        setError('Failed to load. Please refresh.');
+      } finally {
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        setLoading(false);
+      }
+    };
+
+    if (window.pollCurrentUser) window.PollApp_init(window.pollCurrentUser);
+  }, []);
+
+  // Load polls when activeTeam changes
+  useEffect(() => {
+    if (!activeTeam || !window.PollFirebase) return;
+    loadPolls(activeTeam);
+  }, [activeTeam]);
+
+  async function loadPolls(teamId) {
+    try {
+      const data = await window.PollFirebase.getPolls(teamId);
+      setPolls(data);
+      // Load responses for all polls
+      const rMap = {};
+      await Promise.all(data.map(async poll => {
+        rMap[poll.id] = await window.PollFirebase.getResponses(poll.id);
+      }));
+      setResponses(rMap);
+    } catch (e) {
+      console.error('Error loading polls:', e);
+      setError('Failed to load polls. Please refresh.');
+    }
+  }
+
+  async function refreshPollResponses(pollId) {
+    if (!window.PollFirebase) return;
+    const resp = await window.PollFirebase.getResponses(pollId);
+    setResponses(prev => ({ ...prev, [pollId]: resp }));
+    // Also load roster for grid
+    const season = window.PollFirebase.currentSeason;
+    if (season && activeTeam) {
+      const r = await window.PollFirebase.getRoster(season, activeTeam);
+      setRoster(r);
+    }
+  }
+
+  async function handleCreatePoll(data) {
+    setSaving(true);
+    try {
+      await window.PollFirebase.createPoll({
+        ...data,
+        createdBy: currentUser.uid,
+        createdByName: userProfile.displayName || currentUser.displayName || 'Captain'
+      });
+      setShowCreate(false);
+      await loadPolls(activeTeam);
+    } catch (e) {
+      console.error('Error creating poll:', e);
+      alert('Failed to create poll. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleRSVP(answers) {
+    if (!rsvpPoll) return;
+    setSaving(true);
+    try {
+      await window.PollFirebase.saveResponse(rsvpPoll.id, {
+        uid: currentUser.uid,
+        displayName: userProfile.displayName || currentUser.displayName || 'Player',
+        legacyPlayerId: userProfile.linkedPlayer || null,
+        answers
+      });
+      setRsvpPoll(null);
+      // Refresh this poll's responses
+      const resp = await window.PollFirebase.getResponses(rsvpPoll.id);
+      setResponses(prev => ({ ...prev, [rsvpPoll.id]: resp }));
+    } catch (e) {
+      console.error('Error saving RSVP:', e);
+      alert('Failed to save your RSVP. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleConfirmSlot(slotId) {
+    if (!confirmPoll) return;
+    setSaving(true);
+    try {
+      await window.PollFirebase.confirmSlot(confirmPoll.id, slotId, confirmPoll.teamId);
+      setConfirmPoll(null);
+      await loadPolls(activeTeam);
+    } catch (e) {
+      console.error('Error confirming slot:', e);
+      alert('Failed to confirm slot. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleClosePoll(pollId) {
+    try {
+      await window.PollFirebase.closePoll(pollId);
+      await loadPolls(activeTeam);
+    } catch (e) {
+      alert('Failed to close poll.');
+    }
+  }
+
+  async function handleDeletePoll(pollId) {
+    try {
+      await window.PollFirebase.deletePoll(pollId);
+      setPolls(prev => prev.filter(p => p.id !== pollId));
+    } catch (e) {
+      alert('Failed to delete poll.');
+    }
+  }
+
+  // --- Determine if user is a manager for a given poll ---
+  function canManagePoll(poll) {
+    if (!userProfile) return false;
+    if (userProfile.userRole === 'admin' || userProfile.userRole === 'league-staff') return true;
+    if (poll.createdBy === currentUser?.uid) return true;
+    return captainTeams.some(t => t.id === poll.teamId);
+  }
+
+  // Which teams to show in tab bar
+  const tabTeams = captainTeams.length > 0
+    ? captainTeams
+    : playerTeam ? [{ id: playerTeam, label: capitalize(playerTeam) }] : [];
+
+  const canCreateForActiveTeam = captainTeams.some(t => t.id === activeTeam)
+    || userProfile?.userRole === 'admin'
+    || userProfile?.userRole === 'league-staff';
+
+  if (loading) return null;
+
+  if (!currentUser) return null;
+
+  const visiblePolls = polls; // already filtered by team from Firestore query
+
+  return (
+    <>
+      <div className="page-header">
+        <a href="index.html" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: '0.85rem', display: 'inline-block', marginBottom: '0.75rem' }}>
+          {E.back} Home
+        </a>
+        <h1>{E.calendar} Practice Scheduler</h1>
+        <p>Captain posts time options {E.bullet} Players RSVP {E.bullet} Best slot gets confirmed</p>
+      </div>
+
+      <div className="page-content">
+        {error && (
+          <div style={{ background: '#fee2e2', color: '#991b1b', padding: '0.85rem 1.1rem', borderRadius: 10, marginBottom: '1.25rem', fontWeight: 600 }}>
+            {error}
+          </div>
+        )}
+
+        {/* Team tabs */}
+        {tabTeams.length > 1 && (
+          <div className="team-tabs">
+            {tabTeams.map(t => (
+              <button
+                key={t.id}
+                className={`team-tab${activeTeam === t.id ? ' active' : ''}`}
+                onClick={() => setActiveTeam(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Create button */}
+        {canCreateForActiveTeam && (
+          <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
+            <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+              + New Practice Poll
+            </button>
+          </div>
+        )}
+
+        {/* Poll list */}
+        {visiblePolls.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">{E.tennis}</div>
+            <p className="empty-title">No practice polls yet</p>
+            <p className="empty-sub">
+              {canCreateForActiveTeam
+                ? 'Create a poll to find the best time for your team to practice.'
+                : 'Your captain hasn\'t posted a practice poll yet. Check back soon!'}
+            </p>
+          </div>
+        ) : (
+          visiblePolls.map(poll => (
+            <PollCard
+              key={poll.id}
+              poll={poll}
+              responses={responses[poll.id] || {}}
+              roster={roster}
+              currentUser={currentUser}
+              canManage={canManagePoll(poll)}
+              onRSVP={setRsvpPoll}
+              onConfirm={setConfirmPoll}
+              onClose={handleClosePoll}
+              onDelete={handleDeletePoll}
+              onRefreshResponses={refreshPollResponses}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Modals */}
+      {showCreate && (
+        <CreatePollModal
+          teams={captainTeams.length > 0 ? captainTeams : [{ id: activeTeam, label: capitalize(activeTeam) }]}
+          defaultTeam={activeTeam}
+          onSave={handleCreatePoll}
+          onClose={() => setShowCreate(false)}
+          saving={saving}
+        />
+      )}
+      {rsvpPoll && (
+        <RSVPModal
+          poll={rsvpPoll}
+          existing={responses[rsvpPoll.id]?.[currentUser.uid]}
+          onSave={handleRSVP}
+          onClose={() => setRsvpPoll(null)}
+          saving={saving}
+        />
+      )}
+      {confirmPoll && (
+        <ConfirmSlotModal
+          poll={confirmPoll}
+          responses={responses[confirmPoll.id] || {}}
+          onConfirm={handleConfirmSlot}
+          onClose={() => setConfirmPoll(null)}
+          saving={saving}
+        />
+      )}
+    </>
+  );
+}
+
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<PracticePollApp />);
+</script>
+
+<!-- ============================
+     FIREBASE MODULE
+============================= -->
+<script type="module">
+import { onAuthChange, getUserProfile } from './firebase-auth.js';
+import { getCurrentSeason, getAllTeams } from './firebase-data.js';
+import { db } from './firebase-data.js';
+import {
+  collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc,
+  query, where, orderBy, serverTimestamp, Timestamp
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
+
+const functions = getFunctions();
+
+let currentSeasonId = null;
+
+// ---- helpers ----
+async function resolveCurrentSeason() {
+  if (currentSeasonId) return currentSeasonId;
+  try {
+    const s = await getCurrentSeason();
+    currentSeasonId = s?.id || s?.seasonId || null;
+  } catch(e) { console.warn('Could not load current season', e); }
+  return currentSeasonId;
+}
+
+// ---- Poll CRUD ----
+async function createPoll(data) {
+  const seasonId = await resolveCurrentSeason();
+  const deadlineTs = data.deadline ? Timestamp.fromDate(new Date(data.deadline)) : null;
+  const ref = await addDoc(collection(db, 'practicePolls'), {
+    createdBy: data.createdBy,
+    createdByName: data.createdByName,
+    teamId: data.teamId,
+    seasonId: seasonId || '',
+    title: data.title,
+    location: data.location || '',
+    notes: data.notes || '',
+    status: 'open',
+    deadline: deadlineTs,
+    confirmedSlotId: null,
+    slots: data.slots,
+    createdAt: serverTimestamp()
+  });
+
+  // Notify team via Cloud Function (best-effort)
+  try {
+    const notify = httpsCallable(functions, 'notifyPracticePollCreated');
+    await notify({ pollId: ref.id, teamId: data.teamId, title: data.title, createdByName: data.createdByName });
+  } catch(e) { console.warn('Notification skipped:', e.message); }
+
+  return ref.id;
+}
+
+async function getPolls(teamId) {
+  const q = query(
+    collection(db, 'practicePolls'),
+    where('teamId', '==', teamId),
+    orderBy('createdAt', 'desc')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+async function getResponses(pollId) {
+  const snap = await getDocs(collection(db, 'practicePolls', pollId, 'responses'));
+  const map = {};
+  snap.docs.forEach(d => { map[d.id] = d.data(); });
+  return map;
+}
+
+async function saveResponse(pollId, data) {
+  const ref = doc(db, 'practicePolls', pollId, 'responses', data.uid);
+  await updateDoc(ref, {
+    uid: data.uid,
+    displayName: data.displayName,
+    legacyPlayerId: data.legacyPlayerId || null,
+    answers: data.answers,
+    updatedAt: serverTimestamp()
+  }).catch(async () => {
+    // doc doesn't exist yet — use set
+    const { setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await setDoc(ref, {
+      uid: data.uid,
+      displayName: data.displayName,
+      legacyPlayerId: data.legacyPlayerId || null,
+      answers: data.answers,
+      updatedAt: serverTimestamp()
+    });
+  });
+}
+
+async function confirmSlot(pollId, slotId, teamId) {
+  // Get poll to read slot label
+  const pollSnap = await getDoc(doc(db, 'practicePolls', pollId));
+  const poll = pollSnap.data();
+  const slot = poll.slots.find(s => s.id === slotId);
+
+  await updateDoc(doc(db, 'practicePolls', pollId), {
+    status: 'confirmed',
+    confirmedSlotId: slotId
+  });
+
+  // Notify team
+  try {
+    const notify = httpsCallable(functions, 'notifyPracticePollConfirmed');
+    await notify({
+      pollId,
+      teamId,
+      title: poll.title,
+      slotLabel: slot?.label || '',
+      location: poll.location || ''
+    });
+  } catch(e) { console.warn('Confirmation notification skipped:', e.message); }
+}
+
+async function closePoll(pollId) {
+  await updateDoc(doc(db, 'practicePolls', pollId), { status: 'closed' });
+}
+
+async function deletePoll(pollId) {
+  // Delete response subcollection docs first
+  const respSnap = await getDocs(collection(db, 'practicePolls', pollId, 'responses'));
+  await Promise.all(respSnap.docs.map(d => deleteDoc(d.ref)));
+  await deleteDoc(doc(db, 'practicePolls', pollId));
+}
+
+async function getRoster(seasonId, teamId) {
+  try {
+    const rosterDocId = `${seasonId}-${teamId}`;
+    const snap = await getDoc(doc(db, 'rosters', rosterDocId));
+    if (!snap.exists()) return [];
+    const data = snap.data();
+    const players = data.players || data.roster || [];
+    return players.map(p => ({
+      uid: p.uid || p.authId || null,
+      legacyId: p.playerId || p.legacyId || null,
+      displayName: p.displayName || p.name || p.playerId || 'Unknown'
+    }));
+  } catch(e) {
+    console.warn('Could not load roster:', e);
+    return [];
+  }
+}
+
+// Expose to React (mirrors roster-management window.FirebaseRoster pattern)
+window.PollFirebase = {
+  createPoll, getPolls, getResponses, saveResponse,
+  confirmSlot, closePoll, deletePoll, getRoster,
+  getCurrentSeason, getAllTeams, getUserProfile,
+  get currentSeason() { return currentSeasonId; }
+};
+
+// Auth — just set window.pollCurrentUser and trigger React init
+onAuthChange((user) => {
+  console.log('Poll auth state changed:', user ? user.email : 'No user');
+  if (user) {
+    window.pollCurrentUser = user;
+    if (window.PollApp_init) window.PollApp_init(user);
+  } else {
+    window.location.href = 'signin.html';
+  }
+});
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+</body>
+</html>

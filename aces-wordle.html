@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aces Wordle - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  
+  /* Wordle colors */
+  --correct: #6aaa64;
+  --present: #c9b458;
+  --absent: #787c7e;
+  --tile-border: #d3d6da;
+  --tile-text: #ffffff;
+  --key-bg: #d3d6da;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.softball-spinner::before {
+  content: '⚾';
+  font-size: 60px;
+  animation: spin 1.5s ease-in-out infinite;
+  display: block;
+}
+
+@keyframes spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+
+/* Page Container */
+.page-container {
+  max-width: 550px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Page Header */
+.page-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.back-link {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(255,255,255,0.15);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.back-link:hover {
+  background: rgba(255,255,255,0.25);
+  color: white;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.page-header h1 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.page-header .subtitle {
+  opacity: 0.9;
+  font-size: 0.9rem;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.puzzle-date {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-top: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* User Stats Section */
+.user-stats-container {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.user-stats-content {
+  text-align: center;
+}
+
+.sign-in-prompt {
+  color: var(--text-light);
+  font-size: 0.85rem;
+}
+
+.sign-in-prompt a {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.user-greeting {
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.lifetime-stats {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.lifetime-stat {
+  text-align: center;
+}
+
+.lifetime-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  display: block;
+}
+
+.lifetime-label {
+  font-size: 0.65rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Game Board */
+.board-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.game-board {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.board-row {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.tile {
+  width: 52px;
+  height: 52px;
+  border: 2px solid var(--tile-border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: white;
+  transition: transform 0.1s ease;
+}
+
+.tile.filled {
+  border-color: #878a8c;
+  animation: pop 0.1s ease;
+}
+
+.tile.revealed {
+  color: var(--tile-text);
+  border: none;
+  animation: flip 0.5s ease forwards;
+}
+
+.tile.correct {
+  background: var(--correct);
+}
+
+.tile.present {
+  background: var(--present);
+}
+
+.tile.absent {
+  background: var(--absent);
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes flip {
+  0% { transform: rotateX(0deg); }
+  50% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+.board-row.shake {
+  animation: shake 0.5s ease;
+}
+
+/* Hint Section */
+.hint-section {
+  text-align: center;
+  margin-bottom: 1rem;
+  min-height: 24px;
+}
+
+.hint-text {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  background: #f7fafc;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.hint-text strong {
+  color: var(--primary-color);
+}
+
+/* Keyboard */
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.keyboard-row {
+  display: flex;
+  gap: 4px;
+}
+
+.key {
+  height: 50px;
+  min-width: 32px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 4px;
+  background: var(--key-bg);
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  transition: all 0.1s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.key:active {
+  transform: scale(0.95);
+}
+
+.key.wide {
+  min-width: 55px;
+  font-size: 0.75rem;
+}
+
+.key.correct {
+  background: var(--correct);
+  color: white;
+}
+
+.key.present {
+  background: var(--present);
+  color: white;
+}
+
+.key.absent {
+  background: var(--absent);
+  color: white;
+}
+
+/* Message */
+.message-container {
+  text-align: center;
+  margin-bottom: 1rem;
+  min-height: 28px;
+}
+
+.message {
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  display: inline-block;
+  animation: fadeIn 0.3s ease;
+}
+
+.message.error {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.message.success {
+  background: #c6f6d5;
+  color: #276749;
+}
+
+.message.info {
+  background: #e9d8fd;
+  color: #553c9a;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--card-bg);
+  color: var(--text-dark);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+}
+
+/* Game Over Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  padding: 1rem;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.3s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-light);
+}
+
+.answer-reveal {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.answer-word {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.answer-player {
+  font-size: 1rem;
+  color: var(--text-light);
+  margin-top: 0.25rem;
+}
+
+/* Stats Display */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.stat-box {
+  padding: 0.5rem;
+}
+
+.stat-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+}
+
+/* Guess Distribution */
+.distribution {
+  margin: 1rem 0;
+}
+
+.distribution h4 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  color: var(--text-dark);
+}
+
+.dist-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 4px;
+}
+
+.dist-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  width: 12px;
+}
+
+.dist-bar {
+  height: 20px;
+  background: var(--absent);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+  min-width: 20px;
+  border-radius: 2px;
+}
+
+.dist-bar.highlight {
+  background: var(--correct);
+}
+
+/* Share Section */
+.share-section {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.share-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--correct);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.share-btn:hover {
+  opacity: 0.9;
+}
+
+/* How to Play */
+.how-to-play {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.how-to-play h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.how-to-play-content {
+  display: none;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+.how-to-play.expanded .how-to-play-content {
+  display: block;
+}
+
+.example-tiles {
+  display: flex;
+  gap: 4px;
+  margin: 0.75rem 0;
+}
+
+.example-tile {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border-radius: 4px;
+  color: white;
+}
+
+.example-tile.correct { background: var(--correct); }
+.example-tile.present { background: var(--present); }
+.example-tile.absent { background: var(--absent); }
+.example-tile.empty { background: white; border: 2px solid var(--tile-border); color: var(--text-dark); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text-dark);
+  color: white;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Announcement Popup */
+.announcement-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  padding: 1rem;
+}
+
+.announcement-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.announcement-content {
+  background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+  border-radius: 16px;
+  padding: 1.75rem;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  animation: announceSlideUp 0.4s ease;
+  text-align: center;
+  position: relative;
+  border: 3px solid var(--accent-color);
+}
+
+@keyframes announceSlideUp {
+  from { transform: translateY(30px) scale(0.95); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.announcement-icon {
+  font-size: 3rem;
+  margin-bottom: 0.75rem;
+}
+
+.announcement-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0 0 0.75rem 0;
+}
+
+.announcement-body {
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+
+.announcement-body strong {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.announcement-highlight {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin: 1rem 0;
+  font-weight: 600;
+}
+
+.announcement-examples {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  background: #f7fafc;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin: 0.75rem 0;
+}
+
+.announcement-dismiss {
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.announcement-dismiss:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(45, 80, 22, 0.3);
+}
+
+/* Mobile Adjustments */
+@media (max-width: 480px) {
+  .tile {
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
+  }
+  
+  .key {
+    height: 45px;
+    min-width: 26px;
+    padding: 0 6px;
+    font-size: 0.8rem;
+  }
+  
+  .key.wide {
+    min-width: 48px;
+    font-size: 0.7rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<!-- Navigation placeholder -->
+<nav id="main-nav"></nav>
+
+<div class="page-container">
+  <div class="page-header">
+    <a href="games.html" class="back-link">← Games</a>
+    <h1>🔤 Aces Wordle</h1>
+    <p class="subtitle">Guess the player's last name</p>
+    <div class="puzzle-date" id="puzzleDate">Puzzle #1</div>
+  </div>
+
+  <!-- User Stats Section -->
+  <div class="user-stats-container" id="userStatsContainer">
+    <div class="user-stats-content">
+      <div class="sign-in-prompt">
+        <span>🔒</span>
+        <a href="signin.html">Sign in</a> to track your stats across devices
+      </div>
+    </div>
+  </div>
+
+  <!-- Message Area -->
+  <div class="message-container" id="messageContainer"></div>
+
+  <!-- Game Board -->
+  <div class="board-container">
+    <div class="game-board" id="gameBoard">
+      <!-- Rows generated by JS -->
+    </div>
+  </div>
+
+  <!-- Hint Section -->
+  <div class="hint-section" id="hintSection"></div>
+
+  <!-- Keyboard -->
+  <div class="keyboard" id="keyboard">
+    <div class="keyboard-row">
+      <button class="key" data-key="Q">Q</button>
+      <button class="key" data-key="W">W</button>
+      <button class="key" data-key="E">E</button>
+      <button class="key" data-key="R">R</button>
+      <button class="key" data-key="T">T</button>
+      <button class="key" data-key="Y">Y</button>
+      <button class="key" data-key="U">U</button>
+      <button class="key" data-key="I">I</button>
+      <button class="key" data-key="O">O</button>
+      <button class="key" data-key="P">P</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key" data-key="A">A</button>
+      <button class="key" data-key="S">S</button>
+      <button class="key" data-key="D">D</button>
+      <button class="key" data-key="F">F</button>
+      <button class="key" data-key="G">G</button>
+      <button class="key" data-key="H">H</button>
+      <button class="key" data-key="J">J</button>
+      <button class="key" data-key="K">K</button>
+      <button class="key" data-key="L">L</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key wide" data-key="ENTER">Enter</button>
+      <button class="key" data-key="Z">Z</button>
+      <button class="key" data-key="X">X</button>
+      <button class="key" data-key="C">C</button>
+      <button class="key" data-key="V">V</button>
+      <button class="key" data-key="B">B</button>
+      <button class="key" data-key="N">N</button>
+      <button class="key" data-key="M">M</button>
+      <button class="key wide" data-key="BACKSPACE">⌫</button>
+    </div>
+  </div>
+
+  <!-- Action Buttons (shown after game ends) -->
+  <div class="action-buttons" id="actionButtons" style="display: none;">
+    <button class="action-btn primary" onclick="showStats()">📊 Stats</button>
+    <button class="action-btn" onclick="shareResults()">📤 Share</button>
+  </div>
+
+  <!-- How to Play -->
+  <div class="how-to-play" id="howToPlay">
+    <h3 onclick="toggleHowToPlay()">📖 How to Play <span id="howToPlayToggle">▼</span></h3>
+    <div class="how-to-play-content">
+      <p>Guess the Aces player's <strong>last name</strong> in 6 tries.</p>
+      <p>After each guess, the tiles will change color to show how close you were:</p>
+      
+      <div class="example-tiles">
+        <div class="example-tile correct">S</div>
+        <div class="example-tile empty">M</div>
+        <div class="example-tile empty">I</div>
+        <div class="example-tile empty">T</div>
+        <div class="example-tile empty">H</div>
+      </div>
+      <p><strong>S</strong> is in the name and in the correct spot.</p>
+      
+      <div class="example-tiles">
+        <div class="example-tile empty">J</div>
+        <div class="example-tile present">O</div>
+        <div class="example-tile empty">N</div>
+        <div class="example-tile empty">E</div>
+        <div class="example-tile empty">S</div>
+      </div>
+      <p><strong>O</strong> is in the name but in a different spot.</p>
+      
+      <div class="example-tiles">
+        <div class="example-tile empty">B</div>
+        <div class="example-tile empty">R</div>
+        <div class="example-tile absent">O</div>
+        <div class="example-tile empty">W</div>
+        <div class="example-tile empty">N</div>
+      </div>
+      <p><strong>O</strong> is not in the name at all.</p>
+      
+      <p style="margin-top: 1rem;">A new puzzle is available each day at midnight!</p>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Modal -->
+<div class="modal-overlay" id="statsModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>📊 Statistics</h2>
+    </div>
+    
+    <div class="answer-reveal" id="answerReveal" style="display: none;">
+      <div class="answer-word" id="answerWord"></div>
+      <div class="answer-player" id="answerPlayer"></div>
+    </div>
+    
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-number" id="statPlayed">0</div>
+        <div class="stat-label">Played</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="statWinPct">0</div>
+        <div class="stat-label">Win %</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="statStreak">0</div>
+        <div class="stat-label">Streak</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="statMaxStreak">0</div>
+        <div class="stat-label">Max Streak</div>
+      </div>
+    </div>
+    
+    <div class="distribution">
+      <h4>Guess Distribution</h4>
+      <div id="distributionBars"></div>
+    </div>
+    
+    <div class="share-section">
+      <button class="share-btn" onclick="shareResults()">📤 Share Results</button>
+    </div>
+    
+    <div class="action-buttons" style="margin-top: 1rem;">
+      <button class="action-btn" onclick="closeStatsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Announcement Popup -->
+<div class="announcement-overlay" id="announcementOverlay">
+  <div class="announcement-content">
+    <div class="announcement-icon">📢</div>
+    <h2 class="announcement-title">Word List Expanding!</h2>
+    <div class="announcement-body">
+      <p>Starting on <strong id="announcementDay">Day XX</strong>, Aces Wordle will include more than just player last names!</p>
+      <div class="announcement-highlight">
+        🥎 Softball terms, plays & lingo incoming!
+      </div>
+      <div class="announcement-examples">
+        Examples: BUNT, STEAL, SLIDE, RELAY, and more...
+      </div>
+      <p style="margin-top: 0.75rem; font-size: 0.9rem;">Hints will help you know if it's a name or term!</p>
+    </div>
+    <button class="announcement-dismiss" onclick="dismissAnnouncement()">Got It!</button>
+  </div>
+</div>
+
+<script type="module">
+import { 
+  db, 
+  doc,
+  getDoc,
+  collection,
+  getDocs
+} from './firebase-config.js';
+
+import {
+  setDoc,
+  serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+import { getAllPlayerStatsOptimized } from './firebase-data.js';
+
+import {
+  getCurrentUser,
+  onAuthChange
+} from './firebase-auth.js';
+
+// ============================================
+// VERSION CHECK - Increment to clear old localStorage data
+// ============================================
+const DATA_VERSION = 2;
+const VERSION_KEY = 'acesWordle_dataVersion';
+
+(function checkDataVersion() {
+  const storedVersion = localStorage.getItem(VERSION_KEY);
+  if (!storedVersion || parseInt(storedVersion) < DATA_VERSION) {
+    console.log('🔄 Clearing old Aces Wordle data (version update)');
+    localStorage.removeItem('acesWordle_game');
+    localStorage.removeItem('acesWordle_stats');
+    localStorage.setItem(VERSION_KEY, String(DATA_VERSION));
+  }
+})();
+
+// ============================================
+// CONFIGURATION
+// ============================================
+const LAUNCH_YEAR = 2026;
+const LAUNCH_MONTH = 0; // January (0-indexed)
+const LAUNCH_DAY = 6;
+const MAX_GUESSES = 6;
+const PLAYER_NAME_RATIO = 0.5; // 50% player names, 50% softball words
+
+// Announcement Configuration
+// Set these values to control when the popup appears
+const ANNOUNCEMENT_CONFIG = {
+  enabled: true,                    // Set to false to disable announcement
+  showStartDay: 1,                  // First day to show announcement (inclusive)
+  showEndDay: 21,                   // Last day to show announcement (inclusive)
+  changeStartDay: 22,               // Day when expanded word list begins
+  storageKey: 'acesWordle_announcement_dismissed_v1'
+};
+
+// ============================================
+// SUBSTITUTE SEASON HELPER
+// ============================================
+function isSubstituteSeason(season) {
+  return season.sub === 'Yes' || season.sub === 'yes' || season.sub === true;
+}
+
+function hasNonSubSeason(player) {
+  if (!player.seasons) return false;
+  return Object.values(player.seasons).some(s => !isSubstituteSeason(s));
+}
+
+// ============================================
+// AUTH STATE
+// ============================================
+let currentUser = null;
+let userStats = null;
+
+// ============================================
+// GAME STATE
+// ============================================
+let allPlayers = [];
+let validLastNames = []; // Unique last names for valid guesses
+let lastNameToPlayer = {}; // Map last name to player info
+let softballWords = []; // Words from Firebase
+let allPuzzleWords = []; // Combined pool for puzzles
+let todaysPuzzle = null;
+let gameState = {
+  guesses: [],
+  currentGuess: '',
+  gameOver: false,
+  won: false
+};
+
+// ============================================
+// LOAD SOFTBALL WORDS FROM FIREBASE
+// ============================================
+async function loadSoftballWords() {
+  try {
+    const wordsRef = collection(db, 'wordleWords');
+    const snapshot = await getDocs(wordsRef);
+    
+    softballWords = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.enabled !== false) { // Include if enabled or not set
+        softballWords.push({
+          word: (data.word || '').toUpperCase(),
+          hint: data.hint || '',
+          category: data.category || 'general',
+          type: 'softball'
+        });
+      }
+    });
+    
+    console.log(`Loaded ${softballWords.length} softball words from Firebase`);
+  } catch (error) {
+    console.error('Error loading softball words:', error);
+    softballWords = [];
+  }
+}
+
+// ============================================
+// SEEDED RANDOM
+// ============================================
+function seededRandom(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function getDayNumber() {
+  const start = new Date(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY).setHours(0, 0, 0, 0);
+  const now = new Date().setHours(0, 0, 0, 0);
+  const daysSinceLaunch = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  return Math.max(1, daysSinceLaunch + 1);
+}
+
+function shuffleWithSeed(array, seed) {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    seed++;
+    const j = Math.floor(seededRandom(seed) * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+// ============================================
+// PUZZLE GENERATION
+// ============================================
+
+async function getUsedAnswers() {
+  try {
+    const snapshot = await getDocs(collection(db, 'wordleDailyPuzzles'));
+    const used = new Set();
+    snapshot.forEach(d => {
+      const answer = d.data().answer;
+      if (answer) used.add(answer.toUpperCase());
+    });
+    console.log(`📚 ${used.size} previously used answers loaded`);
+    return used;
+  } catch (error) {
+    console.error('Error loading used answers:', error);
+    return new Set();
+  }
+}
+function buildLastNameData() {
+  const lastNamePlayers = {};
+  
+  allPlayers.forEach(p => {
+    // Only include players with at least one non-sub season
+    if (!hasNonSubSeason(p)) return;
+    
+    // Only include players with 10+ career games
+    const careerGames = p.careerGames || p.career?.games || 0;
+    if (careerGames < 10) return;
+    
+    const fullName = p.name || p.playerName || '';
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length < 2) return;
+    
+    const lastName = parts[parts.length - 1].toUpperCase();
+    // Only letters
+    if (!/^[A-Z]+$/.test(lastName)) return;
+    
+    if (!lastNamePlayers[lastName]) {
+      lastNamePlayers[lastName] = [];
+    }
+    lastNamePlayers[lastName].push({
+      fullName,
+      firstName: parts.slice(0, -1).join(' ')
+    });
+  });
+  
+  // Include all last names (duplicates allowed)
+  validLastNames = Object.keys(lastNamePlayers);
+  
+  // Build lookup (for duplicates, store all players)
+  validLastNames.forEach(ln => {
+    lastNameToPlayer[ln] = lastNamePlayers[ln];
+  });
+  
+  console.log(`Built ${validLastNames.length} last names for puzzles`);
+}
+
+function buildPuzzlePool() {
+  // Build combined pool with type markers
+  allPuzzleWords = [];
+  
+  // Add player last names
+  validLastNames.forEach(lastName => {
+    allPuzzleWords.push({
+      word: lastName,
+      type: 'player',
+      players: lastNameToPlayer[lastName]
+    });
+  });
+  
+  // Add softball words
+  softballWords.forEach(sw => {
+    allPuzzleWords.push({
+      word: sw.word,
+      type: 'softball',
+      hint: sw.hint,
+      category: sw.category
+    });
+  });
+  
+  console.log(`Total puzzle pool: ${allPuzzleWords.length} words (${validLastNames.length} names, ${softballWords.length} softball)`);
+}
+
+function generateDailyPuzzle(usedAnswers = new Set()) {
+  const dayNum = getDayNumber();
+
+  // Use a FIXED seed so the pool order is always deterministic
+  const FIXED_SEED = 54321;
+  const shuffled = shuffleWithSeed(allPuzzleWords, FIXED_SEED);
+
+  // Starting from the day's natural index, walk forward until we find
+  // a word that hasn't been used in a previous puzzle.
+  const startIndex = (dayNum - 1) % shuffled.length;
+  let selected = null;
+  let skipped = 0;
+
+  for (let offset = 0; offset < shuffled.length; offset++) {
+    const candidate = shuffled[(startIndex + offset) % shuffled.length];
+    if (!usedAnswers.has(candidate.word.toUpperCase())) {
+      selected = candidate;
+      break;
+    }
+    skipped++;
+  }
+
+  if (!selected) {
+    // Every word has been used — just wrap to natural index (pool exhausted)
+    console.warn('⚠️ All words used — cycling from natural index');
+    selected = shuffled[startIndex];
+  } else if (skipped > 0) {
+    console.log(`⏭ Skipped ${skipped} already-used word(s); selected index ${(startIndex + skipped) % shuffled.length}`);
+  }
+
+  if (selected.type === 'player') {
+    const players = selected.players;
+    const playerNames = players.map(p => p.fullName);
+    return {
+      dayNum,
+      answer: selected.word,
+      type: 'player',
+      playerName: playerNames.join(' / '),
+      playerNames,
+      firstName: players[0].firstName,
+      hint: null
+    };
+  } else {
+    return {
+      dayNum,
+      answer: selected.word,
+      type: 'softball',
+      hint: selected.hint,
+      category: selected.category,
+      playerName: null,
+      playerNames: null,
+      firstName: null
+    };
+  }
+}
+
+// ============================================
+// FIREBASE PUZZLE STORAGE (Prevents repeats when adding words)
+// ============================================
+async function loadPuzzleFromFirebase(dayNum) {
+  try {
+    const puzzleRef = doc(db, 'wordleDailyPuzzles', String(dayNum));
+    const puzzleDoc = await getDoc(puzzleRef);
+    
+    if (puzzleDoc.exists()) {
+      const data = puzzleDoc.data();
+      console.log(`📅 Loaded puzzle #${dayNum} from Firebase: ${data.answer}`);
+      return {
+        dayNum: data.dayNum,
+        answer: data.answer,
+        type: data.type,
+        playerName: data.playerName || null,
+        playerNames: data.playerNames || null,
+        firstName: data.firstName || null,
+        hint: data.hint || null,
+        category: data.category || null
+      };
+    }
+  } catch (error) {
+    console.error('Error loading puzzle from Firebase:', error);
+  }
+  return null;
+}
+
+async function savePuzzleToFirebase(puzzle) {
+  try {
+    const puzzleRef = doc(db, 'wordleDailyPuzzles', String(puzzle.dayNum));
+    
+    // Build object excluding undefined values (Firebase doesn't allow undefined)
+    const puzzleData = {
+      dayNum: puzzle.dayNum,
+      answer: puzzle.answer,
+      type: puzzle.type,
+      createdAt: serverTimestamp()
+    };
+    
+    // Only add fields if they have values
+    if (puzzle.playerName) puzzleData.playerName = puzzle.playerName;
+    if (puzzle.playerNames) puzzleData.playerNames = puzzle.playerNames;
+    if (puzzle.firstName) puzzleData.firstName = puzzle.firstName;
+    if (puzzle.hint) puzzleData.hint = puzzle.hint;
+    if (puzzle.category) puzzleData.category = puzzle.category;
+    
+    await setDoc(puzzleRef, puzzleData);
+    console.log(`💾 Saved puzzle #${puzzle.dayNum} to Firebase: ${puzzle.answer}`);
+  } catch (error) {
+    console.error('Error saving puzzle to Firebase:', error);
+  }
+}
+
+async function getOrCreateDailyPuzzle() {
+  const dayNum = getDayNumber();
+
+  // If today's puzzle is already locked in Firebase, use it
+  const existingPuzzle = await loadPuzzleFromFirebase(dayNum);
+  if (existingPuzzle) {
+    return existingPuzzle;
+  }
+
+  // New day — fetch all previously used answers so we don't repeat
+  const usedAnswers = await getUsedAnswers();
+
+  const newPuzzle = generateDailyPuzzle(usedAnswers);
+  await savePuzzleToFirebase(newPuzzle);
+
+  return newPuzzle;
+}
+
+// ============================================
+// UI RENDERING
+// ============================================
+function renderBoard() {
+  const board = document.getElementById('gameBoard');
+  board.innerHTML = '';
+  
+  const wordLength = todaysPuzzle.answer.length;
+  
+  for (let row = 0; row < MAX_GUESSES; row++) {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'board-row';
+    rowDiv.id = `row-${row}`;
+    
+    for (let col = 0; col < wordLength; col++) {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.id = `tile-${row}-${col}`;
+      
+      // Fill in previous guesses
+      if (row < gameState.guesses.length) {
+        const guess = gameState.guesses[row];
+        const letter = guess.word[col] || '';
+        const status = guess.results[col];
+        tile.textContent = letter;
+        tile.classList.add('revealed', status);
+      }
+      // Fill in current guess
+      else if (row === gameState.guesses.length && col < gameState.currentGuess.length) {
+        tile.textContent = gameState.currentGuess[col];
+        tile.classList.add('filled');
+      }
+      
+      rowDiv.appendChild(tile);
+    }
+    
+    board.appendChild(rowDiv);
+  }
+}
+
+function updateKeyboard() {
+  const letterStatus = {};
+  
+  // Compile letter statuses from all guesses
+  gameState.guesses.forEach(guess => {
+    guess.word.split('').forEach((letter, i) => {
+      const status = guess.results[i];
+      const current = letterStatus[letter];
+      
+      // Priority: correct > present > absent
+      if (status === 'correct') {
+        letterStatus[letter] = 'correct';
+      } else if (status === 'present' && current !== 'correct') {
+        letterStatus[letter] = 'present';
+      } else if (status === 'absent' && !current) {
+        letterStatus[letter] = 'absent';
+      }
+    });
+  });
+  
+  // Update keyboard keys
+  document.querySelectorAll('.key').forEach(key => {
+    const letter = key.dataset.key;
+    if (letter.length === 1) {
+      key.classList.remove('correct', 'present', 'absent');
+      if (letterStatus[letter]) {
+        key.classList.add(letterStatus[letter]);
+      }
+    }
+  });
+}
+
+function showHint() {
+  const section = document.getElementById('hintSection');
+  const guessCount = gameState.guesses.length;
+  
+  if (gameState.gameOver || guessCount < 4) {
+    section.innerHTML = '';
+    return;
+  }
+  
+  // Show hint after 4 guesses
+  let hint = '';
+  if (guessCount >= 4) {
+    if (todaysPuzzle.type === 'player') {
+      // Find players with this last name and get a team they played for
+      const players = allPlayers.filter(p => {
+        const name = (p.name || p.playerName || '').toUpperCase();
+        return name.endsWith(' ' + todaysPuzzle.answer) || name.endsWith(todaysPuzzle.answer);
+      });
+      
+      const allTeams = new Set();
+      players.forEach(player => {
+        if (player.seasons) {
+          Object.values(player.seasons).forEach(s => {
+            if (!isSubstituteSeason(s) && s.team) {
+              allTeams.add(s.team);
+            }
+          });
+        }
+      });
+      
+      const teams = [...allTeams];
+      if (teams.length > 0) {
+        hint = `Hint: Played for <strong>${teams[0]}</strong>`;
+      }
+    } else {
+      // Softball word - show the hint/definition
+      if (todaysPuzzle.hint) {
+        hint = `Hint: <strong>${todaysPuzzle.hint}</strong>`;
+      } else if (todaysPuzzle.category) {
+        hint = `Hint: <strong>${todaysPuzzle.category}</strong> related`;
+      }
+    }
+  }
+  
+  if (hint) {
+    section.innerHTML = `<div class="hint-text">${hint}</div>`;
+  }
+}
+
+function showMessage(text, type = 'info', duration = 2000) {
+  const container = document.getElementById('messageContainer');
+  container.innerHTML = `<div class="message ${type}">${text}</div>`;
+  
+  if (duration > 0) {
+    setTimeout(() => {
+      container.innerHTML = '';
+    }, duration);
+  }
+}
+
+function showToast(text) {
+  const toast = document.getElementById('toast');
+  toast.textContent = text;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ============================================
+// GAME LOGIC
+// ============================================
+function handleKeyPress(key) {
+  if (gameState.gameOver) return;
+  
+  const wordLength = todaysPuzzle.answer.length;
+  
+  if (key === 'BACKSPACE') {
+    gameState.currentGuess = gameState.currentGuess.slice(0, -1);
+    renderBoard();
+  } else if (key === 'ENTER') {
+    submitGuess();
+  } else if (key.length === 1 && /^[A-Z]$/.test(key)) {
+    if (gameState.currentGuess.length < wordLength) {
+      gameState.currentGuess += key;
+      renderBoard();
+    }
+  }
+}
+
+function submitGuess() {
+  const wordLength = todaysPuzzle.answer.length;
+  const guess = gameState.currentGuess.toUpperCase();
+  
+  if (guess.length !== wordLength) {
+    showMessage(`Name must be ${wordLength} letters`, 'error');
+    shakeCurrentRow();
+    return;
+  }
+  
+  // Check if it's a valid last name (optional - can remove to allow any guess)
+  // For now, let's allow any alphabetic guess to make it more accessible
+  // if (!validLastNames.includes(guess) && guess !== todaysPuzzle.answer) {
+  //   showMessage('Not a valid player name', 'error');
+  //   shakeCurrentRow();
+  //   return;
+  // }
+  
+  // Calculate results
+  const results = evaluateGuess(guess, todaysPuzzle.answer);
+  
+  gameState.guesses.push({
+    word: guess,
+    results
+  });
+  gameState.currentGuess = '';
+  
+  // Animate reveal
+  revealGuess(gameState.guesses.length - 1, () => {
+    updateKeyboard();
+    showHint();
+    
+    // Check win/lose
+    if (guess === todaysPuzzle.answer) {
+      gameState.won = true;
+      gameState.gameOver = true;
+      
+      const messages = ['Genius!', 'Magnificent!', 'Impressive!', 'Splendid!', 'Great!', 'Phew!'];
+      showMessage(messages[Math.min(gameState.guesses.length - 1, 5)], 'success', 3000);
+      
+      endGame();
+    } else if (gameState.guesses.length >= MAX_GUESSES) {
+      gameState.gameOver = true;
+      // Show appropriate message based on puzzle type
+      const lossMessage = todaysPuzzle.type === 'player' 
+        ? todaysPuzzle.playerName 
+        : `${todaysPuzzle.answer} - ${todaysPuzzle.hint || 'Softball term'}`;
+      showMessage(lossMessage, 'info', 0);
+      endGame();
+    }
+    
+    saveGameState();
+  });
+}
+
+function evaluateGuess(guess, answer) {
+  const results = Array(answer.length).fill('absent');
+  const answerLetters = answer.split('');
+  const guessLetters = guess.split('');
+  
+  // First pass: mark correct letters
+  guessLetters.forEach((letter, i) => {
+    if (letter === answerLetters[i]) {
+      results[i] = 'correct';
+      answerLetters[i] = null; // Mark as used
+    }
+  });
+  
+  // Second pass: mark present letters
+  guessLetters.forEach((letter, i) => {
+    if (results[i] !== 'correct') {
+      const idx = answerLetters.indexOf(letter);
+      if (idx !== -1) {
+        results[i] = 'present';
+        answerLetters[idx] = null; // Mark as used
+      }
+    }
+  });
+  
+  return results;
+}
+
+function revealGuess(rowIndex, callback) {
+  const guess = gameState.guesses[rowIndex];
+  const wordLength = todaysPuzzle.answer.length;
+  
+  let revealed = 0;
+  
+  for (let i = 0; i < wordLength; i++) {
+    const tile = document.getElementById(`tile-${rowIndex}-${i}`);
+    
+    setTimeout(() => {
+      tile.textContent = guess.word[i];
+      tile.classList.add('revealed', guess.results[i]);
+      revealed++;
+      
+      if (revealed === wordLength && callback) {
+        setTimeout(callback, 250);
+      }
+    }, i * 300);
+  }
+}
+
+function shakeCurrentRow() {
+  const rowIndex = gameState.guesses.length;
+  const row = document.getElementById(`row-${rowIndex}`);
+  if (row) {
+    row.classList.add('shake');
+    setTimeout(() => row.classList.remove('shake'), 500);
+  }
+}
+
+function endGame() {
+  document.getElementById('actionButtons').style.display = 'flex';
+  updateLifetimeStats();
+  
+  // Show stats modal after short delay
+  setTimeout(() => showStats(), 1500);
+}
+
+// ============================================
+// STATS & SHARING
+// ============================================
+async function showStats() {
+  const modal = document.getElementById('statsModal');
+  
+  // Show answer if game over
+  const answerReveal = document.getElementById('answerReveal');
+  if (gameState.gameOver) {
+    answerReveal.style.display = 'block';
+    document.getElementById('answerWord').textContent = todaysPuzzle.answer;
+    
+    // Show player name or hint depending on puzzle type
+    const revealText = todaysPuzzle.type === 'player'
+      ? todaysPuzzle.playerName
+      : (todaysPuzzle.hint || 'Softball term');
+    document.getElementById('answerPlayer').textContent = revealText;
+  } else {
+    answerReveal.style.display = 'none';
+  }
+  
+  // Load stats from Firebase first, fall back to localStorage
+  let stats = await loadStatsFromFirebase();
+  if (!stats) {
+    stats = getLocalStats();
+  }
+  
+  document.getElementById('statPlayed').textContent = stats.gamesPlayed;
+  document.getElementById('statWinPct').textContent = stats.gamesPlayed > 0 
+    ? Math.round((stats.wins / stats.gamesPlayed) * 100) 
+    : 0;
+  document.getElementById('statStreak').textContent = stats.currentStreak;
+  document.getElementById('statMaxStreak').textContent = stats.maxStreak;
+  
+  // Distribution
+  const distBars = document.getElementById('distributionBars');
+  const maxDist = Math.max(...Object.values(stats.distribution), 1);
+  
+  distBars.innerHTML = '';
+  for (let i = 1; i <= 6; i++) {
+    const count = stats.distribution[i] || 0;
+    const pct = (count / maxDist) * 100;
+    const isHighlight = gameState.won && gameState.guesses.length === i;
+    
+    distBars.innerHTML += `
+      <div class="dist-row">
+        <span class="dist-label">${i}</span>
+        <div class="dist-bar ${isHighlight ? 'highlight' : ''}" style="width: ${Math.max(pct, 8)}%">${count}</div>
+      </div>
+    `;
+  }
+  
+  modal.classList.add('active');
+}
+
+function closeStatsModal() {
+  document.getElementById('statsModal').classList.remove('active');
+}
+
+function shareResults() {
+  if (!gameState.gameOver) return;
+  
+  const dayNum = todaysPuzzle.dayNum;
+  const guesses = gameState.won ? gameState.guesses.length : 'X';
+  
+  let grid = '';
+  gameState.guesses.forEach(guess => {
+    guess.results.forEach(result => {
+      if (result === 'correct') grid += '🟩';
+      else if (result === 'present') grid += '🟨';
+      else grid += '⬛';
+    });
+    grid += '\n';
+  });
+  
+  const text = `Aces Wordle #${dayNum} ${guesses}/${MAX_GUESSES}\n\n${grid.trim()}\n\nhttps://mountainsideaces.com/aces-wordle.html`;
+  
+  if (navigator.share) {
+    navigator.share({ text }).catch(() => {
+      copyToClipboard(text);
+    });
+  } else {
+    copyToClipboard(text);
+  }
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Copied to clipboard!');
+  }).catch(() => {
+    showToast('Could not copy');
+  });
+}
+
+// ============================================
+// LOCAL STORAGE
+// ============================================
+function getLocalStats() {
+  try {
+    const stored = localStorage.getItem('acesWordle_stats');
+    if (stored) return JSON.parse(stored);
+  } catch (e) {}
+  
+  return {
+    gamesPlayed: 0,
+    wins: 0,
+    currentStreak: 0,
+    maxStreak: 0,
+    distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
+    lastPlayedPuzzle: 0
+  };
+}
+
+function saveLocalStats(stats) {
+  try {
+    localStorage.setItem('acesWordle_stats', JSON.stringify(stats));
+  } catch (e) {}
+}
+
+function updateLifetimeStats() {
+  // This function now delegates to async version
+  updateLifetimeStatsAsync();
+}
+
+async function updateLifetimeStatsAsync() {
+  // Load from Firebase first, fall back to localStorage
+  let stats = null;
+  if (currentUser) {
+    stats = await loadStatsFromFirebase();
+  }
+  if (!stats) {
+    stats = getLocalStats();
+  }
+  
+  if (stats.lastPlayedPuzzle === todaysPuzzle.dayNum) {
+    return; // Already recorded
+  }
+  
+  stats.gamesPlayed++;
+  stats.lastPlayedPuzzle = todaysPuzzle.dayNum;
+  
+  if (gameState.won) {
+    stats.wins++;
+    stats.currentStreak++;
+    stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
+    stats.distribution[gameState.guesses.length] = (stats.distribution[gameState.guesses.length] || 0) + 1;
+  } else {
+    stats.currentStreak = 0;
+  }
+  
+  saveLocalStats(stats);
+  
+  // Also save to Firebase if logged in
+  if (currentUser) {
+    saveStatsToFirebase(stats);
+  }
+}
+
+// ============================================
+// FIREBASE PERSISTENCE
+// ============================================
+async function saveStatsToFirebase(stats) {
+  if (!currentUser) return;
+  
+  try {
+    const statsRef = doc(db, 'acesWordleGames', currentUser.uid);
+    await setDoc(statsRef, {
+      ...stats,
+      lastPlayedAt: serverTimestamp(),
+      displayName: currentUser.displayName || 'Anonymous'
+    }, { merge: true });
+    console.log('📊 Stats saved to Firebase');
+  } catch (error) {
+    console.error('Error saving stats to Firebase:', error);
+  }
+}
+
+async function loadStatsFromFirebase() {
+  if (!currentUser) return null;
+  
+  try {
+    const statsRef = doc(db, 'acesWordleGames', currentUser.uid);
+    const statsDoc = await getDoc(statsRef);
+    
+    if (statsDoc.exists()) {
+      const data = statsDoc.data();
+      return {
+        gamesPlayed: data.gamesPlayed || 0,
+        wins: data.wins || 0,
+        currentStreak: data.currentStreak || 0,
+        maxStreak: data.maxStreak || 0,
+        distribution: data.distribution || {1:0, 2:0, 3:0, 4:0, 5:0, 6:0},
+        lastPlayedPuzzle: data.lastPlayedPuzzle || 0
+      };
+    }
+  } catch (error) {
+    console.error('Error loading stats from Firebase:', error);
+  }
+  return null;
+}
+
+function saveGameStateLocal() {
+  try {
+    localStorage.setItem('acesWordle_game', JSON.stringify({
+      dayNum: todaysPuzzle.dayNum,
+      guesses: gameState.guesses,
+      gameOver: gameState.gameOver,
+      won: gameState.won
+    }));
+  } catch (e) {}
+}
+
+function loadGameStateLocal() {
+  try {
+    const stored = localStorage.getItem('acesWordle_game');
+    if (stored) {
+      const data = JSON.parse(stored);
+      if (data.dayNum === todaysPuzzle.dayNum) {
+        gameState.guesses = data.guesses || [];
+        gameState.gameOver = data.gameOver || false;
+        gameState.won = data.won || false;
+        return true;
+      }
+    }
+  } catch (e) {}
+  return false;
+}
+
+async function saveGameStateFirebase() {
+  if (!currentUser) return;
+  
+  try {
+    const gameRef = doc(db, 'acesWordleGames', currentUser.uid, 'dailyGames', String(todaysPuzzle.dayNum));
+    await setDoc(gameRef, {
+      dayNum: todaysPuzzle.dayNum,
+      guesses: gameState.guesses,
+      gameOver: gameState.gameOver,
+      won: gameState.won,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error saving to Firebase:', error);
+  }
+}
+
+async function loadGameStateFirebase() {
+  if (!currentUser) return false;
+  
+  try {
+    const gameRef = doc(db, 'acesWordleGames', currentUser.uid, 'dailyGames', String(todaysPuzzle.dayNum));
+    const gameDoc = await getDoc(gameRef);
+    
+    if (gameDoc.exists()) {
+      const data = gameDoc.data();
+      if (data.dayNum === todaysPuzzle.dayNum) {
+        gameState.guesses = data.guesses || [];
+        gameState.gameOver = data.gameOver || false;
+        gameState.won = data.won || false;
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading from Firebase:', error);
+  }
+  return false;
+}
+
+function saveGameState() {
+  saveGameStateLocal();
+  if (currentUser) {
+    saveGameStateFirebase();
+  }
+}
+
+async function loadGameState() {
+  if (currentUser) {
+    const loaded = await loadGameStateFirebase();
+    if (loaded) return true;
+  }
+  return loadGameStateLocal();
+}
+
+// ============================================
+// USER STATS DISPLAY
+// ============================================
+async function updateUserStatsDisplay() {
+  const container = document.getElementById('userStatsContainer');
+  if (!container) return;
+  
+  if (!currentUser) {
+    container.innerHTML = `
+      <div class="user-stats-content">
+        <div class="sign-in-prompt">
+          <span>🔒</span>
+          <a href="signin.html">Sign in</a> to track your stats across devices
+        </div>
+      </div>
+    `;
+    return;
+  }
+  
+  // Load from Firebase first, fall back to localStorage
+  let stats = await loadStatsFromFirebase();
+  if (!stats) {
+    stats = getLocalStats();
+  }
+  
+  container.innerHTML = `
+    <div class="user-stats-content">
+      <div class="user-greeting">👋 ${currentUser.displayName || 'Player'}</div>
+      <div class="lifetime-stats">
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${stats.gamesPlayed}</span>
+          <span class="lifetime-label">Played</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${stats.gamesPlayed > 0 ? Math.round((stats.wins / stats.gamesPlayed) * 100) : 0}%</span>
+          <span class="lifetime-label">Win Rate</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${stats.currentStreak}</span>
+          <span class="lifetime-label">Streak</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${stats.maxStreak}</span>
+          <span class="lifetime-label">Max</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================
+// EVENT HANDLERS
+// ============================================
+function setupEventListeners() {
+  // Keyboard clicks
+  document.querySelectorAll('.key').forEach(key => {
+    key.addEventListener('click', () => {
+      handleKeyPress(key.dataset.key);
+    });
+  });
+  
+  // Physical keyboard
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    
+    if (e.key === 'Enter') {
+      handleKeyPress('ENTER');
+    } else if (e.key === 'Backspace') {
+      handleKeyPress('BACKSPACE');
+    } else if (/^[a-zA-Z]$/.test(e.key)) {
+      handleKeyPress(e.key.toUpperCase());
+    }
+  });
+  
+  // Modal close on backdrop click
+  document.getElementById('statsModal').addEventListener('click', (e) => {
+    if (e.target.id === 'statsModal') closeStatsModal();
+  });
+}
+
+// ============================================
+// AUTH STATE
+// ============================================
+function setupAuthListener() {
+  onAuthChange(async (user) => {
+    currentUser = user;
+    console.log(user ? `✅ User signed in: ${user.displayName}` : '👤 No user signed in');
+    
+    if (user && todaysPuzzle) {
+      const firebaseHasState = await loadGameStateFirebase();
+      if (firebaseHasState) {
+        renderBoard();
+        updateKeyboard();
+        showHint();
+        
+        if (gameState.gameOver) {
+          document.getElementById('actionButtons').style.display = 'flex';
+        }
+      }
+    }
+    
+    await updateUserStatsDisplay();
+  });
+}
+
+// ============================================
+// HOW TO PLAY
+// ============================================
+window.toggleHowToPlay = function() {
+  const section = document.getElementById('howToPlay');
+  const toggle = document.getElementById('howToPlayToggle');
+  section.classList.toggle('expanded');
+  toggle.textContent = section.classList.contains('expanded') ? '▲' : '▼';
+};
+
+// ============================================
+// ANNOUNCEMENT POPUP
+// ============================================
+function shouldShowAnnouncement() {
+  if (!ANNOUNCEMENT_CONFIG.enabled) return false;
+  
+  const dayNum = getDayNumber();
+  
+  // Check if within the display window
+  if (dayNum < ANNOUNCEMENT_CONFIG.showStartDay || dayNum > ANNOUNCEMENT_CONFIG.showEndDay) {
+    return false;
+  }
+  
+  // Check if already dismissed
+  try {
+    const dismissed = localStorage.getItem(ANNOUNCEMENT_CONFIG.storageKey);
+    if (dismissed === 'true') return false;
+  } catch (e) {}
+  
+  return true;
+}
+
+function showAnnouncement() {
+  // Update the day number in the announcement
+  const dayElement = document.getElementById('announcementDay');
+  if (dayElement) {
+    dayElement.textContent = `Day ${ANNOUNCEMENT_CONFIG.changeStartDay}`;
+  }
+  
+  // Show the overlay
+  const overlay = document.getElementById('announcementOverlay');
+  if (overlay) {
+    setTimeout(() => {
+      overlay.classList.add('active');
+    }, 500); // Small delay after page load
+  }
+}
+
+window.dismissAnnouncement = function() {
+  const overlay = document.getElementById('announcementOverlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
+  
+  // Remember dismissal
+  try {
+    localStorage.setItem(ANNOUNCEMENT_CONFIG.storageKey, 'true');
+  } catch (e) {}
+};
+
+// Expose functions to window for onclick handlers
+window.showStats = showStats;
+window.closeStatsModal = closeStatsModal;
+window.shareResults = shareResults;
+
+// ============================================
+// INITIALIZATION
+// ============================================
+async function init() {
+  try {
+    // Check if before launch
+    const launchDate = new Date(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY).setHours(0, 0, 0, 0);
+    const now = new Date().setHours(0, 0, 0, 0);
+    
+    if (now < launchDate) {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      const launchDateObj = new Date(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY);
+      document.getElementById('puzzleDate').textContent = `Launching ${launchDateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`;
+      document.getElementById('gameBoard').innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🔤</div>
+          <h3 style="margin: 0;">Coming Soon!</h3>
+        </div>
+      `;
+      document.getElementById('keyboard').style.display = 'none';
+      return;
+    }
+    
+    // Check for existing auth
+    currentUser = getCurrentUser();
+    
+    // Load players and softball words in parallel
+    console.log('Loading player data and softball words...');
+    const [rawPlayers] = await Promise.all([
+      getAllPlayerStatsOptimized(),
+      loadSoftballWords()
+    ]);
+    allPlayers = rawPlayers.filter(p => p.migrated !== true);
+    console.log(`Loaded ${allPlayers.length} players`);
+    
+    // Build last name data and combined puzzle pool
+    buildLastNameData();
+    buildPuzzlePool();
+    
+    // Generate puzzle (checks Firebase first, then generates if needed)
+    todaysPuzzle = await getOrCreateDailyPuzzle();
+    const puzzleInfo = todaysPuzzle.type === 'player' 
+      ? todaysPuzzle.playerName 
+      : `${todaysPuzzle.hint} (${todaysPuzzle.category})`;
+    console.log('Today\'s puzzle:', todaysPuzzle.answer, '-', puzzleInfo, `[${todaysPuzzle.type}]`);
+    
+    // Display date
+    const today = new Date();
+    document.getElementById('puzzleDate').textContent = 
+      `Puzzle #${todaysPuzzle.dayNum} • ${today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}`;
+    
+    // Load saved state
+    await loadGameState();
+    
+    // Setup
+    setupEventListeners();
+    setupAuthListener();
+    await updateUserStatsDisplay();
+    
+    // Render
+    renderBoard();
+    updateKeyboard();
+    showHint();
+    
+    if (gameState.gameOver) {
+      document.getElementById('actionButtons').style.display = 'flex';
+    }
+    
+    // Check if announcement should show
+    if (shouldShowAnnouncement()) {
+      showAnnouncement();
+    }
+    
+    // Hide loading
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    
+  } catch (error) {
+    console.error('Error initializing game:', error);
+    document.getElementById('loadingOverlay').innerHTML = `
+      <div style="text-align: center; padding: 2rem;">
+        <p>Error loading game</p>
+        <p style="color: var(--text-light); font-size: 0.9rem;">${error.message}</p>
+        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; cursor: pointer;">Retry</button>
+      </div>
+    `;
+  }
+}
+
+// Start
+init();
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

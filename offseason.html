@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offseason Management Hub - Mountainside Aces</title>
+    <meta name="theme-color" content="#2d5016">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mountainside Aces">
+    
+    <style>
+        :root {
+            --primary-color: #2d5016;
+            --secondary-color: #1a6b4a;
+            --accent-color: #ffd700;
+            --card-bg: #ffffff;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .softball-spinner::before {
+            content: '⚾';
+            font-size: 80px;
+            animation: spin 1.5s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0%, 100% {
+                transform: rotate(0deg) scale(1);
+            }
+            50% {
+                transform: rotate(180deg) scale(1.1);
+            }
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            padding: 4rem 2rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            color: white;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            top: -100px;
+            right: -100px;
+            border-radius: 50%;
+        }
+
+        .header::after {
+            content: '🎣';
+            position: absolute;
+            font-size: 200px;
+            opacity: 0.05;
+            bottom: -50px;
+            left: -30px;
+            pointer-events: none;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Back Button */
+        .back-button {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(-5px);
+        }
+
+        .back-button::before {
+            content: "←";
+            font-size: 1.2rem;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            color: var(--text-dark);
+        }
+
+        .section-title::before {
+            content: "";
+            width: 8px;
+            height: 36px;
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-radius: 4px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, var(--border-color) 0%, transparent 100%);
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .card::after {
+            content: '🎣';
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            font-size: 120px;
+            opacity: 0;
+            color: var(--primary-color);
+            transition: all 0.4s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card:hover::after {
+            opacity: 0.05;
+            bottom: -10px;
+            right: -10px;
+        }
+
+  /* Ice Blue Winter Card */
+  .winter-card {
+    background: linear-gradient(135deg, #4a90e2 0%, #67b8e3 100%);
+    color: white;
+    box-shadow: var(--shadow-md);
+  }
+
+  .winter-card::before {
+    background: linear-gradient(90deg, #a8e6ff 0%, #6dd5fa 100%);
+    opacity: 1;
+  }
+
+  .winter-card::after {
+    content: '❄️';
+    color: white;
+  }
+
+  .winter-card .card-title,
+  .winter-card .card-description,
+  .winter-card .card-stats {
+    color: white;
+  }
+
+  .winter-card .card-stats {
+    border-top-color: rgba(255,255,255,0.3);
+  }
+
+  /* Frosty Silver Card */
+  .frost-card {
+    background: linear-gradient(135deg, #b8c6db 0%, #f5f7fa 100%);
+    color: #2c3e50;
+    box-shadow: var(--shadow-md);
+  }
+
+  .frost-card::before {
+    background: linear-gradient(90deg, #dfe9f3 0%, #ffffff 100%);
+    opacity: 1;
+  }
+
+  .frost-card::after {
+    content: '❄️';
+    color: #b8c6db;
+  }
+
+  .frost-card .card-title {
+    color: #2c3e50;
+  }
+
+  .frost-card .card-description,
+  .frost-card .card-stats {
+    color: #34495e;
+  }
+
+  .frost-card .card-stats {
+    border-top-color: rgba(44,62,80,0.2);
+  }
+
+  /* Snowy White Card */
+  .snow-card {
+    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    color: #1e3a5f;
+    box-shadow: var(--shadow-md);
+  }
+
+  .snow-card::before {
+    background: linear-gradient(90deg, #ffffff 0%, #e0eafc 100%);
+    opacity: 1;
+  }
+
+  .snow-card::after {
+    content: '⛄';
+    color: #cfdef3;
+  }
+
+  .snow-card .card-title {
+    color: #1e3a5f;
+  }
+
+  .snow-card .card-description,
+  .snow-card .card-stats {
+    color: #2c5282;
+  }
+
+  .snow-card .card-stats {
+    border-top-color: rgba(30,58,95,0.2);
+  }
+
+  /* Icy Teal Card */
+  .ice-card {
+    background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+    color: white;
+    box-shadow: var(--shadow-md);
+  }
+
+  .ice-card::before {
+    background: linear-gradient(90deg, #56ccf2 0%, #2f80ed 100%);
+    opacity: 1;
+  }
+
+  .ice-card::after {
+    content: '🧊';
+    color: white;
+  }
+
+  .ice-card .card-title,
+  .ice-card .card-description,
+  .ice-card .card-stats {
+    color: white;
+  }
+
+  .ice-card .card-stats {
+    border-top-color: rgba(255,255,255,0.3);
+  }
+
+  /* Northern Lights Card */
+  .aurora-card {
+    background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);
+    color: white;
+    box-shadow: var(--shadow-md);
+  }
+
+  .aurora-card::before {
+    background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+    opacity: 1;
+  }
+
+  .aurora-card::after {
+    content: '🌌';
+    color: white;
+  }
+
+  .aurora-card .card-title,
+  .aurora-card .card-description,
+  .aurora-card .card-stats {
+    color: white;
+  }
+
+  .aurora-card .card-stats {
+    border-top-color: rgba(255,255,255,0.3);
+  }
+
+
+        /* Card Icon */
+        .card-icon {
+            font-size: 3rem;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            transition: transform 0.4s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card:hover .card-icon {
+            transform: scale(1.15) rotate(5deg);
+        }
+
+        .card h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .card p {
+            color: var(--text-light);
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Card Features */
+        .card-features {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-features li {
+            color: var(--text-dark);
+            padding: 0.75rem 0;
+            padding-left: 2rem;
+            position: relative;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .card-features li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* Card Link */
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: gap 0.3s ease;
+        }
+
+        .card-link::after {
+            content: "→";
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover .card-link {
+            gap: 1rem;
+        }
+
+        .card:hover .card-link::after {
+            transform: translateX(5px);
+        }
+
+        /* Fade in animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeInUp 0.6s ease backwards;
+        }
+
+        .card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 60px; /* Account for fixed mobile nav */
+            }
+            
+            .back-button {
+                top: 1rem;
+                left: 1rem;
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+
+            .header {
+                padding: 5rem 2rem 3rem;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .header p {
+                font-size: 1.1rem;
+            }
+
+            .header::after {
+                font-size: 120px;
+                bottom: -30px;
+                left: -20px;
+            }
+
+            .section-title {
+                font-size: 1.6rem;
+            }
+
+            .section-title::after {
+                display: none;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="mobile-enhancements.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="softball-spinner"></div>
+    </div>
+
+    <!-- Page Container - Required for navigation component -->
+    <div class="page-container">
+        
+        <!-- Optional Desktop Navigation Area -->
+        <div class="filters-nav">
+            <!-- Desktop nav will be injected here by nav-component.js -->
+        </div>
+        
+        <!-- Header -->
+        <div class="header">
+            <a href="index.html" class="back-button">Back Home</a>
+            <a href="offseason-guide.html" class="back-button" style="left: auto; right: 2rem;">📖 Guide</a>
+            <h1>🎣 Offseason Management Hub</h1>
+            <p>Manage your league's roster movements and schedule planning for the upcoming season</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container">
+        <h2 class="section-title">Management Tools</h2>
+        
+        <div class="cards-grid">
+            <a href="offseason-roster.html" class="card">
+                <div class="card winter-card">👥</div>
+                <h2>Roster Management</h2>
+                <p>League-wide roster overview with drag-and-drop player management for offseason transitions.</p>
+                <ul class="card-features">
+                    <li>View all teams and players in a grid layout</li>
+                    <li>Drag players between teams for trades</li>
+                    <li>Manage roster spots for season transitions</li>
+                    <li>Handle new/returning players and departures</li>
+                </ul>
+                <span class="card-link">Manage Rosters</span>
+            </a>
+            <a href="schedule-generator.html" class="card">
+                <div class="card aurora-card">🎲</div>
+                <h2>Schedule Generator</h2>
+                <p>Create balanced schedules with automatic time slot assignment for summer or fall seasons.</p>
+                <ul class="card-features">
+                    <li>Generate 20-game (summer) or 12-game (fall) schedules</li>
+                    <li>Select teams and customize parameters</li>
+                    <li>Automatic time slot assignment by season</li>
+                    <li>Export to Firebase or download CSV</li>
+                </ul>
+                <span class="card-link">Generate Schedule</span>
+            </a>
+            <a href="schedule-workshop.html" class="card">
+                <div class="card snow-card">⚖️</div>
+                <h2>Schedule Workshop</h2>
+                <p>Balance and analyze your schedule in one place — edits update the analysis live.</p>
+                <ul class="card-features">
+                    <li>Edit dates, times, teams, and home/away</li>
+                    <li>Live MOLSKI fairness scores per team</li>
+                    <li>Day, time, and opponent breakdowns</li>
+                    <li>Flags weeks missing double-headers</li>
+                </ul>
+                <span class="card-link">Open Workshop</span>
+            </a>
+            <a href="season-setup-wizard.html" class="card">
+                <div class="card autumn-card">🏆</div>
+                <h2>Season Setup Wizard</h2>
+                <p>Complete guided setup for creating a new season from start to finish.</p>
+                <ul class="card-features">
+                    <li>Create season with all settings configured</li>
+                    <li>Select participating teams</li>
+                    <li>Import schedule from CSV or generator</li>
+                    <li>Publish to Firebase in one click</li>
+                </ul>
+                <span class="card-link">Setup New Season →</span>
+            </a>
+
+            <a href="admin-rosters.html" class="card">
+                <div class="card frost-card">👥</div>
+                <h2>Roster Assignment</h2>
+                <p>Bulk-assign players to teams by uploading a CSV — updates each player's linked team in their profile.</p>
+                <ul class="card-features">
+                    <li>Upload playerName + team CSV</li>
+                    <li>Preview matches before applying</li>
+                    <li>Validates against season team list</li>
+                    <li>Flags unmatched players and unknown teams</li>
+                </ul>
+                <span class="card-link">Assign Rosters →</span>
+            </a>
+
+        </div>
+    </div>
+    
+    </div><!-- End page-container -->
+
+    <script>
+        // Hide loading overlay after page loads
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }, 800);
+        });
+    </script>
+    <script src="mobile-enhancements.js"></script>
+</body>
+</html>

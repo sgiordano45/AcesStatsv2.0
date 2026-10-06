@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Pick'em - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #3b82f6;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0; padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+.loading-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 9999; transition: opacity 0.5s ease;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.spinner {
+  width: 48px; height: 48px; border: 4px solid var(--border-color);
+  border-top-color: var(--primary-color); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white; text-align: center; padding: 2rem 1.5rem 1.5rem; box-shadow: var(--shadow-lg);
+  position: relative; overflow: hidden;
+}
+.header h1 { margin: 0 0 0.25rem; font-size: 1.7rem; }
+.header p { margin: 0; opacity: 0.9; font-size: 0.95rem; }
+.back-link { color: white; opacity: 0.85; text-decoration: none; font-size: 0.9rem; display: inline-block; margin-bottom: 0.75rem; }
+.back-link:hover { opacity: 1; text-decoration: underline; }
+
+.page-container { max-width: 900px; margin: 0 auto; padding: 1.25rem; }
+
+.auth-gate {
+  display: none; max-width: 480px; margin: 4rem auto; text-align: center;
+  background: var(--card-bg); padding: 2.5rem; border-radius: 16px; box-shadow: var(--shadow-md);
+}
+
+.card {
+  background: var(--card-bg); border-radius: 16px; box-shadow: var(--shadow-md);
+  padding: 1.5rem; margin-bottom: 1.25rem;
+}
+.card h2 { margin: 0 0 0.25rem; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem; }
+.card .subtitle { color: var(--text-light); font-size: 0.85rem; margin: 0 0 1rem; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.2rem;
+  border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700;
+  cursor: pointer; transition: transform 0.15s ease; text-decoration: none;
+}
+.btn-primary { background: var(--primary-color); color: white; }
+
+/* Tabs */
+.tabs { display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.tab {
+  padding: 0.5rem 1rem; border-radius: 20px; border: 1px solid var(--border-color);
+  background: white; color: var(--text-dark); font-size: 0.85rem; font-weight: 700; cursor: pointer;
+}
+.tab.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+/* Week navigator */
+.week-nav {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  background: var(--card-bg); border-radius: 14px; box-shadow: var(--shadow-sm);
+  padding: 0.6rem 0.75rem; margin-bottom: 1rem;
+}
+.week-nav button {
+  border: 1px solid var(--border-color); background: white; border-radius: 10px;
+  width: 40px; height: 40px; font-size: 1.1rem; cursor: pointer; color: var(--text-dark);
+}
+.week-nav button:disabled { opacity: 0.35; cursor: not-allowed; }
+.week-title { text-align: center; }
+.week-title .wk { font-weight: 800; font-size: 1.05rem; }
+.week-title .range { font-size: 0.8rem; color: var(--text-light); }
+
+/* Summary strip */
+.summary {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 1rem;
+}
+.summary .stat {
+  background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow-sm);
+  padding: 0.7rem 0.5rem; text-align: center;
+}
+.summary .val { font-size: 1.25rem; font-weight: 800; color: var(--primary-color); font-variant-numeric: tabular-nums; }
+.summary .lbl { font-size: 0.7rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
+
+/* Day groups + games */
+.day-label {
+  font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-light); margin: 1.1rem 0 0.5rem;
+}
+.game {
+  background: var(--card-bg); border-radius: 14px; box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color); padding: 0.75rem; margin-bottom: 0.6rem;
+}
+.game-meta {
+  display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;
+  font-size: 0.75rem; color: var(--text-light); margin-bottom: 0.55rem; flex-wrap: wrap;
+}
+.game-meta .tag {
+  display: inline-block; padding: 0.1rem 0.5rem; border-radius: 10px; font-weight: 700; font-size: 0.68rem;
+  text-transform: uppercase; letter-spacing: 0.03em;
+}
+.tag-open { background: #dcfce7; color: #15803d; }
+.tag-locked { background: #fef3c7; color: #92400e; }
+.tag-final { background: #e0e7ff; color: #4338ca; }
+.tag-void { background: #f1f5f9; color: #64748b; }
+.tag-playoff { background: #fde68a; color: #78350f; }
+
+.matchup { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.5rem; align-items: stretch; }
+.at { align-self: center; font-size: 0.75rem; font-weight: 800; color: var(--text-light); }
+.team-btn {
+  position: relative; border: 2px solid var(--border-color); background: #f8fafc; border-radius: 12px;
+  padding: 0.7rem 0.5rem; cursor: pointer; text-align: center; font-weight: 800; font-size: 0.95rem;
+  color: var(--text-dark); transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease;
+  min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem;
+}
+.team-btn:not(:disabled):hover { transform: translateY(-1px); }
+.team-btn:disabled { cursor: default; }
+.team-btn .side { font-size: 0.65rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.04em; }
+.team-btn .score { font-size: 0.8rem; font-weight: 800; }
+.team-btn .swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 0.35rem; vertical-align: middle; }
+.team-btn.picked { color: white; }
+.team-btn.picked .side { color: rgba(255,255,255,0.85); }
+.team-btn.dim { opacity: 0.55; }
+.team-btn .mark {
+  position: absolute; top: 4px; right: 6px; font-size: 0.8rem; font-weight: 900;
+}
+
+.split { margin-top: 0.55rem; }
+.split-bar { display: flex; height: 8px; border-radius: 6px; overflow: hidden; background: #e2e8f0; }
+.split-bar div { height: 100%; }
+.split-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-light); margin-top: 0.25rem; font-variant-numeric: tabular-nums; }
+.result-line { margin-top: 0.45rem; font-size: 0.8rem; font-weight: 700; }
+.result-line.win { color: #15803d; }
+.result-line.loss { color: #b91c1c; }
+.result-line.neutral { color: var(--text-light); }
+.bonus-chip {
+  display: inline-block; background: #fef3c7; color: #92400e; border-radius: 10px;
+  padding: 0.05rem 0.45rem; font-size: 0.7rem; margin-left: 0.35rem;
+}
+
+/* Leaderboards */
+.lb-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.lb-table th {
+  text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-light); padding: 0.45rem 0.5rem; background: #f8fafc;
+}
+.lb-table th.num, .lb-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.lb-table td { padding: 0.6rem 0.5rem; border-top: 1px solid var(--border-color); }
+.lb-table tr.me td { background: #f0fdf4; font-weight: 700; }
+.lb-table .pts { font-weight: 800; color: var(--primary-color); }
+.rank { font-weight: 800; color: var(--text-light); width: 2rem; }
+
+.grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.picks-grid { border-collapse: collapse; font-size: 0.78rem; min-width: 100%; }
+.picks-grid th, .picks-grid td { padding: 0.4rem 0.35rem; border-top: 1px solid var(--border-color); text-align: center; white-space: nowrap; }
+.picks-grid th { font-size: 0.66rem; color: var(--text-light); font-weight: 700; background: #f8fafc; line-height: 1.25; }
+.picks-grid td.name, .picks-grid th.name { text-align: left; position: sticky; left: 0; background: white; font-weight: 700; z-index: 1; }
+.picks-grid th.name { background: #f8fafc; }
+.picks-grid tr.me td { background: #f0fdf4; }
+.picks-grid tr.me td.name { background: #f0fdf4; }
+.chip {
+  display: inline-block; min-width: 2.6rem; padding: 0.15rem 0.35rem; border-radius: 8px;
+  font-weight: 800; font-size: 0.7rem; color: white;
+}
+.chip.wrong { opacity: 0.35; }
+.chip.none { background: transparent; color: var(--text-light); }
+.count-row { padding: 0.75rem 0; border-top: 1px solid var(--border-color); }
+.count-row:first-child { border-top: none; padding-top: 0; }
+.count-meta { font-size: 0.72rem; color: var(--text-light); font-weight: 700; margin-bottom: 0.4rem; }
+.count-sides { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.5rem; align-items: center; margin-bottom: 0.45rem; }
+.count-side { display: flex; align-items: center; gap: 0.4rem; background: #f8fafc; border-radius: 10px; padding: 0.5rem 0.65rem; }
+.count-side.lost { opacity: 0.55; }
+.count-side .swatch { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.count-team { font-weight: 700; font-size: 0.88rem; flex: 1; }
+.count-num { font-weight: 800; font-size: 1.05rem; color: var(--primary-color); font-variant-numeric: tabular-nums; }
+
+.rules-list { margin: 0; padding-left: 1.1rem; font-size: 0.85rem; color: var(--text-dark); line-height: 1.6; }
+
+.toast {
+  position: fixed; left: 50%; bottom: 5.5rem; transform: translateX(-50%) translateY(20px);
+  background: #1f2937; color: white; padding: 0.6rem 1rem; border-radius: 10px; font-size: 0.85rem;
+  opacity: 0; transition: all 0.25s ease; z-index: 1000; pointer-events: none; max-width: 90vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { background: #b91c1c; }
+
+.empty-state { text-align: center; color: var(--text-light); padding: 2rem 1rem; font-size: 0.9rem; }
+
+@media (max-width: 640px) {
+  .header { padding: 1.25rem 1rem 1rem; }
+  .header h1 { font-size: 1.45rem; }
+  .page-container { padding: 1rem 0.75rem 5rem; }
+  .card { padding: 1.1rem; }
+  .summary { grid-template-columns: repeat(2, 1fr); }
+  .team-btn { font-size: 0.88rem; padding: 0.6rem 0.35rem; }
+  .lb-table .hide-sm { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="margin-top:1rem;color:var(--text-light);">Loading Pick'em...</p>
+</div>
+
+<div class="header">
+  <a href="games.html" class="back-link">&larr; Daily Games</a>
+  <h1>&#9989; Weekly Pick'em</h1>
+  <p>Pick the winner of every game. Beat the crowd on an upset for a bonus point.</p>
+</div>
+
+<div class="page-container">
+
+  <div class="auth-gate" id="authGate">
+    <h2>&#128274; Sign In Required</h2>
+    <p>Pick'em is open to any signed-in Aces account.</p>
+    <a href="signin.html" class="btn btn-primary">Sign In</a>
+  </div>
+
+  <div id="mainContent" style="display:none;">
+    <div class="filters-nav"></div>
+
+    <div id="noGamesState" class="card" style="display:none;">
+      <div class="empty-state">&#128197; No games on the schedule for the current season yet.</div>
+    </div>
+
+    <div id="pickemContent" style="display:none;">
+
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-tab="picks">My Picks</button>
+        <button class="tab" data-tab="week">Week Board</button>
+        <button class="tab" data-tab="season">Season Standings</button>
+        <button class="tab" data-tab="rules">Rules</button>
+      </div>
+
+      <div class="week-nav" id="weekNav">
+        <button id="prevWeek" aria-label="Previous week">&#8249;</button>
+        <div class="week-title">
+          <div class="wk" id="weekTitle"></div>
+          <div class="range" id="weekRange"></div>
+        </div>
+        <button id="nextWeek" aria-label="Next week">&#8250;</button>
+      </div>
+
+      <!-- MY PICKS -->
+      <div id="panel-picks">
+        <div class="summary" id="weekSummary"></div>
+        <div id="gamesList"></div>
+      </div>
+
+      <!-- WEEK BOARD -->
+      <div id="panel-week" style="display:none;">
+        <div class="card">
+          <h2>Week Leaderboard</h2>
+          <p class="subtitle">Points from this week's final games.</p>
+          <div id="weekLeaderboard"></div>
+        </div>
+        <div class="card">
+          <h2>Pick Counts</h2>
+          <p class="subtitle">How many people took each team. Counts appear once each game locks at first pitch.</p>
+          <div id="weekGrid"></div>
+        </div>
+      </div>
+
+      <!-- SEASON -->
+      <div id="panel-season" style="display:none;">
+        <div class="card">
+          <h2>&#127942; Season Standings</h2>
+          <p class="subtitle" id="seasonSubtitle"></p>
+          <div id="seasonLeaderboard"></div>
+        </div>
+      </div>
+
+      <!-- RULES -->
+      <div id="panel-rules" style="display:none;">
+        <div class="card">
+          <h2>How It Works</h2>
+          <ul class="rules-list">
+            <li>Tap a team to pick it. Tap it again to clear the pick. Picks save automatically.</li>
+            <li>Each game locks at its scheduled first pitch, so you can make or change Thursday's picks on Wednesday.</li>
+            <li>Nobody can see anyone else's pick for a game until it locks.</li>
+            <li><strong>1 point</strong> for every correct pick.</li>
+            <li><strong>+1 upset bonus</strong> when you're right and fewer than a third of pickers took that team (at least 3 picks on the game).</li>
+            <li>Ties, forfeits, and cancelled games don't count for anyone.</li>
+            <li>Season standings: points, then correct picks, then fewest misses.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { onAuthChange, getUserProfile } from './firebase-auth.js';
+  import { getCurrentSeason, getSeasonGames } from './firebase-data.js';
+  import { db, collection, doc, getDocs } from './firebase-config.js';
+  import { setDoc, updateDoc, deleteField, serverTimestamp, FieldPath } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  // ============================================================
+  // CONSTANTS
+  // ============================================================
+  const TZ = 'America/New_York';
+  const UPSET_SHARE = 1 / 3;     // winner picked by < 1/3 of pickers = upset
+  const UPSET_MIN_PICKS = 3;     // need at least this many picks for a bonus
+  const DEFAULT_LOCK_MINUTES = 8 * 60; // unparseable time -> lock 8:00 AM ET that day
+
+  // Mirrors team-colors.js / schedule.html
+  const TEAM_COLORS = {
+    Black:    { bg: '#1a1a1a', text: '#fff' },
+    Green:    { bg: '#2d7d32', text: '#fff' },
+    Red:      { bg: '#d32f2f', text: '#fff' },
+    Blue:     { bg: '#1976d2', text: '#fff' },
+    White:    { bg: '#e9ecef', text: '#343a40' },
+    Orange:   { bg: '#f57c00', text: '#fff' },
+    Silver:   { bg: '#757575', text: '#fff' },
+    Purple:   { bg: '#7b1fa2', text: '#fff' },
+    Gold:     { bg: '#CFB53B', text: '#fff' },
+    Carolina: { bg: '#4b9cd3', text: '#fff' },
+    Army:     { bg: '#654321', text: '#fff' },
+    Teal:     { bg: '#008080', text: '#fff' },
+  };
+
+  // ============================================================
+  // STATE
+  // ============================================================
+  let currentUser = null;
+  let displayName = '';
+  let season = null;
+  let games = [];            // normalized games
+  let gamesById = {};
+  let weeks = [];            // [{ key, start: {y,m,day}, games: [] , num }]
+  let weekIdx = 0;
+  let entries = {};          // uid -> { displayName, picks: { gameId: { team, atMs } } }
+  let activeTab = 'picks';
+  let tickTimer = null;
+
+  const el = (id) => document.getElementById(id);
+  const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+  // ============================================================
+  // DATE / TIME HELPERS (all league times are Eastern)
+  // ============================================================
+  const etFmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: TZ, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric'
+  });
+  function etParts(ms) {
+    const p = {};
+    etFmt.formatToParts(new Date(ms)).forEach(x => { p[x.type] = x.value; });
+    return { y: +p.year, m: +p.month - 1, day: +p.day, h: +p.hour % 24, min: +p.minute };
+  }
+  // Wall-clock ET -> epoch ms
+  function etToMs(y, m, day, h, min) {
+    const guess = Date.UTC(y, m, day, h, min);
+    const p = etParts(guess);
+    const offset = Date.UTC(p.y, p.m, p.day, p.h, p.min) - guess;
+    let ms = guess - offset;
+    // Second pass handles DST boundaries
+    const p2 = etParts(ms);
+    const offset2 = Date.UTC(p2.y, p2.m, p2.day, p2.h, p2.min) - ms;
+    if (offset2 !== offset) ms = guess - offset2;
+    return ms;
+  }
+  function dateParts(g) {
+    if (g.date && g.date.seconds) {
+      const p = etParts(g.date.seconds * 1000);
+      return { y: p.y, m: p.m, day: p.day };
+    }
+    if (g.date && typeof g.date === 'string') {
+      const parts = g.date.split(/[-\/]/);
+      if (parts.length < 3) return null;
+      if (parts[0].length === 4) return { y: +parts[0], m: +parts[1] - 1, day: +parts[2] };
+      return { y: +parts[2], m: +parts[0] - 1, day: +parts[1] };
+    }
+    return null;
+  }
+  // Day of week for a calendar date (0 = Sun), timezone-independent
+  const dow = (dp) => new Date(Date.UTC(dp.y, dp.m, dp.day)).getUTCDay();
+
+  // "7:45 PM" -> minutes after midnight. Times without AM/PM: weekend 7-11 = AM, otherwise PM.
+  function timeToMinutes(t, dp) {
+    if (!t) return null;
+    const m = String(t).match(/(\d{1,2})(?::(\d{2}))?\s*([AaPp])\.?\s*[Mm]?/) || String(t).match(/(\d{1,2}):(\d{2})/);
+    if (!m) return null;
+    let h = parseInt(m[1], 10);
+    const min = m[2] ? parseInt(m[2], 10) : 0;
+    const period = m[3] ? m[3].toUpperCase() : null;
+    if (h > 23 || min > 59) return null;
+    if (period === 'A') { if (h === 12) h = 0; }
+    else if (period === 'P') { if (h !== 12) h += 12; }
+    else if (h < 12) {
+      const weekend = dp && (dow(dp) === 0 || dow(dp) === 6);
+      if (!(weekend && h >= 7)) h += 12;
+    }
+    return h * 60 + min;
+  }
+
+  function addDays(dp, n) {
+    const d = new Date(Date.UTC(dp.y, dp.m, dp.day + n));
+    return { y: d.getUTCFullYear(), m: d.getUTCMonth(), day: d.getUTCDate() };
+  }
+  const dpKey = (dp) => `${dp.y}-${String(dp.m + 1).padStart(2, '0')}-${String(dp.day).padStart(2, '0')}`;
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const shortDate = (dp) => `${MONTHS[dp.m]} ${dp.day}`;
+
+  function formatLock(ms) {
+    return new Date(ms).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' });
+  }
+  function formatCountdown(ms) {
+    const s = Math.max(Math.floor(ms / 1000), 0);
+    const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+    if (d > 0) return `${d}d ${h}h`;
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+  }
+
+  // ============================================================
+  // GAME NORMALIZATION + SCORING
+  // ============================================================
+  function normalizeGame(g) {
+    const dp = dateParts(g);
+    if (!dp) return null;
+    const homeName = g.homeTeamName || capitalize(g.homeTeamId) || g['home team'] || 'TBD';
+    const awayName = g.awayTeamName || capitalize(g.awayTeamId) || g['away team'] || 'TBD';
+    const homeKey = String(g.homeTeamId || homeName).toLowerCase();
+    const awayKey = String(g.awayTeamId || awayName).toLowerCase();
+    const status = String(g.status || '').toLowerCase();
+    const mins = timeToMinutes(g.time, dp);
+    const lockMins = mins === null ? DEFAULT_LOCK_MINUTES : mins;
+    const lockAt = etToMs(dp.y, dp.m, dp.day, Math.floor(lockMins / 60), lockMins % 60);
+    const winnerRaw = g.winner ? String(g.winner).toLowerCase() : '';
+    const homeScore = g.homeScore ?? g['home score'] ?? null;
+    const awayScore = g.awayScore ?? g['away score'] ?? null;
+    const isFinal = status === 'completed' || (!!winnerRaw && homeScore !== null && awayScore !== null);
+    const isTBD = !!g.isPlaceholder || homeName === 'TBD' || awayName === 'TBD';
+    const cancelled = ['cancelled', 'canceled', 'postponed', 'rainout', 'rained out'].includes(status);
+    let winnerKey = null;
+    if (isFinal && winnerRaw) {
+      if (winnerRaw === homeKey || winnerRaw === homeName.toLowerCase()) winnerKey = homeKey;
+      else if (winnerRaw === awayKey || winnerRaw === awayName.toLowerCase()) winnerKey = awayKey;
+    }
+    const isPlayoff = ['playoff'].includes(String(g.gameType || g.game_type || '').toLowerCase());
+    return {
+      id: g.id, dp, time: g.time || '', lockAt, homeName, awayName, homeKey, awayKey,
+      homeScore, awayScore, isFinal, isTBD, cancelled, isPlayoff,
+      isForfeit: !!g.forfeit, winnerKey,
+      // void = final but no pick-em result (tie, forfeit, unknown winner)
+      isVoid: cancelled || (isFinal && (!winnerKey || !!g.forfeit)),
+    };
+  }
+
+  const isLocked = (g) => Date.now() >= g.lockAt;
+  const isGraded = (g) => g.isFinal && !g.isVoid;
+
+  // A pick only counts if it was saved (server time) before first pitch
+  function validPick(uid, g) {
+    const p = entries[uid]?.picks?.[g.id];
+    if (!p || !p.team) return null;
+    if (p.atMs && p.atMs > g.lockAt) return null;
+    if (p.team !== g.homeKey && p.team !== g.awayKey) return null;
+    return p.team;
+  }
+
+  // Pick distribution among valid picks
+  function splitFor(g) {
+    let home = 0, away = 0;
+    Object.keys(entries).forEach(uid => {
+      const t = validPick(uid, g);
+      if (t === g.homeKey) home++;
+      else if (t === g.awayKey) away++;
+    });
+    return { home, away, total: home + away };
+  }
+
+  function isUpset(g) {
+    if (!isGraded(g)) return false;
+    const s = splitFor(g);
+    if (s.total < UPSET_MIN_PICKS) return false;
+    const winners = g.winnerKey === g.homeKey ? s.home : s.away;
+    return winners / s.total < UPSET_SHARE;
+  }
+
+  // Score a set of games for every user
+  function scoreGames(gameList) {
+    const table = {};
+    const ensure = (uid) => table[uid] || (table[uid] = { uid, name: entries[uid]?.displayName || 'Unknown', pts: 0, correct: 0, wrong: 0, upsets: 0, picks: 0 });
+    const upsetCache = {};
+    gameList.forEach(g => {
+      Object.keys(entries).forEach(uid => {
+        const t = validPick(uid, g);
+        if (!t) return;
+        const row = ensure(uid);
+        row.picks++;
+        if (!isGraded(g)) return;
+        if (t === g.winnerKey) {
+          if (upsetCache[g.id] === undefined) upsetCache[g.id] = isUpset(g);
+          row.correct++;
+          row.pts += 1;
+          if (upsetCache[g.id]) { row.pts += 1; row.upsets++; }
+        } else {
+          row.wrong++;
+        }
+      });
+    });
+    return Object.values(table)
+      .filter(r => r.picks > 0)
+      .sort((a, b) => (b.pts - a.pts) || (b.correct - a.correct) || (a.wrong - b.wrong) || a.name.localeCompare(b.name));
+  }
+
+  // ============================================================
+  // AUTH + LOAD
+  // ============================================================
+  onAuthChange(async (user) => {
+    if (!user) {
+      el('authGate').style.display = 'block';
+      el('mainContent').style.display = 'none';
+      el('loadingOverlay').classList.add('hidden');
+      return;
+    }
+    currentUser = user;
+    try {
+      const profileResult = await getUserProfile(user.uid);
+      const profile = profileResult?.data || null;
+      displayName = profile?.displayName || profile?.linkedPlayer || (user.email ? user.email.split('@')[0] : 'Aces Fan');
+    } catch (e) {
+      displayName = user.email ? user.email.split('@')[0] : 'Aces Fan';
+    }
+    el('authGate').style.display = 'none';
+    el('mainContent').style.display = 'block';
+    try {
+      await init();
+    } catch (err) {
+      console.error('Pickem load error', err);
+      el('noGamesState').style.display = 'block';
+      el('noGamesState').querySelector('.empty-state').textContent = 'Could not load Pick\'em. Please refresh.';
+    }
+    el('loadingOverlay').classList.add('hidden');
+  });
+
+  async function init() {
+    season = await getCurrentSeason();
+    if (!season) { el('noGamesState').style.display = 'block'; return; }
+
+    const [raw, entriesSnap] = await Promise.all([
+      getSeasonGames(season.id),
+      getDocs(collection(db, 'pickem', season.id, 'entries')),
+    ]);
+
+    games = raw.map(normalizeGame).filter(Boolean)
+      .sort((a, b) => (a.lockAt - b.lockAt) || a.homeName.localeCompare(b.homeName));
+    gamesById = Object.fromEntries(games.map(g => [g.id, g]));
+
+    entries = {};
+    entriesSnap.forEach(d => {
+      const data = d.data();
+      const picks = {};
+      Object.entries(data.picks || {}).forEach(([gid, p]) => {
+        if (!p) return;
+        picks[gid] = { team: p.team, atMs: p.at?.toMillis ? p.at.toMillis() : null };
+      });
+      entries[d.id] = { displayName: data.displayName || 'Unknown', picks };
+    });
+
+    if (!games.length) { el('noGamesState').style.display = 'block'; return; }
+
+    buildWeeks();
+    weekIdx = defaultWeekIndex();
+
+    el('pickemContent').style.display = 'block';
+    wireUi();
+    render();
+    tickTimer = setInterval(() => { if (activeTab === 'picks') renderPicks(); }, 30000);
+  }
+
+  // Sunday-start weeks, numbered from the first week with games
+  function buildWeeks() {
+    const map = new Map();
+    games.forEach(g => {
+      const start = addDays(g.dp, -dow(g.dp));
+      const key = dpKey(start);
+      if (!map.has(key)) map.set(key, { key, start, games: [] });
+      map.get(key).games.push(g);
+    });
+    weeks = [...map.values()].sort((a, b) => a.key.localeCompare(b.key));
+    weeks.forEach((w, i) => {
+      w.num = i + 1;
+      w.allPlayoff = w.games.every(g => g.isPlayoff);
+    });
+  }
+
+  function defaultWeekIndex() {
+    // First week that still has a game to pick; otherwise the last week
+    const now = Date.now();
+    const idx = weeks.findIndex(w => w.games.some(g => g.lockAt > now && !g.cancelled));
+    return idx === -1 ? weeks.length - 1 : idx;
+  }
+
+  function wireUi() {
+    el('prevWeek').addEventListener('click', () => { if (weekIdx > 0) { weekIdx--; render(); } });
+    el('nextWeek').addEventListener('click', () => { if (weekIdx < weeks.length - 1) { weekIdx++; render(); } });
+    el('tabs').addEventListener('click', (e) => {
+      const btn = e.target.closest('.tab');
+      if (!btn) return;
+      activeTab = btn.dataset.tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === btn));
+      render();
+    });
+    el('gamesList').addEventListener('click', (e) => {
+      const btn = e.target.closest('.team-btn');
+      if (!btn || btn.disabled) return;
+      handlePick(btn.dataset.game, btn.dataset.team);
+    });
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+  function render() {
+    ['picks', 'week', 'season', 'rules'].forEach(t => {
+      el('panel-' + t).style.display = t === activeTab ? 'block' : 'none';
+    });
+    el('weekNav').style.display = (activeTab === 'picks' || activeTab === 'week') ? 'flex' : 'none';
+    renderWeekNav();
+    if (activeTab === 'picks') renderPicks();
+    if (activeTab === 'week') renderWeekBoard();
+    if (activeTab === 'season') renderSeason();
+  }
+
+  function renderWeekNav() {
+    const w = weeks[weekIdx];
+    el('weekTitle').textContent = w.allPlayoff ? `Week ${w.num} · Playoffs` : `Week ${w.num}`;
+    el('weekRange').textContent = `${shortDate(w.start)} – ${shortDate(addDays(w.start, 6))} · ${w.games.length} game${w.games.length === 1 ? '' : 's'}`;
+    el('prevWeek').disabled = weekIdx === 0;
+    el('nextWeek').disabled = weekIdx === weeks.length - 1;
+  }
+
+  function teamColor(name) {
+    return TEAM_COLORS[capitalize(String(name).toLowerCase())] || { bg: '#2d5016', text: '#fff' };
+  }
+
+  function renderPicks() {
+    const w = weeks[weekIdx];
+    const uid = currentUser.uid;
+    const myPicks = entries[uid]?.picks || {};
+    const now = Date.now();
+
+    // Summary
+    const pickable = w.games.filter(g => !g.isTBD && !g.cancelled);
+    const made = pickable.filter(g => myPicks[g.id]?.team).length;
+    const mine = scoreGames(w.games).find(r => r.uid === uid) || { pts: 0, correct: 0, wrong: 0 };
+    const next = pickable.filter(g => g.lockAt > now).sort((a, b) => a.lockAt - b.lockAt)[0];
+    el('weekSummary').innerHTML = `
+      <div class="stat"><div class="val">${mine.pts}</div><div class="lbl">Points</div></div>
+      <div class="stat"><div class="val">${mine.correct}&ndash;${mine.wrong}</div><div class="lbl">Record</div></div>
+      <div class="stat"><div class="val">${made}/${pickable.length}</div><div class="lbl">Picks made</div></div>
+      <div class="stat"><div class="val">${next ? formatCountdown(next.lockAt - now) : '&mdash;'}</div><div class="lbl">Next lock</div></div>
+    `;
+
+    // Games grouped by day
+    let html = '';
+    let lastDay = '';
+    w.games.forEach(g => {
+      const dk = dpKey(g.dp);
+      if (dk !== lastDay) {
+        html += `<div class="day-label">${DAYS[dow(g.dp)]}, ${shortDate(g.dp)}</div>`;
+        lastDay = dk;
+      }
+      html += gameCard(g, myPicks[g.id]);
+    });
+    el('gamesList').innerHTML = html || '<div class="empty-state">No games this week.</div>';
+  }
+
+  function gameCard(g, myPick) {
+    const locked = isLocked(g);
+    const myTeam = myPick?.team || null;
+    const late = myPick && myPick.atMs && myPick.atMs > g.lockAt;
+    const disabled = locked || g.isTBD || g.cancelled;
+
+    let tag;
+    if (g.cancelled) tag = `<span class="tag tag-void">Postponed</span>`;
+    else if (g.isFinal && g.isVoid) tag = `<span class="tag tag-void">${g.isForfeit ? 'Forfeit' : 'Tie'} &middot; no contest</span>`;
+    else if (g.isFinal) tag = `<span class="tag tag-final">Final</span>`;
+    else if (locked) tag = `<span class="tag tag-locked">&#128274; Locked</span>`;
+    else if (g.isTBD) tag = `<span class="tag tag-void">Matchup TBD</span>`;
+    else tag = `<span class="tag tag-open">Locks ${esc(formatLock(g.lockAt))}</span>`;
+    const playoffTag = g.isPlayoff ? ' <span class="tag tag-playoff">Playoff</span>' : '';
+
+    const btn = (key, name, side, score) => {
+      const c = teamColor(name);
+      const picked = myTeam === key;
+      const isWinner = g.isFinal && g.winnerKey === key;
+      let style = '';
+      let cls = 'team-btn';
+      if (picked) { cls += ' picked'; style = `background:${c.bg};border-color:${c.bg};color:${c.text};`; }
+      else if (myTeam && (locked || g.isFinal)) cls += ' dim';
+      let mark = '';
+      if (picked && isGraded(g)) mark = `<span class="mark">${isWinner ? '&#10003;' : '&#10007;'}</span>`;
+      const scoreHtml = (g.isFinal && score !== null) ? `<span class="score">${esc(score)}${isWinner ? ' W' : ''}</span>` : '';
+      return `<button class="${cls}" style="${style}" data-game="${esc(g.id)}" data-team="${esc(key)}" ${disabled ? 'disabled' : ''}>
+        <span class="side">${side}</span>
+        <span>${picked ? '' : `<span class="swatch" style="background:${c.bg}"></span>`}${esc(name)}</span>
+        ${scoreHtml}${mark}
+      </button>`;
+    };
+
+    let below = '';
+    if (locked && !g.isTBD && !g.cancelled) {
+      const s = splitFor(g);
+      if (s.total > 0) {
+        const hp = Math.round(100 * s.home / s.total);
+        const ap = 100 - hp;
+        const ac = teamColor(g.awayName).bg, hc = teamColor(g.homeName).bg;
+        below += `<div class="split">
+          <div class="split-bar"><div style="width:${ap}%;background:${ac}"></div><div style="width:${hp}%;background:${hc}"></div></div>
+          <div class="split-labels"><span>${esc(g.awayName)} ${ap}% (${s.away})</span><span>${esc(g.homeName)} ${hp}% (${s.home})</span></div>
+        </div>`;
+      }
+    }
+    if (late) {
+      below += `<div class="result-line neutral">Pick saved after first pitch &mdash; doesn't count.</div>`;
+    } else if (isGraded(g) && myTeam) {
+      const right = myTeam === g.winnerKey;
+      const bonus = right && isUpset(g);
+      below += `<div class="result-line ${right ? 'win' : 'loss'}">${right ? `+${bonus ? 2 : 1} pt${bonus ? 's' : ''}` : 'Missed'}${bonus ? '<span class="bonus-chip">&#9889; Upset bonus</span>' : ''}</div>`;
+    } else if (locked && !myTeam && !g.isTBD && !g.cancelled && !g.isVoid) {
+      below += `<div class="result-line neutral">No pick made.</div>`;
+    }
+
+    return `<div class="game">
+      <div class="game-meta"><span>${esc(g.time || 'Time TBD')}${playoffTag}</span>${tag}</div>
+      <div class="matchup">
+        ${btn(g.awayKey, g.awayName, 'Away', g.awayScore)}
+        <span class="at">@</span>
+        ${btn(g.homeKey, g.homeName, 'Home', g.homeScore)}
+      </div>
+      ${below}
+    </div>`;
+  }
+
+  function leaderboardTable(rows, { showUpsets = true } = {}) {
+    if (!rows.length) return '<div class="empty-state">No graded picks yet.</div>';
+    let rank = 0, prevKey = null;
+    const body = rows.map((r, i) => {
+      const key = `${r.pts}|${r.correct}|${r.wrong}`;
+      if (key !== prevKey) { rank = i + 1; prevKey = key; }
+      const graded = r.correct + r.wrong;
+      const pct = graded ? (r.correct / graded).toFixed(3).replace(/^0/, '') : '&mdash;';
+      return `<tr class="${r.uid === currentUser.uid ? 'me' : ''}">
+        <td class="rank">${rank}</td>
+        <td>${esc(r.name)}</td>
+        <td class="num">${r.correct}&ndash;${r.wrong}</td>
+        <td class="num hide-sm">${pct}</td>
+        ${showUpsets ? `<td class="num hide-sm">${r.upsets}</td>` : ''}
+        <td class="num pts">${r.pts}</td>
+      </tr>`;
+    }).join('');
+    return `<table class="lb-table">
+      <thead><tr><th>#</th><th>Name</th><th class="num">W&ndash;L</th><th class="num hide-sm">Pct</th>${showUpsets ? '<th class="num hide-sm">Upsets</th>' : ''}<th class="num">Pts</th></tr></thead>
+      <tbody>${body}</tbody>
+    </table>`;
+  }
+
+  function renderWeekBoard() {
+    const w = weeks[weekIdx];
+    el('weekLeaderboard').innerHTML = leaderboardTable(scoreGames(w.games));
+
+    const lockedGames = w.games.filter(g => isLocked(g) && !g.isTBD && !g.cancelled);
+    if (!lockedGames.length) {
+      el('weekGrid').innerHTML = '<div class="empty-state">No games have locked yet this week.</div>';
+      return;
+    }
+    // Counts only -- individual picks stay private
+    el('weekGrid').innerHTML = lockedGames.map(g => {
+      const s = splitFor(g);
+      const upset = isUpset(g) ? '<span class="bonus-chip">&#9889; Upset</span>' : '';
+      const side = (key, name, n) => {
+        const c = teamColor(name);
+        const won = isGraded(g) && g.winnerKey === key;
+        const lost = isGraded(g) && g.winnerKey !== key;
+        return `<div class="count-side${lost ? ' lost' : ''}">
+          <span class="swatch" style="background:${c.bg}"></span>
+          <span class="count-team">${esc(name)}${won ? ' &#10003;' : ''}</span>
+          <span class="count-num">${n}</span>
+        </div>`;
+      };
+      const ap = s.total ? Math.round(100 * s.away / s.total) : 50;
+      const bar = s.total
+        ? `<div class="split-bar"><div style="width:${ap}%;background:${teamColor(g.awayName).bg}"></div><div style="width:${100 - ap}%;background:${teamColor(g.homeName).bg}"></div></div>`
+        : '';
+      return `<div class="count-row">
+        <div class="count-meta">${DAYS[dow(g.dp)].slice(0, 3)} ${shortDate(g.dp)} &middot; ${esc(g.time || '')} &middot; ${s.total} pick${s.total === 1 ? '' : 's'}${upset}</div>
+        <div class="count-sides">${side(g.awayKey, g.awayName, s.away)}<span class="at">@</span>${side(g.homeKey, g.homeName, s.home)}</div>
+        ${bar}
+      </div>`;
+    }).join('');
+  }
+
+  function renderSeason() {
+    const graded = games.filter(isGraded).length;
+    el('seasonSubtitle').textContent = `${season.id} · ${graded} graded game${graded === 1 ? '' : 's'} so far`;
+    el('seasonLeaderboard').innerHTML = leaderboardTable(scoreGames(games));
+  }
+
+  // ============================================================
+  // SAVE PICKS
+  // ============================================================
+  async function handlePick(gameId, teamKey) {
+    const g = gamesById[gameId];
+    if (!g) return;
+    if (isLocked(g)) { toast('That game is locked.', true); renderPicks(); return; }
+
+    const uid = currentUser.uid;
+    if (!entries[uid]) entries[uid] = { displayName, picks: {} };
+    const prev = entries[uid].picks[gameId] ? { ...entries[uid].picks[gameId] } : null;
+    const ref = doc(db, 'pickem', season.id, 'entries', uid);
+    const clearing = prev?.team === teamKey;
+
+    // Optimistic update
+    if (clearing) delete entries[uid].picks[gameId];
+    else entries[uid].picks[gameId] = { team: teamKey, atMs: Date.now() };
+    renderPicks();
+
+    try {
+      if (clearing) {
+        await updateDoc(ref, new FieldPath('picks', gameId), deleteField(), 'updatedAt', serverTimestamp());
+        toast('Pick cleared');
+      } else {
+        await setDoc(ref, {
+          uid,
+          displayName,
+          seasonId: season.id,
+          updatedAt: serverTimestamp(),
+          picks: { [gameId]: { team: teamKey, at: serverTimestamp() } },
+        }, { merge: true });
+        const name = teamKey === g.homeKey ? g.homeName : g.awayName;
+        toast(`Picked ${name}`);
+      }
+    } catch (err) {
+      console.error('Pick save failed', err);
+      if (prev) entries[uid].picks[gameId] = prev; else delete entries[uid].picks[gameId];
+      renderPicks();
+      toast('Could not save pick. Try again.', true);
+    }
+  }
+
+  let toastTimer = null;
+  function toast(msg, isError = false) {
+    const t = el('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (isError ? ' error' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = 'toast'; }, 1800);
+  }
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="mobile-enhancements.js"></script>
+</body>
+</html>

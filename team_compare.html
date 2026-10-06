@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Comparison - Aces Stats</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+  
+  .page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .page-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    text-align: center;
+    padding: 4rem 2rem;
+    border-radius: 16px;
+    margin-bottom: 3rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .page-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  
+  .page-header::after {
+    content: '🆚';
+    position: absolute;
+    bottom: -30px;
+    left: -30px;
+    font-size: 200px;
+    opacity: 0.05;
+  }
+  
+  .page-header h1 {
+    margin: 0;
+    font-size: 3rem;
+    font-weight: 800;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 1;
+  }
+  
+  .page-header p {
+    margin: 1rem 0 0 0;
+    font-size: 1.1rem;
+    opacity: 0.95;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .filters-nav {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 3rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+  }
+  
+  .nav-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-link {
+    padding: 1rem 1.75rem;
+    border: 2px solid var(--primary-color);
+    background: white;
+    color: var(--primary-color);
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--primary-color);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: -1;
+  }
+  
+  .nav-link:hover::before {
+    transform: translateX(0);
+  }
+  
+  .nav-link:hover {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .nav-link.pitching {
+    border-color: #11998e;
+    color: #11998e;
+  }
+  
+  .nav-link.pitching::before {
+    background: #11998e;
+  }
+  
+  .nav-link.pitching:hover {
+    color: white;
+  }
+
+  .comparison-section {
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .comparison-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  }
+  
+  .comparison-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+  }
+  
+  .team-selector {
+    background: #f8f9fa;
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 25px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .team-selector:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
+  }
+  
+  .team-selector h3 {
+    margin: 0 0 15px 0;
+    text-align: center;
+    color: var(--text-dark);
+    font-size: 1.3em;
+    font-weight: 700;
+  }
+  
+  .team-select {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 15px;
+    background: white;
+    transition: all 0.3s ease;
+    color: var(--text-dark);
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .team-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+  }
+  
+  .comparison-type {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin: 30px 0;
+  }
+  
+  .comparison-type button {
+    padding: 12px 32px;
+    border: 2px solid var(--primary-color);
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: white;
+    color: var(--primary-color);
+    font-family: 'Inter', sans-serif;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .comparison-type button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: -1;
+  }
+  
+  .comparison-type button.active {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .comparison-type button.active::before {
+    transform: translateX(0);
+  }
+  
+  .comparison-type button:not(.active):hover::before {
+    transform: translateX(0);
+  }
+  
+  .comparison-type button:not(.active):hover {
+    color: white;
+    transform: translateY(-2px);
+  }
+  
+  #seasonSelector {
+    text-align: center;
+    margin: 20px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+  }
+  
+  #seasonSelector label {
+    margin-right: 15px;
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 16px;
+  }
+  
+  #seasonSelect {
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background: white;
+    min-width: 200px;
+    color: var(--text-dark);
+    font-family: 'Inter', sans-serif;
+  }
+  
+  #seasonSelect:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+  }
+  
+  .comparison-results {
+    margin-top: 30px;
+  }
+  
+  .team-comparison {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+  }
+  
+  .team-stats {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .team-stats::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  
+  .team-stats:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+  }
+  
+  .team-stats:hover::before {
+    opacity: 1;
+  }
+  
+  .team-stats::after {
+    content: '⚾';
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    font-size: 120px;
+    opacity: 0;
+    color: var(--primary-color);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .team-stats:hover::after {
+    opacity: 0.05;
+    bottom: -10px;
+    right: -10px;
+  }
+  
+  .team-stats h4 {
+    margin: 0 0 20px 0;
+    text-align: center;
+    font-size: 1.4em;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-weight: 700;
+  }
+  
+  .team-logo {
+    height: 35px;
+    width: auto;
+    object-fit: contain;
+  }
+  
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .stat-row:last-child {
+    border-bottom: none;
+  }
+  
+  .stat-label {
+    font-weight: 600;
+    color: var(--text-light);
+    font-size: 14px;
+  }
+  
+  .stat-value {
+    font-weight: 700;
+    color: var(--text-dark);
+    font-size: 16px;
+  }
+  
+  .comparison-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5em;
+    color: var(--primary-color);
+    font-weight: bold;
+    opacity: 0.3;
+  }
+  
+  .no-comparison {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-light);
+    font-style: italic;
+    font-size: 1.1em;
+    background: #f8f9fa;
+    border-radius: 16px;
+    border: 2px dashed var(--border-color);
+  }
+  
+  .record-display {
+    font-size: 1.1em;
+    background: linear-gradient(135deg, #e8f4f8 0%, #d6eaf8 100%);
+    padding: 15px;
+    border-radius: 12px;
+    margin: 15px 0;
+    text-align: center;
+    border: 1px solid #85c1e9;
+    color: var(--text-dark);
+  }
+  
+  .head-to-head {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 2px solid #ffeaa7;
+    border-radius: 16px;
+    padding: 30px;
+    margin: 30px 0;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+  }
+  
+  .head-to-head h3 {
+    margin: 0 0 20px 0;
+    color: #856404;
+    font-size: 1.5em;
+    font-weight: 700;
+  }
+  
+  .h2h-record {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: var(--text-dark);
+    margin: 15px 0;
+  }
+  
+  .h2h-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
+  
+  .h2h-stat {
+    background: rgba(255, 255, 255, 0.85);
+    padding: 18px;
+    border-radius: 12px;
+    border: 1px solid #e6d3a3;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .h2h-stat:hover {
+    background: white;
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .h2h-stat-label {
+    font-size: 0.9em;
+    color: var(--text-light);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  
+  .h2h-stat-value {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: var(--text-dark);
+  }
+  
+  @media (max-width: 768px) {
+    .page-container {
+      padding: 1rem;
+    }
+    
+    .page-header {
+      padding: 2.5rem 1.5rem;
+    }
+    
+    .page-header h1 {
+      font-size: 2.5rem;
+    }
+    
+    .nav-container {
+      justify-content: center;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .nav-link {
+      padding: 12px 20px;
+      font-size: 14px;
+      text-align: center;
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .comparison-container {
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+    
+    .team-comparison {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    .comparison-divider {
+      display: none;
+    }
+    
+    .comparison-type {
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .comparison-type button {
+      width: 250px;
+      padding: 15px 20px;
+    }
+    
+    .h2h-breakdown {
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .comparison-section {
+      padding: 1.5rem;
+    }
+    
+    .team-selector {
+      padding: 20px;
+    }
+    
+    .team-stats {
+      padding: 20px;
+    }
+    
+    .team-stats h4 {
+      font-size: 1.2em;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .team-logo {
+      height: 30px;
+    }
+    
+    .comparison-type button {
+      width: 100%;
+      padding: 12px 15px;
+      font-size: 14px;
+    }
+    
+    .page-header h1 {
+      font-size: 2rem;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="page-container">
+  <div class="page-header">
+    <h1>Team Comparison Tool</h1>
+    <p>Compare team statistics, head-to-head records, and performance across seasons (2022+)</p>
+  </div>
+
+  <div class="filters-nav">
+
+  </div>
+
+
+
+  <div class="comparison-section">
+    <div class="comparison-container">
+      <div class="team-selector">
+        <h3>Team 1</h3>
+        <select id="team1Select" class="team-select">
+          <option value="">Select Team 1...</option>
+        </select>
+      </div>
+      
+      <div class="team-selector">
+        <h3>Team 2</h3>
+        <select id="team2Select" class="team-select">
+          <option value="">Select Team 2...</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="comparison-type">
+      <button id="allTimeBtn" onclick="switchComparison('allTime')" class="active">All-Time Comparison</button>
+      <button id="seasonBtn" onclick="switchComparison('season')">Season Comparison</button>
+    </div>
+
+    <div id="seasonSelector" style="display: none;">
+      <label for="seasonSelect">Select Season:</label>
+      <select id="seasonSelect">
+        <option value="">Choose a season...</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="comparisonResults" class="comparison-results">
+    <div class="no-comparison">
+      Select two teams above to begin comparison
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// ========================================
+// TEAM COMPARISON - FIREBASE OPTIMIZED
+// ========================================
+import {
+  getAllPlayerStatsOptimized,
+  seasonsObjectToArray,
+  getAllSeasons,
+  getSeasonGames
+} from './firebase-data.js';
+
+let allBattingData = [];
+let allGames = [];
+let allAwards = [];
+let currentComparison = 'allTime';
+let team1Data = null;
+let team2Data = null;
+
+async function loadData() {
+  try {
+    console.log('🔍 Loading team comparison data from Firebase...');
+    
+    const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+    
+    // Load players from Firebase - USE OPTIMIZED FUNCTION
+    console.log('📊 Loading player stats...');
+    const playerStats = await getAllPlayerStatsOptimized();
+    console.log(`✅ Loaded ${playerStats.length} players from Firebase`);
+    
+    // Load all seasons (2022+)
+    console.log('📅 Loading seasons...');
+    const allSeasons = await getAllSeasons();
+    const seasons2022Plus = allSeasons.filter(s => s.year >= 2022);
+    console.log(`✅ Found ${seasons2022Plus.length} seasons (2022+)`);
+    
+    // Load games from all seasons (2022+)
+    console.log('🎮 Loading games from all seasons...');
+    const gamePromises = seasons2022Plus.map(async (season) => {
+      try {
+        const seasonGames = await getSeasonGames(season.id);
+        return seasonGames.map(g => {
+          let dateString = "";
+          try {
+            if (g.date && g.date.seconds) {
+              const dateObj = new Date(g.date.seconds * 1000);
+              const month = dateObj.getMonth() + 1;
+              const day = dateObj.getDate();
+              const year = dateObj.getFullYear();
+              dateString = `${month}/${day}/${year}`;
+            } else if (g.date) {
+              dateString = g.date;
+            }
+          } catch (dateError) {
+            console.warn('Date parsing error:', dateError);
+            dateString = "";
+          }
+          
+          return {
+            "home team": g.homeTeamName || capitalize(g.homeTeamId) || "",
+            "away team": g.awayTeamName || capitalize(g.awayTeamId) || "",
+            "home score": g.homeScore !== undefined ? g.homeScore : null,
+            "away score": g.awayScore !== undefined ? g.awayScore : null,
+            winner: capitalize(g.winner || ""),
+            game_type: g.gameType || "Regular",
+            date: dateString,
+            year: season.year.toString(),  // ✅ Convert to string
+            season: capitalize(season.season || "")
+          };
+        });
+      } catch (err) {
+        console.warn(`Could not load games for season ${season.id}:`, err);
+        return [];
+      }
+    });
+    
+    const allSeasonGames = await Promise.all(gamePromises);
+    allGames = allSeasonGames.flat();
+    console.log(`✅ Loaded ${allGames.length} games (2022+)`);
+    console.log('📊 Sample game:', allGames[0]);
+    
+    // Load awards from Firebase
+    console.log('🏆 Loading awards...');
+    const { db, collection, getDocs } = await import('./firebase-config.js');
+    const awardsSnapshot = await getDocs(collection(db, 'awards'));
+    
+    allAwards = [];
+    awardsSnapshot.forEach(doc => {
+      const data = doc.data();
+      const year = data.year || (data.seasonId ? parseInt(data.seasonId.split('-')[0]) : 0);
+      
+      // Filter to 2022+ only
+      if (year >= 2022) {
+        allAwards.push({
+          Player: data.playerName || data.Player,
+          Award: data.category || data.Award,
+          Team: data.team || data.Team,
+          Year: data.year ? data.year.toString() : (data.seasonId ? data.seasonId.split('-')[0] : ''),
+          Season: data.season || (data.seasonId ? capitalize(data.seasonId.split('-')[1]) : '')
+        });
+      }
+    });
+    
+    console.log(`✅ Loaded ${allAwards.length} awards (2022+)`);
+    console.log('📊 Sample award:', allAwards[0]);
+    
+    // Convert Firebase data to format expected by comparison tool
+    // ✅ Use seasonsObjectToArray helper
+    allBattingData = playerStats.map(player => {
+      const seasonArray = seasonsObjectToArray(player);
+      
+      // Map each season to expected format, filter to 2022+
+      return seasonArray
+        .filter(season => {
+          const parts = season.seasonId.split('-');
+          const year = parseInt(parts[0]);
+          return year >= 2022;
+        })
+        .map(season => {
+          const parts = season.seasonId.split('-');
+          const year = parts[0];
+          const seasonName = parts[1] ? parts[1].charAt(0).toUpperCase() + parts[1].slice(1) : '';
+          
+          // ✅ Use multiple field name fallbacks
+          return {
+            name: player.name || player.playerName || player.id,
+            team: season.team || player.currentTeam || player.team || '',
+            season: seasonName,
+            year: year,
+            games: Number(season.games || 0),
+            atBats: Number(season.atBats || 0),
+            hits: Number(season.hits || 0),
+            runs: Number(season.runs || 0),
+            walks: Number(season.walks || 0)
+          };
+        });
+    }).flat();
+    
+    console.log(`✅ Processed ${allBattingData.length} player-season records (2022+)`);
+    console.log('📊 Sample player-season:', allBattingData[0]);
+    
+    populateTeamSelects();
+    
+    // Handle URL parameters for incoming links from h2h_grid
+    const urlParams = new URLSearchParams(window.location.search);
+    const team1Param = urlParams.get('team1');
+    const team2Param = urlParams.get('team2');
+
+    if (team1Param && team2Param) {
+      setTimeout(() => {
+        const team1Select = document.getElementById('team1Select');
+        const team2Select = document.getElementById('team2Select');
+        
+        if (team1Select && team2Select) {
+          team1Select.value = team1Param;
+          team2Select.value = team2Param;
+          updateComparison();
+        }
+      }, 100);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error loading data:', error);
+    console.error('Error stack:', error.stack);
+    document.getElementById("comparisonResults").innerHTML =
+      '<div class="no-comparison">Error loading team data. Please check your connection.</div>';
+  }
+}
+
+function populateTeamSelects() {
+  const teams = [...new Set(allBattingData.map(p => p.team))]
+    .filter(team => team && team.toLowerCase() !== "kings")
+    .sort();
+  
+  console.log('🏆 Teams found:', teams);
+  
+  const team1Select = document.getElementById('team1Select');
+  const team2Select = document.getElementById('team2Select');
+  
+  teams.forEach(teamName => {
+    const option1 = document.createElement('option');
+    option1.value = teamName;
+    option1.textContent = teamName;
+    team1Select.appendChild(option1);
+    
+    const option2 = document.createElement('option');
+    option2.value = teamName;
+    option2.textContent = teamName;
+    team2Select.appendChild(option2);
+  });
+  
+  team1Select.addEventListener('change', updateComparison);
+  team2Select.addEventListener('change', updateComparison);
+}
+
+function updateComparison() {
+  const team1Name = document.getElementById('team1Select').value;
+  const team2Name = document.getElementById('team2Select').value;
+  
+  if (!team1Name || !team2Name) {
+    document.getElementById('comparisonResults').innerHTML =
+      '<div class="no-comparison">Select two teams above to begin comparison</div>';
+    return;
+  }
+  
+  if (team1Name === team2Name) {
+    document.getElementById('comparisonResults').innerHTML =
+      '<div class="no-comparison">Please select two different teams</div>';
+    return;
+  }
+  
+  team1Data = allBattingData.filter(p => p.team === team1Name);
+  team2Data = allBattingData.filter(p => p.team === team2Name);
+  
+  console.log(`📊 Team 1 (${team1Name}):`, team1Data.length, 'player-seasons');
+  console.log(`📊 Team 2 (${team2Name}):`, team2Data.length, 'player-seasons');
+  
+  if (currentComparison === 'season') {
+    populateSeasonSelector();
+  }
+  
+  renderComparison();
+}
+
+function switchComparison(type) {
+  currentComparison = type;
+  
+  const allTimeBtn = document.getElementById('allTimeBtn');
+  const seasonBtn = document.getElementById('seasonBtn');
+  const seasonSelector = document.getElementById('seasonSelector');
+  
+  if (type === 'allTime') {
+    allTimeBtn.classList.add('active');
+    seasonBtn.classList.remove('active');
+    seasonSelector.style.display = 'none';
+  } else {
+    seasonBtn.classList.add('active');
+    allTimeBtn.classList.remove('active');
+    seasonSelector.style.display = 'block';
+    populateSeasonSelector();
+  }
+  
+  renderComparison();
+}
+
+function populateSeasonSelector() {
+  const seasonSelect = document.getElementById('seasonSelect');
+  
+  if (!team1Data || !team2Data) return;
+  
+  const allSeasons = new Set();
+  
+  team1Data.forEach(player => {
+    allSeasons.add(`${player.year}-${player.season}`);
+  });
+  
+  team2Data.forEach(player => {
+    allSeasons.add(`${player.year}-${player.season}`);
+  });
+  
+  seasonSelect.innerHTML = '<option value="">Choose a season...</option>';
+  
+  const sortedSeasons = Array.from(allSeasons).sort((a, b) => {
+    const [yearA, seasonA] = a.split('-');
+    const [yearB, seasonB] = b.split('-');
+    
+    if (yearB !== yearA) return parseInt(yearB) - parseInt(yearA);
+    return seasonB.localeCompare(seasonA);
+  });
+  
+  sortedSeasons.forEach(seasonKey => {
+    const [year, season] = seasonKey.split('-');
+    const option = document.createElement('option');
+    option.value = seasonKey;
+    option.textContent = `${year} ${season}`;
+    seasonSelect.appendChild(option);
+  });
+  
+  const newSeasonSelect = seasonSelect.cloneNode(true);
+  seasonSelect.parentNode.replaceChild(newSeasonSelect, seasonSelect);
+  newSeasonSelect.addEventListener('change', renderComparison);
+}
+
+function renderComparison() {
+  if (!team1Data || !team2Data) return;
+  
+  const resultsDiv = document.getElementById('comparisonResults');
+  
+  if (currentComparison === 'allTime') {
+    resultsDiv.innerHTML = renderAllTimeComparison();
+  } else {
+    const selectedSeason = document.getElementById('seasonSelect').value;
+    if (selectedSeason) {
+      resultsDiv.innerHTML = renderSeasonComparison(selectedSeason);
+    } else {
+      resultsDiv.innerHTML = '<div class="no-comparison">Please select a season to compare</div>';
+    }
+  }
+}
+
+function renderAllTimeComparison() {
+  const team1Stats = aggregateTeamStats(team1Data, team1Data[0].team);
+  const team2Stats = aggregateTeamStats(team2Data, team2Data[0].team);
+  
+  const headToHead = calculateHeadToHead(team1Data[0].team, team2Data[0].team);
+  
+  return `
+    ${headToHead ? renderHeadToHeadSection(headToHead, team1Data[0].team, team2Data[0].team) : ''}
+    
+    <div class="team-comparison">
+      <div class="team-stats">
+        <h4>
+          <img src="logos/${team1Stats.teamName.toLowerCase()}.png" alt="${team1Stats.teamName} Logo" class="team-logo" onerror="this.style.display='none';">
+          ${team1Stats.teamName}
+        </h4>
+        ${renderTeamStatsRows(team1Stats)}
+      </div>
+      
+      <div class="comparison-divider">VS</div>
+      
+      <div class="team-stats">
+        <h4>
+          <img src="logos/${team2Stats.teamName.toLowerCase()}.png" alt="${team2Stats.teamName} Logo" class="team-logo" onerror="this.style.display='none';">
+          ${team2Stats.teamName}
+        </h4>
+        ${renderTeamStatsRows(team2Stats)}
+      </div>
+    </div>
+  `;
+}
+
+function renderSeasonComparison(selectedSeason) {
+  const [year, season] = selectedSeason.split('-');
+  
+  const team1SeasonData = team1Data.filter(p => p.year === year && p.season === season);
+  const team2SeasonData = team2Data.filter(p => p.year === year && p.season === season);
+  
+  if (team1SeasonData.length === 0 && team2SeasonData.length === 0) {
+    return '<div class="no-comparison">Neither team played in the selected season</div>';
+  }
+  
+  const team1Stats = team1SeasonData.length > 0 ?
+    aggregateTeamStats(team1SeasonData, team1Data[0].team, year, season) : null;
+  const team2Stats = team2SeasonData.length > 0 ?
+    aggregateTeamStats(team2SeasonData, team2Data[0].team, year, season) : null;
+  
+  const headToHead = calculateHeadToHead(team1Data[0].team, team2Data[0].team, year, season);
+  
+  return `
+    ${headToHead ? renderHeadToHeadSection(headToHead, team1Data[0].team, team2Data[0].team, `${year} ${season}`) : ''}
+    
+    <div class="team-comparison">
+      <div class="team-stats">
+        <h4>
+          <img src="logos/${team1Data[0].team.toLowerCase()}.png" alt="${team1Data[0].team} Logo" class="team-logo" onerror="this.style.display='none';">
+          ${team1Data[0].team} - ${year} ${season}
+        </h4>
+        ${team1Stats ? renderTeamStatsRows(team1Stats) : '<div style="text-align: center; color: #666; font-style: italic;">Did not play this season</div>'}
+      </div>
+      
+      <div class="comparison-divider">VS</div>
+      
+      <div class="team-stats">
+        <h4>
+          <img src="logos/${team2Data[0].team.toLowerCase()}.png" alt="${team2Data[0].team} Logo" class="team-logo" onerror="this.style.display='none';">
+          ${team2Data[0].team} - ${year} ${season}
+        </h4>
+        ${team2Stats ? renderTeamStatsRows(team2Stats) : '<div style="text-align: center; color: #666; font-style: italic;">Did not play this season</div>'}
+      </div>
+    </div>
+  `;
+}
+
+function renderTeamStatsRows(stats) {
+  return `
+    <div class="stat-row">
+      <span class="stat-label">Total Players:</span>
+      <span class="stat-value">${stats.totalPlayers}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Total Team Games:</span>
+      <span class="stat-value">${stats.totalTeamGames}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">At Bats:</span>
+      <span class="stat-value">${stats.totalAtBats}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Hits:</span>
+      <span class="stat-value">${stats.totalHits}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Runs:</span>
+      <span class="stat-value">${stats.totalRuns}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Walks:</span>
+      <span class="stat-value">${stats.totalWalks}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Team BA:</span>
+      <span class="stat-value">${stats.teamBA}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Team OBP:</span>
+      <span class="stat-value">${stats.teamOBP}</span>
+    </div>
+    ${stats.gameRecord ? `
+    <div class="record-display">
+      <strong>Record: ${stats.gameRecord}</strong><br>
+      <small>Win Percentage: ${stats.winPercentage}</small>
+    </div>
+    ` : ''}
+    <div class="stat-row">
+      <span class="stat-label">Seasons Active:</span>
+      <span class="stat-value">${stats.seasonsActive}</span>
+    </div>
+    ${stats.awards ? `
+    <div class="stat-row">
+      <span class="stat-label">Awards:</span>
+      <span class="stat-value">${stats.awards}</span>
+    </div>
+    ` : ''}
+  `;
+}
+
+function aggregateTeamStats(teamData, teamName, specificYear = null, specificSeason = null) {
+  const uniquePlayers = new Set(teamData.map(p => p.name));
+  
+  const stats = {
+    teamName: teamName,
+    totalPlayers: uniquePlayers.size,
+    totalGames: 0,
+    totalAtBats: 0,
+    totalHits: 0,
+    totalRuns: 0,
+    totalWalks: 0,
+    seasonsActive: 0
+  };
+  
+  teamData.forEach(player => {
+    stats.totalGames += player.games;
+    stats.totalAtBats += player.atBats;
+    stats.totalHits += player.hits;
+    stats.totalRuns += player.runs;
+    stats.totalWalks += player.walks;
+  });
+  
+  stats.teamBA = stats.totalAtBats > 0 ? (stats.totalHits / stats.totalAtBats).toFixed(3) : ".000";
+  stats.teamOBP = (stats.totalAtBats + stats.totalWalks) > 0 ?
+    ((stats.totalHits + stats.totalWalks) / (stats.totalAtBats + stats.totalWalks)).toFixed(3) : ".000";
+  
+  const uniqueSeasons = new Set(teamData.map(p => `${p.year}-${p.season}`));
+  stats.seasonsActive = uniqueSeasons.size;
+  
+  let gameFilter;
+  if (specificYear && specificSeason) {
+    gameFilter = g => (g["home team"] === teamName || g["away team"] === teamName) &&
+                      g.year === specificYear && g.season === specificSeason;
+  } else {
+    gameFilter = g => g["home team"] === teamName || g["away team"] === teamName;
+  }
+  
+  const teamGames = allGames.filter(gameFilter);
+  stats.totalTeamGames = teamGames.length;
+  
+  if (teamGames.length > 0) {
+    const record = calculateTeamRecord(teamName, teamGames);
+    stats.gameRecord = `${record.wins}-${record.losses}${record.ties > 0 ? `-${record.ties}` : ''}`;
+    stats.winPercentage = record.totalDecidedGames > 0 ?
+      (record.wins / record.totalDecidedGames * 100).toFixed(1) + '%' : '0.0%';
+  }
+  
+  let awardsFilter;
+  if (specificYear && specificSeason) {
+    awardsFilter = a => a.Team === teamName && a.Year === specificYear && a.Season === specificSeason;
+  } else {
+    awardsFilter = a => a.Team === teamName;
+  }
+  
+  const teamAwards = allAwards.filter(awardsFilter);
+  if (teamAwards.length > 0) {
+    const awardCounts = {};
+    teamAwards.forEach(award => {
+      const awardType = award.Award.trim();
+      if (!awardCounts[awardType]) {
+        awardCounts[awardType] = 0;
+      }
+      awardCounts[awardType]++;
+    });
+    
+    const formattedAwards = Object.entries(awardCounts)
+      .map(([awardType, count]) => `${awardType}: ${count}`)
+      .join(' | ');
+    
+    stats.awards = formattedAwards;
+  }
+  
+  return stats;
+}
+
+function calculateTeamRecord(teamName, games) {
+  let wins = 0, losses = 0, ties = 0;
+  
+  games.forEach(game => {
+    const winner = game.winner;
+
+    // Skip games that haven't been played yet (no winner recorded)
+    if (!winner || winner.trim() === "") return;
+
+    if (winner === "Tie") {
+      ties++;
+    } else if (winner === teamName) {
+      wins++;
+    } else if (winner !== teamName && winner !== "Tie" && !winner.includes("Forfeit")) {
+      losses++;
+    } else if (winner.includes("Forfeit")) {
+      const actualWinner = winner.replace("Forfeit - ", "").replace("Tie", "");
+      if (actualWinner === teamName) {
+        wins++;
+      } else if (actualWinner !== teamName && actualWinner !== "" && actualWinner !== "Tie") {
+        losses++;
+      } else {
+        ties++;
+      }
+    }
+  });
+  
+  return {
+    wins: wins,
+    losses: losses,
+    ties: ties,
+    totalDecidedGames: wins + losses
+  };
+}
+
+function calculateHeadToHead(team1Name, team2Name, specificYear = null, specificSeason = null) {
+  let headToHeadGames = allGames.filter(game => {
+    const homeTeam = game["home team"];
+    const awayTeam = game["away team"];
+    
+    const isMatchup = (homeTeam === team1Name && awayTeam === team2Name) ||
+                      (homeTeam === team2Name && awayTeam === team1Name);
+    
+    if (!isMatchup) return false;
+    
+    if (specificYear && specificSeason) {
+      return game.year === specificYear && game.season === specificSeason;
+    }
+    
+    return true;
+  });
+  
+  if (headToHeadGames.length === 0) {
+    return null;
+  }
+  
+  let team1Wins = 0, team2Wins = 0, ties = 0;
+  let regularSeasonGames = 0, playoffGames = 0;
+  let team1HomeWins = 0, team1AwayWins = 0;
+  let team2HomeWins = 0, team2AwayWins = 0;
+  
+  headToHeadGames.forEach(game => {
+    const homeTeam = game["home team"];
+    const winner = game.winner;
+    const gameType = game.game_type;
+
+    // Skip unplayed future games
+    if (!winner || winner.trim() === "") return;
+
+    if (gameType === 'Regular') {
+      regularSeasonGames++;
+    } else if (gameType === 'Playoff') {
+      playoffGames++;
+    }
+
+    let actualWinner = winner;
+    if (winner.includes("Forfeit")) {
+      actualWinner = winner.replace("Forfeit - ", "").replace("Tie", "");
+    }
+    
+    if (actualWinner === "Tie") {
+      ties++;
+    } else if (actualWinner === team1Name) {
+      team1Wins++;
+      if (homeTeam === team1Name) {
+        team1HomeWins++;
+      } else {
+        team1AwayWins++;
+      }
+    } else if (actualWinner === team2Name) {
+      team2Wins++;
+      if (homeTeam === team2Name) {
+        team2HomeWins++;
+      } else {
+        team2AwayWins++;
+      }
+    }
+  });
+  
+  const totalGames = team1Wins + team2Wins + ties;
+  const totalDecidedGames = team1Wins + team2Wins;
+  
+  return {
+    team1Name: team1Name,
+    team2Name: team2Name,
+    team1Wins: team1Wins,
+    team2Wins: team2Wins,
+    ties: ties,
+    totalGames: totalGames,
+    totalDecidedGames: totalDecidedGames,
+    regularSeasonGames: regularSeasonGames,
+    playoffGames: playoffGames,
+    team1HomeWins: team1HomeWins,
+    team1AwayWins: team1AwayWins,
+    team2HomeWins: team2HomeWins,
+    team2AwayWins: team2AwayWins,
+    team1WinPct: totalDecidedGames > 0 ? (team1Wins / totalDecidedGames * 100).toFixed(1) : '0.0',
+    team2WinPct: totalDecidedGames > 0 ? (team2Wins / totalDecidedGames * 100).toFixed(1) : '0.0'
+  };
+}
+
+function renderHeadToHeadSection(h2h, team1Name, team2Name, seasonInfo = '') {
+  const leadingTeam = h2h.team1Wins > h2h.team2Wins ? team1Name :
+                      h2h.team2Wins > h2h.team1Wins ? team2Name : 'Tied';
+  
+  return `
+    <div class="head-to-head">
+      <h3>Head-to-Head Record ${seasonInfo ? `(${seasonInfo})` : '(2022+)'}</h3>
+      <div class="h2h-record">
+        ${team1Name} ${h2h.team1Wins} - ${h2h.team2Wins} ${team2Name}
+        ${h2h.ties > 0 ? ` (${h2h.ties} ties)` : ''}
+      </div>
+      <div style="font-size: 1em; color: #666; margin: 5px 0;">
+        ${h2h.totalGames} total games • ${leadingTeam !== 'Tied' ? `${leadingTeam} leads series` : 'Series tied'}
+      </div>
+      
+      <div class="h2h-breakdown">
+        <div class="h2h-stat">
+          <div class="h2h-stat-label">Win Percentage</div>
+          <div class="h2h-stat-value">${team1Name}: ${h2h.team1WinPct}%</div>
+          <div class="h2h-stat-value">${team2Name}: ${h2h.team2WinPct}%</div>
+        </div>
+        
+        ${h2h.regularSeasonGames > 0 || h2h.playoffGames > 0 ? `
+        <div class="h2h-stat">
+          <div class="h2h-stat-label">By Game Type</div>
+          ${h2h.regularSeasonGames > 0 ? `<div class="h2h-stat-value">Regular: ${h2h.regularSeasonGames}</div>` : ''}
+          ${h2h.playoffGames > 0 ? `<div class="h2h-stat-value">Playoff: ${h2h.playoffGames}</div>` : ''}
+        </div>
+        ` : ''}
+        
+        <div class="h2h-stat">
+          <div class="h2h-stat-label">${team1Name} Home/Away</div>
+          <div class="h2h-stat-value">Home: ${h2h.team1HomeWins} wins</div>
+          <div class="h2h-stat-value">Away: ${h2h.team1AwayWins} wins</div>
+        </div>
+        
+        <div class="h2h-stat">
+          <div class="h2h-stat-label">${team2Name} Home/Away</div>
+          <div class="h2h-stat-value">Home: ${h2h.team2HomeWins} wins</div>
+          <div class="h2h-stat-value">Away: ${h2h.team2AwayWins} wins</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+window.switchComparison = switchComparison;
+
+loadData();
+</script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

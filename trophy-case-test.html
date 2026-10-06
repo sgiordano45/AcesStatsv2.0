@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trophy Case (TEST) - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --gold: #ffd700;
+    --silver: #c0c0c0;
+    --bronze: #cd7f32;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+
+  /* Loading Spinner */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .trophy-spinner {
+    font-size: 80px;
+    animation: bounce 1s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(10deg); }
+  }
+
+  /* Header - Trophy Gold Theme */
+  .header {
+    background: linear-gradient(135deg, #b8860b 0%, #daa520 50%, #ffd700 100%);
+    color: white;
+    text-align: center;
+    padding: 4rem 2rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .header::after {
+    content: '🏆';
+    position: absolute;
+    bottom: -30px;
+    left: 10%;
+    font-size: 120px;
+    opacity: 0.15;
+    transform: rotate(-15deg);
+  }
+  
+  .header h1 {
+    margin: 0;
+    font-size: 3.5rem;
+    font-weight: 800;
+    text-shadow: 2px 4px 8px rgba(0,0,0,0.3);
+    letter-spacing: -0.5px;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .header p {
+    margin: 1rem 0 0 0;
+    font-size: 1.3rem;
+    opacity: 0.95;
+    font-weight: 300;
+    position: relative;
+    z-index: 1;
+    text-shadow: 1px 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 3rem auto;
+    padding: 0 2rem;
+  }
+
+  /* Section Styling */
+  .section {
+    background: var(--card-bg);
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .section:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .section-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    position: relative;
+  }
+
+  .section-header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .section-content {
+    padding: 2rem;
+  }
+
+  /* Stats Summary Cards */
+  .stats-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    border-left: 4px solid var(--gold);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card.gold-border { border-left-color: var(--gold); }
+  .stat-card.silver-border { border-left-color: var(--silver); }
+  .stat-card.bronze-border { border-left-color: var(--bronze); }
+  .stat-card.hidden-border { border-left-color: #6b46c1; }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    font-weight: 500;
+  }
+
+  /* Search/Filter Bar */
+  .search-filter-bar {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+  }
+
+  .search-box input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+  }
+
+  .search-box::before {
+    content: '🔍';
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+  }
+
+  .filter-select {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 1rem;
+    background: white;
+    cursor: pointer;
+    min-width: 150px;
+  }
+
+  .filter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+
+  /* Leaderboard */
+  .leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+  }
+
+  .leaderboard-item:hover {
+    background: #f0f4f8;
+    transform: translateX(4px);
+  }
+
+  .leaderboard-rank {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-light);
+    min-width: 2rem;
+  }
+
+  .leaderboard-rank.top-3 {
+    color: var(--gold);
+  }
+
+  .leaderboard-player {
+    flex: 1;
+  }
+
+  .leaderboard-player-name {
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .leaderboard-player-name a {
+    color: var(--primary-color);
+    text-decoration: none;
+  }
+
+  .leaderboard-player-name a:hover {
+    text-decoration: underline;
+  }
+
+  .leaderboard-player-team {
+    font-size: 0.85rem;
+    color: var(--text-light);
+  }
+
+  .leaderboard-badges {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .badge-count {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+
+  .badge-count.gold { background: rgba(255, 215, 0, 0.2); color: #b8860b; }
+  .badge-count.silver { background: rgba(192, 192, 192, 0.3); color: #666; }
+  .badge-count.bronze { background: rgba(205, 127, 50, 0.2); color: #8b4513; }
+
+  .view-all-link {
+    display: inline-block;
+    margin-top: 1rem;
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .view-all-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Recently Earned Feed */
+  .activity-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .activity-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+    transition: all 0.2s ease;
+  }
+
+  .activity-item:hover {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .activity-item.gold-earned { border-left-color: var(--gold); }
+  .activity-item.silver-earned { border-left-color: var(--silver); }
+  .activity-item.bronze-earned { border-left-color: var(--bronze); }
+  .activity-item.hidden-earned { border-left-color: #6b46c1; }
+
+  .activity-badge-icon {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f4f8;
+    border-radius: 12px;
+  }
+
+  .activity-content {
+    flex: 1;
+  }
+
+  .activity-headline {
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+  }
+
+  .activity-headline a {
+    color: var(--primary-color);
+    text-decoration: none;
+  }
+
+  .activity-headline a:hover {
+    text-decoration: underline;
+  }
+
+  .activity-detail {
+    font-size: 0.9rem;
+    color: var(--text-light);
+  }
+
+  .activity-date {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    white-space: nowrap;
+  }
+
+  /* Badge Grid */
+  .badge-category {
+    margin-bottom: 2rem;
+  }
+
+  .badge-category:last-child {
+    margin-bottom: 0;
+  }
+
+  .badge-category-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .badge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+
+  .badge-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    border: 2px solid var(--border-color);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .badge-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+  }
+
+  .badge-card.gold-tier { border-color: var(--gold); background: linear-gradient(135deg, #fffef0 0%, #ffffff 100%); }
+  .badge-card.silver-tier { border-color: var(--silver); background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%); }
+  .badge-card.bronze-tier { border-color: var(--bronze); background: linear-gradient(135deg, #fdf8f3 0%, #ffffff 100%); }
+
+  .badge-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .badge-icon-img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+  }
+  
+  .badge-icon-emoji {
+    line-height: 1;
+  }
+
+  .badge-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+  }
+
+  .badge-tier {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-tier.gold { color: #b8860b; }
+  .badge-tier.silver { color: #666; }
+  .badge-tier.bronze { color: #8b4513; }
+
+  .badge-earned-count {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 0.5rem;
+  }
+
+  /* Hidden Badge Styling */
+  .badge-card.hidden-badge {
+    background: linear-gradient(135deg, #f3f0ff 0%, #ffffff 100%);
+    border-color: #6b46c1;
+  }
+
+  .badge-card.locked {
+    background: #f8f9fa;
+    border-color: #e2e8f0;
+    opacity: 0.7;
+  }
+
+  .badge-card.locked .badge-icon {
+    filter: grayscale(100%);
+  }
+
+  .hidden-badges-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .hidden-badge-slot {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #e9e3ff 0%, #f3f0ff 100%);
+    border: 2px dashed #6b46c1;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #6b46c1;
+    transition: all 0.2s ease;
+  }
+
+  .hidden-badge-slot.unlocked {
+    background: linear-gradient(135deg, #6b46c1 0%, #805ad5 100%);
+    border-style: solid;
+    color: white;
+    cursor: pointer;
+  }
+
+  .hidden-badge-slot.unlocked:hover {
+    transform: scale(1.1);
+  }
+
+  .hidden-progress {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    font-weight: 500;
+  }
+
+  /* No Data State */
+  .no-data {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-light);
+  }
+
+  .no-data-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .no-data-message {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .no-data-hint {
+    font-size: 0.9rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header h1 {
+      font-size: 2.5rem;
+    }
+
+    .header p {
+      font-size: 1rem;
+    }
+
+    .container {
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .section-content {
+      padding: 1.5rem;
+    }
+
+    .stats-summary {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .search-filter-bar {
+      flex-direction: column;
+    }
+
+    .search-box {
+      width: 100%;
+    }
+
+    .filter-select {
+      width: 100%;
+    }
+
+    .badge-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .leaderboard-badges {
+      flex-wrap: wrap;
+    }
+
+    .activity-item {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .activity-date {
+      align-self: flex-start;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .header h1 {
+      font-size: 2rem;
+    }
+
+    .stats-summary {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .badge-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .badge-card {
+      padding: 1rem 0.75rem;
+    }
+
+    .badge-icon {
+      font-size: 2rem;
+    }
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .section {
+    animation: fadeInUp 0.6s ease backwards;
+  }
+
+  .section:nth-child(1) { animation-delay: 0.1s; }
+  .section:nth-child(2) { animation-delay: 0.2s; }
+  .section:nth-child(3) { animation-delay: 0.3s; }
+  .section:nth-child(4) { animation-delay: 0.4s; }
+  .section:nth-child(5) { animation-delay: 0.5s; }
+
+  /* Badge Earned Animation */
+  @keyframes badgeEarned {
+    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+    50% { transform: scale(1.2) rotate(10deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .badge-card.just-earned {
+    animation: badgeEarned 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  /* Partial Data Banner */
+  .partial-data-banner {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 2px solid #f59e0b;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .partial-data-banner.hidden {
+    display: none;
+  }
+
+  .partial-data-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .partial-data-content h4 {
+    margin: 0 0 4px 0;
+    color: #92400e;
+    font-size: 1rem;
+  }
+
+  .partial-data-content p {
+    margin: 0;
+    color: #b45309;
+    font-size: 0.9rem;
+  }
+
+  /* Badge Modal */
+  .badge-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .badge-modal-content {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .badge-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.75rem;
+    cursor: pointer;
+    color: #666;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+
+  .badge-modal-close:hover {
+    background: #f1f5f9;
+    color: #333;
+  }
+
+  .badge-modal-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .badge-modal-icon {
+    font-size: 4rem;
+    margin-bottom: 0.5rem;
+    display: inline-block;
+    padding: 1rem;
+    border-radius: 50%;
+    background: #f8f9fa;
+  }
+
+  .badge-modal-icon.gold-tier { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); }
+  .badge-modal-icon.silver-tier { background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); }
+  .badge-modal-icon.bronze-tier { background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); }
+
+  .badge-modal-header h2 {
+    margin: 0.5rem 0 0.25rem;
+    font-size: 1.5rem;
+    color: var(--text-dark);
+  }
+
+  .badge-modal-tier {
+    display: inline-block;
+    padding: 0.25rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .badge-modal-tier.gold { background: var(--gold); color: #78350f; }
+  .badge-modal-tier.silver { background: var(--silver); color: #374151; }
+  .badge-modal-tier.bronze { background: var(--bronze); color: #fff; }
+
+  .badge-modal-description {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .badge-modal-earners h3 {
+    font-size: 1rem;
+    margin: 0 0 1rem;
+    color: var(--text-dark);
+  }
+
+  .earners-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 250px;
+    overflow-y: auto;
+  }
+
+  .earner-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+  }
+
+  .earner-item a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .earner-item a:hover {
+    text-decoration: underline;
+  }
+
+  .earner-team {
+    color: var(--text-light);
+    font-size: 0.85rem;
+  }
+
+  .earner-value {
+    margin-left: auto;
+    font-weight: 600;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+  }
+
+  .no-earners {
+    text-align: center;
+    color: var(--text-light);
+    padding: 1rem;
+  }
+
+  .badge-modal-tiers {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .badge-modal-tiers h4 {
+    font-size: 0.9rem;
+    margin: 0 0 0.75rem;
+    color: var(--text-light);
+  }
+
+  .tier-links {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tier-link {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border-color);
+    background: white;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .tier-link:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tier-link.gold { border-color: var(--gold); color: #b8860b; }
+  .tier-link.silver { border-color: var(--silver); color: #666; }
+  .tier-link.bronze { border-color: var(--bronze); color: #8b4513; }
+</style>
+</head>
+<body>
+  <!-- Loading Spinner -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="trophy-spinner">🏆</div>
+  </div>
+
+  <!-- Navigation placeholder -->
+  <div class="filters-nav"></div>
+
+  <!-- Header -->
+  <header class="header" style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);">
+    <h1>🧪 Trophy Case (TEST)</h1>
+    <p>Preview - Reading from test collection</p>
+  </header>
+
+  <div class="container">
+    
+    <!-- Test Mode Banner -->
+    <div class="partial-data-banner" style="background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); border-color: #8b5cf6;">
+      <div class="partial-data-icon">🧪</div>
+      <div class="partial-data-content">
+        <h4 style="color: #5b21b6;">Test Mode</h4>
+        <p style="color: #6d28d9;">This page displays badges from the <code>playerBadges_test</code> collection. Run calculations with "Test Mode" enabled in the admin tool to populate this data.</p>
+      </div>
+    </div>
+    
+    <!-- Partial Data Banner -->
+    <div class="partial-data-banner hidden" id="partialDataBanner">
+      <div class="partial-data-icon">⚠️</div>
+      <div class="partial-data-content">
+        <h4>Preview Mode - Partial Data</h4>
+        <p>This trophy case is based on incomplete 2025 game-level data. Not all games or players are included. Complete badge tracking begins with the 2026 Summer season.</p>
+      </div>
+    </div>
+    
+    <!-- Season Badge Summary -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-header-title">📊 Season Badge Summary</span>
+      </div>
+      <div class="section-content">
+        <div class="stats-summary">
+          <div class="stat-card gold-border">
+            <div class="stat-number" id="totalBadges">--</div>
+            <div class="stat-label">Total Earned</div>
+          </div>
+          <div class="stat-card gold-border">
+            <div class="stat-number" id="goldCount">--</div>
+            <div class="stat-label">🥇 Gold</div>
+          </div>
+          <div class="stat-card silver-border">
+            <div class="stat-number" id="silverCount">--</div>
+            <div class="stat-label">🥈 Silver</div>
+          </div>
+          <div class="stat-card bronze-border">
+            <div class="stat-number" id="bronzeCount">--</div>
+            <div class="stat-label">🥉 Bronze</div>
+          </div>
+          <div class="stat-card hidden-border">
+            <div class="stat-number" id="hiddenCount">--</div>
+            <div class="stat-label">🔒 Hidden Found</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Badge Leaderboard -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-header-title">🎯 Badge Leaderboard</span>
+      </div>
+      <div class="section-content">
+        <div class="leaderboard-list" id="leaderboardContent">
+          <div class="no-data">
+            <div class="no-data-icon">⏳</div>
+            <p class="no-data-message">Loading leaderboard...</p>
+          </div>
+        </div>
+        <a href="#" class="view-all-link" id="viewAllLeaderboard" style="display: none;">View full leaderboard →</a>
+      </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-header-title">🔍 Find a Player</span>
+      </div>
+      <div class="section-content">
+        <div class="search-filter-bar">
+          <div class="search-box">
+            <input type="text" id="playerSearch" placeholder="Search by player name...">
+          </div>
+          <select class="filter-select" id="teamFilter">
+            <option value="">All Teams</option>
+            <option value="crushers">Crushers</option>
+            <option value="dingers">Dingers</option>
+            <option value="sluggers">Sluggers</option>
+            <!-- Teams will be dynamically populated -->
+          </select>
+          <select class="filter-select" id="badgeFilter">
+            <option value="">All Badges</option>
+            <option value="hitting">Hitting</option>
+            <option value="pitching">Pitching</option>
+            <option value="two-way">Two-Way</option>
+            <option value="milestone">Milestone</option>
+            <option value="hidden">Hidden</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recently Earned -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-header-title">⭐ Recently Earned</span>
+      </div>
+      <div class="section-content">
+        <div class="activity-feed" id="recentActivity">
+          <div class="no-data">
+            <div class="no-data-icon">⏳</div>
+            <p class="no-data-message">Loading recent activity...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- All Badges -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-header-title">🏅 All Badges</span>
+      </div>
+      <div class="section-content" id="allBadgesContent">
+        <div class="no-data">
+          <div class="no-data-icon">⏳</div>
+          <p class="no-data-message">Loading badges...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { 
+      db,
+      collection, 
+      doc, 
+      getDocs, 
+      getDoc
+    } from './firebase-config.js';
+    import { NavigationComponent } from './nav-component.js';
+    import { 
+      BADGE_DEFINITIONS, 
+      getBadgesByCategory,
+      getTierColorClass,
+      getBadgeIconHtml
+    } from './badge-calculator.js';
+
+    // State
+    let badgeData = null;
+    let allPlayerBadges = {};
+    let currentSeasonId = '2025-fall'; // Default to partial data season for testing
+
+    // ============================================
+    // DATA LOADING (READ-ONLY)
+    // ============================================
+
+    async function loadBadgeData() {
+      console.log('🧪 Loading TEST badge data...');
+      
+      try {
+        // Load pre-calculated badges from TEST collection (read-only)
+        const summaryRef = doc(db, 'playerBadges_test', `season_${currentSeasonId}`);
+        const summarySnap = await getDoc(summaryRef);
+        
+        if (summarySnap.exists()) {
+          badgeData = summarySnap.data();
+          console.log('✅ Loaded pre-calculated TEST badge data:', badgeData);
+          
+          // Load individual player badges from TEST collection
+          const badgesRef = collection(db, 'playerBadges_test');
+          const badgesSnap = await getDocs(badgesRef);
+          
+          badgesSnap.forEach(docSnap => {
+            if (docSnap.id.startsWith(currentSeasonId + '_')) {
+              const playerId = docSnap.id.replace(currentSeasonId + '_', '');
+              allPlayerBadges[playerId] = docSnap.data();
+            }
+          });
+          
+          renderAll();
+        } else {
+          console.log('⚠️ No pre-calculated badges found for this season.');
+          showNoDataState();
+        }
+        
+      } catch (error) {
+        console.error('Error loading badge data:', error);
+        showNoDataState();
+      }
+      
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+
+    // ============================================
+    // RENDERING
+    // ============================================
+
+    function renderAll() {
+      renderPartialDataBanner();
+      renderSummary();
+      renderLeaderboard();
+      renderRecentActivity();
+      renderAllBadges();
+      populateFilters();
+    }
+
+    function renderPartialDataBanner() {
+      const banner = document.getElementById('partialDataBanner');
+      if (badgeData?.isPartialData) {
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function renderSummary() {
+      if (!badgeData?.summary) return;
+      
+      document.getElementById('totalBadges').textContent = badgeData.summary.total || 0;
+      document.getElementById('goldCount').textContent = badgeData.summary.gold || 0;
+      document.getElementById('silverCount').textContent = badgeData.summary.silver || 0;
+      document.getElementById('bronzeCount').textContent = badgeData.summary.bronze || 0;
+      document.getElementById('hiddenCount').textContent = badgeData.summary.hidden || 0;
+    }
+
+    function renderLeaderboard() {
+      const container = document.getElementById('leaderboardContent');
+      if (!badgeData?.leaderboard || badgeData.leaderboard.length === 0) {
+        container.innerHTML = `
+          <div class="no-data">
+            <div class="no-data-icon">🏆</div>
+            <p class="no-data-message">No badges earned yet</p>
+          </div>
+        `;
+        return;
+      }
+      
+      const topPlayers = badgeData.leaderboard.slice(0, 5);
+      
+      container.innerHTML = topPlayers.map((player, index) => `
+        <div class="leaderboard-item">
+          <div class="leaderboard-rank ${index < 3 ? 'top-3' : ''}">${index + 1}</div>
+          <div class="leaderboard-player">
+            <div class="leaderboard-player-name">
+              <a href="player.html?id=${encodeURIComponent(player.playerId)}">${player.playerName}</a>
+            </div>
+            <div class="leaderboard-player-team">${formatTeamName(player.teamId)}</div>
+          </div>
+          <div class="leaderboard-badges">
+            ${player.gold > 0 ? `<span class="badge-count gold">🥇 ${player.gold}</span>` : ''}
+            ${player.silver > 0 ? `<span class="badge-count silver">🥈 ${player.silver}</span>` : ''}
+            ${player.bronze > 0 ? `<span class="badge-count bronze">🥉 ${player.bronze}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderRecentActivity() {
+      const container = document.getElementById('recentActivity');
+      
+      // Collect all earned badges with dates
+      const activities = [];
+      
+      Object.entries(allPlayerBadges).forEach(([playerId, playerData]) => {
+        if (!playerData.earned) return;
+        
+        Object.entries(playerData.earned).forEach(([badgeId, badge]) => {
+          activities.push({
+            playerId,
+            playerName: playerData.playerName,
+            badge,
+            // Use calculation date if no specific earn date
+            date: badge.gameDate || playerData.calculatedAt
+          });
+        });
+      });
+      
+      // Sort by date (most recent first) and take top 10
+      activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const recent = activities.slice(0, 10);
+      
+      if (recent.length === 0) {
+        container.innerHTML = `
+          <div class="no-data">
+            <div class="no-data-icon">⭐</div>
+            <p class="no-data-message">No recent badge activity</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = recent.map(activity => {
+        const tierClass = activity.badge.tier ? `${activity.badge.tier}-earned` : '';
+        const hiddenClass = activity.badge.hidden ? 'hidden-earned' : '';
+        
+        return `
+          <div class="activity-item ${tierClass} ${hiddenClass}">
+            <div class="activity-badge-icon">${getBadgeIconHtml(activity.badge.badgeId || activity.badge.id, activity.badge.tier, 32)}</div>
+            <div class="activity-content">
+              <div class="activity-headline">
+                <a href="player.html?id=${encodeURIComponent(activity.playerId)}">${activity.playerName}</a>
+                ${activity.badge.hidden ? 'unlocked' : 'earned'}
+                <strong>"${activity.badge.name}"</strong>
+                ${activity.badge.tier ? `(${capitalize(activity.badge.tier)})` : ''}
+              </div>
+              <div class="activity-detail">${activity.badge.description || ''}</div>
+            </div>
+            <div class="activity-date">${formatDate(activity.date)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAllBadges() {
+      const container = document.getElementById('allBadgesContent');
+      
+      // Count how many players earned each badge
+      const badgeCounts = {};
+      const badgeEarners = {};
+      
+      Object.entries(allPlayerBadges).forEach(([playerId, playerData]) => {
+        if (!playerData.earned) return;
+        
+        Object.entries(playerData.earned).forEach(([badgeId, badge]) => {
+          const key = badge.tier ? `${badgeId}_${badge.tier}` : badgeId;
+          badgeCounts[key] = (badgeCounts[key] || 0) + 1;
+          if (!badgeEarners[key]) badgeEarners[key] = [];
+          badgeEarners[key].push({
+            playerId,
+            playerName: playerData.playerName,
+            value: badge.value
+          });
+        });
+      });
+      
+      // Count hidden badges discovered
+      const hiddenBadges = getBadgesByCategory('hidden');
+      const hiddenDiscovered = hiddenBadges.filter(b => badgeCounts[b.id] > 0).length;
+      
+      container.innerHTML = `
+        <!-- Hitting Badges -->
+        <div class="badge-category">
+          <div class="badge-category-title">⚾ Hitting Badges</div>
+          <div class="badge-grid">
+            ${renderBadgeCards('hitting', badgeCounts, badgeEarners)}
+          </div>
+        </div>
+
+        <!-- Pitching Badges -->
+        <div class="badge-category">
+          <div class="badge-category-title">⚾ Pitching Badges</div>
+          <div class="badge-grid">
+            ${renderBadgeCards('pitching', badgeCounts, badgeEarners)}
+          </div>
+        </div>
+
+        <!-- Two-Way Badges -->
+        <div class="badge-category">
+          <div class="badge-category-title">⚡ Two-Way Player Badges</div>
+          <div class="badge-grid">
+            ${renderBadgeCards('two-way', badgeCounts, badgeEarners)}
+          </div>
+        </div>
+
+        <!-- Milestone Badges -->
+        <div class="badge-category">
+          <div class="badge-category-title">🎯 Milestone Badges</div>
+          <div class="badge-grid">
+            ${renderBadgeCards('milestone', badgeCounts, badgeEarners)}
+          </div>
+        </div>
+
+        <!-- Hidden Badges -->
+        <div class="badge-category">
+          <div class="badge-category-title">🔒 Hidden Badges</div>
+          <div class="hidden-badges-row">
+            ${hiddenBadges.map(badge => {
+              const count = badgeCounts[badge.id] || 0;
+              if (count > 0) {
+                return `<div class="hidden-badge-slot unlocked" title="${badge.name}" onclick="showBadgeDetail('${badge.id}')">${getBadgeIconHtml(badge.id, null, 40)}</div>`;
+              } else {
+                return `<div class="hidden-badge-slot">?</div>`;
+              }
+            }).join('')}
+            <span class="hidden-progress">${hiddenDiscovered} of ${hiddenBadges.length} discovered</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderBadgeCards(category, badgeCounts, badgeEarners) {
+      const badges = getBadgesByCategory(category);
+      let html = '';
+      
+      badges.forEach(badge => {
+        if (badge.type === 'tiered') {
+          // Render each tier as a separate card
+          ['gold', 'silver', 'bronze'].forEach(tier => {
+            const key = `${badge.id}_${tier}`;
+            const count = badgeCounts[key] || 0;
+            const tierDef = badge.tiers[tier];
+            
+            html += `
+              <div class="badge-card ${tier}-tier" onclick="showBadgeDetail('${badge.id}', '${tier}')">
+                <div class="badge-icon">${getBadgeIconHtml(badge.id, tier, 48)}</div>
+                <div class="badge-name">${tierDef.name}</div>
+                <div class="badge-tier ${tier}">${capitalize(tier)}</div>
+                <div class="badge-earned-count">${count} player${count !== 1 ? 's' : ''}</div>
+              </div>
+            `;
+          });
+        } else {
+          // Single badge
+          const count = badgeCounts[badge.id] || 0;
+          html += `
+            <div class="badge-card" onclick="showBadgeDetail('${badge.id}')">
+              <div class="badge-icon">${getBadgeIconHtml(badge.id, null, 48)}</div>
+              <div class="badge-name">${badge.name}</div>
+              <div class="badge-tier" style="color: var(--primary-color);">Elite</div>
+              <div class="badge-earned-count">${count} player${count !== 1 ? 's' : ''}</div>
+            </div>
+          `;
+        }
+      });
+      
+      return html;
+    }
+
+    function populateFilters() {
+      // Get unique teams from player data
+      const teams = new Set();
+      Object.values(allPlayerBadges).forEach(player => {
+        if (player.teamId) teams.add(player.teamId);
+      });
+      
+      const teamFilter = document.getElementById('teamFilter');
+      teamFilter.innerHTML = '<option value="">All Teams</option>';
+      Array.from(teams).sort().forEach(team => {
+        teamFilter.innerHTML += `<option value="${team}">${formatTeamName(team)}</option>`;
+      });
+    }
+
+    function showNoDataState() {
+      document.getElementById('totalBadges').textContent = '—';
+      document.getElementById('goldCount').textContent = '—';
+      document.getElementById('silverCount').textContent = '—';
+      document.getElementById('bronzeCount').textContent = '—';
+      document.getElementById('hiddenCount').textContent = '—';
+      
+      document.getElementById('leaderboardContent').innerHTML = `
+        <div class="no-data">
+          <div class="no-data-icon">🧪</div>
+          <p class="no-data-message">No test badges calculated yet</p>
+          <p class="no-data-hint">Run the badge calculator with "Test Mode" enabled to populate test data.</p>
+        </div>
+      `;
+      
+      document.getElementById('recentActivity').innerHTML = `
+        <div class="no-data">
+          <div class="no-data-icon">⭐</div>
+          <p class="no-data-message">No test badge activity yet</p>
+        </div>
+      `;
+      
+      document.getElementById('allBadgesContent').innerHTML = `
+        <div class="no-data" style="padding: 3rem; text-align: center;">
+          <div class="no-data-icon" style="font-size: 4rem;">🧪</div>
+          <p class="no-data-message" style="font-size: 1.25rem; margin: 1rem 0;">Test badge data not available</p>
+          <p class="no-data-hint">Go to <a href="admin-badges.html">Admin Badge Calculator</a> and run with "Test Mode" checked.</p>
+        </div>
+      `;
+    }
+
+    // ============================================
+    // BADGE DETAIL MODAL
+    // ============================================
+
+    window.showBadgeDetail = function(badgeId, tier = null) {
+      const def = BADGE_DEFINITIONS[badgeId];
+      if (!def) return;
+      
+      // Find all players who earned this badge
+      const earners = [];
+      Object.entries(allPlayerBadges).forEach(([playerId, playerData]) => {
+        if (!playerData.earned) return;
+        
+        const badge = playerData.earned[badgeId];
+        if (badge && (!tier || badge.tier === tier)) {
+          earners.push({
+            playerId,
+            playerName: playerData.playerName,
+            teamId: playerData.teamId,
+            badge
+          });
+        }
+      });
+      
+      // Sort by value if available
+      earners.sort((a, b) => (b.badge.value || 0) - (a.badge.value || 0));
+      
+      const tierInfo = tier && def.tiers ? def.tiers[tier] : null;
+      const displayName = tierInfo ? tierInfo.name : def.name;
+      const description = tierInfo ? tierInfo.description : def.description;
+      
+      const modal = document.createElement('div');
+      modal.className = 'badge-modal';
+      modal.innerHTML = `
+        <div class="badge-modal-content">
+          <button class="badge-modal-close" onclick="this.closest('.badge-modal').remove()">&times;</button>
+          
+          <div class="badge-modal-header">
+            <div class="badge-modal-icon ${tier ? tier + '-tier' : ''}">${getBadgeIconHtml(badgeId, tier, 64)}</div>
+            <h2>${displayName}</h2>
+            ${tier ? `<div class="badge-modal-tier ${tier}">${capitalize(tier)}</div>` : ''}
+          </div>
+          
+          <p class="badge-modal-description">${description}</p>
+          
+          <div class="badge-modal-earners">
+            <h3>🏆 Earned by ${earners.length} player${earners.length !== 1 ? 's' : ''}</h3>
+            
+            ${earners.length > 0 ? `
+              <div class="earners-list">
+                ${earners.map(e => `
+                  <div class="earner-item">
+                    <a href="player.html?id=${encodeURIComponent(e.playerId)}">${e.playerName}</a>
+                    <span class="earner-team">${formatTeamName(e.teamId)}</span>
+                    ${e.badge.value ? `<span class="earner-value">${formatBadgeValue(badgeId, e.badge.value)}</span>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            ` : `
+              <p class="no-earners">No players have earned this badge yet</p>
+            `}
+          </div>
+          
+          ${def.type === 'tiered' && tier ? `
+            <div class="badge-modal-tiers">
+              <h4>Other Tiers</h4>
+              <div class="tier-links">
+                ${['gold', 'silver', 'bronze'].filter(t => t !== tier).map(t => `
+                  <button class="tier-link ${t}" onclick="document.querySelector('.badge-modal').remove(); showBadgeDetail('${badgeId}', '${t}')">
+                    ${def.tiers[t].name} (${capitalize(t)})
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+      });
+      
+      document.body.appendChild(modal);
+    };
+
+    // ============================================
+    // SEARCH & FILTER
+    // ============================================
+
+    document.getElementById('playerSearch')?.addEventListener('input', function(e) {
+      const query = e.target.value.toLowerCase();
+      // TODO: Implement player search with results dropdown
+      console.log('Search query:', query);
+    });
+
+    document.getElementById('teamFilter')?.addEventListener('change', function(e) {
+      // TODO: Filter displayed badges by team
+      console.log('Team filter:', e.target.value);
+    });
+
+    document.getElementById('badgeFilter')?.addEventListener('change', function(e) {
+      // TODO: Filter badge categories
+      console.log('Badge filter:', e.target.value);
+    });
+
+    // ============================================
+    // UTILITIES
+    // ============================================
+
+    function formatTeamName(teamId) {
+      if (!teamId) return 'Unknown';
+      return teamId.charAt(0).toUpperCase() + teamId.slice(1).replace(/_/g, ' ');
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function capitalize(str) {
+      return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+    }
+
+    function formatBadgeValue(badgeId, value) {
+      if (typeof value === 'object') {
+        // Two-way badge
+        if (value.hits !== undefined && value.ip !== undefined) {
+          return `${value.hits}H / ${value.ip}IP`;
+        }
+        return JSON.stringify(value);
+      }
+      
+      // Add context based on badge type
+      switch (badgeId) {
+        case 'hitStreak': return `${value}-game streak`;
+        case 'multiHitGames': return `${value} hits`;
+        case 'seasonHits': return `${value} hits`;
+        case 'seasonRuns': return `${value} runs`;
+        case 'seasonWalks': return `${value} walks`;
+        case 'bigGames': return `${value} runs`;
+        case 'scorelessOutings': return `${value} outings`;
+        case 'seasonInnings': return `${value} IP`;
+        case 'lowRunGames': return `${value} games`;
+        case 'theArchitect': return `${value} games`;
+        default: return value;
+      }
+    }
+
+    // ============================================
+    // INITIALIZE
+    // ============================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadBadgeData();
+    });
+  </script>
+  <script src="mobile-enhancements.js"></script>
+</body>
+</html>

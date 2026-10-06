@@ -1,0 +1,3581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roster Management - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  }
+  
+  * { box-sizing: border-box; }
+  body { 
+    margin: 0; 
+    padding: 0; 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  }
+  #root { min-height: 100vh; }
+  .table-scroll-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-scroll-container::-webkit-scrollbar { height: 8px; }
+  .table-scroll-container::-webkit-scrollbar-track { background: #f1f1f1; }
+  .table-scroll-container::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+  .table-scroll-container::-webkit-scrollbar-thumb:hover { background: #555; }
+  .player-card-hover:hover .remove-btn { opacity: 1 !important; }
+  .player-card-hover:hover { box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; }
+  .player-card-draggable { 
+    cursor: move !important; 
+    user-select: none; 
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    touch-action: none;
+  }
+  .player-card-draggable:active { 
+    cursor: move !important; 
+  }
+  .player-card-draggable:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important; 
+  }
+  .player-card-draggable * {
+        user-select: none !important;
+  }
+  .player-card-draggable .remove-btn {
+    pointer-events: auto !important;
+  }
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  .loading-overlay.hidden {
+    display: none;
+  }
+  .softball-spinner::before {
+    content: '⚾';
+    font-size: 80px;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+  @keyframes spin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+.back-home-btn {
+      position: absolute;
+      top: 2rem;
+      right: 2rem;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255,255,255,0.3);
+      z-index: 2;
+    }
+
+    .back-home-btn:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateX(-5px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+/* Connection Status Indicator */
+.connection-status {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #ffc107;
+  color: #856404;
+  padding: 10px 16px;
+  border-radius: 25px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 9999;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.connection-status.hidden {
+  display: none;
+}
+
+.connection-status.online {
+  background: #28a745;
+  color: white;
+}
+
+.connection-status .status-icon {
+  font-size: 1rem;
+}
+</style>
+</head>
+<body>
+<div id="connectionStatus" class="connection-status hidden">
+  <span class="status-icon">📡</span>
+  <span class="status-text">You're offline</span>
+</div>
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="softball-spinner"></div>
+</div>
+<div id="root"></div>
+
+<script type="module">
+import { onAuthChange, getCurrentUser, getUserProfile } from './firebase-auth.js';
+// import { isImpersonating, getImpersonatedUser, injectImpersonationBanner } from './admin-impersonate.js';
+import {
+  getCurrentSeason,
+  getAllTeams
+} from './firebase-data.js';
+import {
+  getGameRSVPs,
+  updateRSVP,
+  listenToGameRSVPs,
+  getBattingOrder,
+  saveBattingOrder,
+  getFieldingPositions,
+  saveFieldingPositions,
+  getBenchPlayers,
+  saveBenchPlayers,
+  getUpcomingTeamGames,
+  getTeamRosterDoc,
+  finalizeBattingOrder,
+  unfinalizeBattingOrder,
+  finalizeFieldingPositions,
+  unfinalizeFieldingPositions
+} from './firebase-roster.js';
+
+import { onForegroundMessage } from './firebase-messaging.js';
+
+// Expose Firebase functions for finalization status checks
+import { doc, getDoc, setDoc, deleteDoc, collection, query, where, orderBy, limit, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { db } from './firebase-data.js';
+
+window.firebaseImports = { doc, getDoc, setDoc, deleteDoc, db, collection, query, where, orderBy, limit, getDocs, serverTimestamp };
+
+
+let rsvpListeners = [];
+let appInitialized = false;
+
+// ADD THIS: Listen for foreground notifications
+onForegroundMessage((payload) => {
+  console.log('📬 Notification received:', payload);
+  
+  // Show visual notification in the page
+  showInPageNotification(payload);
+  
+  // Reload data if it's relevant to this page
+  if (payload.data.type === 'lineup_posted') {
+    // Trigger a refresh of the lineup data
+    console.log('🔄 Lineup updated, refreshing data...');
+    if (window.location.reload) {
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000); // Give user time to see the notification
+    }
+  } else if (payload.data.type === 'rsvp_update') {
+    console.log('🔄 RSVP updated');
+    // Could trigger a specific RSVP refresh here
+  }
+});
+
+// Helper function to show in-page notification
+function showInPageNotification(payload) {
+  // Check if notification already exists
+  const existingNotif = document.getElementById('inPageNotification');
+  if (existingNotif) {
+    existingNotif.remove();
+  }
+  
+  const notification = document.createElement('div');
+  notification.id = 'inPageNotification';
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    z-index: 10000;
+    max-width: 350px;
+    animation: slideInRight 0.3s ease-out;
+    border-left: 4px solid #2d5016;
+  `;
+  
+  notification.innerHTML = `
+    <div style="display: flex; align-items: start; gap: 12px;">
+      <div style="font-size: 24px;">🔔</div>
+      <div style="flex: 1;">
+        <div style="font-weight: 600; color: #2d3748; margin-bottom: 4px;">
+          ${payload.notification.title}
+        </div>
+        <div style="color: #718096; font-size: 14px;">
+          ${payload.notification.body}
+        </div>
+      </div>
+      <button onclick="this.parentElement.parentElement.remove()" 
+              style="background: none; border: none; color: #718096; cursor: pointer; font-size: 20px; padding: 0; line-height: 1;">
+        ×
+      </button>
+    </div>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    if (notification.parentElement) {
+      notification.style.animation = 'slideOutRight 0.3s ease-out';
+      setTimeout(() => notification.remove(), 300);
+    }
+  }, 5000);
+}
+
+// Add animation styles if not present
+if (!document.getElementById('notification-animations')) {
+  const styles = document.createElement('style');
+  styles.id = 'notification-animations';
+  styles.textContent = `
+    @keyframes slideInRight {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    @keyframes slideOutRight {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+    }
+  `;
+  document.head.appendChild(styles);
+}
+
+async function initializeApp(user) {
+  if (!user) {
+    window.location.href = 'signin.html';
+    return;
+  }
+  
+  if (appInitialized) {
+    console.log('⚠️ App already initialized, skipping');
+    return;
+  }
+  
+  console.log('🚀 Initializing app for user:', user.displayName);
+  
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  
+  const container = document.getElementById('root');
+  const root = ReactDOM.createRoot(container);
+  root.render(React.createElement(RosterManagement, { currentUser: user }));
+  
+  appInitialized = true;
+}
+
+onAuthChange((user) => {
+  console.log('🔐 Auth state changed:', user ? user.displayName : 'No user');
+  if (user) {
+    initializeApp(user);
+  } else {
+    window.location.href = 'signin.html';
+  }
+});
+
+window.FirebaseRoster = {
+  getGameRSVPs,
+  updateRSVP,
+  listenToGameRSVPs,
+  getBattingOrder,
+  saveBattingOrder,
+  getFieldingPositions,
+  saveFieldingPositions,
+  getBenchPlayers,
+  saveBenchPlayers,
+  getUpcomingTeamGames,
+  getTeamRosterDoc,
+  getCurrentSeason,
+  getAllTeams,
+  getUserProfile,
+  finalizeBattingOrder,
+  unfinalizeBattingOrder,
+  finalizeFieldingPositions,
+  unfinalizeFieldingPositions,
+  getPlayerSeasonAvg: async function(playerId, legacyId, seasonId) {
+    const lookupIds = [playerId, legacyId].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i);
+    for (const id of lookupIds) {
+      const snap = await getDoc(doc(db, 'aggregatedPlayerStats', id));
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.migrated) break;
+        const key = Object.keys(data.seasons || {}).find(k => k.startsWith(seasonId) && !k.endsWith('-sub'));
+        if (key) {
+          const s = data.seasons[key];
+          const avg = s.battingAverage ?? (s.atBats > 0 ? s.hits / s.atBats : 0);
+          return typeof avg === 'number' ? avg.toFixed(3) : '.000';
+        }
+        break;
+      }
+    }
+    return '.000';
+  }
+};
+</script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useCallback } = React;
+
+const AlertCircle = ({ style }) => (
+  <svg style={style} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+);
+
+const Lock = ({ style }) => (
+  <svg style={style} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+);
+
+const Edit3 = ({ style }) => (
+  <svg style={style} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+  </svg>
+);
+
+const X = ({ style }) => (
+  <svg style={style} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+);
+
+// ADD THIS:
+const Printer = ({ style }) => (
+  <svg style={style} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+    <rect x="6" y="14" width="12" height="8"/>
+  </svg>
+);
+
+const Copy = ({ style }) => (
+  <svg style={style} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </svg>
+);
+
+const ChevronUp = ({ style }) => (
+  <svg style={style} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="18 15 12 9 6 15"/>
+  </svg>
+);
+
+const ChevronDown = ({ style }) => (
+  <svg style={style} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="6 9 12 15 18 9"/>
+  </svg>
+);
+
+const ChevronLeft = ({ style }) => (
+  <svg style={style} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+);
+
+const ChevronRight = ({ style }) => (
+  <svg style={style} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="9 18 15 12 9 6"/>
+  </svg>
+);
+
+const Plus = ({ style }) => (
+  <svg style={style} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+);
+
+const SEASONS = {
+  fall: { name: 'Fall', minPlayers: 7, catcherMinPlayers: 9, maxRoster: 14, battingOrderSize: 14, 
+         positions: ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF'] },
+  summer: { name: 'Summer', minPlayers: 8, catcherMinPlayers: 10, maxRoster: 17, battingOrderSize: 17,
+           positions: ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'LCF', 'RCF', 'RF'] }
+};
+
+const RSVP_STATUS = {
+  yes: { label: 'Yes', color: '#10b981', icon: '✓' },
+  no: { label: 'No', color: '#ef4444', icon: '✗' },
+  maybe: { label: 'Maybe', color: '#f59e0b', icon: '?' },
+  none: { label: 'No Response', color: '#9ca3af', icon: '∅' }
+};
+
+function RosterManagement({ currentUser }) {
+  const [season, setSeason] = useState('fall');
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [selectedTeam, setSelectedTeam] = useState('');
+  const [selectedGame, setSelectedGame] = useState(null);
+  const [rsvps, setRsvps] = useState({});
+  const [lastRsvpUpdate, setLastRsvpUpdate] = useState({}); // Track last RSVP update per game
+  const [battingOrder, setBattingOrder] = useState({});
+  const [fieldingPositions, setFieldingPositions] = useState({});
+  const [benchPlayers, setBenchPlayers] = useState({});
+  const [draggedPlayer, setDraggedPlayer] = useState(null);
+  const [dropTarget, setDropTarget] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [savingLineup, setSavingLineup] = useState(false);
+  const [players, setPlayers] = useState([]);
+  const [games, setGames] = useState([]);
+  const [allTeams, setAllTeams] = useState([]);
+  const [currentSeason, setCurrentSeason] = useState(null);
+  
+  // Mobile detection and tab state
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [activeTab, setActiveTab] = useState('rsvp');
+  const [currentInning, setCurrentInning] = useState(1); // For mobile fielding view
+  
+  // Finalization state
+  const [battingFinalized, setBattingFinalized] = useState({});
+  const [fieldingFinalized, setFieldingFinalized] = useState({});
+  
+  // Player selection modal state
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: '',
+    availablePlayers: [],
+    onSelect: null,
+    playerNumber: ''
+  });
+
+  // Past game picker (Option 1)
+  const [pastGames, setPastGames] = useState([]);
+  const [pastGamesLoaded, setPastGamesLoaded] = useState(false);
+  const [pastGameSelectBatting, setPastGameSelectBatting] = useState('');
+  const [pastGameSelectFielding, setPastGameSelectFielding] = useState('');
+  const [loadingFromPast, setLoadingFromPast] = useState(false);
+
+  // Template save/load (Option 3)
+  const [battingTemplates, setBattingTemplates] = useState([]);
+  const [fieldingTemplates, setFieldingTemplates] = useState([]);
+  const [templatesLoaded, setTemplatesLoaded] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateModalType, setTemplateModalType] = useState(''); // 'batting' | 'fielding'
+  const [templateNameInput, setTemplateNameInput] = useState('');
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateSelectBatting, setTemplateSelectBatting] = useState('');
+  const [templateSelectFielding, setTemplateSelectFielding] = useState('');
+
+  const isCaptain = (() => {
+    if (!userProfile) return false;
+    if (userProfile.isAdmin || userProfile.userRole === 'admin' || userProfile.userRole === 'league-staff') return true;
+    if (userProfile.isCaptain) return true;
+    if (selectedTeam && userProfile.teamRoles && typeof userProfile.teamRoles === 'object') {
+      const entry = Object.entries(userProfile.teamRoles).find(
+        ([key]) => key.toLowerCase() === selectedTeam.toLowerCase()
+      );
+      if (entry) {
+        const teamRole = entry[1];
+        if (teamRole.status === 'active' && (teamRole.role === 'captain' || teamRole.role === 'team-staff')) {
+          return true;
+        }
+      }
+    }
+    return false;
+  })();
+
+  // True only for team-staff (not captain/admin) — used for UI labels only
+  const isTeamStaffRole = (() => {
+    if (!userProfile || !selectedTeam || !userProfile.teamRoles) return false;
+    const entry = Object.entries(userProfile.teamRoles).find(
+      ([key]) => key.toLowerCase() === selectedTeam.toLowerCase()
+    );
+    return !!(entry && entry[1].status === 'active' && entry[1].role === 'team-staff');
+  })();
+  const seasonConfig = SEASONS[season];
+
+  // Helper function to format relative time
+  const formatRelativeTime = (timestamp) => {
+    if (!timestamp) return null;
+    
+    const now = new Date();
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'just now';
+    if (diffMins === 1) return '1 minute ago';
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours === 1) return '1 hour ago';
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays === 1) return 'yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      const newIsMobile = window.innerWidth < 768;
+      setIsMobile(newIsMobile);
+      console.log(`📱 Screen width: ${window.innerWidth}px - Mobile mode: ${newIsMobile}`);
+    };
+    
+    // Log initial state
+    console.log(`📱 Initial screen width: ${window.innerWidth}px - Mobile mode: ${isMobile}`);
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (selectedTeam && currentSeason) {
+      loadTeamData();
+    }
+  }, [selectedTeam, currentSeason]);
+
+  useEffect(() => {
+    if (games.length > 0 && selectedTeam && players.length > 0) {
+      const cleanup = loadGameData();
+      return () => {
+        if (cleanup && typeof cleanup.then === 'function') {
+          cleanup.then(unsubscribe => unsubscribe && unsubscribe());
+        }
+      };
+    }
+  }, [games, selectedTeam, players]);
+
+  useEffect(() => {
+    if (selectedGame && selectedTeam && players.length > 0 && isCaptain) {
+      loadLineupForGame(selectedGame);
+    }
+  }, [selectedGame]);
+
+  async function loadLineupForGame(gameId) {
+    try {
+      const [batting, fielding, bench] = await Promise.all([
+        window.FirebaseRoster.getBattingOrder(gameId, selectedTeam),
+        window.FirebaseRoster.getFieldingPositions(gameId, selectedTeam),
+        window.FirebaseRoster.getBenchPlayers(gameId, selectedTeam)
+      ]);
+
+      const battingWithPlayers = batting.map(playerId =>
+        players.find(p => p.id === playerId) || null
+      );
+
+      const hydratedBench = {};
+      Object.entries(bench).forEach(([inning, playerIds]) => {
+        hydratedBench[inning] = playerIds.map(id =>
+          players.find(p => p.id === id || p.authId === id) || null
+        ).filter(p => p !== null);
+      });
+
+      setBattingOrder(prev => ({ ...prev, [gameId]: battingWithPlayers }));
+      setFieldingPositions(prev => ({ ...prev, [gameId]: fielding }));
+      setBenchPlayers(prev => ({ ...prev, [gameId]: hydratedBench }));
+
+      try {
+        const battingDocRef = window.firebaseImports.doc(window.firebaseImports.db, 'lineups', gameId, 'batting', selectedTeam);
+        const battingDoc = await window.firebaseImports.getDoc(battingDocRef);
+        if (battingDoc.exists() && battingDoc.data().finalized) {
+          setBattingFinalized(prev => ({ ...prev, [gameId]: true }));
+        }
+      } catch (error) {
+        console.log('Error loading batting finalization status:', error);
+      }
+    } catch (error) {
+      console.error('Error loading lineup for game:', gameId, error);
+    }
+  }
+
+  async function loadInitialData() {
+    try {
+      if (!currentUser || !currentUser.uid) {
+        console.error('❌ No currentUser available!');
+        return;
+      }
+      
+      const seasonData = await window.FirebaseRoster.getCurrentSeason();
+      setCurrentSeason(seasonData);
+      
+      if (seasonData.season.toLowerCase() === 'summer') {
+        setSeason('summer');
+      } else {
+        setSeason('fall');
+      }
+      
+      const teams = await window.FirebaseRoster.getAllTeams();
+      const teamNames = teams.map(t => t.name || t.id).sort();
+      setAllTeams(teamNames);
+      
+      const profileResult = await window.FirebaseRoster.getUserProfile(currentUser.uid);
+      
+      if (profileResult.success && profileResult.data) {
+        setUserProfile(profileResult.data);
+        // Check for impersonation mode
+        //if (isImpersonating()) {
+         // const impersonatedProfile = getImpersonatedUser();
+          //if (impersonatedProfile) {
+            // setUserProfile(impersonatedProfile);
+            //console.log('🎭 Impersonation active - viewing as:', // impersonatedProfile?.displayName);
+         // }
+        //}
+        // injectImpersonationBanner();
+        setCurrentUserId(currentUser.uid);
+        
+        if (profileResult.data.linkedTeam) {
+          setSelectedTeam(profileResult.data.linkedTeam);
+        }
+      }
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('❌ Error loading initial data:', error);
+      setLoading(false);
+    }
+  }
+
+  async function loadTeamData() {
+    try {
+      const rosterPlayers = await window.FirebaseRoster.getTeamRosterDoc(selectedTeam, currentSeason.id);
+      
+      const myProfile = userProfile;
+      
+      const formattedPlayersPromises = rosterPlayers.map(async (player, index) => {
+        const name = player.name;
+        const nameParts = name.trim().split(' ');
+        const avatar = nameParts.length > 1 ?
+          (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase() :
+          name.substring(0, 2).toUpperCase();
+        
+        const isCurrentUser = myProfile?.linkedPlayer === name;
+        
+        let jerseyNum = player.number ? parseInt(player.number) || (index + 1) : (index + 1);
+        let isCaptain = player.isCaptain || false;
+        
+        try {
+          const playerProfile = await window.FirebaseRoster.getUserProfile(player.playerId);
+          if (playerProfile.success && playerProfile.data) {
+            if (playerProfile.data.number) {
+              jerseyNum = parseInt(playerProfile.data.number) || jerseyNum;
+            }
+            isCaptain = playerProfile.data.isCaptain || isCaptain;
+          }
+        } catch (error) {
+          console.warn(`Could not load profile for ${name}:`, error);
+        }
+        
+        return {
+          id: player.playerId || player.id,
+          legacyId: player.legacyId || '',
+          name,
+          jersey: jerseyNum,
+          avatar,
+          battingAvg: '.000',
+          isCaptain: isCaptain,
+          isMe: isCurrentUser
+        };
+      });
+
+      const formattedPlayers = await Promise.all(formattedPlayersPromises);
+      formattedPlayers.sort((a, b) => a.name.localeCompare(b.name));
+
+      // Fetch current-season batting averages from aggregatedPlayerStats
+      await Promise.all(formattedPlayers.map(async (p) => {
+        try {
+          p.battingAvg = await window.FirebaseRoster.getPlayerSeasonAvg(p.id, p.legacyId, currentSeason.id);
+        } catch (e) {
+          console.error(`❌ Stats fetch error for ${p.name}:`, e);
+        }
+      }));
+
+      setPlayers(formattedPlayers);
+      
+      const upcomingGames = await window.FirebaseRoster.getUpcomingTeamGames(selectedTeam, currentSeason.id);
+      
+      const capitalizeTeamName = (name) => {
+        if (!name) return '';
+        return name.charAt(0).toUpperCase() + name.slice(1);
+      };
+      
+      const formattedGames = upcomingGames.map(game => {
+        const gameDate = game.date.seconds
+          ? new Date(game.date.seconds * 1000).toLocaleDateString()
+          : game.date;
+        
+        // Data is already normalized by getUpcomingTeamGames
+        return {
+          id: game.id,
+          date: gameDate,
+          homeTeam: capitalizeTeamName(game.homeTeam),
+          awayTeam: capitalizeTeamName(game.awayTeam),
+          opponent: capitalizeTeamName(game.opponent),
+          gameType: game.gameType, // Already normalized (handles both game_type and gameType)
+          round: game.round || '', // Playoff games have round info
+          isHome: game.isHome // Already calculated
+        };
+      });
+      
+      setGames(formattedGames);
+      
+      if (formattedGames.length > 0 && !selectedGame) {
+        setSelectedGame(formattedGames[0].id);
+      }
+    } catch (error) {
+      console.error('❌ Error loading team data:', error);
+    }
+  }
+
+  async function loadGameData() {
+    try {
+      const allRsvpsPromises = games.map(game => 
+        window.FirebaseRoster.getGameRSVPs(game.id)
+      );
+      
+      const allRsvpsResults = await Promise.all(allRsvpsPromises);
+      
+      const formattedRsvps = {};
+      games.forEach((game, gameIndex) => {
+        const gameRsvps = allRsvpsResults[gameIndex];
+        players.forEach(player => {
+          const key = `${player.id}-${game.id}`;
+          const userRsvp = gameRsvps[player.id];
+          formattedRsvps[key] = userRsvp?.status || 'none';
+        });
+      });
+      
+      setRsvps(prev => ({ ...prev, ...formattedRsvps }));
+      
+      if (isCaptain) {
+        const [batting, fielding, bench] = await Promise.all([
+          window.FirebaseRoster.getBattingOrder(selectedGame, selectedTeam),
+          window.FirebaseRoster.getFieldingPositions(selectedGame, selectedTeam),
+          window.FirebaseRoster.getBenchPlayers(selectedGame, selectedTeam)
+        ]);
+        
+        const battingWithPlayers = batting.map(playerId => 
+          players.find(p => p.id === playerId) || null
+        );
+        
+        // Hydrate bench: convert stored IDs (may be authId or legacyId) back to full player objects
+        const hydratedBench = {};
+        Object.entries(bench).forEach(([inning, playerIds]) => {
+          hydratedBench[inning] = playerIds.map(id =>
+            players.find(p => p.id === id || p.authId === id) || null
+          ).filter(p => p !== null);
+        });
+
+        setBattingOrder({ ...battingOrder, [selectedGame]: battingWithPlayers });
+        setFieldingPositions({ ...fieldingPositions, [selectedGame]: fielding });
+        setBenchPlayers({ ...benchPlayers, [selectedGame]: hydratedBench });
+        
+        // Load finalization status
+        try {
+          const battingDocRef = window.firebaseImports.doc(window.firebaseImports.db, 'lineups', selectedGame, 'batting', selectedTeam);
+          const battingDoc = await window.firebaseImports.getDoc(battingDocRef);
+          if (battingDoc.exists() && battingDoc.data().finalized) {
+            setBattingFinalized(prev => ({...prev, [selectedGame]: true}));
+          }
+        } catch (error) {
+          console.log('Error loading batting finalization status:', error);
+        }
+      }
+      
+      const unsubscribes = games.map(game => 
+        window.FirebaseRoster.listenToGameRSVPs(game.id, (updatedRsvps) => {
+          const formattedRsvps = {};
+          let mostRecentUpdate = null;
+          
+          players.forEach(player => {
+            const key = `${player.id}-${game.id}`;
+            const userRsvp = updatedRsvps[player.id];
+            formattedRsvps[key] = userRsvp?.status || 'none';
+            
+            // Track most recent update timestamp
+            if (userRsvp?.updatedAt) {
+              const updateTime = userRsvp.updatedAt.toDate ? userRsvp.updatedAt.toDate() : new Date(userRsvp.updatedAt);
+              if (!mostRecentUpdate || updateTime > mostRecentUpdate) {
+                mostRecentUpdate = updateTime;
+              }
+            }
+          });
+          
+          setRsvps(prev => ({ ...prev, ...formattedRsvps }));
+          if (mostRecentUpdate) {
+            setLastRsvpUpdate(prev => ({ ...prev, [game.id]: mostRecentUpdate }));
+          }
+        })
+      );
+      
+      return () => {
+        unsubscribes.forEach(unsub => unsub());
+      };
+    } catch (error) {
+      console.error('❌ Error loading game data:', error);
+    }
+  }
+
+  const handleRSVPClick = async (playerId, gameId) => {
+    const canEdit = isCaptain || userProfile?.linkedPlayer === players.find(p => p.id === playerId)?.name;
+    if (!canEdit) return;
+    
+    const key = `${playerId}-${gameId}`;
+    const status = rsvps[key] || 'none';
+    const statuses = ['yes', 'no', 'maybe', 'none'];
+    const currentIndex = statuses.indexOf(status);
+    const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+    
+setRsvps({ ...rsvps, [key]: nextStatus });
+
+const player = players.find(p => p.id === playerId);
+
+// OFFLINE CHECK - NEW CODE STARTS HERE
+if (!navigator.onLine) {
+  console.log('📡 Offline - queuing RSVP action');
+  
+  try {
+    await window.offlineQueue.addToQueue('RSVP', {
+      gameId: gameId,
+      playerId: playerId,
+      status: nextStatus,
+      playerName: player?.name || 'Unknown',
+      teamId: selectedTeam
+    });
+    
+    // Keep the optimistic UI update (already done above)
+    console.log('✅ RSVP queued successfully');
+    
+    // Optional: Show a subtle notification (offlineQueue already shows one)
+  } catch (error) {
+    console.error('Failed to queue RSVP:', error);
+    setRsvps({ ...rsvps, [key]: status }); // Revert on error
+    alert('Failed to save RSVP offline. Please try again.');
+  }
+  return; // Exit early - don't try Firebase
+}
+// OFFLINE CHECK - NEW CODE ENDS HERE
+
+// ONLINE - Original Firebase code
+try {
+  await window.FirebaseRoster.updateRSVP(gameId, playerId, nextStatus, player?.name || 'Unknown', selectedTeam);
+} catch (error) {
+  console.error('Error updating RSVP:', error);
+  setRsvps({ ...rsvps, [key]: status });
+  alert('Failed to update RSVP. Please try again.');
+}
+  };
+
+  const handleDragStart = (e, player) => {
+    if (!isCaptain) return;
+    e.stopPropagation();
+    setDraggedPlayer(player);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', player.id);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDragEnter = (e, target) => {
+    e.preventDefault();
+    setDropTarget(target);
+  };
+
+  const handleDragLeave = () => {
+    setDropTarget(null);
+  };
+
+  const handleDrop = (e, target) => {
+    e.preventDefault();
+    if (!isCaptain || !draggedPlayer) return;
+
+    if (target.type === 'batting') {
+      const newBattingOrder = { ...battingOrder };
+      if (!newBattingOrder[selectedGame]) newBattingOrder[selectedGame] = [];
+      
+      while (newBattingOrder[selectedGame].length < seasonConfig.battingOrderSize) {
+        newBattingOrder[selectedGame].push(null);
+      }
+      
+      const currentIndex = newBattingOrder[selectedGame].findIndex(p => p && p.id === draggedPlayer.id);
+      if (currentIndex !== -1) {
+        newBattingOrder[selectedGame][currentIndex] = null;
+      }
+      
+      newBattingOrder[selectedGame][target.position] = draggedPlayer;
+      setBattingOrder(newBattingOrder);
+      saveLineupData('batting', newBattingOrder[selectedGame]);
+      
+    } else if (target.type === 'fielding') {
+      if (target.position === 'C' && catcherDisabled) {
+        setDraggedPlayer(null);
+        setDropTarget(null);
+        return;
+      }
+
+      const currentBench = benchPlayers[selectedGame]?.[target.inning] || [];
+      const isOnBench = currentBench.some(p => p.id === draggedPlayer.id);
+      
+      if (isOnBench) {
+        alert(`${draggedPlayer.name} is on the bench for inning ${target.inning}. Remove them from the bench first.`);
+        setDraggedPlayer(null);
+        setDropTarget(null);
+        return;
+      }
+
+      const newFieldingPositions = { ...fieldingPositions };
+      if (!newFieldingPositions[selectedGame]) newFieldingPositions[selectedGame] = {};
+      if (!newFieldingPositions[selectedGame][target.inning]) {
+        newFieldingPositions[selectedGame][target.inning] = {};
+      }
+      
+      const inningPositions = newFieldingPositions[selectedGame][target.inning];
+      const alreadyAssigned = Object.entries(inningPositions).find(
+        ([pos, player]) => player.id === draggedPlayer.id && pos !== target.position
+      );
+      
+      if (alreadyAssigned) {
+        delete newFieldingPositions[selectedGame][target.inning][alreadyAssigned[0]];
+      }
+      
+      newFieldingPositions[selectedGame][target.inning][target.position] = draggedPlayer;
+      setFieldingPositions(newFieldingPositions);
+      saveLineupData('fielding', newFieldingPositions[selectedGame], target.inning);
+      
+    } else if (target.type === 'bench') {
+      const currentDefense = fieldingPositions[selectedGame]?.[target.inning] || {};
+      const defensePosition = Object.entries(currentDefense).find(([pos, player]) => player.id === draggedPlayer.id);
+      
+      if (defensePosition) {
+        alert(`${draggedPlayer.name} is playing ${defensePosition[0]} in inning ${target.inning}. Remove them from defense first.`);
+        setDraggedPlayer(null);
+        setDropTarget(null);
+        return;
+      }
+
+      const newBenchPlayers = { ...benchPlayers };
+      if (!newBenchPlayers[selectedGame]) newBenchPlayers[selectedGame] = {};
+      if (!newBenchPlayers[selectedGame][target.inning]) {
+        newBenchPlayers[selectedGame][target.inning] = [];
+      }
+      
+      newBenchPlayers[selectedGame][target.inning] = newBenchPlayers[selectedGame][target.inning].filter(
+        p => p.id !== draggedPlayer.id
+      );
+      
+      newBenchPlayers[selectedGame][target.inning].splice(target.benchIndex, 0, draggedPlayer);
+      setBenchPlayers(newBenchPlayers);
+      saveLineupData('bench', newBenchPlayers[selectedGame], target.inning);
+    }
+
+    setDraggedPlayer(null);
+    setDropTarget(null);
+  };
+
+const saveLineupData = async (type, data, inning = null) => {
+  if (!isCaptain) return;
+  setSavingLineup(true);
+  
+  // OFFLINE CHECK - NEW CODE STARTS HERE
+  if (!navigator.onLine) {
+    console.log('📡 Offline - queuing lineup update');
+    
+    try {
+      // Prepare lineup data for queue
+      let lineupData = {
+        gameId: selectedGame,
+        teamId: selectedTeam,
+        userId: currentUser.uid,
+        type: type,
+        inning: inning
+      };
+      
+      if (type === 'batting') {
+        lineupData.playerIds = data.map(p => p?.id || null);
+      } else if (type === 'fielding') {
+        lineupData.positions = data[inning];
+      } else if (type === 'bench') {
+        lineupData.playerIds = data[inning].map(p => p.id);
+      }
+      
+      await window.offlineQueue.addToQueue('LINEUP_UPDATE', lineupData);
+      console.log('✅ Lineup queued successfully');
+      
+      // Keep the optimistic UI update (already done by caller)
+      // Optional: Show success message
+      
+    } catch (error) {
+      console.error('Failed to queue lineup:', error);
+      alert('Failed to save lineup offline. Please try again.');
+    } finally {
+      setSavingLineup(false);
+    }
+    return; // Exit early - don't try Firebase
+  }
+  // OFFLINE CHECK - NEW CODE ENDS HERE
+  
+  // ONLINE - Original Firebase code
+  try {
+    if (type === 'batting') {
+      const playerIds = data.map(p => p?.id || null);
+      await window.FirebaseRoster.saveBattingOrder(selectedGame, selectedTeam, playerIds, currentUser.uid);
+    } else if (type === 'fielding') {
+      await window.FirebaseRoster.saveFieldingPositions(selectedGame, selectedTeam, inning, data[inning], currentUser.uid);
+    } else if (type === 'bench') {
+      const playerIds = data[inning].map(p => p.id);
+      await window.FirebaseRoster.saveBenchPlayers(selectedGame, selectedTeam, inning, playerIds, currentUser.uid);
+    }
+  } catch (error) {
+    console.error('Error saving lineup:', error);
+    alert('Failed to save lineup. Please try again.');
+  } finally {
+    setSavingLineup(false);
+  }
+};
+
+  const removeFromBatting = (position) => {
+    if (!isCaptain) return;
+    const newBattingOrder = { ...battingOrder };
+    if (newBattingOrder[selectedGame]) {
+      newBattingOrder[selectedGame][position] = null;
+      setBattingOrder(newBattingOrder);
+      saveLineupData('batting', newBattingOrder[selectedGame]);
+    }
+  };
+
+  // 🆕 Mobile batting order helpers
+  const moveBattingPlayer = (fromIndex, direction) => {
+    if (!isCaptain) return;
+    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+    if (toIndex < 0 || toIndex >= seasonConfig.battingOrderSize) return;
+    
+    const newOrder = { ...battingOrder };
+    if (!newOrder[selectedGame]) newOrder[selectedGame] = Array(seasonConfig.battingOrderSize).fill(null);
+    
+    const tempOrder = [...newOrder[selectedGame]];
+    [tempOrder[fromIndex], tempOrder[toIndex]] = [tempOrder[toIndex], tempOrder[fromIndex]];
+    
+    newOrder[selectedGame] = tempOrder;
+    setBattingOrder(newOrder);
+    saveLineupData('batting', newOrder[selectedGame]);
+  };
+
+  const addToBattingOrder = (position, player) => {
+    if (!isCaptain) return;
+    const newOrder = { ...battingOrder };
+    if (!newOrder[selectedGame]) newOrder[selectedGame] = Array(seasonConfig.battingOrderSize).fill(null);
+    
+    // Remove player from current position if already in order
+    const currentIndex = newOrder[selectedGame].findIndex(p => p && p.id === player.id);
+    if (currentIndex !== -1) {
+      newOrder[selectedGame][currentIndex] = null;
+    }
+    
+    newOrder[selectedGame][position] = player;
+    setBattingOrder(newOrder);
+    saveLineupData('batting', newOrder[selectedGame]);
+  };
+
+  // Helper function to open player selection modal
+  const openPlayerModal = (title, availablePlayers, onSelect) => {
+    setModalConfig({
+      title,
+      availablePlayers,
+      onSelect,
+      playerNumber: ''
+    });
+    setShowPlayerModal(true);
+  };
+
+  // Helper functions for mobile fielding
+  const handleFieldingDrop = (player, inning, position) => {
+    if (!isCaptain) return;
+    
+    const newFieldingPositions = { ...fieldingPositions };
+    if (!newFieldingPositions[selectedGame]) newFieldingPositions[selectedGame] = {};
+    if (!newFieldingPositions[selectedGame][inning]) newFieldingPositions[selectedGame][inning] = {};
+    
+    // Remove player from any other position in this inning
+    Object.keys(newFieldingPositions[selectedGame][inning]).forEach(pos => {
+      if (newFieldingPositions[selectedGame][inning][pos]?.id === player.id) {
+        delete newFieldingPositions[selectedGame][inning][pos];
+      }
+    });
+    
+    // Remove from bench if they're there
+    const newBenchPlayers = { ...benchPlayers };
+    if (newBenchPlayers[selectedGame]?.[inning]) {
+      const benchIndex = newBenchPlayers[selectedGame][inning].findIndex(p => p?.id === player.id);
+      if (benchIndex !== -1) {
+        newBenchPlayers[selectedGame][inning].splice(benchIndex, 1);
+        setBenchPlayers(newBenchPlayers);
+      }
+    }
+    
+    // Add to new position
+    newFieldingPositions[selectedGame][inning][position] = player;
+    setFieldingPositions(newFieldingPositions);
+    saveLineupData('fielding', newFieldingPositions[selectedGame], inning);
+  };
+
+  const handleBenchDrop = (player, inning, benchIndex) => {
+    if (!isCaptain) return;
+    
+    // Remove from any fielding position first
+    const newFieldingPositions = { ...fieldingPositions };
+    if (newFieldingPositions[selectedGame]?.[inning]) {
+      Object.keys(newFieldingPositions[selectedGame][inning]).forEach(pos => {
+        if (newFieldingPositions[selectedGame][inning][pos]?.id === player.id) {
+          delete newFieldingPositions[selectedGame][inning][pos];
+        }
+      });
+      setFieldingPositions(newFieldingPositions);
+    }
+    
+    const newBenchPlayers = { ...benchPlayers };
+    if (!newBenchPlayers[selectedGame]) newBenchPlayers[selectedGame] = {};
+    if (!newBenchPlayers[selectedGame][inning]) newBenchPlayers[selectedGame][inning] = [];
+    
+    // Remove from any other bench spot
+    const currentBenchIndex = newBenchPlayers[selectedGame][inning].findIndex(p => p?.id === player.id);
+    if (currentBenchIndex !== -1) {
+      newBenchPlayers[selectedGame][inning].splice(currentBenchIndex, 1);
+    }
+    
+    // Add to new bench spot
+    while (newBenchPlayers[selectedGame][inning].length <= benchIndex) {
+      newBenchPlayers[selectedGame][inning].push(null);
+    }
+    newBenchPlayers[selectedGame][inning][benchIndex] = player;
+    
+    setBenchPlayers(newBenchPlayers);
+    saveLineupData('bench', newBenchPlayers[selectedGame], inning);
+  };
+
+  const removeFromFielding = (inning, position) => {
+    if (!isCaptain) return;
+    const newFieldingPositions = { ...fieldingPositions };
+    if (newFieldingPositions[selectedGame]?.[inning]?.[position]) {
+      delete newFieldingPositions[selectedGame][inning][position];
+      setFieldingPositions(newFieldingPositions);
+      saveLineupData('fielding', newFieldingPositions[selectedGame], inning);
+    }
+  };
+
+  const removeFromBench = (inning, benchIndex) => {
+    if (!isCaptain) return;
+    const newBenchPlayers = { ...benchPlayers };
+    if (newBenchPlayers[selectedGame]?.[inning]?.[benchIndex] !== undefined) {
+      newBenchPlayers[selectedGame][inning].splice(benchIndex, 1);
+      setBenchPlayers(newBenchPlayers);
+      saveLineupData('bench', newBenchPlayers[selectedGame], inning);
+    }
+  };
+
+  const resetDefense = async () => {
+    if (!isCaptain) return;
+    const confirmMsg = fieldingFinalized[selectedGame]
+      ? 'This will clear ALL fielding positions and bench assignments for all innings, and unfinalize the defense. Are you sure?'
+      : 'This will clear ALL fielding positions and bench assignments for all innings. Are you sure?';
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      setSavingLineup(true);
+
+      // Clear Firestore for all 7 innings
+      for (let inning = 1; inning <= 7; inning++) {
+        await window.FirebaseRoster.saveFieldingPositions(selectedGame, selectedTeam, inning, {}, currentUser.uid);
+        await window.FirebaseRoster.saveBenchPlayers(selectedGame, selectedTeam, inning, [], currentUser.uid);
+      }
+
+      // Unfinalize if needed
+      if (fieldingFinalized[selectedGame]) {
+        await window.FirebaseRoster.unfinalizeFieldingPositions(selectedGame, selectedTeam, currentUser.uid);
+        setFieldingFinalized(prev => ({ ...prev, [selectedGame]: false }));
+      }
+
+      // Clear local state
+      setFieldingPositions(prev => ({ ...prev, [selectedGame]: {} }));
+      setBenchPlayers(prev => ({ ...prev, [selectedGame]: {} }));
+
+      alert('Defense reset. All positions and bench assignments cleared.');
+    } catch (error) {
+      console.error('Error resetting defense:', error);
+      alert('Failed to reset defense. Please try again.');
+    } finally {
+      setSavingLineup(false);
+    }
+  };
+
+  const copyFromPreviousInning = (targetInning) => {
+    if (!isCaptain || targetInning === 1) return;
+    
+    const previousInning = targetInning - 1;
+    
+    const newFieldingPositions = { ...fieldingPositions };
+    if (!newFieldingPositions[selectedGame]) newFieldingPositions[selectedGame] = {};
+    
+    const previousPositions = newFieldingPositions[selectedGame][previousInning] || {};
+    const clonedPositions = {};
+    Object.keys(previousPositions).forEach(pos => {
+      const player = previousPositions[pos];
+      if (player && player.id) {
+        const fullPlayer = players.find(p => p.id === player.id);
+        if (fullPlayer) {
+          clonedPositions[pos] = { ...fullPlayer };
+        }
+      }
+    });
+    newFieldingPositions[selectedGame][targetInning] = clonedPositions;
+    setFieldingPositions(newFieldingPositions);
+    
+    const newBenchPlayers = { ...benchPlayers };
+    if (!newBenchPlayers[selectedGame]) newBenchPlayers[selectedGame] = {};
+    
+    const previousBench = newBenchPlayers[selectedGame][previousInning] || [];
+    const clonedBench = previousBench.map(player => {
+      if (player && player.id) {
+        const fullPlayer = players.find(p => p.id === player.id);
+        return fullPlayer ? { ...fullPlayer } : null;
+      }
+      return null;
+    }).filter(p => p !== null);
+    newBenchPlayers[selectedGame][targetInning] = clonedBench;
+    setBenchPlayers(newBenchPlayers);
+    
+    saveLineupData('fielding', newFieldingPositions[selectedGame], targetInning);
+    saveLineupData('bench', newBenchPlayers[selectedGame], targetInning);
+  };
+
+  // Apply one inning's fielding positions to all 7 innings
+  const applyFieldingToAllInnings = async (sourceInning = 1) => {
+    if (!isCaptain) return;
+    
+    const sourcePositions = fieldingPositions[selectedGame]?.[sourceInning] || {};
+    const sourceBench = benchPlayers[selectedGame]?.[sourceInning] || [];
+    
+    if (Object.keys(sourcePositions).length === 0) {
+      alert(`Inning ${sourceInning} has no fielding positions set. Please set positions first.`);
+      return;
+    }
+    
+    if (!confirm(`Apply Inning ${sourceInning}'s defensive positions to all 7 innings?`)) {
+      return;
+    }
+    
+    setSavingLineup(true);
+    
+    try {
+      const newFieldingPositions = { ...fieldingPositions };
+      const newBenchPlayers = { ...benchPlayers };
+      
+      if (!newFieldingPositions[selectedGame]) newFieldingPositions[selectedGame] = {};
+      if (!newBenchPlayers[selectedGame]) newBenchPlayers[selectedGame] = {};
+      
+      // Clone source positions for each inning
+      for (let inning = 1; inning <= 7; inning++) {
+        // Clone fielding positions
+        const clonedPositions = {};
+        Object.keys(sourcePositions).forEach(pos => {
+          const player = sourcePositions[pos];
+          if (player && player.id) {
+            const fullPlayer = players.find(p => p.id === player.id);
+            if (fullPlayer) {
+              clonedPositions[pos] = { ...fullPlayer };
+            }
+          }
+        });
+        newFieldingPositions[selectedGame][inning] = clonedPositions;
+        
+        // Clone bench players
+        const clonedBench = sourceBench.map(player => {
+          if (player && player.id) {
+            const fullPlayer = players.find(p => p.id === player.id);
+            return fullPlayer ? { ...fullPlayer } : null;
+          }
+          return null;
+        }).filter(p => p !== null);
+        newBenchPlayers[selectedGame][inning] = clonedBench;
+      }
+      
+      // Update state
+      setFieldingPositions(newFieldingPositions);
+      setBenchPlayers(newBenchPlayers);
+      
+      // Save all innings to Firebase
+      for (let inning = 1; inning <= 7; inning++) {
+        await window.FirebaseRoster.saveFieldingPositions(
+          selectedGame, 
+          selectedTeam, 
+          inning, 
+          newFieldingPositions[selectedGame][inning], 
+          currentUser.uid
+        );
+        await window.FirebaseRoster.saveBenchPlayers(
+          selectedGame, 
+          selectedTeam, 
+          inning, 
+          newBenchPlayers[selectedGame][inning]?.map(p => p.id) || [], 
+          currentUser.uid
+        );
+      }
+      
+      alert(`✅ Inning ${sourceInning}'s positions applied to all 7 innings!`);
+    } catch (error) {
+      console.error('Error applying fielding to all innings:', error);
+      alert('Failed to apply positions. Please try again.');
+    } finally {
+      setSavingLineup(false);
+    }
+  };
+
+  // Copy batting order from most recent previous game
+    const copyFromPreviousGame = async () => {
+      if (!isCaptain || !selectedGame) return;
+
+      try {
+        // games state only contains future games, so query Firestore directly for past games
+        const { getDocs: _getDocs, collection: _collection, db: _db } = window.firebaseImports;
+        const teamIdLower = selectedTeam.toLowerCase();
+        const allGamesSnap = await _getDocs(_collection(_db, 'seasons', currentSeason.id, 'games'));
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        const priorGames = [];
+        allGamesSnap.forEach(docSnap => {
+          const data = docSnap.data();
+          if (docSnap.id === selectedGame) return;
+          const homeTeam = (data.homeTeamId || data.homeTeamName || data.homeTeam || data['home team'] || '').toLowerCase();
+          const awayTeam = (data.awayTeamId || data.awayTeamName || data.awayTeam || data['away team'] || '').toLowerCase();
+          if (homeTeam !== teamIdLower && awayTeam !== teamIdLower) return;
+          let gameDate;
+          if (data.date?.seconds) gameDate = new Date(data.date.seconds * 1000);
+          else if (data.date) gameDate = new Date(data.date);
+          else return;
+          gameDate.setHours(0, 0, 0, 0);
+          if (gameDate < now) {
+            priorGames.push({ id: docSnap.id, ...data, _parsedDate: gameDate });
+          }
+        });
+
+        priorGames.sort((a, b) => b._parsedDate - a._parsedDate);
+
+        if (priorGames.length === 0) {
+          alert('No previous games found for this team.');
+          return;
+        }
+
+        // Check each game for a batting order (most recent first)
+        for (const gameData of priorGames) {
+          const prevBattingOrder = await window.FirebaseRoster.getBattingOrder(gameData.id, selectedTeam);
+          
+          if (prevBattingOrder && prevBattingOrder.length > 0 && prevBattingOrder.some(id => id)) {
+            // Found a lineup! Map player IDs to player objects
+            const copiedOrder = prevBattingOrder.map(playerId => {
+              if (!playerId) return null;
+              const player = players.find(p => p.id === playerId);
+              if (!player) return null;
+              
+              // Only include players who have RSVP'd Yes for the current game
+              const key = `${player.id}-${selectedGame}`;
+              return rsvps[key] === 'yes' ? player : null;
+            });
+            
+            const totalInPrevious = prevBattingOrder.filter(id => id).length;
+            const copiedCount = copiedOrder.filter(p => p).length;
+            
+            if (copiedCount === 0) {
+              // No overlap - try next game
+              continue;
+            }
+            
+            // Update state and save
+            setBattingOrder(prev => ({ ...prev, [selectedGame]: copiedOrder }));
+            await saveLineupData('batting', copiedOrder);
+            
+            // Get game info for message
+            const gameDate = gameData._parsedDate ? gameData._parsedDate.toLocaleDateString() : gameData.id;
+            
+            const skippedCount = totalInPrevious - copiedCount;
+            let message = `✅ Copied ${copiedCount} players from ${gameDate}`;
+            if (skippedCount > 0) {
+              message += `\n⚠️ ${skippedCount} player(s) skipped (RSVP'd No or not on roster)`;
+            }
+            alert(message);
+            return;
+          }
+        }
+        
+        alert('No previous batting orders found to copy.');
+        
+      } catch (error) {
+        console.error('Error copying previous lineup:', error);
+        alert('Error copying previous lineup. Please try again.');
+      }
+    };
+
+    // ── Load past games list (shared by batting + fielding pickers) ──────────
+    const loadPastGames = async () => {
+      if (pastGamesLoaded || !currentSeason || !selectedTeam) return;
+      try {
+        const { getDocs: _getDocs, collection: _collection, db: _db } = window.firebaseImports;
+        const teamIdLower = selectedTeam.toLowerCase();
+        const allGamesSnap = await _getDocs(_collection(_db, 'seasons', currentSeason.id, 'games'));
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const prior = [];
+        allGamesSnap.forEach(docSnap => {
+          const data = docSnap.data();
+          if (docSnap.id === selectedGame) return;
+          const home = (data.homeTeamId || data.homeTeamName || data.homeTeam || data['home team'] || '').toLowerCase();
+          const away = (data.awayTeamId || data.awayTeamName || data.awayTeam || data['away team'] || '').toLowerCase();
+          if (home !== teamIdLower && away !== teamIdLower) return;
+          let gameDate;
+          if (data.date?.seconds) gameDate = new Date(data.date.seconds * 1000);
+          else if (data.date) gameDate = new Date(data.date);
+          else return;
+          gameDate.setHours(0, 0, 0, 0);
+          if (gameDate < now) {
+            const opponent = home === teamIdLower
+              ? (data.awayTeamId || data.awayTeamName || data.awayTeam || data['away team'] || 'Opponent')
+              : (data.homeTeamId || data.homeTeamName || data.homeTeam || data['home team'] || 'Opponent');
+            const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+            prior.push({
+              id: docSnap.id,
+              _parsedDate: gameDate,
+              label: `${gameDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} vs ${cap(opponent)}`
+            });
+          }
+        });
+        prior.sort((a, b) => b._parsedDate - a._parsedDate);
+        setPastGames(prior);
+        setPastGamesLoaded(true);
+      } catch (err) {
+        console.error('Error loading past games:', err);
+      }
+    };
+
+    // ── Load batting order from a specific past game ──────────────────────────
+    const loadBattingFromGame = async (gameId) => {
+      if (!gameId || !isCaptain) return;
+      setLoadingFromPast(true);
+      try {
+        const prevOrder = await window.FirebaseRoster.getBattingOrder(gameId, selectedTeam);
+        if (!prevOrder || !prevOrder.some(id => id)) {
+          alert('No batting order found for that game.');
+          setLoadingFromPast(false);
+          return;
+        }
+        const copiedOrder = prevOrder.map(playerId => {
+          if (!playerId) return null;
+          return players.find(p => p.id === playerId) || null;
+        });
+        const copiedCount = copiedOrder.filter(p => p).length;
+        if (copiedCount === 0) {
+          alert('None of those players are on the current roster.');
+          setLoadingFromPast(false);
+          return;
+        }
+        setBattingOrder(prev => ({ ...prev, [selectedGame]: copiedOrder }));
+        await saveLineupData('batting', copiedOrder);
+        const gameLabel = pastGames.find(g => g.id === gameId)?.label || gameId;
+        const skipped = prevOrder.filter(id => id).length - copiedCount;
+        let msg = `✅ Batting order loaded from ${gameLabel} (${copiedCount} players)`;
+        if (skipped > 0) msg += `\n⚠️ ${skipped} player(s) not on current roster — slots left empty`;
+        alert(msg);
+        setPastGameSelectBatting('');
+      } catch (err) {
+        console.error('Error loading batting from past game:', err);
+        alert('Error loading batting order. Please try again.');
+      }
+      setLoadingFromPast(false);
+    };
+
+    // ── Load fielding from a specific past game ───────────────────────────────
+    const loadFieldingFromGame = async (gameId) => {
+      if (!gameId || !isCaptain) return;
+      setLoadingFromPast(true);
+      try {
+        const prevFielding = await window.FirebaseRoster.getFieldingPositions(gameId, selectedTeam);
+        if (!prevFielding || Object.keys(prevFielding).length === 0) {
+          alert('No fielding positions found for that game.');
+          setLoadingFromPast(false);
+          return;
+        }
+        // Hydrate: stored values may be player IDs (strings) or player objects
+        const hydrateInning = (inningData) => {
+          const result = {};
+          Object.entries(inningData).forEach(([pos, val]) => {
+            if (val && typeof val === 'object' && val.id) {
+              // Already a player object — find from current roster
+              const p = players.find(pl => pl.id === val.id);
+              if (p) result[pos] = p;
+            } else if (typeof val === 'string') {
+              const p = players.find(pl => pl.id === val);
+              if (p) result[pos] = p;
+            }
+          });
+          return result;
+        };
+        const hydratedFielding = {};
+        Object.entries(prevFielding).forEach(([inning, data]) => {
+          hydratedFielding[inning] = hydrateInning(data);
+        });
+        setFieldingPositions(prev => ({ ...prev, [selectedGame]: hydratedFielding }));
+        // Save all innings
+        const savePromises = Object.entries(hydratedFielding).map(([inning]) =>
+          saveLineupData('fielding', hydratedFielding, parseInt(inning))
+        );
+        await Promise.all(savePromises);
+        const gameLabel = pastGames.find(g => g.id === gameId)?.label || gameId;
+        alert(`✅ Defense loaded from ${gameLabel}`);
+        setPastGameSelectFielding('');
+      } catch (err) {
+        console.error('Error loading fielding from past game:', err);
+        alert('Error loading defense. Please try again.');
+      }
+      setLoadingFromPast(false);
+    };
+
+    // ── Load templates from Firestore ─────────────────────────────────────────
+    const loadTemplates = async () => {
+      if (templatesLoaded || !selectedTeam) return;
+      try {
+        const { getDocs: _getDocs, collection: _collection, db: _db, orderBy: _orderBy, query: _query } = window.firebaseImports;
+        const [batSnap, fieldSnap] = await Promise.all([
+          _getDocs(_query(_collection(_db, 'lineupTemplates', selectedTeam, 'batting'), _orderBy('createdAt', 'desc'))),
+          _getDocs(_query(_collection(_db, 'lineupTemplates', selectedTeam, 'fielding'), _orderBy('createdAt', 'desc')))
+        ]);
+        setBattingTemplates(batSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setFieldingTemplates(fieldSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setTemplatesLoaded(true);
+      } catch (err) {
+        console.error('Error loading templates:', err);
+      }
+    };
+
+    // ── Save current lineup as a named template ───────────────────────────────
+    const saveTemplate = async () => {
+      if (!templateNameInput.trim() || !isCaptain) return;
+      setSavingTemplate(true);
+      try {
+        const { setDoc: _setDoc, doc: _doc, db: _db, serverTimestamp: _ts } = window.firebaseImports;
+        const templateId = templateNameInput.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        const safeName = templateNameInput.trim();
+
+        if (templateModalType === 'batting') {
+          const order = (battingOrder[selectedGame] || []).map(p => p?.id || null);
+          await _setDoc(_doc(_db, 'lineupTemplates', selectedTeam, 'batting', templateId), {
+            name: safeName,
+            order,
+            createdAt: _ts(),
+            createdBy: currentUser?.uid || ''
+          });
+          setBattingTemplates(prev => {
+            const filtered = prev.filter(t => t.id !== templateId);
+            return [{ id: templateId, name: safeName, order }, ...filtered];
+          });
+          alert(`✅ Batting template "${safeName}" saved.`);
+        } else if (templateModalType === 'fielding') {
+          // Serialize: store player IDs instead of full objects
+          const serialized = {};
+          const currentFielding = fieldingPositions[selectedGame] || {};
+          Object.entries(currentFielding).forEach(([inning, positions]) => {
+            serialized[inning] = {};
+            Object.entries(positions).forEach(([pos, player]) => {
+              if (player && player.id) serialized[inning][pos] = player.id;
+            });
+          });
+          await _setDoc(_doc(_db, 'lineupTemplates', selectedTeam, 'fielding', templateId), {
+            name: safeName,
+            positions: serialized,
+            createdAt: _ts(),
+            createdBy: currentUser?.uid || ''
+          });
+          setFieldingTemplates(prev => {
+            const filtered = prev.filter(t => t.id !== templateId);
+            return [{ id: templateId, name: safeName, positions: serialized }, ...filtered];
+          });
+          alert(`✅ Defense template "${safeName}" saved.`);
+        }
+
+        setShowTemplateModal(false);
+        setTemplateNameInput('');
+      } catch (err) {
+        console.error('Error saving template:', err);
+        alert('Error saving template. Please try again.');
+      }
+      setSavingTemplate(false);
+    };
+
+    // ── Load a batting template into the current game ─────────────────────────
+    const loadBattingTemplate = async (templateId) => {
+      if (!templateId || !isCaptain) return;
+      const template = battingTemplates.find(t => t.id === templateId);
+      if (!template) return;
+      setLoadingFromPast(true);
+      try {
+        const copiedOrder = (template.order || []).map(playerId => {
+          if (!playerId) return null;
+          return players.find(p => p.id === playerId) || null;
+        });
+        const copiedCount = copiedOrder.filter(p => p).length;
+        if (copiedCount === 0) {
+          alert('None of the template players are on the current roster.');
+          setLoadingFromPast(false);
+          return;
+        }
+        setBattingOrder(prev => ({ ...prev, [selectedGame]: copiedOrder }));
+        await saveLineupData('batting', copiedOrder);
+        const skipped = (template.order || []).filter(id => id).length - copiedCount;
+        let msg = `✅ Template "${template.name}" loaded (${copiedCount} players)`;
+        if (skipped > 0) msg += `\n⚠️ ${skipped} player(s) not on roster — slots left empty`;
+        alert(msg);
+        setTemplateSelectBatting('');
+      } catch (err) {
+        console.error('Error loading batting template:', err);
+        alert('Error loading template. Please try again.');
+      }
+      setLoadingFromPast(false);
+    };
+
+    // ── Load a fielding template into the current game ────────────────────────
+    const loadFieldingTemplate = async (templateId) => {
+      if (!templateId || !isCaptain) return;
+      const template = fieldingTemplates.find(t => t.id === templateId);
+      if (!template || !template.positions) return;
+      setLoadingFromPast(true);
+      try {
+        const hydratedFielding = {};
+        Object.entries(template.positions).forEach(([inning, positions]) => {
+          hydratedFielding[inning] = {};
+          Object.entries(positions).forEach(([pos, playerId]) => {
+            const p = players.find(pl => pl.id === playerId);
+            if (p) hydratedFielding[inning][pos] = p;
+          });
+        });
+        setFieldingPositions(prev => ({ ...prev, [selectedGame]: hydratedFielding }));
+        const savePromises = Object.entries(hydratedFielding).map(([inning]) =>
+          saveLineupData('fielding', hydratedFielding, parseInt(inning))
+        );
+        await Promise.all(savePromises);
+        alert(`✅ Defense template "${template.name}" loaded`);
+        setTemplateSelectFielding('');
+      } catch (err) {
+        console.error('Error loading fielding template:', err);
+        alert('Error loading defense template. Please try again.');
+      }
+      setLoadingFromPast(false);
+    };
+
+const printBattingOrder = () => {
+  const selectedGameData = games.find(g => g.id === selectedGame);
+  if (!selectedGameData) return;
+
+  const printWindow = window.open('', '_blank');
+  const battingOrderList = gameBattingOrder
+    .map((p, idx) => p ? `${idx + 1}. ${p.name} (#${p.jersey}) - ${p.battingAvg}` : `${idx + 1}. (Empty)`)
+    .join('\n');
+
+  const isPlayoff = selectedGameData.gameType && selectedGameData.gameType.toLowerCase() === 'playoff';
+  const roundInfo = selectedGameData.round ? ` - ${selectedGameData.round}` : '';
+  const gameTypeLabel = isPlayoff ? `🏆 PLAYOFF GAME${roundInfo}` : 'Regular Season';
+
+  printWindow.document.write(`
+    <html>
+      <head>
+<link rel="manifest" href="/manifest.json">
+        <title>Batting Order - ${selectedGameData.date}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; }
+          h1 { color: #2d5016; }
+          .info { margin: 20px 0; color: #666; }
+          .playoff-badge { background: #ffd700; color: #2d5016; padding: 4px 12px; border-radius: 6px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+          .lineup { white-space: pre-line; line-height: 1.8; font-size: 14px; }
+          @media print {
+            body { padding: 20px; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>⚾ Mountainside Aces - Batting Order</h1>
+        ${isPlayoff ? `<div class="playoff-badge">🏆 PLAYOFF GAME${roundInfo}</div>` : ''}
+        <div class="info">
+          <strong>Game:</strong> ${selectedGameData.date} vs ${selectedGameData.opponent}<br>
+          <strong>Season:</strong> ${currentSeason.year} ${seasonConfig.name}<br>
+          <strong>Type:</strong> ${gameTypeLabel}
+        </div>
+        <div class="lineup">${battingOrderList}</div>
+        <script>window.print();<\/script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+};
+
+const copyLineupToClipboard = async () => {
+  const selectedGameData = games.find(g => g.id === selectedGame);
+  if (!selectedGameData) return;
+
+  const battingOrderList = gameBattingOrder
+    .filter(p => p) // Only include filled spots
+    .map((p, idx) => `${idx + 1}. ${p.name}`)
+    .join('\n');
+
+  const teamName = allTeams.find(t => t.id === selectedTeam)?.name || selectedTeam;
+  const isPlayoff = selectedGameData.gameType && selectedGameData.gameType.toLowerCase() === 'playoff';
+  const header = isPlayoff 
+    ? `🏆 ${teamName} Lineup - ${selectedGameData.date} vs ${selectedGameData.opponent}`
+    : `⚾ ${teamName} Lineup - ${selectedGameData.date} vs ${selectedGameData.opponent}`;
+
+  const clipboardText = `${header}\n\n${battingOrderList}`;
+
+  try {
+    await navigator.clipboard.writeText(clipboardText);
+    alert('✅ Lineup copied to clipboard!');
+  } catch (error) {
+    console.error('Failed to copy:', error);
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = clipboardText;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    alert('✅ Lineup copied to clipboard!');
+  }
+};
+
+const printDefensiveRotation = () => {
+  const selectedGameData = games.find(g => g.id === selectedGame);
+  if (!selectedGameData) return;
+
+  const printWindow = window.open('', '_blank');
+  
+  let tableRows = '';
+  seasonConfig.positions.forEach(position => {
+    const isCatcher = position === 'C';
+    const disabled = isCatcher && catcherDisabled;
+    
+    tableRows += `<tr>`;
+    tableRows += `<td style="font-weight: bold; text-align: center; padding: 8px; border: 1px solid #ddd;">${disabled ? position + ' (Disabled)' : position}</td>`;
+    
+    [1, 2, 3, 4, 5, 6, 7].forEach(inning => {
+      const player = gameFieldingPositions[inning]?.[position];
+      const playerText = disabled ? '—' : (player ? player.name : '');
+      tableRows += `<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${playerText}</td>`;
+    });
+    tableRows += `</tr>`;
+  });
+
+  const maxBenchSpots = seasonConfig.battingOrderSize - seasonConfig.positions.length;
+  for (let benchIdx = 0; benchIdx < maxBenchSpots; benchIdx++) {
+    tableRows += `<tr style="background: #fefce8;">`;
+    tableRows += `<td style="font-weight: bold; text-align: center; padding: 8px; border: 1px solid #ddd;">BENCH ${benchIdx + 1}</td>`;
+    
+    [1, 2, 3, 4, 5, 6, 7].forEach(inning => {
+      const inningBench = gameBenchPlayers[inning] || [];
+      const benchPlayer = inningBench[benchIdx];
+      const playerText = benchPlayer ? benchPlayer.name : '';
+      tableRows += `<td style="padding: 8px; border: 1px solid #ddd; text-align: center; background: #fefce8;">${playerText}</td>`;
+    });
+    tableRows += `</tr>`;
+  }
+
+  const isPlayoff = selectedGameData.gameType && selectedGameData.gameType.toLowerCase() === 'playoff';
+  const roundInfo = selectedGameData.round ? ` - ${selectedGameData.round}` : '';
+  const gameTypeLabel = isPlayoff ? `🏆 PLAYOFF GAME${roundInfo}` : 'Regular Season';
+
+  printWindow.document.write(`
+    <html>
+      <head>
+<link rel="manifest" href="/manifest.json">
+        <title>Defensive Rotation - ${selectedGameData.date}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; }
+          h1 { color: #2d5016; }
+          .info { margin: 20px 0; color: #666; }
+          .playoff-badge { background: #ffd700; color: #2d5016; padding: 4px 12px; border-radius: 6px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th { background: #2d5016; color: white; padding: 10px; border: 1px solid #ddd; }
+          td { padding: 8px; border: 1px solid #ddd; }
+          @media print {
+            body { padding: 20px; }
+            @page { size: landscape; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>⚾ Mountainside Aces - Defensive Rotation</h1>
+        ${isPlayoff ? `<div class="playoff-badge">🏆 PLAYOFF GAME${roundInfo}</div>` : ''}
+        <div class="info">
+          <strong>Game:</strong> ${selectedGameData.date} vs ${selectedGameData.opponent}<br>
+          <strong>Season:</strong> ${currentSeason.year} ${seasonConfig.name}<br>
+          <strong>Type:</strong> ${gameTypeLabel}
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Position</th>
+              <th>Inning 1</th>
+              <th>Inning 2</th>
+              <th>Inning 3</th>
+              <th>Inning 4</th>
+              <th>Inning 5</th>
+              <th>Inning 6</th>
+              <th>Inning 7</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+        <script>window.print();<\/script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+};
+
+  // Save Template Modal Component
+  const SaveTemplateModal = () => {
+    if (!showTemplateModal) return null;
+    const typeLabel = templateModalType === 'batting' ? 'Batting Order' : 'Defense';
+    return (
+      <div
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '20px', backdropFilter: 'blur(4px)' }}
+        onClick={() => setShowTemplateModal(false)}
+      >
+        <div
+          style={{ background: 'white', borderRadius: '16px', padding: '2rem', width: '100%', maxWidth: '400px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
+          onClick={e => e.stopPropagation()}
+        >
+          <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.2rem', color: 'var(--text-dark)' }}>💾 Save {typeLabel} Template</h3>
+          <p style={{ margin: '0 0 1.25rem', fontSize: '14px', color: 'var(--text-light)' }}>
+            Give this template a name so you can load it for future games.
+          </p>
+          <input
+            type="text"
+            value={templateNameInput}
+            onChange={e => setTemplateNameInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && templateNameInput.trim()) saveTemplate(); if (e.key === 'Escape') setShowTemplateModal(false); }}
+            placeholder={`e.g. "Standard ${typeLabel}" or "Playoff D"`}
+            autoFocus
+            style={{ width: '100%', padding: '0.6rem 0.85rem', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '15px', marginBottom: '1.25rem', outline: 'none', boxSizing: 'border-box' }}
+          />
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+            <button onClick={() => setShowTemplateModal(false)} style={{ padding: '0.6rem 1.25rem', border: '1px solid #d1d5db', borderRadius: '8px', background: 'white', color: '#374151', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+              Cancel
+            </button>
+            <button
+              onClick={saveTemplate}
+              disabled={!templateNameInput.trim() || savingTemplate}
+              style={{ padding: '0.6rem 1.5rem', border: 'none', borderRadius: '8px', background: !templateNameInput.trim() || savingTemplate ? '#9ca3af' : '#059669', color: 'white', fontSize: '14px', fontWeight: '700', cursor: !templateNameInput.trim() || savingTemplate ? 'not-allowed' : 'pointer' }}
+            >
+              {savingTemplate ? 'Saving…' : 'Save Template'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Player Selection Modal Component
+  const PlayerSelectionModal = () => {
+    if (!showPlayerModal) return null;
+
+    const handleNumberChange = (e) => {
+      const value = e.target.value;
+      // Only allow numbers
+      if (value === '' || /^\d+$/.test(value)) {
+        setModalConfig(prev => ({ ...prev, playerNumber: value }));
+      }
+    };
+
+    const handleSubmit = () => {
+      const num = parseInt(modalConfig.playerNumber);
+      if (!isNaN(num) && num >= 1 && num <= modalConfig.availablePlayers.length) {
+        const selectedPlayer = modalConfig.availablePlayers[num - 1];
+        modalConfig.onSelect(selectedPlayer);
+        setShowPlayerModal(false);
+        setModalConfig({ title: '', availablePlayers: [], onSelect: null, playerNumber: '' });
+      }
+    };
+
+    const handleCancel = () => {
+      setShowPlayerModal(false);
+      setModalConfig({ title: '', availablePlayers: [], onSelect: null, playerNumber: '' });
+    };
+
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter') {
+        handleSubmit();
+      } else if (e.key === 'Escape') {
+        handleCancel();
+      }
+    };
+
+    return (
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+          backdropFilter: 'blur(4px)'
+        }}
+        onClick={handleCancel}
+      >
+        <div
+          style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '24px',
+            maxWidth: '400px',
+            width: '100%',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+            animation: 'slideUp 0.3s ease-out'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 style={{ 
+            margin: '0 0 8px 0', 
+            fontSize: '20px', 
+            fontWeight: 'bold', 
+            color: 'var(--text-dark)',
+            textAlign: 'center'
+          }}>
+            {modalConfig.title}
+          </h3>
+          
+          <p style={{ 
+            margin: '0 0 20px 0', 
+            fontSize: '14px', 
+            color: 'var(--text-light)',
+            textAlign: 'center'
+          }}>
+            Enter the number of the player you want to add
+          </p>
+
+          <div style={{ 
+            marginBottom: '20px',
+            padding: '16px',
+            background: '#f9fafb',
+            borderRadius: '12px',
+            border: '2px solid var(--border-color)'
+          }}>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={modalConfig.playerNumber}
+              onChange={handleNumberChange}
+              onKeyPress={handleKeyPress}
+              placeholder="Type number..."
+              autoFocus
+              style={{
+                width: '100%',
+                padding: '16px',
+                fontSize: '24px',
+                fontWeight: 'bold',
+                textAlign: 'center',
+                border: '3px solid var(--primary-color)',
+                borderRadius: '12px',
+                outline: 'none',
+                boxShadow: '0 0 0 3px rgba(45, 80, 22, 0.1)',
+                transition: 'all 0.2s ease'
+              }}
+            />
+          </div>
+
+          <div style={{
+            marginBottom: '20px',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            padding: '8px',
+            background: '#f9fafb',
+            borderRadius: '12px',
+            border: '1px solid var(--border-color)'
+          }}>
+            {modalConfig.availablePlayers.map((player, idx) => (
+              <div 
+                key={player.id}
+                onClick={() => {
+                  setModalConfig(prev => ({ ...prev, playerNumber: String(idx + 1) }));
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  background: modalConfig.playerNumber === String(idx + 1) ? '#eff6ff' : 'white',
+                  border: modalConfig.playerNumber === String(idx + 1) ? '2px solid var(--primary-color)' : '2px solid transparent',
+                  marginBottom: '8px',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <div style={{
+                  width: '32px',
+                  minWidth: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: modalConfig.playerNumber === String(idx + 1) ? 'var(--primary-color)' : '#e5e7eb',
+                  color: modalConfig.playerNumber === String(idx + 1) ? 'white' : '#6b7280',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                }}>
+                  {idx + 1}
+                </div>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: 'var(--primary-color)',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  flexShrink: 0
+                }}>
+                  {player.avatar || player.name?.charAt(0)?.toUpperCase() || '?'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ 
+                    fontWeight: '600', 
+                    fontSize: '14px', 
+                    color: 'var(--text-dark)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {player.name}
+                  </div>
+                  {player.acesBPI || player.battingAvg ? (
+                    <div style={{ fontSize: '12px', color: 'var(--text-light)' }}>
+                      BA: {player.acesBPI || player.battingAvg}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={handleCancel}
+              style={{
+                flex: 1,
+                padding: '14px',
+                fontSize: '16px',
+                fontWeight: '600',
+                border: '2px solid var(--border-color)',
+                borderRadius: '12px',
+                background: 'white',
+                color: 'var(--text-dark)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={!modalConfig.playerNumber || 
+                       parseInt(modalConfig.playerNumber) < 1 || 
+                       parseInt(modalConfig.playerNumber) > modalConfig.availablePlayers.length}
+              style={{
+                flex: 1,
+                padding: '14px',
+                fontSize: '16px',
+                fontWeight: '600',
+                border: 'none',
+                borderRadius: '12px',
+                background: (!modalConfig.playerNumber || 
+                            parseInt(modalConfig.playerNumber) < 1 || 
+                            parseInt(modalConfig.playerNumber) > modalConfig.availablePlayers.length)
+                  ? '#d1d5db' 
+                  : 'var(--primary-color)',
+                color: 'white',
+                cursor: (!modalConfig.playerNumber || 
+                        parseInt(modalConfig.playerNumber) < 1 || 
+                        parseInt(modalConfig.playerNumber) > modalConfig.availablePlayers.length)
+                  ? 'not-allowed' 
+                  : 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Add Player
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+
+
+  const PlayerCard = ({ player, draggable = false, showStats = false, onRemove, size = 'normal' }) => {
+    if (!player || !player.name) {
+      console.warn('Invalid player object:', player);
+      return null;
+    }
+    
+    const isSmall = size === 'small';
+    const isCurrentUser = player.id === currentUserId;
+    const displayName = isSmall ? (player.name.split(' ').pop() || player.name) : player.name;
+    const cardClasses = `player-card-hover ${draggable && isCaptain ? 'player-card-draggable' : ''}`;
+    
+    return (
+      <div
+        draggable={draggable && isCaptain}
+        onDragStart={(e) => handleDragStart(e, player)}
+        style={{
+          padding: isSmall ? '8px' : '10px', 
+          background: isCurrentUser ? '#eff6ff' : 'var(--card-bg)',
+          borderRadius: '12px', 
+          boxShadow: 'var(--shadow-sm)',
+          border: isCurrentUser ? '2px solid var(--primary-color)' : '1px solid var(--border-color)',
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '10px',
+          cursor: draggable && isCaptain ? 'move' : 'default',
+          transition: 'all 0.2s ease', 
+          position: 'relative',
+          minHeight: isSmall ? '40px' : '48px'
+        }}
+        className={cardClasses}
+      >
+        <div style={{
+          width: isSmall ? '28px' : '36px', 
+          height: isSmall ? '28px' : '36px',
+          borderRadius: '50%', 
+          background: 'var(--primary-color)', 
+          color: 'white',
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          fontSize: isSmall ? '11px' : '13px', 
+          fontWeight: '600', 
+          flexShrink: 0,
+          userSelect: 'none'
+        }}>
+          {player.avatar || player.name?.charAt(0)?.toUpperCase() || '?'}
+        </div>
+        <div style={{ flex: 1, minWidth: 0, userSelect: 'none' }}>
+          <div style={{ 
+            fontWeight: '500', fontSize: isSmall ? '11px' : '14px',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            display: 'flex', alignItems: 'center', gap: '4px',
+            color: 'var(--text-dark)'
+          }}>
+            {displayName}
+            {isCurrentUser && !isSmall && (
+              <span style={{
+                fontSize: '10px', background: 'var(--primary-color)', color: 'white',
+                padding: '2px 6px', borderRadius: '6px'
+              }}>You</span>
+            )}
+          </div>
+          {!isSmall && <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>#{player.jersey || 'N/A'}</div>}
+        </div>
+        {showStats && !isSmall && (
+          <div style={{ fontSize: '11px', color: 'var(--text-dark)', userSelect: 'none' }}>{player.battingAvg || '.000'}</div>
+        )}
+        {onRemove && isCaptain && (
+          <button onClick={onRemove} className="remove-btn"
+            style={{
+              opacity: 0, transition: 'opacity 0.2s', padding: '4px',
+              background: 'none', border: 'none', cursor: 'pointer', borderRadius: '6px'
+            }}>
+            <X style={{ width: '14px', height: '14px', color: '#dc2626' }} />
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  const gameBattingOrder = battingOrder[selectedGame] || [];
+  const gameFieldingPositions = fieldingPositions[selectedGame] || {};
+  const gameBenchPlayers = benchPlayers[selectedGame] || {};
+
+  const yesRsvpCount = selectedGame ? players.filter(player => {
+    const key = `${player.id}-${selectedGame}`;
+    return rsvps[key] === 'yes';
+  }).length : 0;
+
+  const availablePlayers = selectedGame ? players.filter(player => {
+    const key = `${player.id}-${selectedGame}`;
+    return rsvps[key] === 'yes';
+  }) : [];
+
+  const availableForBatting = availablePlayers.filter(player => {
+    return !gameBattingOrder.some(p => p && p.id === player.id);
+  });
+
+  const belowMinimum = yesRsvpCount < seasonConfig.minPlayers;
+  // RSVP Summary counts
+  const rsvpCounts = selectedGame ? {
+    yes: players.filter(p => rsvps[`${p.id}-${selectedGame}`] === 'yes').length,
+    no: players.filter(p => rsvps[`${p.id}-${selectedGame}`] === 'no').length,
+    maybe: players.filter(p => rsvps[`${p.id}-${selectedGame}`] === 'maybe').length,
+    none: players.filter(p => !rsvps[`${p.id}-${selectedGame}`] || rsvps[`${p.id}-${selectedGame}`] === 'none').length
+  } : { yes: 0, no: 0, maybe: 0, none: 0 };
+  const catcherDisabled = yesRsvpCount < seasonConfig.catcherMinPlayers;
+
+  if (loading) {
+    return null;
+  }
+
+  return (
+    <>
+      <PlayerSelectionModal />
+      <SaveTemplateModal />
+      <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", background: 'linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%)', minHeight: '100vh', padding: '2rem' }}>	
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        
+        <div style={{ background: 'linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%)', color: 'white', textAlign: 'center', padding: '3rem 2rem', borderRadius: '12px', marginBottom: '2rem', position: 'relative', boxShadow: '0 12px 32px rgba(0,0,0,0.16)' }}>
+                    <a href="index.html" class="back-home-btn hide-mobile">
+            <span>←</span> Back to Home
+          </a>
+		  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'linear-gradient(90deg, #ffd700 0%, #ffed4e 100%)' }}></div>
+          <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: 'bold', textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>⚾ Roster Management</h1>
+          <p style={{ margin: '1rem 0 0 0', fontSize: '1.1rem', opacity: 0.9 }}>
+            {currentSeason ? `${currentSeason.year} ${seasonConfig.name} Season` : 'Loading...'}
+          </p>
+        </div>
+
+        <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontWeight: '600', color: 'var(--text-dark)' }}>Team:</span>
+              <span style={{ color: 'var(--text-dark)', fontWeight: '500' }}>
+                {selectedTeam || 'No team assigned'}
+              </span>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontWeight: '600', color: 'var(--text-dark)' }}>Logged in as:</span>
+              <span style={{ color: 'var(--text-dark)' }}>
+                {userProfile?.linkedPlayer || userProfile?.displayName || currentUser?.displayName || 'Loading...'}
+              </span>
+              {isCaptain && <span style={{ background: 'var(--primary-color)', color: 'white', padding: '4px 8px', borderRadius: '8px', fontSize: '12px' }}>{isTeamStaffRole ? 'Team Staff' : 'Captain'}</span>}
+            </div>
+          </div>
+          
+          {savingLineup && (
+            <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', borderRadius: '12px', background: '#e0f2fe', color: '#0369a1', textAlign: 'center' }}>
+              💾 Saving lineup...
+            </div>
+          )}
+        </div>
+
+        {selectedTeam && players.length > 0 && games.length > 0 && (
+          <>
+            {/* RSVP Section - Mobile vs Desktop */}
+            {isMobile ? (
+              // 📱 MOBILE: Simplified card-based RSVP
+              <div style={{ background: 'var(--card-bg)', borderRadius: '16px', marginBottom: '1rem', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+                <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', background: 'linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%)' }}>
+                  <h2 style={{ margin: '0 0 0.75rem 0', fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-dark)' }}>Game RSVPs</h2>
+                  <select 
+                    value={selectedGame || ''}
+                    onChange={(e) => setSelectedGame(e.target.value)}
+                    style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'white', minHeight: '44px' }}>
+                    <option value="">Select a game...</option>
+                    {games.map(game => (
+                      <option key={game.id} value={game.id}>{game.date} vs {game.opponent}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {selectedGame && (
+                  <div style={{ padding: '0.5rem' }}>
+                    {players.map(player => {
+                      const key = `${player.id}-${selectedGame}`;
+                      const status = rsvps[key] || 'none';
+                      const statusInfo = RSVP_STATUS[status];
+                      const canEdit = isCaptain || userProfile?.linkedPlayer === player.name;
+                      const isCurrentPlayer = userProfile?.linkedPlayer === player.name;
+                      
+                      return (
+                        <div key={player.id} style={{ background: isCurrentPlayer ? '#eff6ff' : 'white', border: isCurrentPlayer ? '2px solid var(--primary-color)' : '1px solid var(--border-color)', borderRadius: '12px', padding: '1rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem', minHeight: '72px' }}>
+                          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--primary-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: '600', flexShrink: 0 }}>
+                            {player.avatar}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: '600', fontSize: '1rem', color: 'var(--text-dark)', marginBottom: '2px' }}>
+                              {player.name}
+                              {isCurrentPlayer && <span style={{ fontSize: '0.7rem', background: 'var(--primary-color)', color: 'white', padding: '2px 8px', borderRadius: '6px', marginLeft: '0.5rem' }}>You</span>}
+                            </div>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>#{player.jersey || 'N/A'}</div>
+                          </div>
+                          <button onClick={() => handleRSVPClick(player.id, selectedGame)} disabled={!canEdit}
+                            style={{ minWidth: '64px', minHeight: '64px', borderRadius: '12px', border: 'none', fontSize: '24px', fontWeight: 'bold', color: 'white', background: statusInfo.color, cursor: canEdit ? 'pointer' : 'not-allowed', opacity: canEdit ? 1 : 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
+                            <span>{statusInfo.icon}</span>
+                            <span style={{ fontSize: '0.65rem', fontWeight: '600' }}>{statusInfo.label}</span>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              // 🖥️ DESKTOP: Original table view
+            <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-color)' }}>
+              <h2 style={{ margin: '0 0 1rem 0', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-dark)' }}>Game RSVPs</h2>
+              <div className="table-scroll-container" style={{ border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ position: 'sticky', left: 0, background: '#f2f2f2', zIndex: 10, borderBottom: '2px solid var(--border-color)', padding: '8px', textAlign: 'left', minWidth: '200px', color: 'var(--text-dark)' }}>Player</th>
+                      {games.map(game => (
+                        <th key={game.id} style={{ borderBottom: '2px solid var(--border-color)', padding: '8px', textAlign: 'center', background: '#f2f2f2', whiteSpace: 'nowrap', minWidth: '80px', color: 'var(--text-dark)' }}>
+                          {game.date}<br/><span style={{ fontSize: '12px', fontWeight: 'normal', color: 'var(--text-light)' }}>vs {game.opponent}</span>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {players.map(player => {
+                      const isCurrentUserRow = userProfile?.linkedPlayer === player.name;
+                      return (
+                        <tr key={player.id} style={{ background: isCurrentUserRow ? '#eff6ff' : 'white', borderLeft: isCurrentUserRow ? '4px solid var(--primary-color)' : 'none' }}>
+                          <td style={{ position: 'sticky', left: 0, background: isCurrentUserRow ? '#eff6ff' : 'white', zIndex: 10, borderBottom: '1px solid var(--border-color)', padding: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '600', flexShrink: 0 }}>
+                                {player.avatar}
+                              </div>
+                              <div>
+                                <div style={{ fontWeight: '500', fontSize: '14px', color: 'var(--text-dark)' }}>
+                                  {player.name}
+                                  {isCurrentUserRow && <span style={{ fontSize: '10px', background: 'var(--primary-color)', color: 'white', padding: '2px 6px', borderRadius: '6px', marginLeft: '8px' }}>You</span>}
+                                </div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>{player.jersey ? `#${player.jersey}` : 'No #'}</div>
+                              </div>
+                            </div>
+                          </td>
+                          {games.map(game => {
+                            const key = `${player.id}-${game.id}`;
+                            const status = rsvps[key] || 'none';
+                            const statusInfo = RSVP_STATUS[status];
+                            const canEdit = isCaptain || userProfile?.linkedPlayer === player.name;
+                            
+                            return (
+                              <td key={game.id} style={{ borderBottom: '1px solid var(--border-color)', padding: '8px', textAlign: 'center' }}>
+                                <button onClick={() => handleRSVPClick(player.id, game.id)} disabled={!canEdit}
+                                  title={canEdit ? 'Click to change RSVP' : 'Only captain or team staff can edit other RSVPs'}
+                                  style={{ width: '48px', height: '48px', borderRadius: '8px', border: 'none', fontSize: '18px', fontWeight: 'bold', color: 'white',
+                                          cursor: canEdit ? 'pointer' : 'not-allowed', opacity: canEdit ? 1 : 0.5, background: statusInfo.color }}>
+                                  {statusInfo.icon}
+                                </button>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            )}
+
+            {selectedGame && (belowMinimum || catcherDisabled) && (
+              <div style={{ marginBottom: '2rem' }}>
+                {belowMinimum && (
+                  <div style={{ background: '#fee2e2', border: '2px solid #ef4444', borderRadius: '12px', padding: '1rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <AlertCircle style={{ width: '24px', height: '24px', color: '#dc2626', flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: '600', color: '#7f1d1d' }}>
+                        Only {yesRsvpCount} players confirmed - Need {seasonConfig.minPlayers} minimum to play
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {catcherDisabled && (
+                  <div style={{ background: '#fee2e2', border: '2px solid #ef4444', borderRadius: '12px', padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <AlertCircle style={{ width: '24px', height: '24px', color: '#dc2626', flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: '600', color: '#7f1d1d' }}>
+                        Catcher position disabled - need {seasonConfig.catcherMinPlayers} players (currently {yesRsvpCount})
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {isCaptain && (
+              <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-color)' }}>
+                <div style={{ marginBottom: '1.5rem', padding: '0.75rem 1rem', borderRadius: '12px', background: '#eff6ff',
+                              color: '#1e40af', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
+                  <Edit3 style={{ width: '18px', height: '18px' }} />
+                  <span>{isTeamStaffRole ? 'Team Staff - Editing Enabled' : 'Captain - Editing Enabled'}</span>
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--text-dark)', marginBottom: '0.5rem' }}>Select Game:</label>
+                  <select value={selectedGame || ''} onChange={(e) => setSelectedGame(e.target.value)}
+                    style={{ padding: '0.5rem 1rem', border: '1px solid var(--border-color)', borderRadius: '12px', fontSize: '14px', width: '100%', maxWidth: '400px' }}>
+                    <option value="">Select a game...</option>
+                    {games.map(game => {
+                      const gameYesCount = players.filter(player => rsvps[`${player.id}-${game.id}`] === 'yes').length;
+                      const isPlayoff = game.gameType && game.gameType.toLowerCase() === 'playoff';
+                      const roundInfo = game.round ? ` - ${game.round}` : '';
+                      const playoffLabel = isPlayoff ? `🏆 PLAYOFF${roundInfo}: ` : '';
+                      return (
+                        <option key={game.id} value={game.id}>
+                          {playoffLabel}{game.date} vs {game.opponent} ({gameYesCount} Yes)
+                        </option>
+                      );
+                    })}
+                           </select>
+                                           </div>
+
+                                           {/* RSVP Summary Bar */}
+                                           {selectedGame && (
+                                             <div style={{
+                                               display: 'flex',
+                                               flexWrap: 'wrap',
+                                               gap: '12px',
+                                               padding: '12px 16px',
+                                               background: '#f9fafb',
+                                               borderRadius: '12px',
+                                               border: '1px solid var(--border-color)',
+                                               marginBottom: '1.5rem',
+                                               alignItems: 'center',
+                                               justifyContent: 'center'
+                                             }}>
+                                               <span style={{ fontWeight: '600', color: 'var(--text-dark)', fontSize: '14px' }}>RSVPs:</span>
+                                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                 <span style={{
+                                                   background: '#10b981',
+                                                   color: 'white',
+                                                   padding: '4px 10px',
+                                                   borderRadius: '20px',
+                                                   fontSize: '13px',
+                                                   fontWeight: '600',
+                                                   minWidth: '28px',
+                                                   textAlign: 'center'
+                                                 }}>{rsvpCounts.yes}</span>
+                                                 <span style={{ color: '#10b981', fontWeight: '500', fontSize: '13px' }}>Yes</span>
+                                               </div>
+                                               <span style={{ color: '#d1d5db' }}>•</span>
+                                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                 <span style={{
+                                                   background: '#f59e0b',
+                                                   color: 'white',
+                                                   padding: '4px 10px',
+                                                   borderRadius: '20px',
+                                                   fontSize: '13px',
+                                                   fontWeight: '600',
+                                                   minWidth: '28px',
+                                                   textAlign: 'center'
+                                                 }}>{rsvpCounts.maybe}</span>
+                                                 <span style={{ color: '#f59e0b', fontWeight: '500', fontSize: '13px' }}>Maybe</span>
+                                               </div>
+                                               <span style={{ color: '#d1d5db' }}>•</span>
+                                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                 <span style={{
+                                                   background: '#ef4444',
+                                                   color: 'white',
+                                                   padding: '4px 10px',
+                                                   borderRadius: '20px',
+                                                   fontSize: '13px',
+                                                   fontWeight: '600',
+                                                   minWidth: '28px',
+                                                   textAlign: 'center'
+                                                 }}>{rsvpCounts.no}</span>
+                                                 <span style={{ color: '#ef4444', fontWeight: '500', fontSize: '13px' }}>No</span>
+                                               </div>
+                                               <span style={{ color: '#d1d5db' }}>•</span>
+                                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                 <span style={{
+                                                   background: '#9ca3af',
+                                                   color: 'white',
+                                                   padding: '4px 10px',
+                                                   borderRadius: '20px',
+                                                   fontSize: '13px',
+                                                   fontWeight: '600',
+                                                   minWidth: '28px',
+                                                   textAlign: 'center'
+                                                 }}>{rsvpCounts.none}</span>
+                                                 <span style={{ color: '#9ca3af', fontWeight: '500', fontSize: '13px' }}>Pending</span>
+                                               </div>
+                                             </div>
+                                           )}
+                                           
+                                           {/* Last RSVP Update Timestamp */}
+                                           {selectedGame && lastRsvpUpdate[selectedGame] && (
+                                             <div style={{
+                                               textAlign: 'center',
+                                               fontSize: '12px',
+                                               color: 'var(--text-light)',
+                                               marginTop: '-0.75rem',
+                                               marginBottom: '1.5rem'
+                                             }}>
+                                               🕐 RSVPs last updated {formatRelativeTime(lastRsvpUpdate[selectedGame])}
+                                             </div>
+                                           )}
+
+                                           {selectedGame && (                  <>
+                    <div style={{ marginBottom: '2rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+  <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-dark)' }}>Batting Order</h2>
+  <div style={{ display: 'flex', gap: '0.5rem' }}>
+    <button onClick={copyLineupToClipboard} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease' }} onMouseEnter={(e) => e.target.style.background = '#4f46e5'} onMouseLeave={(e) => e.target.style.background = '#6366f1'}>
+      <Copy style={{ width: '18px', height: '18px' }} />
+      Copy
+    </button>
+    <button onClick={printBattingOrder} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease' }} onMouseEnter={(e) => e.target.style.background = 'var(--secondary-color)'} onMouseLeave={(e) => e.target.style.background = 'var(--primary-color)'}>
+      <Printer style={{ width: '18px', height: '18px' }} />
+      Print
+    </button>
+  </div>
+</div>
+                                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', marginBottom: '1rem' }}>
+                                                               <p style={{ fontSize: '14px', color: 'var(--text-light)', margin: 0, flex: 1 }}>
+                                                                 {seasonConfig.name} allows up to {seasonConfig.battingOrderSize} batters. {isMobile ? 'Tap + to add players, use arrows to reorder.' : 'Drag players from the available list.'}
+                                                               </p>
+                                                             </div>
+                                                             {isCaptain && (
+                                                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '1.25rem', padding: '10px 14px', background: '#f8f7ff', borderRadius: '10px', border: '1px solid #e0deff' }}>
+                                                                 <span style={{ fontSize: '13px', fontWeight: '600', color: '#4c4b7a', whiteSpace: 'nowrap' }}>📋 Load batting:</span>
+                                                                 <select
+                                                                   value={pastGameSelectBatting}
+                                                                   onChange={e => setPastGameSelectBatting(e.target.value)}
+                                                                   onFocus={loadPastGames}
+                                                                   style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #c7c3f5', fontSize: '13px', background: 'white', cursor: 'pointer', flex: 1, minWidth: '160px' }}
+                                                                 >
+                                                                   <option value="">From past game…</option>
+                                                                   {pastGames.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
+                                                                 </select>
+                                                                 <button
+                                                                   onClick={() => loadBattingFromGame(pastGameSelectBatting)}
+                                                                   disabled={!pastGameSelectBatting || loadingFromPast}
+                                                                   style={{ padding: '6px 14px', background: !pastGameSelectBatting || loadingFromPast ? '#d1d5db' : '#6366f1', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: !pastGameSelectBatting || loadingFromPast ? 'not-allowed' : 'pointer' }}
+                                                                 >
+                                                                   Load
+                                                                 </button>
+                                                                 <span style={{ color: '#c4c4d4', margin: '0 2px' }}>|</span>
+                                                                 <select
+                                                                   value={templateSelectBatting}
+                                                                   onChange={e => setTemplateSelectBatting(e.target.value)}
+                                                                   onFocus={() => { loadPastGames(); loadTemplates(); }}
+                                                                   style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #c7c3f5', fontSize: '13px', background: 'white', cursor: 'pointer', flex: 1, minWidth: '160px' }}
+                                                                 >
+                                                                   <option value="">From template…</option>
+                                                                   {battingTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                                                 </select>
+                                                                 <button
+                                                                   onClick={() => loadBattingTemplate(templateSelectBatting)}
+                                                                   disabled={!templateSelectBatting || loadingFromPast}
+                                                                   style={{ padding: '6px 14px', background: !templateSelectBatting || loadingFromPast ? '#d1d5db' : '#6366f1', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: !templateSelectBatting || loadingFromPast ? 'not-allowed' : 'pointer' }}
+                                                                 >
+                                                                   Load
+                                                                 </button>
+                                                                 <button
+                                                                   onClick={() => { loadTemplates(); setTemplateModalType('batting'); setTemplateNameInput(''); setShowTemplateModal(true); }}
+                                                                   style={{ padding: '6px 12px', background: '#059669', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                                 >
+                                                                   💾 Save template
+                                                                 </button>
+                                                               </div>
+                                                             )}
+                      
+                      {isMobile ? (
+                        // MOBILE VIEW: Vertical list with arrow buttons
+                        <>
+                          <div style={{ marginBottom: '1rem' }}>
+                            <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-dark)' }}>Lineup</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              {[...Array(seasonConfig.battingOrderSize)].map((_, idx) => {
+                                const player = gameBattingOrder[idx];
+                                
+                                return (
+                                  <div key={idx}
+                                    style={{ padding: '12px', borderRadius: '12px', border: '1px solid var(--border-color)',
+                                            background: player ? 'var(--card-bg)' : '#f9fafb', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <span style={{ fontWeight: 'bold', color: 'var(--text-light)', width: '32px', fontSize: '16px' }}>{idx + 1}.</span>
+                                    
+                                    {player ? (
+                                      <>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{
+                                              width: '40px', 
+                                              height: '40px',
+                                              borderRadius: '50%', 
+                                              background: 'var(--primary-color)', 
+                                              color: 'white',
+                                              display: 'flex', 
+                                              alignItems: 'center', 
+                                              justifyContent: 'center',
+                                              fontSize: '14px', 
+                                              fontWeight: '600', 
+                                              flexShrink: 0
+                                            }}>
+                                              {player.avatar || player.name?.charAt(0) || '?'}
+                                            </div>
+                                            <div style={{ minWidth: 0, flex: 1 }}>
+                                              <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {player.name}
+                                              </div>
+                                              <div style={{ fontSize: '12px', color: 'var(--text-light)' }}>
+                                                BA: {player.acesBPI || player.battingAvg || '---'}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        
+                                        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                                          <button
+                                            onClick={() => moveBattingPlayer(idx, 'up')}
+                                            disabled={idx === 0}
+                                            style={{ padding: '8px', background: idx === 0 ? '#e5e7eb' : 'var(--primary-color)', color: 'white',
+                                                    border: 'none', borderRadius: '8px', cursor: idx === 0 ? 'not-allowed' : 'pointer',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}>
+                                            <ChevronUp style={{ width: '20px', height: '20px' }} />
+                                          </button>
+                                          <button
+                                            onClick={() => moveBattingPlayer(idx, 'down')}
+                                            disabled={idx === seasonConfig.battingOrderSize - 1}
+                                            style={{ padding: '8px', background: idx === seasonConfig.battingOrderSize - 1 ? '#e5e7eb' : 'var(--primary-color)',
+                                                    color: 'white', border: 'none', borderRadius: '8px',
+                                                    cursor: idx === seasonConfig.battingOrderSize - 1 ? 'not-allowed' : 'pointer',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}>
+                                            <ChevronDown style={{ width: '20px', height: '20px' }} />
+                                          </button>
+                                          <button
+                                            onClick={() => removeFromBatting(idx)}
+                                            style={{ padding: '8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px',
+                                                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    width: '40px', height: '40px', fontSize: '18px', fontWeight: 'bold' }}>
+                                            ×
+                                          </button>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span style={{ color: 'var(--text-light)', fontSize: '14px', flex: 1 }}>Empty spot</span>
+                                        <button
+                                          onClick={() => {
+                                            if (availableForBatting.length > 0) {
+                                              openPlayerModal(
+                                                `Add to Batting Spot #${idx + 1}`,
+                                                availableForBatting,
+                                                (player) => addToBattingOrder(idx, player)
+                                              );
+                                            }
+                                          }}
+                                          disabled={availableForBatting.length === 0}
+                                          style={{ padding: '8px', background: availableForBatting.length === 0 ? '#e5e7eb' : 'var(--primary-color)',
+                                                  color: 'white', border: 'none', borderRadius: '8px',
+                                                  cursor: availableForBatting.length === 0 ? 'not-allowed' : 'pointer',
+                                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                  width: '40px', height: '40px' }}>
+                                          <Plus style={{ width: '20px', height: '20px' }} />
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-dark)' }}>
+                              Available Players ({availableForBatting.length})
+                            </h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '300px', overflowY: 'auto' }}>
+                              {availableForBatting.map(player => (
+                                <div key={player.id} style={{ padding: '12px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{
+                                      width: '40px', 
+                                      height: '40px',
+                                      borderRadius: '50%', 
+                                      background: 'var(--primary-color)', 
+                                      color: 'white',
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'center',
+                                      fontSize: '14px', 
+                                      fontWeight: '600', 
+                                      flexShrink: 0
+                                    }}>
+                                      {player.avatar || player.name?.charAt(0) || '?'}
+                                    </div>
+                                    <div>
+                                      <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-dark)' }}>{player.name}</div>
+                                      <div style={{ fontSize: '12px', color: 'var(--text-light)' }}>BA: {player.acesBPI || player.battingAvg || '---'}</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        // DESKTOP VIEW: Original drag-and-drop grid
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                          <div>
+                            <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-dark)' }}>Lineup</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              {[...Array(seasonConfig.battingOrderSize)].map((_, idx) => {
+                                const player = gameBattingOrder[idx];
+                                const isDropTarget = dropTarget?.type === 'batting' && dropTarget?.position === idx;
+                                
+                                return (
+                                  <div key={idx}
+                                    onDragOver={handleDragOver}
+                                    onDragEnter={(e) => handleDragEnter(e, { type: 'batting', position: idx })}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={(e) => handleDrop(e, { type: 'batting', position: idx })}
+                                    style={{ padding: '12px', borderRadius: '12px', border: isDropTarget ? '2px dashed var(--primary-color)' : '1px solid var(--border-color)',
+                                            background: isDropTarget ? '#eff6ff' : (!player ? '#f9fafb' : 'var(--card-bg)'), transition: 'all 0.3s ease' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <span style={{ fontWeight: 'bold', color: 'var(--text-light)', width: '24px' }}>{idx + 1}.</span>
+                                      {player ? (
+                                        <div style={{ flex: 1 }}>
+                                          <PlayerCard player={player} draggable={true} showStats={true}
+                                            onRemove={() => removeFromBatting(idx)} />
+                                        </div>
+                                      ) : (
+                                        <span style={{ color: 'var(--text-light)', fontSize: '14px' }}>Drag player here</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-dark)' }}>
+                              Available Players ({availableForBatting.length})
+                            </h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '600px', overflowY: 'auto' }}>
+                              {availableForBatting.map(player => (
+                                <PlayerCard key={player.id} player={player} draggable={true} showStats={true} />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Finalize Batting Order Button */}
+                    {isCaptain && selectedGame && gameBattingOrder.length > 0 && (
+                      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+                        {!battingFinalized[selectedGame] ? (
+                          <button 
+                            onClick={async () => {
+                              if (confirm('Finalize batting order? Your team will be notified that the lineup is ready.')) {
+                                try {
+                                  setSavingLineup(true);
+                                  await window.FirebaseRoster.finalizeBattingOrder(
+                                    selectedGame, 
+                                    selectedTeam, 
+                                    currentUser.uid
+                                  );
+                                  setBattingFinalized(prev => ({...prev, [selectedGame]: true}));
+                                  alert('✅ Batting order finalized! Team has been notified.');
+                                } catch (error) {
+                                  console.error('Error finalizing batting order:', error);
+                                  alert('Error finalizing batting order. Please try again.');
+                                } finally {
+                                  setSavingLineup(false);
+                                }
+                              }
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '1rem 2rem',
+                              background: 'linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '12px',
+                              fontSize: '1.1rem',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              boxShadow: '0 4px 12px rgba(45, 80, 22, 0.3)',
+                              transition: 'all 0.2s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.5rem'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.transform = 'translateY(-2px)';
+                              e.target.style.boxShadow = '0 6px 16px rgba(45, 80, 22, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.transform = 'translateY(0)';
+                              e.target.style.boxShadow = '0 4px 12px rgba(45, 80, 22, 0.3)';
+                            }}
+                          >
+                            📢 Finalize Batting Order & Notify Team
+                          </button>
+                        ) : (
+                          <div style={{
+                            padding: '1rem',
+                            background: '#d1fae5',
+                            border: '2px solid #10b981',
+                            borderRadius: '12px',
+                            color: '#065f46',
+                            fontWeight: '700',
+                            fontSize: '1rem',
+                            textAlign: 'center',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem'
+                          }}>
+                            ✅ Batting order finalized - Team has been notified
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+  <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-dark)' }}>Defensive Positions by Inning</h2>
+  <div style={{ display: 'flex', gap: '0.5rem' }}>
+    {isCaptain && (
+      <button
+        onClick={() => applyFieldingToAllInnings(1)}
+        disabled={savingLineup}
+        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: savingLineup ? 'not-allowed' : 'pointer', transition: 'all 0.2s ease', opacity: savingLineup ? 0.7 : 1 }}
+        onMouseEnter={(e) => !savingLineup && (e.target.style.background = '#4f46e5')}
+        onMouseLeave={(e) => e.target.style.background = '#6366f1'}
+      >
+        {savingLineup ? '⏳' : '📋'} Apply Inning 1 to All
+      </button>
+    )}
+    <button onClick={printDefensiveRotation} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease' }} onMouseEnter={(e) => e.target.style.background = 'var(--secondary-color)'} onMouseLeave={(e) => e.target.style.background = 'var(--primary-color)'}>
+      <Printer style={{ width: '18px', height: '18px' }} />
+      Print
+    </button>
+  </div>
+</div>
+                      {isCaptain && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '1.25rem', padding: '10px 14px', background: '#f0fdf4', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
+                          <span style={{ fontSize: '13px', fontWeight: '600', color: '#166534', whiteSpace: 'nowrap' }}>🛡 Load defense:</span>
+                          <select
+                            value={pastGameSelectFielding}
+                            onChange={e => setPastGameSelectFielding(e.target.value)}
+                            onFocus={loadPastGames}
+                            style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #86efac', fontSize: '13px', background: 'white', cursor: 'pointer', flex: 1, minWidth: '160px' }}
+                          >
+                            <option value="">From past game…</option>
+                            {pastGames.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
+                          </select>
+                          <button
+                            onClick={() => loadFieldingFromGame(pastGameSelectFielding)}
+                            disabled={!pastGameSelectFielding || loadingFromPast}
+                            style={{ padding: '6px 14px', background: !pastGameSelectFielding || loadingFromPast ? '#d1d5db' : '#16a34a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: !pastGameSelectFielding || loadingFromPast ? 'not-allowed' : 'pointer' }}
+                          >
+                            Load
+                          </button>
+                          <span style={{ color: '#86efac', margin: '0 2px' }}>|</span>
+                          <select
+                            value={templateSelectFielding}
+                            onChange={e => setTemplateSelectFielding(e.target.value)}
+                            onFocus={() => { loadPastGames(); loadTemplates(); }}
+                            style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #86efac', fontSize: '13px', background: 'white', cursor: 'pointer', flex: 1, minWidth: '160px' }}
+                          >
+                            <option value="">From template…</option>
+                            {fieldingTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                          </select>
+                          <button
+                            onClick={() => loadFieldingTemplate(templateSelectFielding)}
+                            disabled={!templateSelectFielding || loadingFromPast}
+                            style={{ padding: '6px 14px', background: !templateSelectFielding || loadingFromPast ? '#d1d5db' : '#16a34a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: !templateSelectFielding || loadingFromPast ? 'not-allowed' : 'pointer' }}
+                          >
+                            Load
+                          </button>
+                          <button
+                            onClick={() => { loadTemplates(); setTemplateModalType('fielding'); setTemplateNameInput(''); setShowTemplateModal(true); }}
+                            style={{ padding: '6px 12px', background: '#059669', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          >
+                            💾 Save template
+                          </button>
+                        </div>
+                      )}
+
+                      {isMobile ? (
+                        // MOBILE VIEW: One inning at a time with navigation
+                        <>
+                          <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                      padding: '12px', background: '#f9fafb', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                            <button
+                              onClick={() => setCurrentInning(Math.max(1, currentInning - 1))}
+                              disabled={currentInning === 1}
+                              style={{ padding: '8px 16px', background: currentInning === 1 ? '#e5e7eb' : 'var(--primary-color)',
+                                      color: 'white', border: 'none', borderRadius: '8px',
+                                      cursor: currentInning === 1 ? 'not-allowed' : 'pointer',
+                                      display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', fontWeight: '600' }}>
+                              <ChevronLeft style={{ width: '18px', height: '18px' }} />
+                              Prev
+                            </button>
+                            
+                            <div style={{ fontWeight: 'bold', fontSize: '18px', color: 'var(--text-dark)' }}>
+                              Inning {currentInning}
+                            </div>
+                            
+                            <button
+                              onClick={() => setCurrentInning(Math.min(7, currentInning + 1))}
+                              disabled={currentInning === 7}
+                              style={{ padding: '8px 16px', background: currentInning === 7 ? '#e5e7eb' : 'var(--primary-color)',
+                                      color: 'white', border: 'none', borderRadius: '8px',
+                                      cursor: currentInning === 7 ? 'not-allowed' : 'pointer',
+                                      display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', fontWeight: '600' }}>
+                              Next
+                              <ChevronRight style={{ width: '18px', height: '18px' }} />
+                            </button>
+                          </div>
+                          
+                          {currentInning > 1 && (
+                            <button
+                              onClick={() => copyFromPreviousInning(currentInning)}
+                              style={{ width: '100%', marginBottom: '1rem', padding: '12px', background: 'var(--primary-color)',
+                                      color: 'white', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: '600',
+                                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                              <ChevronLeft style={{ width: '18px', height: '18px' }} />
+                              Copy All from Inning {currentInning - 1}
+                            </button>
+                          )}
+                          
+                          {isCaptain && gameFieldingPositions[currentInning] && Object.keys(gameFieldingPositions[currentInning]).length > 0 && (
+                            <button
+                              onClick={() => applyFieldingToAllInnings(currentInning)}
+                              disabled={savingLineup}
+                              style={{ width: '100%', marginBottom: '1rem', padding: '12px', background: '#6366f1',
+                                      color: 'white', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: '600',
+                                      cursor: savingLineup ? 'not-allowed' : 'pointer', opacity: savingLineup ? 0.7 : 1,
+                                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                              {savingLineup ? '⏳ Applying...' : `📋 Apply Inning ${currentInning} to All 7 Innings`}
+                            </button>
+                          )}
+                          
+                          <div style={{ marginBottom: '1rem' }}>
+                            <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-dark)' }}>
+                              Positions
+                            </h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              {seasonConfig.positions.map(position => {
+                                const isCatcher = position === 'C';
+                                const disabled = isCatcher && catcherDisabled;
+                                const player = gameFieldingPositions[currentInning]?.[position];
+                                
+                                return (
+                                  <div key={position}
+                                    style={{ padding: '12px', borderRadius: '12px', border: '1px solid var(--border-color)',
+                                            background: disabled ? '#f3f4f6' : (player ? 'var(--card-bg)' : '#f9fafb'),
+                                            opacity: disabled ? 0.6 : 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '48px', justifyContent: 'center' }}>
+                                        {disabled && <Lock style={{ width: '14px', height: '14px', color: '#9ca3af' }} />}
+                                        <span style={{ fontWeight: 'bold', fontSize: '16px',
+                                                      textDecoration: disabled ? 'line-through' : 'none',
+                                                      color: disabled ? '#9ca3af' : 'var(--text-dark)' }}>
+                                          {position}
+                                        </span>
+                                      </div>
+                                      
+                                      {disabled ? (
+                                        <span style={{ color: '#9ca3af', fontSize: '14px', flex: 1 }}>
+                                          Need {seasonConfig.catcherMinPlayers}+ players
+                                        </span>
+                                      ) : player ? (
+                                        <>
+                                          <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                              <div style={{
+                                                width: '40px', 
+                                                height: '40px',
+                                                borderRadius: '50%', 
+                                                background: 'var(--primary-color)', 
+                                                color: 'white',
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'center',
+                                                fontSize: '14px', 
+                                                fontWeight: '600', 
+                                                flexShrink: 0
+                                              }}>
+                                                {player.avatar || player.name?.charAt(0) || '?'}
+                                              </div>
+                                              <div style={{ minWidth: 0, flex: 1 }}>
+                                                <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-dark)',
+                                                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                  {player.name}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <button
+                                            onClick={() => removeFromFielding(currentInning, position)}
+                                            style={{ padding: '8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px',
+                                                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    width: '40px', height: '40px', fontSize: '18px', fontWeight: 'bold', flexShrink: 0 }}>
+                                            ×
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <span style={{ color: 'var(--text-light)', fontSize: '14px', flex: 1 }}>Tap + to assign</span>
+                                          <button
+                                            onClick={() => {
+                                              if (availablePlayers.length > 0) {
+                                                openPlayerModal(
+                                                  `Assign to ${position} - Inning ${currentInning}`,
+                                                  availablePlayers,
+                                                  (player) => handleFieldingDrop(player, currentInning, position)
+                                                );
+                                              }
+                                            }}
+                                            disabled={availablePlayers.length === 0}
+                                            style={{ padding: '8px', background: availablePlayers.length === 0 ? '#e5e7eb' : 'var(--primary-color)',
+                                                    color: 'white', border: 'none', borderRadius: '8px',
+                                                    cursor: availablePlayers.length === 0 ? 'not-allowed' : 'pointer',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    width: '40px', height: '40px', flexShrink: 0 }}>
+                                            <Plus style={{ width: '20px', height: '20px' }} />
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '0.5rem', color: '#854d0e' }}>
+                              Bench
+                            </h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              {(() => {
+                                const maxBenchSpots = seasonConfig.battingOrderSize - seasonConfig.positions.length;
+                                const inningBench = gameBenchPlayers[currentInning] || [];
+                                return [...Array(maxBenchSpots)].map((_, benchIdx) => {
+                                  const benchPlayer = inningBench[benchIdx];
+                                  
+                                  return (
+                                    <div key={benchIdx}
+                                      style={{ padding: '12px', borderRadius: '12px', border: '1px solid #ca8a04',
+                                              background: benchPlayer ? '#fefce8' : '#fef3c7' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#854d0e', width: '48px', textAlign: 'center' }}>
+                                          B{benchIdx + 1}
+                                        </span>
+                                        
+                                        {benchPlayer ? (
+                                          <>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <div style={{
+                                                  width: '40px', 
+                                                  height: '40px',
+                                                  borderRadius: '50%', 
+                                                  background: 'var(--primary-color)', 
+                                                  color: 'white',
+                                                  display: 'flex', 
+                                                  alignItems: 'center', 
+                                                  justifyContent: 'center',
+                                                  fontSize: '14px', 
+                                                  fontWeight: '600', 
+                                                  flexShrink: 0
+                                                }}>
+                                                  {benchPlayer.avatar || benchPlayer.name?.charAt(0) || '?'}
+                                                </div>
+                                                <div style={{ minWidth: 0, flex: 1 }}>
+                                                  <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-dark)',
+                                                              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {benchPlayer.name}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <button
+                                              onClick={() => removeFromBench(currentInning, benchIdx)}
+                                              style={{ padding: '8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px',
+                                                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                      width: '40px', height: '40px', fontSize: '18px', fontWeight: 'bold', flexShrink: 0 }}>
+                                              ×
+                                            </button>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <span style={{ color: '#92400e', fontSize: '14px', flex: 1 }}>Tap + to assign</span>
+                                            <button
+                                              onClick={() => {
+                                                if (availablePlayers.length > 0) {
+                                                  openPlayerModal(
+                                                    `Assign to Bench Spot ${benchIdx + 1} - Inning ${currentInning}`,
+                                                    availablePlayers,
+                                                    (player) => handleBenchDrop(player, currentInning, benchIdx)
+                                                  );
+                                                }
+                                              }}
+                                              disabled={availablePlayers.length === 0}
+                                              style={{ padding: '8px', background: availablePlayers.length === 0 ? '#e5e7eb' : '#ca8a04',
+                                                      color: 'white', border: 'none', borderRadius: '8px',
+                                                      cursor: availablePlayers.length === 0 ? 'not-allowed' : 'pointer',
+                                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                      width: '40px', height: '40px', flexShrink: 0 }}>
+                                              <Plus style={{ width: '20px', height: '20px' }} />
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                });
+                              })()}
+                            </div>
+                          </div>
+                          
+                          <div style={{ marginTop: '1rem' }}>
+                            <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-dark)' }}>
+                              Available Players ({availablePlayers.length})
+                            </h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto' }}>
+                              {availablePlayers.map(player => (
+                                <div key={player.id} style={{ padding: '12px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--card-bg)' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{
+                                      width: '40px', 
+                                      height: '40px',
+                                      borderRadius: '50%', 
+                                      background: 'var(--primary-color)', 
+                                      color: 'white',
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'center',
+                                      fontSize: '14px', 
+                                      fontWeight: '600', 
+                                      flexShrink: 0
+                                    }}>
+                                      {player.avatar || player.name?.charAt(0) || '?'}
+                                    </div>
+                                    <div>
+                                      <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-dark)' }}>{player.name}</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        // DESKTOP VIEW: Original 7-inning grid
+                        <div style={{ display: 'flex', gap: '1.5rem' }}>
+                          <div style={{ minWidth: '250px', maxWidth: '250px' }}>
+                            <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-dark)' }}>
+                              Available Players ({availablePlayers.length})
+                            </h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '700px', overflowY: 'auto', 
+                                          padding: '0.5rem', background: '#f9fafb', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                              {availablePlayers.map(player => (
+                                <PlayerCard key={player.id} player={player} draggable={true} showStats={false} />
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div style={{ flex: 1, overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                              <thead>
+                                <tr>
+                                  <th style={{ position: 'sticky', left: 0, background: '#f2f2f2', zIndex: 10, borderBottom: '2px solid var(--border-color)', padding: '8px', textAlign: 'center', width: '64px', color: 'var(--text-dark)' }}>Pos</th>
+                                  {[1, 2, 3, 4, 5, 6, 7].map(inning => (
+                                    <th key={inning} style={{ borderBottom: '2px solid var(--border-color)', padding: '8px', textAlign: 'center', background: '#f2f2f2', color: 'var(--text-dark)', position: 'relative' }}>
+                                      <div style={{ marginBottom: inning > 1 ? '4px' : '0' }}>{inning}</div>
+                                      {inning > 1 && (
+                                        <button
+                                          onClick={() => copyFromPreviousInning(inning)}
+                                          style={{
+                                            fontSize: '10px',
+                                            padding: '2px 6px',
+                                            background: 'var(--primary-color)',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            whiteSpace: 'nowrap',
+                                            transition: 'all 0.2s ease'
+                                          }}
+                                          onMouseEnter={(e) => e.target.style.background = 'var(--secondary-color)'}
+                                          onMouseLeave={(e) => e.target.style.background = 'var(--primary-color)'}
+                                          title={`Copy all players from inning ${inning - 1}`}
+                                        >
+                                          ← Copy
+                                        </button>
+                                      )}
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {seasonConfig.positions.map(position => {
+                                  const isCatcher = position === 'C';
+                                  const disabled = isCatcher && catcherDisabled;
+                                  
+                                  return (
+                                    <tr key={position} style={{ background: disabled ? '#f3f4f6' : 'white' }}>
+                                      <td style={{ position: 'sticky', left: 0, background: disabled ? '#f3f4f6' : 'white', zIndex: 10,
+                                                  borderBottom: '1px solid var(--border-color)', padding: '8px', fontWeight: '600', textAlign: 'center' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                                          {disabled && <Lock style={{ width: '14px', height: '14px', color: '#9ca3af' }} />}
+                                          <span style={{ textDecoration: disabled ? 'line-through' : 'none', color: disabled ? '#9ca3af' : 'var(--text-dark)' }}>
+                                            {position}
+                                          </span>
+                                        </div>
+                                      </td>
+                                      {[1, 2, 3, 4, 5, 6, 7].map(inning => {
+                                        const player = gameFieldingPositions[inning]?.[position];
+                                        const isDropTarget = dropTarget?.type === 'fielding' && dropTarget?.position === position && dropTarget?.inning === inning;
+                                        
+                                        return (
+                                          <td key={inning}
+                                            onDragOver={disabled ? undefined : handleDragOver}
+                                            onDragEnter={disabled ? undefined : (e) => handleDragEnter(e, { type: 'fielding', position, inning })}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={disabled ? undefined : (e) => handleDrop(e, { type: 'fielding', position, inning })}
+                                            style={{ borderBottom: '1px solid var(--border-color)', padding: '4px', transition: 'all 0.3s ease',
+                                                    background: isDropTarget && !disabled ? '#eff6ff' : 'transparent',
+                                                    border: isDropTarget && !disabled ? '2px dashed var(--primary-color)' : '1px solid var(--border-color)',
+                                                    cursor: disabled ? 'not-allowed' : 'default' }}>
+                                            {disabled ? (
+                                              <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>—</div>
+                                            ) : player ? (
+                                              <PlayerCard player={player} draggable={true} size="small"
+                                                onRemove={() => removeFromFielding(inning, position)} />
+                                            ) : (
+                                              <div style={{ height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            color: '#d1d5db', fontSize: '12px' }}>
+                                                Drop
+                                              </div>
+                                            )}
+                                          </td>
+                                        );
+                                      })}
+                                    </tr>
+                                  );
+                                })}
+                                
+                                <tr style={{ background: '#f9fafb' }}>
+                                  <td colSpan={8} style={{ padding: '8px', textAlign: 'center', fontWeight: '600', fontSize: '12px',
+                                                            color: 'var(--text-light)', borderTop: '2px solid #9ca3af', borderBottom: '2px solid #9ca3af' }}>
+                                    BENCH
+                                  </td>
+                                </tr>
+                                
+                                {(() => {
+                                  const maxBenchSpots = seasonConfig.battingOrderSize - seasonConfig.positions.length;
+                                  return [...Array(maxBenchSpots)].map((_, benchIdx) => (
+                                    <tr key={`bench-${benchIdx}`} style={{ background: '#fefce8' }}>
+                                      <td style={{ position: 'sticky', left: 0, background: '#fefce8', zIndex: 10, borderBottom: '1px solid var(--border-color)',
+                                                  padding: '8px', fontWeight: '600', textAlign: 'center', color: '#854d0e' }}>
+                                        B{benchIdx + 1}
+                                      </td>
+                                      {[1, 2, 3, 4, 5, 6, 7].map(inning => {
+                                        const inningBench = gameBenchPlayers[inning] || [];
+                                        const benchPlayer = inningBench[benchIdx];
+                                        const isDropTarget = dropTarget?.type === 'bench' && dropTarget?.inning === inning && dropTarget?.benchIndex === benchIdx;
+                                        
+                                        return (
+                                          <td key={inning}
+                                            onDragOver={handleDragOver}
+                                            onDragEnter={(e) => handleDragEnter(e, { type: 'bench', inning, benchIndex: benchIdx })}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={(e) => handleDrop(e, { type: 'bench', inning, benchIndex: benchIdx })}
+                                            style={{ borderBottom: '1px solid var(--border-color)', padding: '4px', background: isDropTarget ? '#fef3c7' : '#fefce8',
+                                                    border: isDropTarget ? '2px dashed #ca8a04' : '1px solid var(--border-color)',
+                                                    transition: 'all 0.3s ease' }}>
+                                            {benchPlayer ? (
+                                              <PlayerCard player={benchPlayer} draggable={true} size="small"
+                                                onRemove={() => removeFromBench(inning, benchIdx)} />
+                                            ) : (
+                                              <div style={{ height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            color: '#d1d5db', fontSize: '12px' }}>
+                                                Drop
+                                              </div>
+                                            )}
+                                          </td>
+                                        );
+                                      })}
+                                    </tr>
+                                  ));
+                                })()}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Finalize Fielding Button */}
+                    {isCaptain && selectedGame && (
+                      <div style={{ marginTop: '1.5rem' }}>
+                        {!fieldingFinalized[selectedGame] ? (
+                          <button 
+                            onClick={async () => {
+                              if (confirm('Finalize all fielding positions? Your team will be notified that defensive positions are ready.')) {
+                                try {
+                                  setSavingLineup(true);
+                                  // Finalize all innings that have been set up
+                                  const innings = Object.keys(gameFieldingPositions || {});
+                                  if (innings.length === 0) {
+                                    alert('No fielding positions set yet. Please assign positions before finalizing.');
+                                    return;
+                                  }
+                                  
+                                  // Finalize each inning
+                                  for (const inning of innings) {
+                                    await window.FirebaseRoster.finalizeFieldingPositions(
+                                      selectedGame, 
+                                      selectedTeam, 
+                                      parseInt(inning),
+                                      currentUser.uid
+                                    );
+                                  }
+                                  
+                                  setFieldingFinalized(prev => ({...prev, [selectedGame]: true}));
+                                  alert(`✅ Fielding positions finalized for ${innings.length} inning(s)! Team has been notified.`);
+                                } catch (error) {
+                                  console.error('Error finalizing fielding positions:', error);
+                                  alert('Error finalizing fielding positions. Please try again.');
+                                } finally {
+                                  setSavingLineup(false);
+                                }
+                              }
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '1rem 2rem',
+                              background: 'linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '12px',
+                              fontSize: '1.1rem',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              boxShadow: '0 4px 12px rgba(45, 80, 22, 0.3)',
+                              transition: 'all 0.2s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.5rem'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.transform = 'translateY(-2px)';
+                              e.target.style.boxShadow = '0 6px 16px rgba(45, 80, 22, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.transform = 'translateY(0)';
+                              e.target.style.boxShadow = '0 4px 12px rgba(45, 80, 22, 0.3)';
+                            }}
+                          >
+                            📢 Finalize Fielding & Notify Team
+                          </button>
+                        ) : (
+                          <div style={{
+                            padding: '1rem',
+                            background: '#d1fae5',
+                            border: '2px solid #10b981',
+                            borderRadius: '12px',
+                            color: '#065f46',
+                            fontWeight: '700',
+                            fontSize: '1rem',
+                            textAlign: 'center',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem'
+                          }}>
+                            ✅ Fielding positions finalized - Team has been notified
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Reset Defense Button */}
+                    {isCaptain && selectedGame && (
+                      <div style={{ marginTop: '0.75rem' }}>
+                        <button
+                          onClick={resetDefense}
+                          disabled={savingLineup}
+                          style={{
+                            width: '100%',
+                            padding: '0.75rem 2rem',
+                            background: savingLineup ? '#e5e7eb' : 'transparent',
+                            color: savingLineup ? '#9ca3af' : '#dc2626',
+                            border: '2px solid ' + (savingLineup ? '#e5e7eb' : '#dc2626'),
+                            borderRadius: '12px',
+                            fontSize: '0.95rem',
+                            fontWeight: '600',
+                            cursor: savingLineup ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!savingLineup) {
+                              e.currentTarget.style.background = '#fef2f2';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!savingLineup) {
+                              e.currentTarget.style.background = 'transparent';
+                            }
+                          }}
+                        >
+                          {savingLineup ? 'Working...' : 'Reset Defense'}
+                        </button>
+                      </div>
+                    )}
+
+                  </>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {!selectedTeam && (
+          <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: '16px', textAlign: 'center', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-color)' }}>
+            <h3 style={{ marginTop: 0, color: 'var(--text-dark)' }}>Welcome to Roster Management</h3>
+            <p style={{ color: 'var(--text-light)' }}>Select your team to get started with RSVPs and lineup management</p>
+          </div>
+        )}
+      </div>
+    </div>
+    </>
+  );
+}
+
+function updateConnectionStatus() {
+  const status = document.getElementById('connectionStatus');
+  if (!status) return;
+  
+  const icon = status.querySelector('.status-icon');
+  const text = status.querySelector('.status-text');
+  
+  if (navigator.onLine) {
+    // Show "Back online" message
+    status.classList.remove('hidden');  // SHOW IT FIRST
+    status.classList.add('online');
+    icon.textContent = '✅';
+    text.textContent = 'Back online';
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+      status.classList.add('hidden');
+    }, 3000);
+  } else {
+    // Show "You're offline" message
+    status.classList.remove('hidden', 'online');
+    icon.textContent = '📡';
+    text.textContent = "You're offline";
+  }
+}
+
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+if (!navigator.onLine) updateConnectionStatus();
+</script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script type="module" src="offline-queue.js"></script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

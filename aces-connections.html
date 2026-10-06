@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aces Connections - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  --correct-color: #48bb78;
+  --incorrect-color: #f56565;
+  
+  /* Connections difficulty colors */
+  --yellow: #f9df6d;
+  --yellow-dark: #c9a227;
+  --green: #a0c35a;
+  --green-dark: #6a9a23;
+  --blue: #b0c4ef;
+  --blue-dark: #5a7ec2;
+  --purple: #ba81c5;
+  --purple-dark: #8b4a9c;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.softball-spinner::before {
+  content: '⚾';
+  font-size: 60px;
+  animation: spin 1.5s ease-in-out infinite;
+  display: block;
+}
+
+@keyframes spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+
+/* Page Container */
+.page-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* Page Header */
+.page-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  text-align: center;
+  padding: 2rem 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.back-link {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(255,255,255,0.15);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.back-link:hover {
+  background: rgba(255,255,255,0.25);
+  color: white;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.page-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.page-header .subtitle {
+  opacity: 0.9;
+  font-size: 1rem;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.puzzle-date {
+  font-size: 1rem;
+  opacity: 0.85;
+  margin-top: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Game Stats Bar */
+.game-stats-bar {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  background: var(--card-bg);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* User Stats Section */
+.user-stats-container {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.user-stats-content {
+  text-align: center;
+}
+
+.sign-in-prompt {
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+.sign-in-prompt a {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.sign-in-prompt a:hover {
+  text-decoration: underline;
+}
+
+.user-greeting {
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.75rem;
+}
+
+.stats-note {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.lifetime-stats {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.lifetime-stat {
+  text-align: center;
+}
+
+.lifetime-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  display: block;
+}
+
+.lifetime-label {
+  font-size: 0.7rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Mistakes Display */
+.mistakes-section {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.mistakes-label {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.mistakes-display {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.mistake-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  transition: all 0.3s ease;
+}
+
+.mistake-dot.used {
+  background: #e2e8f0;
+}
+
+/* Solved Categories */
+.solved-categories {
+  margin-bottom: 0.5rem;
+}
+
+.solved-category {
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.solved-category.yellow { background: var(--yellow); }
+.solved-category.green { background: var(--green); }
+.solved-category.blue { background: var(--blue); }
+.solved-category.purple { background: var(--purple); }
+
+.category-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.category-players {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+/* Game Grid */
+.grid-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 1rem;
+}
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.player-tile {
+  aspect-ratio: 1.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  padding: 0.5rem;
+  line-height: 1.2;
+  user-select: none;
+}
+
+.player-tile:hover:not(.selected):not(.disabled) {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.player-tile.selected {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: scale(1.02);
+}
+
+.player-tile.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.player-tile.shake {
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+.player-tile.almost {
+  animation: almostPulse 0.6s ease;
+}
+
+@keyframes almostPulse {
+  0%, 100% { background: #f8fafc; }
+  50% { background: #fef3c7; }
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid var(--primary-color);
+  background: white;
+  color: var(--primary-color);
+}
+
+.action-btn:hover:not(:disabled) {
+  background: var(--primary-color);
+  color: white;
+}
+
+.action-btn:disabled {
+  border-color: #cbd5e0;
+  color: #cbd5e0;
+  cursor: not-allowed;
+}
+
+.action-btn.primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.action-btn.primary:hover:not(:disabled) {
+  background: var(--secondary-color);
+  border-color: var(--secondary-color);
+}
+
+.action-btn.primary:disabled {
+  background: #cbd5e0;
+  border-color: #cbd5e0;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  padding: 1rem;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 450px;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+  transform: translateY(0);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  padding: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.modal-close {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.modal-body {
+  padding: 1.25rem;
+}
+
+/* Game Over Modal */
+.game-over-content {
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.game-over-content h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+}
+
+.final-score {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  margin: 1rem 0;
+}
+
+.score-breakdown {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 1.5rem 0;
+}
+
+.breakdown-item {
+  text-align: center;
+}
+
+.breakdown-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.breakdown-label {
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.share-section {
+  margin-top: 1.5rem;
+}
+
+.share-btn {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.share-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.share-preview {
+  background: #f7fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  font-family: monospace;
+  font-size: 0.85rem;
+  white-space: pre-line;
+  text-align: left;
+}
+
+/* How to Play */
+.how-to-play {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
+}
+
+.how-to-play h3 {
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.how-to-play-content {
+  display: none;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.how-to-play.expanded .how-to-play-content {
+  display: block;
+}
+
+.how-to-play p {
+  margin: 0 0 0.75rem 0;
+  line-height: 1.5;
+}
+
+.difficulty-legend {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.difficulty-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.difficulty-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.difficulty-dot.yellow { background: var(--yellow); }
+.difficulty-dot.green { background: var(--green); }
+.difficulty-dot.blue { background: var(--blue); }
+.difficulty-dot.purple { background: var(--purple); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--text-dark);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: 500;
+  z-index: 10001;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .page-container {
+    padding: 1rem;
+  }
+  
+  .page-header {
+    padding: 1.5rem 1rem;
+  }
+  
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .player-tile {
+    font-size: 0.7rem;
+    padding: 0.25rem;
+    aspect-ratio: 1.4;
+  }
+  
+  .game-grid {
+    gap: 0.35rem;
+  }
+  
+  .action-buttons {
+    gap: 0.5rem;
+  }
+  
+  .action-btn {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .game-stats-bar {
+    gap: 1rem;
+  }
+  
+  .stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .lifetime-stats {
+    gap: 1rem;
+  }
+  
+  .lifetime-value {
+    font-size: 1.1rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<!-- Navigation placeholder -->
+<nav id="main-nav"></nav>
+
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <a href="games.html" class="back-link">← Games</a>
+    <h1>🔗 Aces Connections</h1>
+    <p class="subtitle">Group 4 players who share something in common</p>
+    <div class="puzzle-date" id="puzzleDate">Puzzle #1</div>
+  </div>
+
+  <!-- Game Stats Bar -->
+  <div class="game-stats-bar">
+    <div class="stat-item">
+      <div class="stat-value" id="categoriesFound">0/4</div>
+      <div class="stat-label">Found</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="mistakesRemaining">4</div>
+      <div class="stat-label">Mistakes Left</div>
+    </div>
+  </div>
+
+  <!-- User Stats Section -->
+  <div class="user-stats-container" id="userStatsContainer">
+    <div class="user-stats-content">
+      <div class="sign-in-prompt">
+        <span>🔒</span>
+        <a href="signin.html">Sign in</a> to track your stats across devices
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid Container -->
+  <div class="grid-container">
+    <!-- Solved Categories -->
+    <div class="solved-categories" id="solvedCategories"></div>
+
+    <!-- Game Grid -->
+    <div class="game-grid" id="gameGrid"></div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="action-buttons">
+    <button class="action-btn" onclick="shuffleTiles()" id="shuffleBtn">🔀 Shuffle</button>
+    <button class="action-btn" onclick="deselectAll()" id="deselectBtn">↩️ Deselect</button>
+    <button class="action-btn primary" onclick="submitGuess()" id="submitBtn" disabled>Submit</button>
+  </div>
+  
+  <div class="action-buttons">
+    <button class="action-btn" onclick="giveUp()" id="giveUpBtn">🏳️ Give Up</button>
+    <button class="action-btn primary" onclick="viewResults()" id="resultsBtn" style="display:none;">🏆 Results</button>
+    <button class="action-btn" onclick="shareResults()" id="shareBtn" style="display:none;">📤 Share</button>
+    <button class="action-btn" onclick="showAnswers()" id="answersBtn" style="display:none;">👀 Answers</button>
+  </div>
+
+  <!-- How to Play -->
+  <div class="how-to-play" id="howToPlay">
+    <h3 onclick="toggleHowToPlay()">📖 How to Play <span id="howToPlayToggle">▼</span></h3>
+    <div class="how-to-play-content">
+      <p>Find groups of 4 players that share something in common. Select 4 players and tap Submit to check your guess.</p>
+      <p>Categories include team rosters, stat milestones, awards, and more! You have 4 mistakes before the game ends.</p>
+      <div class="difficulty-legend">
+        <div class="difficulty-item">
+          <div class="difficulty-dot yellow"></div>
+          <span>Straightforward</span>
+        </div>
+        <div class="difficulty-item">
+          <div class="difficulty-dot green"></div>
+          <span>Moderate</span>
+        </div>
+        <div class="difficulty-item">
+          <div class="difficulty-dot blue"></div>
+          <span>Tricky</span>
+        </div>
+        <div class="difficulty-item">
+          <div class="difficulty-dot purple"></div>
+          <span>Challenging</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Game Over Modal -->
+<div class="modal-overlay" id="gameOverModal">
+  <div class="modal-content">
+    <div class="game-over-content">
+      <h2 id="gameOverTitle">🎉 Puzzle Complete!</h2>
+      <div class="final-score" id="finalScore">4/4</div>
+      <div class="score-breakdown">
+        <div class="breakdown-item">
+          <div class="breakdown-value" id="correctCount">4</div>
+          <div class="breakdown-label">Found</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-value" id="mistakesUsed">1</div>
+          <div class="breakdown-label">Mistakes</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-value" id="guessesTotal">5</div>
+          <div class="breakdown-label">Guesses</div>
+        </div>
+      </div>
+      <div class="share-section">
+        <button class="share-btn" onclick="shareResults()">📤 Share Results</button>
+        <div class="share-preview" id="sharePreview"></div>
+      </div>
+      <div class="action-buttons" style="margin-top:1rem;">
+        <button class="action-btn" onclick="closeGameOverModal()">Close</button>
+        <button class="action-btn" onclick="showAnswers()">👀 Show Categories</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Answers Modal -->
+<div class="modal-overlay" id="answersModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>📊 All Categories</h3>
+      <button class="modal-close" onclick="closeAnswersModal()">×</button>
+    </div>
+    <div class="modal-body" id="answersModalBody" style="max-height: 60vh; overflow-y: auto;">
+      <!-- Answers will be inserted here -->
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { 
+  db, 
+  doc,
+  getDoc
+} from './firebase-config.js';
+
+import {
+  setDoc,
+  serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+import { getAllPlayerStatsOptimized, getAllAwards } from './firebase-data.js';
+
+import {
+  getCurrentUser,
+  onAuthChange
+} from './firebase-auth.js';
+
+// ============================================
+// CONFIGURATION
+// ============================================
+// Launch date components (Year, Month 0-indexed, Day)
+// Use this format to avoid UTC timezone issues
+const LAUNCH_YEAR = 2026;
+const LAUNCH_MONTH = 0; // January (0-indexed)
+const LAUNCH_DAY = 6;   // 5th
+const MAX_MISTAKES = 4;
+
+// Team list
+const TEAMS = ['Black', 'Blue', 'Green', 'Red', 'Orange', 'Purple', 'Gold', 'Silver', 'White', 'Carolina'];
+
+// Difficulty colors/order
+const DIFFICULTIES = ['yellow', 'green', 'blue', 'purple'];
+
+// ============================================
+// SUBSTITUTE SEASON HELPERS
+// ============================================
+// Helper to check if a season is a substitute season
+function isSubstituteSeason(season) {
+  return season.sub === 'Yes' || season.sub === 'yes' || season.sub === true;
+}
+
+// Get only non-substitute seasons for a player (as object entries)
+function getNonSubSeasonEntries(player) {
+  if (!player.seasons) return [];
+  return Object.entries(player.seasons).filter(([, season]) => !isSubstituteSeason(season));
+}
+
+// Get only non-substitute seasons for a player (as values array)
+function getNonSubSeasons(player) {
+  if (!player.seasons) return [];
+  return Object.values(player.seasons).filter(s => !isSubstituteSeason(s));
+}
+
+// ============================================
+// AUTH STATE
+// ============================================
+let currentUser = null;
+let userStats = null;
+
+// ============================================
+// GAME STATE
+// ============================================
+let allPlayers = [];
+let allAwards = [];
+let todaysPuzzle = null;
+let gameState = {
+  selected: [],
+  solved: [],       // Array of solved category objects
+  mistakes: 0,
+  guessHistory: [], // Array of guess keys for deduplication
+  solveOrder: [],   // Order in which categories were solved (for share)
+  isComplete: false
+};
+
+// ============================================
+// SEEDED RANDOM
+// ============================================
+function seededRandom(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function getDayNumber() {
+  // Use local midnight to avoid UTC issues
+  const start = new Date(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY).setHours(0, 0, 0, 0);
+  const now = new Date().setHours(0, 0, 0, 0);
+  const daysSinceLaunch = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  return Math.max(1, daysSinceLaunch + 1);
+}
+
+function shuffleWithSeed(array, seed) {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    seed++;
+    const j = Math.floor(seededRandom(seed) * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+// ============================================
+// CATEGORY GENERATORS
+// ============================================
+
+function getTeamRoster(team, seasonId) {
+  const players = [];
+  allPlayers.forEach(p => {
+    if (p.seasons && p.seasons[seasonId] && p.seasons[seasonId].team) {
+      const season = p.seasons[seasonId];
+      // Skip substitute seasons
+      if (isSubstituteSeason(season)) return;
+      if (season.team.toLowerCase() === team.toLowerCase()) {
+        players.push(p.name || p.playerName);
+      }
+    }
+  });
+  return [...new Set(players)];
+}
+
+function getCareerStatPlayers(stat, threshold) {
+  const players = [];
+  allPlayers.forEach(p => {
+    let value = 0;
+    if (stat === 'hits') value = p.careerHits || p.career?.hits || 0;
+    else if (stat === 'runs') value = p.careerRuns || p.career?.runs || 0;
+    else if (stat === 'walks') value = p.careerWalks || p.career?.walks || 0;
+    else if (stat === 'games') value = p.careerGames || p.career?.games || 0;
+    else if (stat === 'seasons') value = getNonSubSeasons(p).length; // Count only non-sub seasons
+    
+    if (value >= threshold) {
+      players.push(p.name || p.playerName);
+    }
+  });
+  return [...new Set(players)];
+}
+
+function getSeasonStatPlayers(stat, threshold) {
+  const players = [];
+  allPlayers.forEach(p => {
+    // Only check non-substitute seasons
+    getNonSubSeasons(p).forEach(season => {
+      let value = 0;
+      if (stat === 'hits') value = season.hits || 0;
+      else if (stat === 'runs') value = season.runs || 0;
+      else if (stat === 'walks') value = season.walks || 0;
+      else if (stat === 'games') value = season.games || 0;
+      else if (stat === 'avg') {
+        const ab = (season.hits || 0) + (season.outs || 0);
+        value = ab >= 20 ? (season.hits || 0) / ab : 0;
+      }
+      
+      if (value >= threshold) {
+        players.push(p.name || p.playerName);
+      }
+    });
+  });
+  return [...new Set(players)];
+}
+
+function getTeamCountPlayers(count, exact = true) {
+  const players = [];
+  allPlayers.forEach(p => {
+    const teams = new Set();
+    // Only count teams from non-substitute seasons
+    getNonSubSeasons(p).forEach(s => {
+      if (s.team) teams.add(s.team.toLowerCase());
+    });
+    if (exact ? teams.size === count : teams.size >= count) {
+      players.push(p.name || p.playerName);
+    }
+  });
+  return [...new Set(players)];
+}
+
+function getAwardWinners(awardType = null) {
+  const players = [];
+  allAwards.forEach(a => {
+    if (!awardType || a.category?.toLowerCase().includes(awardType.toLowerCase())) {
+      if (a.playerName) players.push(a.playerName);
+    }
+  });
+  return [...new Set(players)];
+}
+
+function getNameStartsWith(letter) {
+  const players = [];
+  allPlayers.forEach(p => {
+    const name = p.name || p.playerName || '';
+    if (name.toUpperCase().startsWith(letter.toUpperCase())) {
+      players.push(name);
+    }
+  });
+  return [...new Set(players)];
+}
+
+function getSeasonsPlayed(count, exact = false) {
+  const players = [];
+  allPlayers.forEach(p => {
+    // Only count non-substitute seasons
+    const numSeasons = getNonSubSeasons(p).length;
+    if (exact ? numSeasons === count : numSeasons >= count) {
+      players.push(p.name || p.playerName);
+    }
+  });
+  return [...new Set(players)];
+}
+
+// ============================================
+// CATEGORY POOL GENERATION
+// ============================================
+function generateCategoryPool() {
+  const seasonIds = [];
+  
+  // Only collect season IDs from non-substitute seasons
+  allPlayers.forEach(p => {
+    getNonSubSeasonEntries(p).forEach(([sid]) => {
+      if (!seasonIds.includes(sid)) seasonIds.push(sid);
+    });
+  });
+  seasonIds.sort().reverse();
+  
+  // YELLOW (Easy)
+  const yellowOptions = [];
+  
+  seasonIds.slice(0, 4).forEach(sid => {
+    TEAMS.forEach(team => {
+      const roster = getTeamRoster(team, sid);
+      if (roster.length >= 4) {
+        const [year, season] = sid.split('-');
+        yellowOptions.push({
+          title: `${year} ${season.charAt(0).toUpperCase() + season.slice(1)} ${team}`,
+          players: roster,
+          difficulty: 'yellow'
+        });
+      }
+    });
+  });
+  
+  [
+    { stat: 'hits', threshold: 50, title: '50+ Career Hits' },
+    { stat: 'runs', threshold: 30, title: '30+ Career Runs' },
+    { stat: 'games', threshold: 40, title: '40+ Career Games' },
+  ].forEach(m => {
+    const players = getCareerStatPlayers(m.stat, m.threshold);
+    if (players.length >= 4) {
+      yellowOptions.push({ title: m.title, players, difficulty: 'yellow' });
+    }
+  });
+  
+  // GREEN (Medium)
+  const greenOptions = [];
+  
+  [
+    { stat: 'hits', threshold: 20, title: '20+ Hits in a Season' },
+    { stat: 'runs', threshold: 15, title: '15+ Runs in a Season' },
+    { stat: 'walks', threshold: 10, title: '10+ Walks in a Season' },
+  ].forEach(m => {
+    const players = getSeasonStatPlayers(m.stat, m.threshold);
+    if (players.length >= 4) {
+      greenOptions.push({ title: m.title, players, difficulty: 'green' });
+    }
+  });
+  
+  [2, 3].forEach(count => {
+    const players = getTeamCountPlayers(count, true);
+    if (players.length >= 4) {
+      greenOptions.push({
+        title: `Played for Exactly ${count} Teams`,
+        players,
+        difficulty: 'green'
+      });
+    }
+  });
+  
+  [4, 5, 6].forEach(count => {
+    const players = getSeasonsPlayed(count, true);
+    if (players.length >= 4) {
+      greenOptions.push({
+        title: `Played Exactly ${count} Seasons`,
+        players,
+        difficulty: 'green'
+      });
+    }
+  });
+  
+  // BLUE (Hard)
+  const blueOptions = [];
+  
+  [
+    { stat: 'hits', threshold: 75, title: '75+ Career Hits' },
+    { stat: 'runs', threshold: 50, title: '50+ Career Runs' },
+    { stat: 'walks', threshold: 30, title: '30+ Career Walks' },
+  ].forEach(m => {
+    const players = getCareerStatPlayers(m.stat, m.threshold);
+    if (players.length >= 4 && players.length <= 12) {
+      blueOptions.push({ title: m.title, players, difficulty: 'blue' });
+    }
+  });
+  
+  [
+    { stat: 'hits', threshold: 25, title: '25+ Hits in a Season' },
+    { stat: 'runs', threshold: 18, title: '18+ Runs in a Season' },
+    { stat: 'avg', threshold: 0.450, title: '.450+ BA in a Season' },
+  ].forEach(m => {
+    const players = getSeasonStatPlayers(m.stat, m.threshold);
+    if (players.length >= 4 && players.length <= 12) {
+      blueOptions.push({ title: m.title, players, difficulty: 'blue' });
+    }
+  });
+  
+  // Additional blue categories for variety
+  [7, 8, 9].forEach(count => {
+    const players = getSeasonsPlayed(count, true);
+    if (players.length >= 4 && players.length <= 12) {
+      blueOptions.push({
+        title: `Played Exactly ${count} Seasons`,
+        players,
+        difficulty: 'blue'
+      });
+    }
+  });
+  
+  [4, 5].forEach(count => {
+    const players = getTeamCountPlayers(count, false);
+    if (players.length >= 4 && players.length <= 12) {
+      blueOptions.push({
+        title: `Played for ${count}+ Teams`,
+        players,
+        difficulty: 'blue'
+      });
+    }
+  });
+  
+  // PURPLE (Hardest)
+  const purpleOptions = [];
+  
+  const mvpWinners = getAwardWinners('mvp');
+  if (mvpWinners.length >= 4) {
+    purpleOptions.push({ title: 'MVP Award Winners', players: mvpWinners, difficulty: 'purple' });
+  }
+  
+  const battingWinners = getAwardWinners('batting');
+  if (battingWinners.length >= 4) {
+    purpleOptions.push({ title: 'Batting Title Winners', players: battingWinners, difficulty: 'purple' });
+  }
+  
+  const allAwardWinners = getAwardWinners();
+  if (allAwardWinners.length >= 4) {
+    purpleOptions.push({ title: 'League Award Winners', players: allAwardWinners, difficulty: 'purple' });
+  }
+  
+  [
+    { stat: 'hits', threshold: 100, title: '100+ Career Hits' },
+    { stat: 'seasons', threshold: 7, title: '7+ Seasons Played' },
+  ].forEach(m => {
+    const players = getCareerStatPlayers(m.stat, m.threshold);
+    if (players.length >= 4 && players.length <= 10) {
+      purpleOptions.push({ title: m.title, players, difficulty: 'purple' });
+    }
+  });
+  
+  const manyTeams = getTeamCountPlayers(4, false);
+  if (manyTeams.length >= 4) {
+    purpleOptions.push({ title: 'Played for 4+ Teams', players: manyTeams, difficulty: 'purple' });
+  }
+  
+  ['M', 'J', 'S', 'D', 'C', 'A', 'B', 'R', 'T', 'K', 'N', 'P', 'L', 'E'].forEach(letter => {
+    const players = getNameStartsWith(letter);
+    if (players.length >= 4 && players.length <= 10) {
+      purpleOptions.push({
+        title: `First Name Starts with "${letter}"`,
+        players,
+        difficulty: 'purple'
+      });
+    }
+  });
+  
+  // Add more career milestone categories
+  [
+    { stat: 'runs', threshold: 75, title: '75+ Career Runs' },
+    { stat: 'walks', threshold: 40, title: '40+ Career Walks' },
+    { stat: 'games', threshold: 60, title: '60+ Career Games' },
+    { stat: 'seasons', threshold: 8, title: '8+ Seasons Played' },
+    { stat: 'seasons', threshold: 10, title: '10+ Seasons Played' },
+  ].forEach(m => {
+    const players = getCareerStatPlayers(m.stat, m.threshold);
+    if (players.length >= 4 && players.length <= 10) {
+      purpleOptions.push({ title: m.title, players, difficulty: 'purple' });
+    }
+  });
+  
+  return {
+    yellow: yellowOptions,
+    green: greenOptions,
+    blue: blueOptions,
+    purple: purpleOptions
+  };
+}
+
+// ============================================
+// PUZZLE GENERATION
+// ============================================
+function generateDailyPuzzle() {
+  const dayNum = getDayNumber();
+  const seed = dayNum * 12345;
+  
+  // Generate pool (stable order - we'll use dayNum to index)
+  const pool = generateCategoryPool();
+  
+  // Use dayNum to pick different categories each day
+  const categories = [];
+  const usedPlayers = new Set();
+  
+  DIFFICULTIES.forEach((difficulty, diffIdx) => {
+    const options = pool[difficulty];
+    if (options.length === 0) return;
+    
+    // Use dayNum + difficulty offset to pick starting point
+    // This ensures different days pick different categories
+    const startIdx = (dayNum + diffIdx * 7) % options.length;
+    
+    // Try each option starting from our day-based index
+    for (let i = 0; i < options.length; i++) {
+      const idx = (startIdx + i) % options.length;
+      const cat = options[idx];
+      const available = cat.players.filter(p => !usedPlayers.has(p));
+      
+      if (available.length >= 4) {
+        const selected = shuffleWithSeed(available, seed + diffIdx * 1000 + idx).slice(0, 4);
+        selected.forEach(p => usedPlayers.add(p));
+        
+        categories.push({
+          title: cat.title,
+          players: selected,
+          difficulty: cat.difficulty
+        });
+        break;
+      }
+    }
+  });
+  
+  console.log(`✅ Puzzle #${dayNum} generated`);
+  console.log('Categories:', categories.map(c => c.title).join(', '));
+  
+  // Fallback for missing categories
+  while (categories.length < 4) {
+    console.error('❌ Could not generate category for difficulty:', DIFFICULTIES[categories.length]);
+    categories.push({
+      title: 'Mystery Category',
+      players: ['Player A', 'Player B', 'Player C', 'Player D'],
+      difficulty: DIFFICULTIES[categories.length]
+    });
+  }
+  
+  const allTiles = [];
+  categories.forEach(cat => {
+    cat.players.forEach(p => allTiles.push(p));
+  });
+  
+  return {
+    dayNum: dayNum,
+    categories: categories,
+    tiles: shuffleWithSeed(allTiles, seed + 999)
+  };
+}
+
+// ============================================
+// UI FUNCTIONS
+// ============================================
+function renderGrid() {
+  const grid = document.getElementById('gameGrid');
+  grid.innerHTML = '';
+  
+  const solvedPlayers = new Set();
+  gameState.solved.forEach(cat => {
+    cat.players.forEach(p => solvedPlayers.add(p));
+  });
+  
+  const remainingTiles = todaysPuzzle.tiles.filter(p => !solvedPlayers.has(p));
+  
+  remainingTiles.forEach(player => {
+    const tile = document.createElement('div');
+    tile.className = 'player-tile';
+    tile.textContent = player;
+    tile.dataset.player = player;
+    
+    if (gameState.selected.includes(player)) {
+      tile.classList.add('selected');
+    }
+    
+    if (gameState.isComplete) {
+      tile.classList.add('disabled');
+    }
+    
+    tile.addEventListener('click', () => toggleSelection(player));
+    grid.appendChild(tile);
+  });
+  
+  updateSubmitButton();
+}
+
+function renderSolvedCategories() {
+  const container = document.getElementById('solvedCategories');
+  container.innerHTML = '';
+  
+  gameState.solved.forEach(cat => {
+    const div = document.createElement('div');
+    div.className = `solved-category ${cat.difficulty}`;
+    div.innerHTML = `
+      <div class="category-title">${cat.title}</div>
+      <div class="category-players">${cat.players.join(', ')}</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function updateStats() {
+  document.getElementById('categoriesFound').textContent = `${gameState.solved.length}/4`;
+  document.getElementById('mistakesRemaining').textContent = MAX_MISTAKES - gameState.mistakes;
+}
+
+function toggleSelection(player) {
+  if (gameState.isComplete) return;
+  
+  const idx = gameState.selected.indexOf(player);
+  if (idx >= 0) {
+    gameState.selected.splice(idx, 1);
+  } else if (gameState.selected.length < 4) {
+    gameState.selected.push(player);
+  }
+  
+  renderGrid();
+  saveGameState();
+}
+
+function updateSubmitButton() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = gameState.selected.length !== 4;
+}
+
+window.shuffleTiles = function() {
+  const solvedPlayers = new Set();
+  gameState.solved.forEach(cat => {
+    cat.players.forEach(p => solvedPlayers.add(p));
+  });
+  
+  const remaining = todaysPuzzle.tiles.filter(p => !solvedPlayers.has(p));
+  
+  for (let i = remaining.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+  }
+  
+  todaysPuzzle.tiles = [...todaysPuzzle.tiles.filter(p => solvedPlayers.has(p)), ...remaining];
+  
+  renderGrid();
+};
+
+window.deselectAll = function() {
+  gameState.selected = [];
+  renderGrid();
+  saveGameState();
+};
+
+window.submitGuess = function() {
+  if (gameState.selected.length !== 4 || gameState.isComplete) return;
+  
+  const guess = [...gameState.selected].sort();
+  const guessKey = guess.join('|');
+  
+  if (gameState.guessHistory.includes(guessKey)) {
+    showToast('Already guessed!');
+    return;
+  }
+  gameState.guessHistory.push(guessKey);
+  
+  let matchedCategory = null;
+  let almostCount = 0;
+  
+  for (const cat of todaysPuzzle.categories) {
+    if (gameState.solved.some(s => s.title === cat.title)) continue;
+    
+    const catPlayers = [...cat.players].sort();
+    const matches = guess.filter(p => catPlayers.includes(p)).length;
+    
+    if (matches === 4) {
+      matchedCategory = cat;
+      break;
+    } else if (matches === 3) {
+      almostCount = 3;
+    }
+  }
+  
+  if (matchedCategory) {
+    gameState.solved.push(matchedCategory);
+    gameState.solveOrder.push(matchedCategory.difficulty);
+    gameState.selected = [];
+    
+    renderSolvedCategories();
+    renderGrid();
+    updateStats();
+    
+    if (gameState.solved.length === 4) {
+      endGame(true);
+    }
+  } else {
+    gameState.mistakes++;
+    updateStats();
+    
+    document.querySelectorAll('.player-tile.selected').forEach(tile => {
+      tile.classList.add('shake');
+      setTimeout(() => tile.classList.remove('shake'), 500);
+    });
+    
+    if (almostCount === 3) {
+      showToast('One away!');
+      document.querySelectorAll('.player-tile.selected').forEach(tile => {
+        tile.classList.add('almost');
+        setTimeout(() => tile.classList.remove('almost'), 600);
+      });
+    }
+    
+    if (gameState.mistakes >= MAX_MISTAKES) {
+      endGame(false);
+    }
+  }
+  
+  saveGameState();
+};
+
+window.giveUp = function() {
+  if (gameState.isComplete) return;
+  
+  if (!confirm('Are you sure you want to give up? This will end the game and show all categories.')) {
+    return;
+  }
+  
+  endGame(false);
+};
+
+function endGame(won) {
+  gameState.isComplete = true;
+  
+  // Reveal unsolved categories
+  if (!won) {
+    todaysPuzzle.categories.forEach(cat => {
+      if (!gameState.solved.some(s => s.title === cat.title)) {
+        gameState.solved.push(cat);
+        gameState.solveOrder.push('X'); // X for not solved
+      }
+    });
+    renderSolvedCategories();
+  }
+  
+  // Hide grid and gameplay buttons
+  document.getElementById('gameGrid').style.display = 'none';
+  document.getElementById('shuffleBtn').style.display = 'none';
+  document.getElementById('deselectBtn').style.display = 'none';
+  document.getElementById('submitBtn').style.display = 'none';
+  document.getElementById('giveUpBtn').style.display = 'none';
+  
+  // Show results buttons
+  document.getElementById('resultsBtn').style.display = 'inline-block';
+  document.getElementById('shareBtn').style.display = 'inline-block';
+  document.getElementById('answersBtn').style.display = 'inline-block';
+  
+  showGameOver(won);
+  saveGameState();
+  
+  // Update lifetime stats
+  if (currentUser) {
+    const correctCount = gameState.solved.filter(s => !gameState.solveOrder.includes('X')).length;
+    const isPerfect = won && gameState.mistakes === 0;
+    const isWin = correctCount === 4;
+    updateLifetimeStats(isPerfect, isWin, correctCount, gameState.guessHistory.length);
+  }
+}
+
+function showGameOver(won) {
+  const correct = gameState.solveOrder.filter(d => d !== 'X').length;
+  
+  document.getElementById('finalScore').textContent = `${correct}/4`;
+  document.getElementById('correctCount').textContent = correct;
+  document.getElementById('mistakesUsed').textContent = gameState.mistakes;
+  document.getElementById('guessesTotal').textContent = gameState.guessHistory.length;
+  
+  if (correct === 4 && gameState.mistakes === 0) {
+    document.getElementById('gameOverTitle').textContent = '🎉 Perfect!';
+  } else if (correct === 4) {
+    document.getElementById('gameOverTitle').textContent = '⭐ Great Job!';
+  } else if (correct >= 2) {
+    document.getElementById('gameOverTitle').textContent = '👍 Nice Try!';
+  } else {
+    document.getElementById('gameOverTitle').textContent = '💪 Keep Practicing!';
+  }
+  
+  updateSharePreview();
+  document.getElementById('gameOverModal').classList.add('active');
+}
+
+window.viewResults = function() {
+  const correct = gameState.solveOrder.filter(d => d !== 'X').length;
+  
+  document.getElementById('finalScore').textContent = `${correct}/4`;
+  document.getElementById('correctCount').textContent = correct;
+  document.getElementById('mistakesUsed').textContent = gameState.mistakes;
+  document.getElementById('guessesTotal').textContent = gameState.guessHistory.length;
+  
+  updateSharePreview();
+  document.getElementById('gameOverModal').classList.add('active');
+};
+
+window.closeGameOverModal = function() {
+  document.getElementById('gameOverModal').classList.remove('active');
+};
+
+// ============================================
+// SHARING
+// ============================================
+function updateSharePreview() {
+  const emojis = { yellow: '🟨', green: '🟩', blue: '🟦', purple: '🟪' };
+  
+  // Build solve order visualization
+  let resultLine = '';
+  gameState.solveOrder.forEach(d => {
+    if (d === 'X') {
+      resultLine += '⬛';
+    } else {
+      resultLine += emojis[d];
+    }
+  });
+  
+  const correct = gameState.solveOrder.filter(d => d !== 'X').length;
+  const shareText = `🔗 Aces Connections #${todaysPuzzle.dayNum}\n${correct}/4 • ${gameState.mistakes} mistakes\n\n${resultLine}\n\nacessoftballreference.com/aces-connections.html`;
+  
+  document.getElementById('sharePreview').textContent = shareText;
+}
+
+window.shareResults = function() {
+  const shareText = document.getElementById('sharePreview').textContent;
+  
+  if (navigator.share) {
+    navigator.share({ text: shareText }).catch(() => {
+      copyToClipboard(shareText);
+    });
+  } else {
+    copyToClipboard(shareText);
+  }
+};
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Results copied to clipboard!');
+  }).catch(() => {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    showToast('Results copied to clipboard!');
+  });
+}
+
+// ============================================
+// SHOW ANSWERS
+// ============================================
+window.showAnswers = function() {
+  closeGameOverModal();
+  
+  const difficultyColors = {
+    yellow: 'var(--yellow)',
+    green: 'var(--green)',
+    blue: 'var(--blue)',
+    purple: 'var(--purple)'
+  };
+  
+  let answerHtml = '<div style="padding: 0.5rem;">';
+  
+  todaysPuzzle.categories.forEach(cat => {
+    const solved = gameState.solved.some(s => s.title === cat.title && gameState.solveOrder[gameState.solved.indexOf(s)] !== 'X');
+    const solvedByUser = gameState.solveOrder.includes(cat.difficulty) && gameState.solveOrder[gameState.solveOrder.indexOf(cat.difficulty)] !== 'X';
+    
+    answerHtml += `
+      <div style="margin-bottom: 0.75rem; padding: 0.75rem; background: ${difficultyColors[cat.difficulty]}; border-radius: 8px;">
+        <strong>${cat.title}</strong>
+        ${solvedByUser ? '<span style="margin-left: 0.5rem;">✓</span>' : ''}
+        <br>
+        <span style="font-size: 0.85rem;">
+          ${cat.players.join(', ')}
+        </span>
+      </div>
+    `;
+  });
+  
+  answerHtml += '</div>';
+  
+  document.getElementById('answersModalBody').innerHTML = answerHtml;
+  document.getElementById('answersModal').classList.add('active');
+};
+
+window.closeAnswersModal = function() {
+  document.getElementById('answersModal').classList.remove('active');
+};
+
+// ============================================
+// HOW TO PLAY TOGGLE
+// ============================================
+window.toggleHowToPlay = function() {
+  const section = document.getElementById('howToPlay');
+  const toggle = document.getElementById('howToPlayToggle');
+  section.classList.toggle('expanded');
+  toggle.textContent = section.classList.contains('expanded') ? '▲' : '▼';
+};
+
+// ============================================
+// TOAST
+// ============================================
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ============================================
+// PERSISTENCE - LOCAL STORAGE
+// ============================================
+function saveGameStateLocal() {
+  const saveData = {
+    dayNum: todaysPuzzle.dayNum,
+    selected: gameState.selected,
+    solved: gameState.solved,
+    mistakes: gameState.mistakes,
+    guessHistory: gameState.guessHistory,
+    solveOrder: gameState.solveOrder,
+    isComplete: gameState.isComplete
+  };
+  localStorage.setItem('acesConnections', JSON.stringify(saveData));
+  console.log('💾 Game state saved to localStorage');
+}
+
+function loadGameStateLocal() {
+  const saved = localStorage.getItem('acesConnections');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    if (parsed.dayNum === todaysPuzzle.dayNum) {
+      applyLoadedGameState(parsed);
+      return true;
+    }
+  }
+  return false;
+}
+
+// ============================================
+// PERSISTENCE - FIREBASE
+// ============================================
+async function saveGameStateFirebase() {
+  if (!currentUser) return;
+  
+  try {
+    const gameRef = doc(db, 'acesConnectionsGames', currentUser.uid, 'dailyGames', String(todaysPuzzle.dayNum));
+    await setDoc(gameRef, {
+      dayNum: todaysPuzzle.dayNum,
+      selected: gameState.selected,
+      solved: gameState.solved,
+      mistakes: gameState.mistakes,
+      guessHistory: gameState.guessHistory,
+      solveOrder: gameState.solveOrder,
+      isComplete: gameState.isComplete,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    console.log('☁️ Game state saved to Firebase');
+  } catch (error) {
+    console.error('❌ Error saving to Firebase:', error);
+  }
+}
+
+async function loadGameStateFirebase() {
+  if (!currentUser) return false;
+  
+  try {
+    const gameRef = doc(db, 'acesConnectionsGames', currentUser.uid, 'dailyGames', String(todaysPuzzle.dayNum));
+    const gameDoc = await getDoc(gameRef);
+    
+    if (gameDoc.exists()) {
+      const saved = gameDoc.data();
+      if (saved.dayNum === todaysPuzzle.dayNum) {
+        applyLoadedGameState(saved);
+        console.log('☁️ Game state loaded from Firebase');
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error loading from Firebase:', error);
+  }
+  return false;
+}
+
+function applyLoadedGameState(saved) {
+  gameState = {
+    ...gameState,
+    selected: saved.selected || [],
+    solved: saved.solved || [],
+    mistakes: saved.mistakes || 0,
+    guessHistory: saved.guessHistory || [],
+    solveOrder: saved.solveOrder || [],
+    isComplete: saved.isComplete || false
+  };
+  
+  if (gameState.isComplete) {
+    document.getElementById('gameGrid').style.display = 'none';
+    document.getElementById('shuffleBtn').style.display = 'none';
+    document.getElementById('deselectBtn').style.display = 'none';
+    document.getElementById('submitBtn').style.display = 'none';
+    document.getElementById('giveUpBtn').style.display = 'none';
+    document.getElementById('resultsBtn').style.display = 'inline-block';
+    document.getElementById('shareBtn').style.display = 'inline-block';
+    document.getElementById('answersBtn').style.display = 'inline-block';
+  }
+}
+
+function saveGameState() {
+  saveGameStateLocal();
+  if (currentUser) {
+    saveGameStateFirebase();
+  }
+}
+
+async function loadGameState() {
+  if (currentUser) {
+    const loaded = await loadGameStateFirebase();
+    if (loaded) return true;
+  }
+  return loadGameStateLocal();
+}
+
+// ============================================
+// LIFETIME STATS
+// ============================================
+async function updateLifetimeStats(isPerfect, isWin, correct, guessesUsed) {
+  if (!currentUser) return;
+  
+  try {
+    const statsRef = doc(db, 'acesConnectionsGames', currentUser.uid);
+    const statsDoc = await getDoc(statsRef);
+    
+    const stats = statsDoc.exists() ? statsDoc.data() : {
+      gamesPlayed: 0,
+      wins: 0,
+      perfectGames: 0,
+      totalCorrect: 0,
+      totalGuesses: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+      lastPlayedPuzzle: 0
+    };
+    
+    if (stats.lastPlayedPuzzle === todaysPuzzle.dayNum) {
+      console.log('ℹ️ Stats already recorded for this puzzle');
+      return;
+    }
+    
+    const isConsecutive = stats.lastPlayedPuzzle === todaysPuzzle.dayNum - 1;
+    const newStreak = isConsecutive ? stats.currentStreak + 1 : 1;
+    
+    const updatedStats = {
+      gamesPlayed: stats.gamesPlayed + 1,
+      wins: (stats.wins || 0) + (isWin ? 1 : 0),
+      perfectGames: stats.perfectGames + (isPerfect ? 1 : 0),
+      totalCorrect: stats.totalCorrect + correct,
+      totalGuesses: stats.totalGuesses + guessesUsed,
+      currentStreak: newStreak,
+      longestStreak: Math.max(stats.longestStreak, newStreak),
+      lastPlayedPuzzle: todaysPuzzle.dayNum,
+      lastPlayedAt: serverTimestamp(),
+      displayName: currentUser.displayName || 'Anonymous'
+    };
+    
+    await setDoc(statsRef, updatedStats, { merge: true });
+    userStats = updatedStats;
+    updateUserStatsDisplay();
+    
+    console.log('📊 Lifetime stats updated:', updatedStats);
+  } catch (error) {
+    console.error('❌ Error updating lifetime stats:', error);
+  }
+}
+
+async function loadLifetimeStats() {
+  if (!currentUser) return null;
+  
+  try {
+    const statsRef = doc(db, 'acesConnectionsGames', currentUser.uid);
+    const statsDoc = await getDoc(statsRef);
+    
+    if (statsDoc.exists()) {
+      userStats = statsDoc.data();
+      console.log('📊 Lifetime stats loaded:', userStats);
+      return userStats;
+    }
+  } catch (error) {
+    console.error('❌ Error loading lifetime stats:', error);
+  }
+  return null;
+}
+
+// ============================================
+// USER STATS DISPLAY
+// ============================================
+function updateUserStatsDisplay() {
+  const container = document.getElementById('userStatsContainer');
+  if (!container) return;
+  
+  if (!currentUser) {
+    container.innerHTML = `
+      <div class="user-stats-content">
+        <div class="sign-in-prompt">
+          <span>🔒</span>
+          <a href="signin.html">Sign in</a> to track your stats across devices
+        </div>
+      </div>
+    `;
+    return;
+  }
+  
+  if (!userStats) {
+    container.innerHTML = `
+      <div class="user-stats-content">
+        <div class="user-greeting">👋 Welcome, ${currentUser.displayName || 'Player'}!</div>
+        <div class="stats-note">Complete a puzzle to start tracking your stats.</div>
+      </div>
+    `;
+    return;
+  }
+  
+  const avgScore = userStats.gamesPlayed > 0 
+    ? (userStats.totalCorrect / userStats.gamesPlayed).toFixed(1) 
+    : '0';
+  
+  const wins = userStats.wins || 0;
+  
+  container.innerHTML = `
+    <div class="user-stats-content">
+      <div class="user-greeting">👋 ${currentUser.displayName || 'Player'}</div>
+      <div class="lifetime-stats">
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${userStats.gamesPlayed}</span>
+          <span class="lifetime-label">Played</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${wins}</span>
+          <span class="lifetime-label">Wins</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${userStats.perfectGames}</span>
+          <span class="lifetime-label">Perfect</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${avgScore}</span>
+          <span class="lifetime-label">Avg Score</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${userStats.currentStreak}</span>
+          <span class="lifetime-label">Streak</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================
+// AUTH STATE HANDLING
+// ============================================
+function setupAuthListener() {
+  onAuthChange(async (user) => {
+    currentUser = user;
+    console.log(user ? `✅ User signed in: ${user.displayName}` : '👤 No user signed in');
+    
+    if (user && todaysPuzzle) {
+      await loadLifetimeStats();
+      const firebaseHasState = await loadGameStateFirebase();
+      
+      if (firebaseHasState) {
+        renderSolvedCategories();
+        renderGrid();
+        updateStats();
+      }
+    }
+    
+    updateUserStatsDisplay();
+  });
+}
+
+// ============================================
+// INITIALIZATION
+// ============================================
+async function init() {
+  try {
+    // Check if we're before launch date (use local midnight)
+    const launchDate = new Date(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY).setHours(0, 0, 0, 0);
+    const now = new Date().setHours(0, 0, 0, 0);
+    
+    if (now < launchDate) {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      const launchDateObj = new Date(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY);
+      document.getElementById('puzzleDate').textContent = `Launching ${launchDateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`;
+      document.querySelector('.grid-container').innerHTML = `
+        <div style="text-align: center; padding: 3rem;">
+          <div style="font-size: 4rem; margin-bottom: 1rem;">🔗</div>
+          <h2 style="margin: 0 0 0.5rem 0;">Coming Soon!</h2>
+          <p style="color: var(--text-light); margin: 0;">The first Aces Connections puzzle will be available on launch day.</p>
+        </div>
+      `;
+      document.querySelector('.action-buttons').style.display = 'none';
+      document.querySelectorAll('.action-buttons')[1].style.display = 'none';
+      return;
+    }
+    
+    // Check for existing auth user
+    currentUser = getCurrentUser();
+    if (currentUser) {
+      console.log(`✅ User already signed in: ${currentUser.displayName}`);
+    }
+    
+    console.log('Loading player data...');
+    const rawPlayers = await getAllPlayerStatsOptimized();
+    allPlayers = rawPlayers.filter(p => p.migrated !== true);
+    console.log(`Loaded ${allPlayers.length} players`);
+    
+    allAwards = await getAllAwards();
+    console.log(`Loaded ${allAwards.length} awards`);
+    
+    // Generate puzzle
+    todaysPuzzle = generateDailyPuzzle();
+    console.log('Generated puzzle:', todaysPuzzle);
+    
+    // Display date
+    const today = new Date();
+    document.getElementById('puzzleDate').textContent = 
+      `Puzzle #${todaysPuzzle.dayNum} • ${today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}`;
+    
+    // Load lifetime stats if user is logged in
+    if (currentUser) {
+      await loadLifetimeStats();
+    }
+    
+    // Load saved state
+    await loadGameState();
+    
+    // Update user stats display
+    updateUserStatsDisplay();
+    
+    // Set up auth state listener
+    setupAuthListener();
+    
+    // Render
+    renderSolvedCategories();
+    renderGrid();
+    updateStats();
+    
+    // Click outside modal to close
+    document.getElementById('gameOverModal').addEventListener('click', (e) => {
+      if (e.target.id === 'gameOverModal') closeGameOverModal();
+    });
+    document.getElementById('answersModal').addEventListener('click', (e) => {
+      if (e.target.id === 'answersModal') closeAnswersModal();
+    });
+    
+    // Hide loading
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    
+  } catch (error) {
+    console.error('Error initializing game:', error);
+    document.getElementById('loadingOverlay').innerHTML = `
+      <div style="text-align: center; padding: 2rem;">
+        <p>Error loading game data</p>
+        <p style="color: var(--text-light); font-size: 0.9rem;">${error.message}</p>
+        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; cursor: pointer;">Retry</button>
+      </div>
+    `;
+  }
+}
+
+// Start
+init();
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="team-colors.js"></script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

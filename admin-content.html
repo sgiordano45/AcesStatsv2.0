@@ -1,0 +1,2887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Admin - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --admin-color: #6b21a8;
+    --admin-secondary: #7c3aed;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    --success-color: #22c55e;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+
+  .loading-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .softball-spinner::before {
+    content: '🎛️ ';
+    font-size: 80px;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+  }
+
+  /* Auth Gate */
+  .auth-gate {
+    max-width: 500px;
+    margin: 4rem auto;
+    padding: 3rem;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+  }
+
+  .auth-gate h2 {
+    color: var(--danger-color);
+    margin-bottom: 1rem;
+  }
+
+  .auth-gate p {
+    color: var(--text-light);
+    margin-bottom: 2rem;
+  }
+
+  .auth-gate a {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--admin-color) 0%, var(--admin-secondary) 100%);
+    color: white;
+    padding: 2.5rem 2rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .header::after {
+    content: '🎛️';
+    position: absolute;
+    bottom: -40px;
+    left: -30px;
+    font-size: 180px;
+    opacity: 0.08;
+  }
+
+  .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+  }
+
+  .header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.95rem;
+  }
+
+  .header-buttons {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  /* Navigation Buttons */
+  .nav-btn {
+    padding: 0.875rem 1.5rem;
+    border: 2px solid white;
+    background: white;
+    color: var(--admin-color);
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: var(--accent-color);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: -1;
+  }
+
+  .nav-btn:hover::before {
+    transform: translateX(0);
+  }
+
+  .nav-btn:hover {
+    color: var(--admin-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .admin-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+  }
+
+  /* Container */
+  .container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+  }
+
+  /* Tab Navigation */
+  .tab-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    background: var(--card-bg);
+    padding: 0.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tab-btn {
+    flex: 1;
+    min-width: 150px;
+    padding: 1rem 1.5rem;
+    border: none;
+    background: transparent;
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .tab-btn:hover {
+    background: #f1f5f9;
+    color: var(--text-dark);
+  }
+
+  .tab-btn.active {
+    background: var(--admin-color);
+    color: white;
+  }
+
+  .tab-btn .icon {
+    font-size: 1.2rem;
+  }
+
+  /* Tab Content */
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* Section Cards */
+  .section {
+    background: var(--card-bg);
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+  }
+
+  .section-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 1.25rem 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-content {
+    padding: 1.5rem;
+  }
+
+  /* Form Styles */
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+  }
+
+  .form-group .hint {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--admin-color);
+    box-shadow: 0 0 0 3px rgba(107, 33, 168, 0.1);
+  }
+
+  textarea {
+    min-height: 150px;
+    resize: vertical;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-primary {
+    background: var(--admin-color);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--admin-secondary);
+    transform: translateY(-2px);
+  }
+
+  .btn-success {
+    background: var(--success-color);
+    color: white;
+  }
+
+  .btn-success:hover {
+    background: #16a34a;
+  }
+
+  .btn-danger {
+    background: var(--danger-color);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #dc2626;
+  }
+
+  .btn-secondary {
+    background: #e2e8f0;
+    color: var(--text-dark);
+  }
+
+  .btn-secondary:hover {
+    background: #cbd5e1;
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+
+  /* Item List */
+  .item-list {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .item-row {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .item-row:last-child {
+    border-bottom: none;
+  }
+
+  .item-row:hover {
+    background: #f8fafc;
+  }
+
+  .item-row.selected {
+    background: #ede9fe;
+    border-left: 4px solid var(--admin-color);
+  }
+
+  .item-info {
+    flex: 1;
+  }
+
+  .item-title {
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .item-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+  }
+
+  .item-badges {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: 1rem;
+  }
+
+  .badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .badge-locked {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .badge-preview {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .badge-completed {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .badge-champion {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .badge-active {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .badge-inactive {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  /* Toast Notifications */
+  .toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .toast {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .toast-success {
+    background: var(--success-color);
+  }
+
+  .toast-error {
+    background: var(--danger-color);
+  }
+
+  .toast-warning {
+    background: var(--warning-color);
+  }
+
+  /* Editor Panel */
+  .editor-panel {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 2px dashed var(--border-color);
+    display: none;
+  }
+
+  .editor-panel.active {
+    display: block;
+    border-style: solid;
+    border-color: var(--admin-color);
+  }
+
+  .editor-panel h3 {
+    margin: 0 0 1rem 0;
+    color: var(--admin-color);
+  }
+
+  .no-selection {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+  }
+
+  .no-selection .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  /* Manual Edit Warning */
+  .manual-edit-warning {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .manual-edit-warning .icon {
+    font-size: 1.5rem;
+  }
+
+  .manual-edit-warning p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #92400e;
+  }
+
+  /* Checkbox Group */
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1rem 0;
+  }
+
+  .checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+  }
+
+  .checkbox-group label {
+    margin: 0;
+    cursor: pointer;
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+  }
+
+  /* Season Selector */
+  .season-selector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .season-selector label {
+    font-weight: 600;
+  }
+
+  .season-selector select {
+    width: auto;
+    min-width: 200px;
+  }
+
+  /* Document Upload Area */
+  .upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background: #fafafa;
+  }
+
+  .upload-area:hover, .upload-area.dragover {
+    border-color: var(--admin-color);
+    background: #f5f3ff;
+  }
+
+  .upload-area .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+  }
+
+  .upload-area input[type="file"] {
+    display: none;
+  }
+
+  .upload-progress {
+    margin-top: 1rem;
+    display: none;
+  }
+
+  .upload-progress.active {
+    display: block;
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--admin-color);
+    transition: width 0.3s ease;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header {
+      padding: 1.5rem 1rem;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+    }
+
+    .header-content {
+      flex-direction: column;
+      text-align: center;
+      gap: 1rem;
+    }
+
+    .header-buttons {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .container {
+      padding: 0 1rem;
+    }
+
+    .tab-btn {
+      min-width: 100px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+    }
+
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+
+    .btn-group {
+      flex-direction: column;
+    }
+
+    .btn-group .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .toast-container {
+      left: 1rem;
+      right: 1rem;
+      bottom: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<!-- Auth Gate (shown if not authorized) -->
+<div class="auth-gate" id="authGate" style="display: none;">
+  <h2>🔒 Admin Access Required</h2>
+  <p>You must be logged in as an administrator to access this page.</p>
+  <a href="signin.html">Sign In</a>
+</div>
+
+<!-- Main Content (shown when authorized) -->
+<div id="mainContent" style="display: none;">
+  <header class="header">
+    <div class="header-content">
+      <div>
+        <h1>🛠️ Content Admin</h1>
+        <p>Manage documents, games, and league data</p>
+        <div class="admin-badge" id="userBadge">Admin</div>
+      </div>
+      <div class="header-buttons">
+        <a href="profile.html" class="nav-btn">← Back</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="documents">
+        <span class="icon">📄</span>
+        Documents
+      </button>
+      <button class="tab-btn" data-tab="games">
+        <span class="icon">⚾</span>
+        Game Editor
+      </button>
+      <button class="tab-btn" data-tab="stats">
+        <span class="icon">📊</span>
+        Stats Tools
+      </button>
+      <button class="tab-btn" data-tab="users">
+        <span class="icon">👥</span>
+        Users
+      </button>
+      <button class="tab-btn" data-tab="notifications">
+        <span class="icon">📢</span>
+        Notifications
+      </button>
+      <button class="tab-btn" data-tab="offseason">
+        <span class="icon">🧹</span>
+        Offseason Data
+      </button>
+    </div>
+
+    <!-- Tab: Documents -->
+    <div class="tab-content active" id="tab-documents">
+      <div class="section">
+        <div class="section-header">
+          📄 League Documents Manager
+        </div>
+        <div class="section-content">
+          <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+            Upload and manage official league documents (PDFs, memos, permits). Documents appear on the League Rules page.
+          </p>
+
+          <!-- Upload New Document -->
+          <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+            <h4 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+              <span>📤</span> Upload New Document
+            </h4>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Document Title <span style="color: var(--danger-color);">*</span></label>
+                <input type="text" id="docTitle" placeholder="e.g., Field Usage Memo 2025">
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select id="docCategory">
+                  <option value="league">League</option>
+                  <option value="town">Town/Recreation</option>
+                  <option value="insurance">Insurance</option>
+                  <option value="field">Field/Facilities</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Description</label>
+              <textarea id="docDescription" rows="2" placeholder="Brief description of this document..." style="min-height: 80px;"></textarea>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Display Order</label>
+                <input type="number" id="docOrder" value="1" min="1" max="99">
+                <div class="hint">Lower numbers appear first</div>
+              </div>
+              <div class="form-group">
+                <label>&nbsp;</label>
+                <div class="checkbox-group" style="margin: 0;">
+                  <input type="checkbox" id="docActive" checked>
+                  <label for="docActive">Active (visible on Rules page)</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('docFile').click()">
+              <div class="icon">📁</div>
+              <p><strong>Click to select a PDF</strong> or drag and drop</p>
+              <p style="font-size: 0.85rem; color: var(--text-light);">PDF files only, max 10MB</p>
+              <input type="file" id="docFile" accept=".pdf,application/pdf">
+            </div>
+            <div id="selectedFileName" style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-light);"></div>
+            
+            <div class="upload-progress" id="uploadProgress">
+              <div class="progress-bar">
+                <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+              </div>
+              <p style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--text-light);" id="uploadStatus">Uploading...</p>
+            </div>
+
+            <div class="btn-group" style="margin-top: 1rem;">
+              <button class="btn btn-success" onclick="uploadDocument()" id="uploadBtn">
+                📤 Upload Document
+              </button>
+            </div>
+          </div>
+
+          <!-- Existing Documents -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h4 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📚</span> Existing Documents
+              </h4>
+              <button class="btn btn-secondary" onclick="loadDocuments()">🔄 Refresh</button>
+            </div>
+            <div class="item-list" id="documentsList">
+              <div class="empty-state">Loading documents...</div>
+            </div>
+          </div>
+
+          <!-- Edit Document Panel -->
+          <div class="editor-panel" id="documentEditor">
+            <div class="no-selection">
+              <div class="icon">📝</div>
+              <p>Select a document from the list to edit</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Game Editor -->
+    <div class="tab-content" id="tab-games">
+      <div class="section">
+        <div class="section-header">
+          ⚾ Game Data Editor
+        </div>
+        <div class="section-content">
+          <div class="manual-edit-warning">
+            <span class="icon">⚠️</span>
+            <div>
+              <p><strong>Manual Edit Protection:</strong> When you save changes here, the game will be marked as "manually edited". This prevents the weekly update script from overwriting your changes to date, time, or team assignments. Score updates will still be allowed.</p>
+            </div>
+          </div>
+
+          <div class="season-selector">
+            <label>Season:</label>
+            <select id="gameSeasonSelect">
+              <option value="">Loading seasons...</option>
+            </select>
+            <button class="btn btn-secondary" onclick="loadGames()">🔄 Refresh</button>
+          </div>
+
+          <div class="item-list" id="gameList">
+            <div class="empty-state">Select a season to load games</div>
+          </div>
+
+          <div class="editor-panel" id="gameEditor">
+            <div class="no-selection">
+              <div class="icon">🎮</div>
+              <p>Select a game from the list to edit its details</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Stats Tools -->
+    <div class="tab-content" id="tab-stats">
+      <div class="section">
+        <div class="section-header">
+          📊 Statistics Tools
+        </div>
+        <div class="section-content">
+          <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+            Tools for aggregating and managing player statistics.
+          </p>
+          
+          <div style="display: grid; gap: 1rem; max-width: 600px;">
+            <!-- Stats Aggregator Link -->
+            <a href="aggregate-stats.html" style="
+              display: flex;
+              align-items: center;
+              gap: 1rem;
+              padding: 1.5rem;
+              background: linear-gradient(135deg, var(--admin-color) 0%, var(--admin-secondary) 100%);
+              color: white;
+              text-decoration: none;
+              border-radius: 12px;
+              transition: all 0.3s ease;
+              box-shadow: var(--shadow-sm);
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-md)';" onmouseout="this.style.transform=''; this.style.boxShadow='var(--shadow-sm)';">
+              <span style="font-size: 2.5rem;">🎮</span>
+              <div>
+                <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">
+                  Game Stats Aggregator
+                </div>
+                <div style="opacity: 0.9; font-size: 0.9rem;">
+                  Aggregate game-level stats (2026+) into season and career totals
+                </div>
+              </div>
+              <span style="margin-left: auto; font-size: 1.5rem;">→</span>
+            </a>
+
+            <!-- Submit Stats Link -->
+            <a href="submit-stats.html" style="
+              display: flex;
+              align-items: center;
+              gap: 1rem;
+              padding: 1.5rem;
+              background: white;
+              color: var(--text-dark);
+              text-decoration: none;
+              border-radius: 12px;
+              border: 2px solid var(--border-color);
+              transition: all 0.3s ease;
+            " onmouseover="this.style.borderColor='var(--admin-color)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='';">
+              <span style="font-size: 2.5rem;">📝</span>
+              <div>
+                <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">
+                  Submit Game Stats
+                </div>
+                <div style="color: var(--text-light); font-size: 0.9rem;">
+                  Enter player stats for individual games
+                </div>
+              </div>
+              <span style="margin-left: auto; font-size: 1.5rem; color: var(--text-light);">→</span>
+            </a>
+
+            <!-- Admin Stats Entry Link -->
+            <a href="admin-submit-stats.html" style="
+              display: flex;
+              align-items: center;
+              gap: 1rem;
+              padding: 1.5rem;
+              background: white;
+              color: var(--text-dark);
+              text-decoration: none;
+              border-radius: 12px;
+              border: 2px solid var(--border-color);
+              transition: all 0.3s ease;
+            " onmouseover="this.style.borderColor='var(--admin-color)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='';">
+              <span style="font-size: 2.5rem;">📊</span>
+              <div>
+                <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">
+                  Admin Stats Entry
+                </div>
+                <div style="color: var(--text-light); font-size: 0.9rem;">
+                  Submit stats for any team with CSV bulk upload
+                </div>
+              </div>
+              <span style="margin-left: auto; font-size: 1.5rem; color: var(--text-light);">→</span>
+            </a>
+
+            <!-- Game Tracker Review Link -->
+            <a href="admin-game-tracker-review.html" style="
+              display: flex;
+              align-items: center;
+              gap: 1rem;
+              padding: 1.5rem;
+              background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+              color: var(--text-dark);
+              text-decoration: none;
+              border-radius: 12px;
+              border: 2px solid #0891b2;
+              transition: all 0.3s ease;
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-md)';" onmouseout="this.style.transform=''; this.style.boxShadow='';">
+              <span style="font-size: 2.5rem;">🎯</span>
+              <div>
+                <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">
+                  Game Tracker Review
+                </div>
+                <div style="color: var(--text-light); font-size: 0.9rem;">
+                  Convert live-tracked game stats to official records
+                </div>
+              </div>
+              <span style="margin-left: auto; font-size: 1.5rem; color: #0891b2;">→</span>
+            </a>
+
+            <!-- Link Players Link -->
+            <a href="admin-link-players.html" style="
+              display: flex;
+              align-items: center;
+              gap: 1rem;
+              padding: 1.5rem;
+              background: white;
+              color: var(--text-dark);
+              text-decoration: none;
+              border-radius: 12px;
+              border: 2px solid var(--border-color);
+              transition: all 0.3s ease;
+            " onmouseover="this.style.borderColor='var(--admin-color)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='';">
+              <span style="font-size: 2.5rem;">🔗</span>
+              <div>
+                <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">
+                  Link Player Accounts
+                </div>
+                <div style="color: var(--text-light); font-size: 0.9rem;">
+                  Approve and manage player account linking requests
+                </div>
+              </div>
+              <span style="margin-left: auto; font-size: 1.5rem; color: var(--text-light);">→</span>
+            </a>
+
+            <!-- Badge Calculator Link -->
+            <a href="admin-badges.html" style="
+              display: flex;
+              align-items: center;
+              gap: 1rem;
+              padding: 1.5rem;
+              background: white;
+              color: var(--text-dark);
+              text-decoration: none;
+              border-radius: 12px;
+              border: 2px solid var(--border-color);
+              transition: all 0.3s ease;
+            " onmouseover="this.style.borderColor='var(--admin-color)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='';">
+              <span style="font-size: 2.5rem;">🏆</span>
+              <div>
+                <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">
+                  Badge Calculator
+                </div>
+                <div style="color: var(--text-light); font-size: 0.9rem;">
+                  Calculate and award player achievement badges
+                </div>
+              </div>
+              <span style="margin-left: auto; font-size: 1.5rem; color: var(--text-light);">→</span>
+            </a>
+
+            <!-- Legacy Stats Aggregator Link -->
+            <a href="aggregate-stats-legacy.html" style="
+              display: flex;
+              align-items: center;
+              gap: 1rem;
+              padding: 1.5rem;
+              background: white;
+              color: var(--text-dark);
+              text-decoration: none;
+              border-radius: 12px;
+              border: 2px solid var(--border-color);
+              transition: all 0.3s ease;
+            " onmouseover="this.style.borderColor='var(--admin-color)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='';">
+              <span style="font-size: 2.5rem;">📁</span>
+              <div>
+                <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">
+                  Legacy Stats Aggregator
+                </div>
+                <div style="color: var(--text-light); font-size: 0.9rem;">
+                  Re-aggregate for new auth users from playerStats (2025 &amp; earlier)
+                </div>
+              </div>
+              <span style="margin-left: auto; font-size: 1.5rem; color: var(--text-light);">→</span>
+            </a>
+          </div>
+
+          <div style="margin-top: 2rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border-left: 4px solid var(--admin-color);">
+            <strong style="color: var(--admin-color);">💡 Stats Workflow (2026+)</strong>
+            <ol style="margin: 0.75rem 0 0 0; padding-left: 1.25rem; color: var(--text-light);">
+              <li>Captains submit game stats via <strong>Submit Game Stats</strong> OR track live via <strong>Game Tracker</strong></li>
+              <li>Admin reviews tracked games in <strong>Game Tracker Review</strong> and converts to official stats</li>
+              <li>Admin runs <strong>Game Stats Aggregator</strong> weekly to update totals</li>
+              <li>Run <strong>Badge Calculator</strong> to award achievement badges</li>
+              <li>Season and career stats are automatically recalculated</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: User Management -->
+    <div class="tab-content" id="tab-users">
+      <div class="section">
+        <div class="section-header">
+          👥 User Management
+        </div>
+        <div class="section-content">
+          
+          <!-- User Management Tool Link -->
+          <a href="admin-user-management.html" style="
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--admin-color) 0%, var(--admin-secondary) 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.5rem;
+          " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-md)';" onmouseout="this.style.transform=''; this.style.boxShadow='var(--shadow-sm)';">
+            <span style="font-size: 2.5rem;">🔧</span>
+            <div>
+              <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">
+                User Management Tool
+              </div>
+              <div style="opacity: 0.9; font-size: 0.9rem;">
+                Combine duplicate records, migrate linked accounts, fix auth user issues
+              </div>
+            </div>
+            <span style="margin-left: auto; font-size: 1.5rem;">→</span>
+          </a>
+
+          <!-- Roster Sync Tool Link -->
+          <a href="admin-roster-sync.html" style="
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.5rem;
+          " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-md)';" onmouseout="this.style.transform=''; this.style.boxShadow='var(--shadow-sm)';">
+            <span style="font-size: 2.5rem;">&#128279;</span>
+            <div>
+              <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">
+                Roster Auth ID Sync
+              </div>
+              <div style="opacity: 0.9; font-size: 0.9rem;">
+                Backfill missing auth IDs on roster docs for players who signed up after rosters were synced
+              </div>
+            </div>
+            <span style="margin-left: auto; font-size: 1.5rem;">→</span>
+          </a>
+
+          <p style="color: var(--text-light); margin-bottom: 1rem;">
+            Create placeholder user accounts for new players when rosters are finalized.
+            Players can later link their real accounts to these profiles.
+          </p>
+          
+          <div class="info-box" style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 1rem; border-radius: 0 8px 8px 0; margin-bottom: 1.5rem;">
+            <div>
+              <strong style="color: #1e40af;">📋 What gets created:</strong>
+              <ul style="margin: 0.5rem 0 0 1.25rem; padding: 0; color: var(--text-light);">
+                <li><code>users/{player_id}</code> - User profile for authentication</li>
+                <li><code>aggregatedPlayerStats/{player_id}</code> - Stats record (required for roster visibility)</li>
+                <li><code>rosters/{season}-{team}</code> - Player entry added to the roster doc</li>
+              </ul>
+              <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem; color: var(--text-light);">
+                Players will be added to the <strong id="activeSeasonDisplay">active season</strong> roster and appear in stats submission.
+              </p>
+            </div>
+          </div>
+
+          <!-- Create Single User -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
+              <h4 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <span>➕</span> Create Single User
+              </h4>
+              <div class="form-group">
+                <label>Player Name</label>
+                <input type="text" id="newUserName" placeholder="First Last">
+              </div>
+              <div class="form-group">
+                <label>Team</label>
+                <select id="newUserTeam">
+                  <option value="">Loading teams...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Document ID (auto-generated)</label>
+                <input type="text" id="newUserLegacyId" readonly style="background: #e2e8f0; cursor: not-allowed; font-family: monospace;">
+                <div class="hint">Matches playerStats format for aggregation</div>
+              </div>
+              <div class="form-group">
+                <label>Email <span style="color: var(--text-light); font-weight: normal;">(optional)</span></label>
+                <input type="email" id="newUserEmail" placeholder="player@example.com">
+                <div class="hint">Stored on profile — helps player link their account later</div>
+              </div>
+              <button class="btn btn-success" onclick="createSingleUser()">
+                ✅ Create User
+              </button>
+            </div>
+
+            <!-- Bulk Import -->
+            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
+              <h4 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📋</span> Bulk Import
+              </h4>
+              <div class="form-group">
+                <label>Team for All Players</label>
+                <select id="bulkUserTeam">
+                  <option value="">Loading teams...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Player Names (one per line)</label>
+                <textarea id="bulkUserNames" placeholder="John Smith&#10;Jane Doe&#10;Mike Johnson" style="min-height: 120px;"></textarea>
+                <div class="hint">Enter player names, one per line</div>
+              </div>
+              <button class="btn btn-primary" onclick="previewBulkImport()">
+                👁️ Preview Import
+              </button>
+            </div>
+          </div>
+
+          <!-- Bulk Preview Panel -->
+          <div id="bulkPreviewPanel" style="display: none; margin-bottom: 2rem; padding: 1.5rem; background: white; border: 2px solid var(--admin-color); border-radius: 12px;">
+            <h4 style="margin: 0 0 1rem 0;">📝 Preview Users to Create</h4>
+            <div id="bulkPreviewList"></div>
+            <div class="btn-group" style="margin-top: 1rem;">
+              <button class="btn btn-success" onclick="executeBulkImport()">
+                ✅ Create All Users
+              </button>
+              <button class="btn btn-secondary" onclick="cancelBulkImport()">
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          <!-- Existing Users List -->
+          <div style="border-top: 1px solid var(--border-color); padding-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h4 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📇</span> Existing Placeholder Users
+              </h4>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="text" id="userSearchInput" placeholder="Search by name..." style="width: 200px;" oninput="filterUserList()">
+                <select id="userTeamFilter" style="width: 150px;" onchange="filterUserList()">
+                  <option value="">All Teams</option>
+                </select>
+                <button class="btn btn-secondary" onclick="loadPlaceholderUsers()">🔄 Refresh</button>
+              </div>
+            </div>
+            <div class="item-list" id="placeholderUserList" style="max-height: 350px;">
+              <div class="empty-state">Click refresh to load placeholder users</div>
+            </div>
+            <div id="userListStats" style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-light);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Notifications -->
+    <div class="tab-content" id="tab-notifications">
+      <div class="section">
+        <div class="section-header">
+          📢 League Announcements
+        </div>
+        <div class="section-content">
+          <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+            Send push notifications to all league members who have enabled announcements.
+          </p>
+          
+          <div style="display: grid; gap: 1.5rem;">
+            <!-- Send Announcement Form -->
+            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
+              <h4 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📣</span> Send New Announcement
+              </h4>
+              
+              <div class="form-group">
+                <label>Priority</label>
+                <select id="announcementPriority">
+                  <option value="normal">📢 Normal</option>
+                  <option value="info">ℹ️ Informational</option>
+                  <option value="urgent">🚨 Urgent</option>
+                </select>
+                <div class="hint">Urgent notifications bypass quiet hours</div>
+              </div>
+              
+              <div class="form-group">
+                <label>Title <span style="color: var(--danger-color);">*</span></label>
+                <input type="text" id="announcementTitle" placeholder="e.g., Schedule Update, Playoff Information" maxlength="100">
+                <div class="hint"><span id="titleCharCount">0</span>/100 characters</div>
+              </div>
+              
+              <div class="form-group">
+                <label>Message <span style="color: var(--danger-color);">*</span></label>
+                <textarea id="announcementBody" rows="4" placeholder="Write your announcement message here..." maxlength="500" style="resize: vertical;"></textarea>
+                <div class="hint"><span id="bodyCharCount">0</span>/500 characters</div>
+              </div>
+              
+              <div class="form-group">
+                <label>Link (optional)</label>
+                <select id="announcementLinkType">
+                  <option value="">No link</option>
+                  <option value="custom">Custom URL</option>
+                  <option value="/index.html">Home Page</option>
+                  <option value="/schedule.html">Schedule</option>
+                  <option value="/playoffs.html">Playoffs</option>
+                  <option value="/league-rules.html">League Rules</option>
+                  <option value="/teams.html">Teams</option>
+                </select>
+              </div>
+              
+              <div class="form-group" id="customLinkGroup" style="display: none;">
+                <label>Custom URL</label>
+                <input type="text" id="announcementCustomLink" placeholder="/page.html or https://...">
+              </div>
+              
+              <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button class="btn btn-primary" onclick="sendAnnouncement()" id="sendAnnouncementBtn">
+                  📤 Send Announcement
+                </button>
+                <button class="btn btn-secondary" onclick="previewAnnouncement()">
+                  👁️ Preview
+                </button>
+              </div>
+            </div>
+            
+            <!-- Preview Panel -->
+            <div id="announcementPreviewPanel" style="display: none; background: white; padding: 1.5rem; border-radius: 12px; border: 2px solid var(--admin-color);">
+              <h4 style="margin: 0 0 1rem 0; color: var(--admin-color);">📱 Notification Preview</h4>
+              <div style="background: #1a1a2e; color: white; padding: 1rem; border-radius: 12px; max-width: 350px;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                  <span style="font-size: 1.5rem;">⚾</span>
+                  <span style="font-weight: 600; font-size: 0.85rem;">Mountainside Aces</span>
+                  <span style="font-size: 0.75rem; opacity: 0.7; margin-left: auto;">now</span>
+                </div>
+                <div style="font-weight: 600;" id="previewTitle">Title</div>
+                <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.25rem;" id="previewBody">Message body</div>
+              </div>
+            </div>
+            
+            <!-- Test Notification -->
+            <div style="background: #eff6ff; padding: 1.5rem; border-radius: 12px; border: 1px solid #bfdbfe;">
+              <h4 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #1e40af;">
+                <span>🧪</span> Test Notifications
+              </h4>
+              <p style="color: var(--text-light); margin-bottom: 1rem; font-size: 0.9rem;">
+                Send a test notification to yourself to verify the system is working.
+              </p>
+              <button class="btn btn-secondary" onclick="sendTestNotification()" id="testNotificationBtn">
+                🧪 Send Test to Me
+              </button>
+              <span id="testNotificationStatus" style="margin-left: 1rem; font-size: 0.9rem;"></span>
+            </div>
+            
+            <!-- Recent Announcements -->
+            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
+              <h4 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📜</span> Recent Announcements
+                <button class="btn btn-sm" onclick="loadRecentAnnouncements()" style="margin-left: auto; padding: 0.25rem 0.5rem; font-size: 0.8rem;">🔄</button>
+              </h4>
+              <div id="recentAnnouncementsList" class="item-list" style="max-height: 300px;">
+                <div class="empty-state">Click refresh to load recent announcements</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Offseason Data -->
+    <div class="tab-content" id="tab-offseason">
+      <div class="section">
+        <div class="section-header">
+          🧹 Offseason Data Management
+        </div>
+        <div class="section-content">
+
+          <div class="manual-edit-warning" style="background:#fef3c7; border-left:4px solid #f59e0b; padding:1rem; border-radius:8px; margin-bottom:1.5rem; display:flex; gap:0.75rem; align-items:flex-start;">
+            <span style="font-size:1.3rem;">⚠️</span>
+            <div>
+              <p><strong>Safe to wipe anytime.</strong> The offseason roster planner and draft tool use isolated collections (<code>offseasonRosters</code> and <code>drafts</code>) that are completely separate from live season data. Wiping them will not affect player stats, schedules, or any production data.</p>
+            </div>
+          </div>
+
+          <!-- Offseason Rosters -->
+          <div style="margin-bottom:1.5rem;">
+            <h3 style="font-size:1rem; font-weight:700; color:var(--text-dark); margin-bottom:0.4rem;">📋 Offseason Roster Planner</h3>
+            <p style="color:var(--text-light); font-size:0.9rem; margin-bottom:0.75rem;">Collection: <code>offseasonRosters/current</code> + subcollections (changelog, presence)</p>
+            <div id="offseasonRosterStatus" style="font-size:0.9rem; color:var(--text-light); margin-bottom:0.75rem;">Loading status...</div>
+            <button class="btn btn-danger" onclick="wipeOffseasonRosters()" id="wipeRosterBtn">🗑️ Wipe Offseason Roster Data</button>
+          </div>
+
+          <hr style="border:none; border-top:1px solid var(--border-color); margin:1.5rem 0;">
+
+          <!-- Draft -->
+          <div style="margin-bottom:1.5rem;">
+            <h3 style="font-size:1rem; font-weight:700; color:var(--text-dark); margin-bottom:0.4rem;">🎯 Draft Tool</h3>
+            <p style="color:var(--text-light); font-size:0.9rem; margin-bottom:0.75rem;">Collection: <code>drafts/current</code></p>
+            <div id="draftStatus" style="font-size:0.9rem; color:var(--text-light); margin-bottom:0.75rem;">Loading status...</div>
+            <button class="btn btn-danger" onclick="wipeDraft()" id="wipeDraftBtn">🗑️ Wipe Draft Data</button>
+          </div>
+
+          <hr style="border:none; border-top:1px solid var(--border-color); margin:1.5rem 0;">
+
+          <!-- Sandbox Seasons -->
+          <div>
+            <h3 style="font-size:1rem; font-weight:700; color:var(--text-dark); margin-bottom:0.4rem;">🧪 Sandbox Seasons (Setup Wizard Test Data)</h3>
+            <p style="color:var(--text-light); font-size:0.9rem; margin-bottom:0.75rem;">Any seasons whose ID starts with <code>sandbox-</code>, created while testing the Season Setup Wizard.</p>
+            <div id="sandboxSeasonStatus" style="font-size:0.9rem; color:var(--text-light); margin-bottom:0.75rem;">Loading status...</div>
+            <button class="btn btn-danger" onclick="wipeSandboxSeasons()" id="wipeSandboxBtn">🗑️ Wipe Sandbox Seasons</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+  import { auth } from './firebase-auth.js';
+  import { db, functions } from './firebase-config.js';
+  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { 
+    collection,
+    getDocs,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    deleteDoc,
+    addDoc,
+    arrayUnion,
+    query,
+    where,
+    orderBy,
+    limit,
+    Timestamp,
+    serverTimestamp
+  } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
+  import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+  // ========================================
+  // GLOBAL STATE
+  // ========================================
+  let currentUser = null;
+  let userProfile = null;
+  let allSeasons = [];
+  
+  // Current selections
+  let selectedGame = null;
+  let selectedDocument = null;
+  
+  // Cached data
+  let gamesCache = [];
+  let documentsCache = [];
+
+  // Team list for dropdowns
+  const TEAMS = ['Black', 'Green', 'Red', 'Blue', 'White', 'Orange', 'Silver', 'Purple', 'Gold', 'Carolina', 'Army'];
+
+  // Storage instance
+  const storage = getStorage();
+
+  // ========================================
+  // INITIALIZATION
+  // ========================================
+  
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      await checkAuthorization();
+    } else {
+      showAuthGate();
+    }
+  });
+
+  async function checkAuthorization() {
+    try {
+      console.log('🔐 Checking authorization for UID:', currentUser.uid);
+      
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      
+      if (!userDoc.exists()) {
+        console.log('❌ No user document found');
+        showAuthGate();
+        return;
+      }
+
+      userProfile = userDoc.data();
+      
+      const userRole = (userProfile.userRole || '').toLowerCase();
+      const userType = (userProfile.userType || '').toLowerCase();
+      const role = (userProfile.role || '').toLowerCase();
+      
+      const isAuthorized = 
+        userProfile.isAdmin === true || 
+        userType === 'league-staff' ||
+        userType === 'admin' ||
+        userRole === 'admin' ||
+        userRole === 'staff' ||
+        role === 'admin' ||
+        role === 'staff' ||
+        role === 'league-staff';
+
+      if (isAuthorized) {
+        let badge = '🏟️ League Staff';
+        if (userProfile.isAdmin === true || userRole === 'admin' || userType === 'admin' || role === 'admin') {
+          badge = '👑 Admin';
+        }
+        document.getElementById('userBadge').textContent = badge;
+        showMainContent();
+        await initialize();
+      } else {
+        showAuthGate();
+      }
+    } catch (error) {
+      console.error('Authorization check failed:', error);
+      showAuthGate();
+    }
+  }
+
+  function showAuthGate() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('authGate').style.display = 'block';
+    document.getElementById('mainContent').style.display = 'none';
+  }
+
+  function showMainContent() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('authGate').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+  }
+
+  async function initialize() {
+    await loadSeasons();
+    await loadTeamDropdowns();
+    setupTabs();
+    setupUserManagementListeners();
+    setupDocumentUpload();
+    
+    // Load documents on init
+    await loadDocuments();
+    
+    const defaultSeason = getDefaultSeason();
+    if (defaultSeason) {
+      document.getElementById('gameSeasonSelect').value = defaultSeason;
+      await loadGames();
+    }
+  }
+
+  function setupUserManagementListeners() {
+    const nameInput = document.getElementById('newUserName');
+    if (nameInput) {
+      nameInput.addEventListener('input', () => {
+        const legacyId = generateLegacyId(nameInput.value);
+        document.getElementById('newUserLegacyId').value = legacyId;
+      });
+    }
+  }
+
+  async function loadTeamDropdowns() {
+    try {
+      const teamsSnapshot = await getDocs(collection(db, 'teams'));
+      const teams = teamsSnapshot.docs
+        .map(doc => ({ id: doc.id, name: doc.data().name || doc.id.charAt(0).toUpperCase() + doc.id.slice(1) }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      const teamOptions = teams.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+
+      document.getElementById('newUserTeam').innerHTML = `<option value="">Select team...</option>${teamOptions}`;
+      document.getElementById('bulkUserTeam').innerHTML = `<option value="">Select team...</option>${teamOptions}`;
+      document.getElementById('userTeamFilter').innerHTML = `<option value="">All Teams</option>${teamOptions}`;
+
+    } catch (error) {
+      console.error('Error loading teams:', error);
+      showToast('Error loading teams from Firebase', 'error');
+    }
+  }
+
+  async function loadSeasons() {
+    try {
+      const seasonsSnapshot = await getDocs(collection(db, 'seasons'));
+      allSeasons = seasonsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })).sort((a, b) => {
+        const [yearA, seasonA] = a.id.split('-');
+        const [yearB, seasonB] = b.id.split('-');
+        if (yearA !== yearB) return parseInt(yearB) - parseInt(yearA);
+        return seasonA === 'fall' ? -1 : 1;
+      });
+
+      const optionsHtml = allSeasons.map(s => {
+        const [year, season] = s.id.split('-');
+        const label = `${season.charAt(0).toUpperCase() + season.slice(1)} ${year}`;
+        const active = s.isActive ? ' (Active)' : '';
+        return `<option value="${s.id}">${label}${active}</option>`;
+      }).join('');
+
+      document.getElementById('gameSeasonSelect').innerHTML = optionsHtml;
+
+    } catch (error) {
+      console.error('Error loading seasons:', error);
+      showToast('Error loading seasons', 'error');
+    }
+  }
+
+  function getDefaultSeason() {
+    const active = allSeasons.find(s => s.isActive);
+    return active ? active.id : (allSeasons[0]?.id || null);
+  }
+
+  function setupTabs() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const tabId = btn.dataset.tab;
+        
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        
+        if (tabId === 'users') {
+          const activeSeason = allSeasons.find(s => s.isActive);
+          const displayEl = document.getElementById('activeSeasonDisplay');
+          if (displayEl && activeSeason) {
+            const [year, season] = activeSeason.id.split('-');
+            displayEl.textContent = `${season.charAt(0).toUpperCase() + season.slice(1)} ${year}`;
+          } else if (displayEl) {
+            displayEl.textContent = 'no active season found';
+          }
+        }
+
+        if (tabId === 'offseason') {
+          loadOffseasonDataStatus();
+        }
+      });
+    });
+  }
+
+  // ========================================
+  // DOCUMENTS TAB
+  // ========================================
+  
+  function setupDocumentUpload() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('docFile');
+    
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        fileInput.files = files;
+        updateSelectedFileName(files[0]);
+      }
+    });
+    
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        updateSelectedFileName(fileInput.files[0]);
+      }
+    });
+  }
+  
+  function updateSelectedFileName(file) {
+    const display = document.getElementById('selectedFileName');
+    if (file) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      display.innerHTML = `<strong>Selected:</strong> ${file.name} (${sizeMB} MB)`;
+    } else {
+      display.textContent = '';
+    }
+  }
+
+  window.uploadDocument = async function() {
+    const title = document.getElementById('docTitle').value.trim();
+    const category = document.getElementById('docCategory').value;
+    const description = document.getElementById('docDescription').value.trim();
+    const order = parseInt(document.getElementById('docOrder').value) || 1;
+    const active = document.getElementById('docActive').checked;
+    const fileInput = document.getElementById('docFile');
+    
+    if (!title) {
+      showToast('Please enter a document title', 'warning');
+      return;
+    }
+    
+    if (!fileInput.files.length) {
+      showToast('Please select a PDF file', 'warning');
+      return;
+    }
+    
+    const file = fileInput.files[0];
+    
+    if (!file.type.includes('pdf')) {
+      showToast('Only PDF files are allowed', 'error');
+      return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('File size must be less than 10MB', 'error');
+      return;
+    }
+    
+    const uploadBtn = document.getElementById('uploadBtn');
+    const progressDiv = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('progressBarFill');
+    const statusText = document.getElementById('uploadStatus');
+    
+    uploadBtn.disabled = true;
+    progressDiv.classList.add('active');
+    
+    try {
+      // Upload to Storage
+      const timestamp = Date.now();
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const storagePath = `league-documents/${timestamp}_${sanitizedName}`;
+      const storageRef = ref(storage, storagePath);
+      
+      const uploadTask = uploadBytesResumable(storageRef, file, {
+        contentType: 'application/pdf'
+      });
+      
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          progressFill.style.width = progress + '%';
+          statusText.textContent = `Uploading... ${Math.round(progress)}%`;
+        },
+        (error) => {
+          console.error('Upload error:', error);
+          showToast('Upload failed: ' + error.message, 'error');
+          uploadBtn.disabled = false;
+          progressDiv.classList.remove('active');
+        },
+        async () => {
+          statusText.textContent = 'Saving document metadata...';
+          
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          
+          // Save to Firestore
+          await addDoc(collection(db, 'leagueDocuments'), {
+            title,
+            category,
+            description,
+            order,
+            active,
+            url: downloadURL,
+            storagePath,
+            fileName: file.name,
+            fileSize: file.size,
+            uploadedBy: currentUser.uid,
+            uploadedByName: userProfile.displayName || currentUser.email,
+            uploadedAt: serverTimestamp()
+          });
+          
+          showToast('Document uploaded successfully!', 'success');
+          
+          // Reset form
+          document.getElementById('docTitle').value = '';
+          document.getElementById('docDescription').value = '';
+          document.getElementById('docOrder').value = '1';
+          document.getElementById('docActive').checked = true;
+          fileInput.value = '';
+          document.getElementById('selectedFileName').textContent = '';
+          
+          uploadBtn.disabled = false;
+          progressDiv.classList.remove('active');
+          progressFill.style.width = '0%';
+          
+          await loadDocuments();
+        }
+      );
+      
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      showToast('Error: ' + error.message, 'error');
+      uploadBtn.disabled = false;
+      progressDiv.classList.remove('active');
+    }
+  };
+
+  window.loadDocuments = async function() {
+    const listEl = document.getElementById('documentsList');
+    listEl.innerHTML = '<div class="empty-state">Loading documents...</div>';
+    
+    try {
+      const q = query(collection(db, 'leagueDocuments'), orderBy('order', 'asc'));
+      const snapshot = await getDocs(q);
+      
+      documentsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      if (documentsCache.length === 0) {
+        listEl.innerHTML = '<div class="empty-state">No documents uploaded yet</div>';
+        return;
+      }
+      
+      listEl.innerHTML = documentsCache.map((doc, idx) => {
+        const uploadDate = doc.uploadedAt?.toDate?.() 
+          ? doc.uploadedAt.toDate().toLocaleDateString() 
+          : 'Unknown';
+        
+        return `
+          <div class="item-row" data-idx="${idx}" onclick="selectDocument(${idx})">
+            <div class="item-info">
+              <div class="item-title">📄 ${doc.title}</div>
+              <div class="item-subtitle">${doc.category} • Uploaded ${uploadDate}</div>
+            </div>
+            <div class="item-badges">
+              ${doc.active ? '<span class="badge badge-active">Active</span>' : '<span class="badge badge-inactive">Inactive</span>'}
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+    } catch (error) {
+      console.error('Error loading documents:', error);
+      listEl.innerHTML = '<div class="empty-state">Error loading documents</div>';
+    }
+  };
+
+  window.selectDocument = function(idx) {
+    selectedDocument = documentsCache[idx];
+    
+    document.querySelectorAll('#documentsList .item-row').forEach((row, i) => {
+      row.classList.toggle('selected', i === idx);
+    });
+    
+    const editorEl = document.getElementById('documentEditor');
+    editorEl.classList.add('active');
+    editorEl.innerHTML = `
+      <h3>✏️ Edit Document: ${selectedDocument.title}</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="editDocTitle" value="${selectedDocument.title || ''}">
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="editDocCategory">
+            <option value="league" ${selectedDocument.category === 'league' ? 'selected' : ''}>League</option>
+            <option value="town" ${selectedDocument.category === 'town' ? 'selected' : ''}>Town/Recreation</option>
+            <option value="insurance" ${selectedDocument.category === 'insurance' ? 'selected' : ''}>Insurance</option>
+            <option value="field" ${selectedDocument.category === 'field' ? 'selected' : ''}>Field/Facilities</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="editDocDescription" rows="2" style="min-height: 80px;">${selectedDocument.description || ''}</textarea>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Display Order</label>
+          <input type="number" id="editDocOrder" value="${selectedDocument.order || 1}" min="1" max="99">
+        </div>
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <div class="checkbox-group" style="margin: 0;">
+            <input type="checkbox" id="editDocActive" ${selectedDocument.active ? 'checked' : ''}>
+            <label for="editDocActive">Active (visible on Rules page)</label>
+          </div>
+        </div>
+      </div>
+      
+      <div style="padding: 1rem; background: #f1f5f9; border-radius: 8px; margin-bottom: 1rem;">
+        <strong>File:</strong> ${selectedDocument.fileName || 'Unknown'}<br>
+        <a href="${selectedDocument.url}" target="_blank" style="color: var(--admin-color);">📥 View PDF</a>
+      </div>
+      
+      <div class="btn-group">
+        <button class="btn btn-success" onclick="saveDocument()">💾 Save Changes</button>
+        <button class="btn btn-danger" onclick="deleteDocument()">🗑️ Delete</button>
+        <button class="btn btn-secondary" onclick="clearDocumentSelection()">Cancel</button>
+      </div>
+    `;
+  };
+
+  window.saveDocument = async function() {
+    if (!selectedDocument) return;
+    
+    const title = document.getElementById('editDocTitle').value.trim();
+    const category = document.getElementById('editDocCategory').value;
+    const description = document.getElementById('editDocDescription').value.trim();
+    const order = parseInt(document.getElementById('editDocOrder').value) || 1;
+    const active = document.getElementById('editDocActive').checked;
+    
+    if (!title) {
+      showToast('Please enter a title', 'warning');
+      return;
+    }
+    
+    try {
+      await updateDoc(doc(db, 'leagueDocuments', selectedDocument.id), {
+        title,
+        category,
+        description,
+        order,
+        active,
+        updatedAt: serverTimestamp()
+      });
+      
+      showToast('Document updated!', 'success');
+      await loadDocuments();
+      clearDocumentSelection();
+      
+    } catch (error) {
+      console.error('Error saving document:', error);
+      showToast('Error: ' + error.message, 'error');
+    }
+  };
+
+  window.deleteDocument = async function() {
+    if (!selectedDocument) return;
+    
+    if (!confirm(`Delete "${selectedDocument.title}"? This will also delete the PDF file.`)) {
+      return;
+    }
+    
+    try {
+      // Delete from Storage
+      if (selectedDocument.storagePath) {
+        const storageRef = ref(storage, selectedDocument.storagePath);
+        await deleteObject(storageRef).catch(e => console.warn('Storage delete failed:', e));
+      }
+      
+      // Delete from Firestore
+      await deleteDoc(doc(db, 'leagueDocuments', selectedDocument.id));
+      
+      showToast('Document deleted', 'success');
+      await loadDocuments();
+      clearDocumentSelection();
+      
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      showToast('Error: ' + error.message, 'error');
+    }
+  };
+
+  window.clearDocumentSelection = function() {
+    selectedDocument = null;
+    document.querySelectorAll('#documentsList .item-row').forEach(row => {
+      row.classList.remove('selected');
+    });
+    document.getElementById('documentEditor').classList.remove('active');
+    document.getElementById('documentEditor').innerHTML = `
+      <div class="no-selection">
+        <div class="icon">📝</div>
+        <p>Select a document from the list to edit</p>
+      </div>
+    `;
+  };
+
+  // ========================================
+  // GAMES TAB
+  // ========================================
+  
+  window.loadGames = async function() {
+    const seasonId = document.getElementById('gameSeasonSelect').value;
+    if (!seasonId) return;
+
+    const listEl = document.getElementById('gameList');
+    listEl.innerHTML = '<div class="empty-state">Loading games...</div>';
+
+    try {
+      const gamesSnap = await getDocs(collection(db, 'seasons', seasonId, 'games'));
+      
+      gamesCache = gamesSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })).sort((a, b) => {
+        const dateA = a.date?.seconds || 0;
+        const dateB = b.date?.seconds || 0;
+        return dateA - dateB;
+      });
+
+      if (gamesCache.length === 0) {
+        listEl.innerHTML = '<div class="empty-state">No games found for this season</div>';
+        return;
+      }
+
+      listEl.innerHTML = gamesCache.map((game, idx) => {
+        const dateStr = formatDate(game.date);
+        const homeTeam = game.homeTeamName || capitalize(game.homeTeamId);
+        const awayTeam = game.awayTeamName || capitalize(game.awayTeamId);
+        const score = game.homeScore !== undefined ? `${game.awayScore || 0} - ${game.homeScore || 0}` : 'TBD';
+        const gameType = (game.gameType || game.game_type || 'regular').toLowerCase();
+        
+        return `
+          <div class="item-row" data-idx="${idx}" onclick="selectGame(${idx})">
+            <div class="item-info">
+              <div class="item-title">${awayTeam} @ ${homeTeam}</div>
+              <div class="item-subtitle">${dateStr} • ${score} • ${capitalize(gameType)}</div>
+            </div>
+            <div class="item-badges">
+              ${game.status === 'completed' ? '<span class="badge badge-completed">Final</span>' : ''}
+              ${game.manuallyEdited ? '<span class="badge badge-locked">🔒 Locked</span>' : ''}
+              ${gameType === 'playoff' ? '<span class="badge badge-preview">Playoff</span>' : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error loading games:', error);
+      listEl.innerHTML = '<div class="empty-state">Error loading games</div>';
+      showToast('Error loading games', 'error');
+    }
+  };
+
+  window.selectGame = function(idx) {
+    selectedGame = gamesCache[idx];
+    
+    document.querySelectorAll('#gameList .item-row').forEach((row, i) => {
+      row.classList.toggle('selected', i === idx);
+    });
+
+    const homeTeam = selectedGame.homeTeamName || capitalize(selectedGame.homeTeamId);
+    const awayTeam = selectedGame.awayTeamName || capitalize(selectedGame.awayTeamId);
+    
+    let dateValue = '';
+    let timeValue = '';
+    if (selectedGame.date?.seconds) {
+      const d = new Date(selectedGame.date.seconds * 1000);
+      dateValue = d.toISOString().split('T')[0];
+      timeValue = d.toTimeString().slice(0, 5);
+    }
+
+    const teamOptions = TEAMS.map(t => `<option value="${t.toLowerCase()}">${t}</option>`).join('');
+    const gameType = (selectedGame.gameType || selectedGame.game_type || 'regular').toLowerCase();
+
+    const editorEl = document.getElementById('gameEditor');
+    editorEl.classList.add('active');
+    editorEl.innerHTML = `
+      <h3>✏️ Edit Game: ${awayTeam} @ ${homeTeam}</h3>
+      
+      ${selectedGame.manuallyEdited ? `
+        <div class="manual-edit-warning">
+          <span class="icon">🔒</span>
+          <div>
+            <p><strong>This game is locked.</strong> It was previously manually edited.</p>
+          </div>
+        </div>
+      ` : ''}
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Game Date</label>
+          <input type="date" id="gameDateInput" value="${dateValue}">
+        </div>
+        <div class="form-group">
+          <label>Game Time</label>
+          <input type="time" id="gameTimeInput" value="${timeValue}">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Away Team</label>
+          <select id="awayTeamSelect">${teamOptions}</select>
+        </div>
+        <div class="form-group">
+          <label>Home Team</label>
+          <select id="homeTeamSelect">${teamOptions}</select>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Away Score</label>
+          <input type="number" id="awayScoreInput" value="${selectedGame.awayScore || 0}" min="0">
+        </div>
+        <div class="form-group">
+          <label>Home Score</label>
+          <input type="number" id="homeScoreInput" value="${selectedGame.homeScore || 0}" min="0">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Game Type</label>
+          <select id="gameTypeSelect">
+            <option value="regular" ${gameType === 'regular' ? 'selected' : ''}>Regular Season</option>
+            <option value="playoff" ${gameType === 'playoff' ? 'selected' : ''}>Playoff</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="gameStatusSelect">
+            <option value="scheduled" ${selectedGame.status === 'scheduled' ? 'selected' : ''}>Scheduled</option>
+            <option value="in_progress" ${selectedGame.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+            <option value="completed" ${selectedGame.status === 'completed' ? 'selected' : ''}>Completed</option>
+            <option value="postponed" ${selectedGame.status === 'postponed' ? 'selected' : ''}>Postponed</option>
+            <option value="cancelled" ${selectedGame.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Round <span style="color: var(--text-light); font-weight: normal;">(for playoffs)</span></label>
+          <input type="text" id="gameRoundInput" value="${selectedGame.round || ''}" placeholder="e.g. Semifinals, Finals">
+        </div>
+      </div>
+      
+      <div class="checkbox-group">
+        <input type="checkbox" id="forfeitCheck" ${selectedGame.forfeit ? 'checked' : ''}>
+        <label for="forfeitCheck">⚠️ Game was a forfeit</label>
+      </div>
+      
+      <div class="checkbox-group">
+        <input type="checkbox" id="manualEditCheck" ${selectedGame.manuallyEdited ? 'checked' : ''}>
+        <label for="manualEditCheck">🔒 Mark as manually edited</label>
+      </div>
+      
+      <div class="btn-group">
+        <button class="btn btn-success" onclick="saveGame()">💾 Save Changes</button>
+        <button class="btn btn-secondary" onclick="clearGameSelection()">Cancel</button>
+      </div>
+    `;
+
+    setTimeout(() => {
+      document.getElementById('awayTeamSelect').value = selectedGame.awayTeamId || '';
+      document.getElementById('homeTeamSelect').value = selectedGame.homeTeamId || '';
+    }, 0);
+  };
+
+  window.saveGame = async function() {
+    if (!selectedGame) return;
+
+    const seasonId = document.getElementById('gameSeasonSelect').value;
+    
+    const dateInput = document.getElementById('gameDateInput').value;
+    const timeInput = document.getElementById('gameTimeInput').value;
+    const awayTeamId = document.getElementById('awayTeamSelect').value;
+    const homeTeamId = document.getElementById('homeTeamSelect').value;
+    const awayScore = parseInt(document.getElementById('awayScoreInput').value) || 0;
+    const homeScore = parseInt(document.getElementById('homeScoreInput').value) || 0;
+    const gameType = document.getElementById('gameTypeSelect').value;
+    const status = document.getElementById('gameStatusSelect').value;
+    const round = document.getElementById('gameRoundInput').value.trim() || null;
+    const forfeit = document.getElementById('forfeitCheck').checked;
+    const manuallyEdited = document.getElementById('manualEditCheck').checked;
+
+    if (!dateInput || !awayTeamId || !homeTeamId) {
+      showToast('Please fill in all required fields', 'warning');
+      return;
+    }
+
+    try {
+      const dateTime = new Date(`${dateInput}T${timeInput || '00:00'}`);
+      
+      await updateDoc(doc(db, 'seasons', seasonId, 'games', selectedGame.id), {
+        date: Timestamp.fromDate(dateTime),
+        time: timeInput || null,
+        awayTeamId,
+        homeTeamId,
+        awayTeamName: capitalize(awayTeamId),
+        homeTeamName: capitalize(homeTeamId),
+        awayScore,
+        homeScore,
+        gameType,
+        game_type: gameType,
+        status,
+        round,
+        forfeit,
+        manuallyEdited: true,
+        lastUpdate: serverTimestamp()
+      });
+
+      showToast('Game updated!', 'success');
+      await loadGames();
+      clearGameSelection();
+
+    } catch (error) {
+      console.error('Error saving game:', error);
+      showToast('Error: ' + error.message, 'error');
+    }
+  };
+
+  window.clearGameSelection = function() {
+    selectedGame = null;
+    document.querySelectorAll('#gameList .item-row').forEach(row => {
+      row.classList.remove('selected');
+    });
+    document.getElementById('gameEditor').classList.remove('active');
+    document.getElementById('gameEditor').innerHTML = `
+      <div class="no-selection">
+        <div class="icon">🎮</div>
+        <p>Select a game from the list to edit its details</p>
+      </div>
+    `;
+  };
+
+  // ========================================
+  // USER MANAGEMENT
+  // ========================================
+  
+  let bulkUsersToCreate = [];
+  let allPlaceholderUsers = [];
+
+  function generateLegacyId(name) {
+    if (!name) return '';
+    return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  }
+
+  window.createSingleUser = async function() {
+    const name = document.getElementById('newUserName').value.trim();
+    const team = document.getElementById('newUserTeam').value;
+    const legacyId = document.getElementById('newUserLegacyId').value;
+    const email = document.getElementById('newUserEmail').value.trim();
+
+    if (!name || !team || !legacyId) {
+      showToast('Please fill in name and team', 'warning');
+      return;
+    }
+
+    try {
+      const activeSeason = allSeasons.find(s => s.isActive);
+      if (!activeSeason) {
+        showToast('No active season found', 'error');
+        return;
+      }
+
+      const existingUser = await getDoc(doc(db, 'users', legacyId));
+      if (existingUser.exists()) {
+        showToast('A user with this ID already exists', 'error');
+        return;
+      }
+
+      const userDoc = {
+        displayName: name,
+        name: name,
+        linkedTeam: team,
+        userType: 'player',
+        role: 'player',
+        isPlaceholder: true,
+        createdAt: serverTimestamp(),
+        createdBy: currentUser.uid
+      };
+      if (email) userDoc.email = email;
+
+      await setDoc(doc(db, 'users', legacyId), userDoc);
+
+      const statsDoc = {
+        name: name,
+        currentTeam: team,
+        seasons: {
+          [activeSeason.id]: { team: team, games: 0 }
+        },
+        career: { games: 0 },
+        isPlaceholder: true,
+        createdAt: serverTimestamp()
+      };
+      if (email) statsDoc.email = email;
+
+      await setDoc(doc(db, 'aggregatedPlayerStats', legacyId), statsDoc);
+
+      // Add to rosters collection for current season
+      const rosterDocId = `${activeSeason.id}-${team.toLowerCase()}`;
+      const rosterRef = doc(db, 'rosters', rosterDocId);
+      const rosterEntry = {
+        authId: '',
+        bats: '-',
+        captain: false,
+        id: legacyId,
+        name: name,
+        number: null,
+        position: '-',
+        throws: '-'
+      };
+      const rosterSnap = await getDoc(rosterRef);
+      if (rosterSnap.exists()) {
+        await updateDoc(rosterRef, { players: arrayUnion(rosterEntry) });
+      } else {
+        await setDoc(rosterRef, { players: [rosterEntry], seasonId: activeSeason.id, teamId: team.toLowerCase() });
+      }
+
+      showToast(`Created user: ${name} (added to ${rosterDocId})`, 'success');
+      document.getElementById('newUserName').value = '';
+      document.getElementById('newUserTeam').value = '';
+      document.getElementById('newUserLegacyId').value = '';
+      document.getElementById('newUserEmail').value = '';
+
+    } catch (error) {
+      console.error('Error creating user:', error);
+      showToast('Error: ' + error.message, 'error');
+    }
+  };
+
+  window.previewBulkImport = function() {
+    const team = document.getElementById('bulkUserTeam').value;
+    const namesText = document.getElementById('bulkUserNames').value.trim();
+
+    if (!team) {
+      showToast('Please select a team', 'warning');
+      return;
+    }
+
+    if (!namesText) {
+      showToast('Please enter player names', 'warning');
+      return;
+    }
+
+    const names = namesText.split('\n').map(n => n.trim()).filter(n => n);
+    
+    bulkUsersToCreate = names.map(name => ({
+      name,
+      team,
+      legacyId: generateLegacyId(name)
+    }));
+
+    const previewHtml = bulkUsersToCreate.map(u => `
+      <div style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">
+        <strong>${u.name}</strong> → ${u.team}
+        <span style="font-family: monospace; font-size: 0.85rem; color: var(--text-light); margin-left: 0.5rem;">${u.legacyId}</span>
+      </div>
+    `).join('');
+
+    document.getElementById('bulkPreviewList').innerHTML = previewHtml;
+    document.getElementById('bulkPreviewPanel').style.display = 'block';
+  };
+
+  window.executeBulkImport = async function() {
+    if (bulkUsersToCreate.length === 0) return;
+
+    const activeSeason = allSeasons.find(s => s.isActive);
+    if (!activeSeason) {
+      showToast('No active season found', 'error');
+      return;
+    }
+
+    let created = 0;
+    let skipped = 0;
+
+    for (const user of bulkUsersToCreate) {
+      try {
+        const existingUser = await getDoc(doc(db, 'users', user.legacyId));
+        if (existingUser.exists()) {
+          skipped++;
+          continue;
+        }
+
+        await setDoc(doc(db, 'users', user.legacyId), {
+          displayName: user.name,
+          linkedTeam: user.team,
+          userType: 'player',
+          isPlaceholder: true,
+          createdAt: serverTimestamp(),
+          createdBy: currentUser.uid
+        });
+
+        await setDoc(doc(db, 'aggregatedPlayerStats', user.legacyId), {
+          name: user.name,
+          currentTeam: user.team,
+          seasons: {
+            [activeSeason.id]: { team: user.team, games: 0 }
+          },
+          career: { games: 0 },
+          createdAt: serverTimestamp()
+        });
+
+        // Add to rosters collection
+        const rosterDocId = `${activeSeason.id}-${user.team.toLowerCase()}`;
+        const rosterRef = doc(db, 'rosters', rosterDocId);
+        const rosterEntry = {
+          authId: '',
+          bats: '-',
+          captain: false,
+          id: user.legacyId,
+          name: user.name,
+          number: null,
+          position: '-',
+          throws: '-'
+        };
+        const rosterSnap = await getDoc(rosterRef);
+        if (rosterSnap.exists()) {
+          await updateDoc(rosterRef, { players: arrayUnion(rosterEntry) });
+        } else {
+          await setDoc(rosterRef, { players: [rosterEntry], seasonId: activeSeason.id, teamId: user.team.toLowerCase() });
+        }
+
+        created++;
+      } catch (error) {
+        console.error(`Error creating ${user.name}:`, error);
+      }
+    }
+
+    showToast(`Created ${created} users, skipped ${skipped} duplicates`, 'success');
+    cancelBulkImport();
+    document.getElementById('bulkUserNames').value = '';
+    document.getElementById('bulkUserTeam').value = '';
+  };
+
+  window.cancelBulkImport = function() {
+    bulkUsersToCreate = [];
+    document.getElementById('bulkPreviewPanel').style.display = 'none';
+  };
+
+  window.loadPlaceholderUsers = async function() {
+    const listEl = document.getElementById('placeholderUserList');
+    listEl.innerHTML = '<div class="empty-state">Loading...</div>';
+
+    try {
+      const q = query(collection(db, 'users'), where('isPlaceholder', '==', true));
+      const snapshot = await getDocs(q);
+
+      allPlaceholderUsers = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })).sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
+
+      filterUserList();
+
+    } catch (error) {
+      console.error('Error loading users:', error);
+      listEl.innerHTML = '<div class="empty-state">Error loading users</div>';
+    }
+  };
+
+  window.filterUserList = function() {
+    const searchTerm = (document.getElementById('userSearchInput').value || '').toLowerCase();
+    const teamFilter = document.getElementById('userTeamFilter').value;
+
+    let filtered = allPlaceholderUsers;
+
+    if (searchTerm) {
+      filtered = filtered.filter(u => (u.displayName || '').toLowerCase().includes(searchTerm));
+    }
+
+    if (teamFilter) {
+      filtered = filtered.filter(u => u.linkedTeam === teamFilter);
+    }
+
+    const listEl = document.getElementById('placeholderUserList');
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = '<div class="empty-state">No matching users</div>';
+    } else {
+      listEl.innerHTML = filtered.map(u => `
+        <div class="item-row" style="cursor: default;">
+          <div class="item-info">
+            <div class="item-title">${u.displayName || 'Unknown'}</div>
+            <div class="item-subtitle">${u.linkedTeam || 'No team'} • ID: ${u.id}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('userListStats').textContent = 
+      `Showing ${filtered.length} of ${allPlaceholderUsers.length} placeholder users`;
+  };
+
+  // ========================================
+  // UTILITY FUNCTIONS
+  // ========================================
+
+  function formatDate(timestamp) {
+    if (!timestamp?.seconds) return 'TBD';
+    const d = new Date(timestamp.seconds * 1000);
+    return d.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+
+  function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
+    toast.innerHTML = `<span>${icon}</span> ${message}`;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
+
+  // ========================================
+  // NOTIFICATION FUNCTIONS
+  // ========================================
+  
+  function setupNotificationListeners() {
+    const titleInput = document.getElementById('announcementTitle');
+    const bodyInput = document.getElementById('announcementBody');
+    const linkTypeSelect = document.getElementById('announcementLinkType');
+    const customLinkGroup = document.getElementById('customLinkGroup');
+    
+    if (titleInput) {
+      titleInput.addEventListener('input', () => {
+        document.getElementById('titleCharCount').textContent = titleInput.value.length;
+      });
+    }
+    
+    if (bodyInput) {
+      bodyInput.addEventListener('input', () => {
+        document.getElementById('bodyCharCount').textContent = bodyInput.value.length;
+      });
+    }
+    
+    if (linkTypeSelect) {
+      linkTypeSelect.addEventListener('change', () => {
+        customLinkGroup.style.display = linkTypeSelect.value === 'custom' ? 'block' : 'none';
+      });
+    }
+  }
+  
+  document.addEventListener('DOMContentLoaded', setupNotificationListeners);
+  
+  window.previewAnnouncement = function() {
+    const title = document.getElementById('announcementTitle').value || 'Title';
+    const body = document.getElementById('announcementBody').value || 'Message body';
+    const priority = document.getElementById('announcementPriority').value;
+    
+    let emoji = '📢';
+    if (priority === 'urgent') emoji = '🚨';
+    else if (priority === 'info') emoji = 'ℹ️';
+    
+    document.getElementById('previewTitle').textContent = `${emoji} ${title}`;
+    document.getElementById('previewBody').textContent = body;
+    document.getElementById('announcementPreviewPanel').style.display = 'block';
+  };
+  
+  window.sendAnnouncement = async function() {
+    const title = document.getElementById('announcementTitle').value.trim();
+    const body = document.getElementById('announcementBody').value.trim();
+    const priority = document.getElementById('announcementPriority').value;
+    const linkType = document.getElementById('announcementLinkType').value;
+    const customLink = document.getElementById('announcementCustomLink').value.trim();
+    
+    if (!title) {
+      showToast('Please enter a title', 'warning');
+      return;
+    }
+    
+    if (!body) {
+      showToast('Please enter a message', 'warning');
+      return;
+    }
+    
+    let link = null;
+    if (linkType === 'custom' && customLink) {
+      link = customLink;
+    } else if (linkType && linkType !== 'custom') {
+      link = linkType;
+    }
+    
+    const confirmMsg = `Send this announcement to all users?\n\nTitle: ${title}\nMessage: ${body.substring(0, 100)}${body.length > 100 ? '...' : ''}`;
+    if (!confirm(confirmMsg)) {
+      return;
+    }
+    
+    const btn = document.getElementById('sendAnnouncementBtn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Sending...';
+    
+    try {
+      const sendAnnouncementFn = httpsCallable(functions, 'sendAnnouncement');
+      const result = await sendAnnouncementFn({
+        title,
+        body,
+        link,
+        priority
+      });
+      
+      showToast(`✅ ${result.data.message}`, 'success');
+      
+      document.getElementById('announcementTitle').value = '';
+      document.getElementById('announcementBody').value = '';
+      document.getElementById('announcementPriority').value = 'normal';
+      document.getElementById('announcementLinkType').value = '';
+      document.getElementById('announcementCustomLink').value = '';
+      document.getElementById('customLinkGroup').style.display = 'none';
+      document.getElementById('announcementPreviewPanel').style.display = 'none';
+      document.getElementById('titleCharCount').textContent = '0';
+      document.getElementById('bodyCharCount').textContent = '0';
+      
+      await loadRecentAnnouncements();
+      
+    } catch (error) {
+      console.error('Error sending announcement:', error);
+      showToast(`❌ ${error.message || 'Failed to send announcement'}`, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  };
+  
+  window.sendTestNotification = async function() {
+    const btn = document.getElementById('testNotificationBtn');
+    const status = document.getElementById('testNotificationStatus');
+    const originalText = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Sending...';
+    status.textContent = '';
+    status.style.color = '';
+    
+    try {
+      const testNotificationFn = httpsCallable(functions, 'testNotification');
+      const result = await testNotificationFn({});
+      
+      status.textContent = '✅ Test sent! Check your notifications.';
+      status.style.color = 'var(--success-color)';
+      showToast('Test notification sent!', 'success');
+      
+    } catch (error) {
+      console.error('Error sending test notification:', error);
+      status.textContent = `❌ ${error.message || 'Failed'}`;
+      status.style.color = 'var(--danger-color)';
+      showToast(error.message || 'Failed to send test notification', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  };
+  
+  window.loadRecentAnnouncements = async function() {
+    const listEl = document.getElementById('recentAnnouncementsList');
+    listEl.innerHTML = '<div class="empty-state">Loading...</div>';
+    
+    try {
+      const q = query(
+        collection(db, 'announcements'),
+        orderBy('sentAt', 'desc'),
+        limit(10)
+      );
+      
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) {
+        listEl.innerHTML = '<div class="empty-state">No announcements sent yet</div>';
+        return;
+      }
+      
+      listEl.innerHTML = snapshot.docs.map(doc => {
+        const data = doc.data();
+        const sentAt = data.sentAt?.toDate?.() 
+          ? data.sentAt.toDate().toLocaleString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit'
+            })
+          : 'Unknown';
+        
+        const priorityBadge = data.priority === 'urgent' 
+          ? '<span class="badge" style="background: #fef2f2; color: #dc2626;">🚨 Urgent</span>'
+          : data.priority === 'info'
+          ? '<span class="badge" style="background: #eff6ff; color: #2563eb;">ℹ️ Info</span>'
+          : '<span class="badge" style="background: #f0fdf4; color: #16a34a;">📢 Normal</span>';
+        
+        return `
+          <div class="item-row" style="cursor: default;">
+            <div class="item-info">
+              <div class="item-title">${data.title || 'Untitled'}</div>
+              <div class="item-subtitle" style="margin-top: 0.25rem;">
+                ${data.body?.substring(0, 80) || ''}${(data.body?.length || 0) > 80 ? '...' : ''}
+              </div>
+              <div class="item-subtitle" style="font-size: 0.8rem; margin-top: 0.5rem;">
+                ${sentAt} by ${data.sentByName || 'Unknown'} • ${data.recipientCount || 0} recipients
+              </div>
+            </div>
+            <div class="item-badges">
+              ${priorityBadge}
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+    } catch (error) {
+      console.error('Error loading announcements:', error);
+      listEl.innerHTML = '<div class="empty-state">Error loading announcements</div>';
+    }
+  };
+
+  // ========================================
+  // OFFSEASON DATA MANAGEMENT
+  // ========================================
+
+  async function loadOffseasonDataStatus() {
+    // Offseason Rosters
+    try {
+      const rosterDoc = await getDoc(doc(db, 'offseasonRosters', 'current'));
+      const el = document.getElementById('offseasonRosterStatus');
+      if (rosterDoc.exists()) {
+        const d = rosterDoc.data();
+        const teamCount = d.teams ? Object.keys(d.teams).length : 0;
+        const modified = d.lastModified?.toDate ? d.lastModified.toDate().toLocaleDateString() : 'unknown';
+        el.innerHTML = `✅ Document exists — <strong>${teamCount} teams</strong>, last modified <strong>${modified}</strong>`;
+        el.style.color = '#16a34a';
+      } else {
+        el.textContent = 'No data — collection is empty.';
+        el.style.color = 'var(--text-light)';
+      }
+    } catch (e) {
+      document.getElementById('offseasonRosterStatus').textContent = 'Error reading status: ' + e.message;
+    }
+
+    // Draft
+    try {
+      const draftDoc = await getDoc(doc(db, 'drafts', 'current'));
+      const el = document.getElementById('draftStatus');
+      if (draftDoc.exists()) {
+        const d = draftDoc.data();
+        const pickCount = d.picks ? d.picks.length : 0;
+        const status = d.status || 'unknown';
+        el.innerHTML = `✅ Document exists — <strong>${pickCount} picks</strong>, status: <strong>${status}</strong>`;
+        el.style.color = '#16a34a';
+      } else {
+        el.textContent = 'No data — collection is empty.';
+        el.style.color = 'var(--text-light)';
+      }
+    } catch (e) {
+      document.getElementById('draftStatus').textContent = 'Error reading status: ' + e.message;
+    }
+
+    // Sandbox Seasons
+    try {
+      const seasonsSnap = await getDocs(collection(db, 'seasons'));
+      const sandboxSeasons = seasonsSnap.docs.filter(d => d.id.startsWith('sandbox-'));
+      const el = document.getElementById('sandboxSeasonStatus');
+      if (sandboxSeasons.length > 0) {
+        el.innerHTML = `⚠️ Found <strong>${sandboxSeasons.length} sandbox season(s)</strong>: ${sandboxSeasons.map(d => `<code>${d.id}</code>`).join(', ')}`;
+        el.style.color = '#b45309';
+      } else {
+        el.textContent = 'No sandbox seasons found.';
+        el.style.color = 'var(--text-light)';
+      }
+    } catch (e) {
+      document.getElementById('sandboxSeasonStatus').textContent = 'Error reading status: ' + e.message;
+    }
+  }
+
+  async function deleteSubcollectionDocs(parentPath, subcollectionName) {
+    try {
+      const snap = await getDocs(collection(db, parentPath, subcollectionName));
+      await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+    } catch (e) {
+      // Subcollection may not exist — ignore
+    }
+  }
+
+  window.wipeOffseasonRosters = async function() {
+    if (!confirm('⚠️ This will delete offseasonRosters/current and all its subcollections (changelog, presence).\n\nThis is safe — it does NOT affect live season data.\n\nProceed?')) return;
+    const btn = document.getElementById('wipeRosterBtn');
+    btn.disabled = true;
+    btn.textContent = 'Wiping...';
+    try {
+      await deleteSubcollectionDocs('offseasonRosters/current', 'changelog');
+      await deleteSubcollectionDocs('offseasonRosters/current', 'presence');
+      await deleteDoc(doc(db, 'offseasonRosters', 'current'));
+      showToast('✅ Offseason roster data wiped successfully.', 'success');
+      const el = document.getElementById('offseasonRosterStatus');
+      el.textContent = 'No data — collection is empty.';
+      el.style.color = 'var(--text-light)';
+    } catch (e) {
+      showToast('Error wiping roster data: ' + e.message, 'error');
+    }
+    btn.disabled = false;
+    btn.textContent = '🗑️ Wipe Offseason Roster Data';
+  };
+
+  window.wipeDraft = async function() {
+    if (!confirm('⚠️ This will delete drafts/current.\n\nThis is safe — it does NOT affect live season data.\n\nProceed?')) return;
+    const btn = document.getElementById('wipeDraftBtn');
+    btn.disabled = true;
+    btn.textContent = 'Wiping...';
+    try {
+      await deleteDoc(doc(db, 'drafts', 'current'));
+      showToast('✅ Draft data wiped successfully.', 'success');
+      const el = document.getElementById('draftStatus');
+      el.textContent = 'No data — collection is empty.';
+      el.style.color = 'var(--text-light)';
+    } catch (e) {
+      showToast('Error wiping draft data: ' + e.message, 'error');
+    }
+    btn.disabled = false;
+    btn.textContent = '🗑️ Wipe Draft Data';
+  };
+
+  window.wipeSandboxSeasons = async function() {
+    if (!confirm('⚠️ This will delete all seasons whose ID starts with "sandbox-", including all their games subcollections.\n\nProceed?')) return;
+    const btn = document.getElementById('wipeSandboxBtn');
+    btn.disabled = true;
+    btn.textContent = 'Wiping...';
+    try {
+      const seasonsSnap = await getDocs(collection(db, 'seasons'));
+      const sandboxDocs = seasonsSnap.docs.filter(d => d.id.startsWith('sandbox-'));
+      for (const seasonDoc of sandboxDocs) {
+        const gamesSnap = await getDocs(collection(db, 'seasons', seasonDoc.id, 'games'));
+        await Promise.all(gamesSnap.docs.map(g => deleteDoc(g.ref)));
+        await deleteDoc(seasonDoc.ref);
+      }
+      showToast(`✅ Deleted ${sandboxDocs.length} sandbox season(s).`, 'success');
+      const el = document.getElementById('sandboxSeasonStatus');
+      el.textContent = 'No sandbox seasons found.';
+      el.style.color = 'var(--text-light)';
+    } catch (e) {
+      showToast('Error wiping sandbox seasons: ' + e.message, 'error');
+    }
+    btn.disabled = false;
+    btn.textContent = '🗑️ Wipe Sandbox Seasons';
+  };
+
+  window.showToast = showToast;
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="team-colors.js"></script>
+<script src="mobile-enhancements.js"></script>
+</body>
+</html>

@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Championship Preview - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --gold-gradient: linear-gradient(135deg, #ffd700 0%, #ffb300 100%);
+    --champion-gradient: linear-gradient(135deg, #ffd700 0%, #f0c14b 50%, #daa520 100%);
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    --shadow-gold: 0 8px 24px rgba(255,215,0,0.3);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    line-height: 1.6;
+    color: var(--text-dark);
+  }
+
+  /* Loading Spinner */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .softball-spinner::before {
+    content: '🏆';
+    font-size: 80px;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+  }
+
+  .page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* Championship Hero */
+  .championship-hero {
+    background: var(--champion-gradient);
+    border-radius: 24px;
+    padding: 3rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-gold);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+
+  .championship-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 50%);
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+  }
+
+  .championship-hero::after {
+    content: '🏆';
+    position: absolute;
+    bottom: -40px;
+    right: -20px;
+    font-size: 200px;
+    opacity: 0.15;
+  }
+
+  .championship-trophy {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+    animation: bounce 2s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .championship-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #3d3200;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .championship-subtitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #5d4e00;
+    margin-top: 0.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Countdown Timer */
+  .countdown-container {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .countdown-item {
+    background: rgba(255,255,255,0.9);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    min-width: 80px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  .countdown-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #3d3200;
+    line-height: 1;
+  }
+
+  .countdown-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #5d4e00;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 0.25rem;
+  }
+
+  .countdown-complete {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #3d3200;
+    background: rgba(255,255,255,0.9);
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    display: inline-block;
+    margin-top: 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .game-info-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255,255,255,0.5);
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    margin-top: 1rem;
+    font-weight: 600;
+    color: #3d3200;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .game-info-bar span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Team Matchup */
+  .matchup-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 3px solid var(--accent-color);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .matchup-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--gold-gradient);
+  }
+
+  .matchup-card::after {
+    content: '🏆';
+    position: absolute;
+    bottom: -30px;
+    right: -30px;
+    font-size: 150px;
+    opacity: 0.05;
+    transition: all 0.4s ease;
+  }
+
+  .matchup-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg), var(--shadow-gold);
+  }
+
+  .matchup-card:hover::after {
+    opacity: 0.1;
+    bottom: -20px;
+    right: -20px;
+  }
+
+  .matchup-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .matchup-team {
+    flex: 1;
+    text-align: center;
+    padding: 1.5rem;
+    max-width: 250px;
+  }
+
+  .team-logo {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: block;
+    border: 4px solid var(--border-color);
+    transition: all 0.3s ease;
+    object-fit: contain;
+    background: white;
+  }
+
+  .matchup-card:hover .team-logo {
+    transform: scale(1.1);
+    border-color: var(--accent-color);
+    box-shadow: 0 6px 20px rgba(255,215,0,0.3);
+  }
+
+  .matchup-team-name {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .matchup-team-name a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  .matchup-team-name a:hover {
+    color: var(--primary-color);
+  }
+
+  .matchup-team-record {
+    font-size: 1.3rem;
+    color: var(--text-light);
+    font-weight: 600;
+  }
+
+  .matchup-team-seed {
+    display: inline-block;
+    background: var(--gold-gradient);
+    color: #3d3200;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+  }
+
+  .matchup-vs {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 80px;
+  }
+
+  .matchup-vs-text {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent-color);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .matchup-vs-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Section Cards */
+  .section-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+  }
+
+  .section-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-header.gold {
+    background: var(--gold-gradient);
+    color: #3d3200;
+  }
+
+  .section-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+
+  .section-content {
+    padding: 2rem;
+  }
+
+  /* Two Column Journey Layout */
+  .journey-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .journey-column {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+  }
+
+  .journey-column-header {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .journey-step {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid var(--primary-color);
+    font-size: 0.9rem;
+  }
+
+  .journey-step.championship {
+    border-left-color: var(--accent-color);
+    background: linear-gradient(90deg, rgba(255,215,0,0.1) 0%, white 100%);
+  }
+
+  .journey-step.playoff {
+    border-left-color: var(--secondary-color);
+    background: linear-gradient(90deg, rgba(26,107,74,0.05) 0%, white 100%);
+  }
+
+  .journey-step.win {
+    border-left-color: #28a745;
+  }
+
+  .journey-step.loss {
+    border-left-color: #dc3545;
+  }
+
+  .journey-round {
+    font-weight: 600;
+    color: var(--text-light);
+    min-width: 100px;
+    font-size: 0.8rem;
+  }
+
+  .journey-result {
+    flex: 1;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .journey-result .win-indicator {
+    color: #28a745;
+  }
+
+  .journey-result .loss-indicator {
+    color: #dc3545;
+  }
+
+  .journey-score {
+    font-weight: 700;
+    color: var(--primary-color);
+  }
+
+  /* Top Hitters Comparison */
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+
+  .team-players {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+  }
+
+  .team-players-header {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .player-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--primary-color);
+    transition: all 0.3s ease;
+  }
+
+  .player-card:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .player-card.mvp {
+    border-left-color: var(--accent-color);
+    background: linear-gradient(90deg, rgba(255,215,0,0.08) 0%, white 100%);
+  }
+
+  .player-rank {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 24px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-right: 0.75rem;
+  }
+
+  .player-card.mvp .player-rank {
+    background: var(--gold-gradient);
+    color: #3d3200;
+  }
+
+  .player-name {
+    font-weight: 700;
+    color: var(--text-dark);
+    font-size: 1rem;
+  }
+
+  .player-name a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .player-name a:hover {
+    color: var(--primary-color);
+  }
+
+  .player-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .player-stat {
+    text-align: center;
+  }
+
+  .player-stat-value {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1rem;
+  }
+
+  .player-stat-label {
+    font-size: 0.7rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .vs-divider {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent-color);
+    text-align: center;
+    padding: 0 1rem;
+    align-self: center;
+  }
+
+  /* Team Stats Comparison */
+  .stats-comparison {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+
+  .team-stats-box {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+  }
+
+  .team-stats-box h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .stat-row:last-child {
+    border-bottom: none;
+  }
+
+  .stat-label {
+    font-weight: 600;
+    color: var(--text-light);
+  }
+
+  .stat-value {
+    font-weight: 700;
+    color: var(--text-dark);
+    font-size: 1.1rem;
+  }
+
+  .stat-value.advantage {
+    color: #28a745;
+  }
+
+  .stat-value.disadvantage {
+    color: #dc3545;
+  }
+
+  /* H2H Record */
+  .h2h-summary {
+    text-align: center;
+    background: linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,179,0,0.05) 100%);
+    padding: 2rem;
+    border-radius: 12px;
+    border: 2px solid var(--accent-color);
+    margin-bottom: 1.5rem;
+  }
+
+  .h2h-record {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .h2h-subtitle {
+    font-size: 1rem;
+    color: var(--text-light);
+    margin-top: 0.5rem;
+  }
+
+  /* History Table */
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .history-table th {
+    background-color: #f8f9fa;
+    font-weight: 700;
+    color: var(--text-dark);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+  }
+
+  .history-table tr:hover {
+    background-color: #f8f9fa;
+  }
+
+  .winner-highlight {
+    font-weight: 700;
+    color: #28a745;
+  }
+
+  .no-data {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+    font-style: italic;
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+  }
+
+  .empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .page-container {
+      padding: 1rem;
+    }
+
+    .championship-hero {
+      padding: 2rem 1.5rem;
+    }
+
+    .championship-title {
+      font-size: 1.75rem;
+    }
+
+    .countdown-container {
+      gap: 0.75rem;
+    }
+
+    .countdown-item {
+      padding: 0.75rem 1rem;
+      min-width: 60px;
+    }
+
+    .countdown-value {
+      font-size: 1.75rem;
+    }
+
+    .matchup-display {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .matchup-team {
+      max-width: 100%;
+    }
+
+    .matchup-vs {
+      transform: none;
+    }
+
+    .matchup-vs-text {
+      font-size: 2rem;
+    }
+
+    .matchup-vs-label {
+      display: none;
+    }
+
+    .matchup-team-name {
+      font-size: 1.5rem;
+    }
+
+    .team-logo {
+      width: 80px;
+      height: 80px;
+    }
+
+    .journey-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .comparison-grid,
+    .stats-comparison {
+      grid-template-columns: 1fr;
+    }
+
+    .vs-divider {
+      display: none;
+    }
+
+    .history-table {
+      font-size: 0.85rem;
+    }
+
+    .history-table th,
+    .history-table td {
+      padding: 0.6rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .game-info-bar {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .countdown-container {
+      flex-wrap: wrap;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<div class="filters-nav">
+  <!-- Navigation inserted by nav-component.js -->
+</div>
+
+<div class="page-container">
+  
+  <!-- Championship Hero -->
+  <div class="championship-hero">
+    <div class="championship-trophy">🏆</div>
+    <h1 class="championship-title" id="heroTitle">Championship Preview</h1>
+    <div class="championship-subtitle" id="heroSubtitle">Loading...</div>
+    
+    <div id="countdownContainer">
+      <!-- Countdown or "Game Time" message -->
+    </div>
+    
+    <div class="game-info-bar" id="gameInfoBar">
+      <span id="gameDate">📅 Loading...</span>
+      <span id="gameTime">⏰ Loading...</span>
+      <span id="gameLocation">📍 Loading...</span>
+    </div>
+  </div>
+
+  <!-- Team Matchup -->
+  <div class="matchup-card">
+    <div class="matchup-display">
+      <div class="matchup-team" id="awayTeamBox">
+        <img class="team-logo" id="awayTeamLogo" src="" alt="">
+        <div class="matchup-team-name" id="awayTeamName">--</div>
+        <div class="matchup-team-record" id="awayTeamRecord">--</div>
+        <div class="matchup-team-seed" id="awayTeamSeed"></div>
+      </div>
+      
+      <div class="matchup-vs">
+        <div class="matchup-vs-text">VS</div>
+        <div class="matchup-vs-label">Championship</div>
+      </div>
+      
+      <div class="matchup-team" id="homeTeamBox">
+        <img class="team-logo" id="homeTeamLogo" src="" alt="">
+        <div class="matchup-team-name" id="homeTeamName">--</div>
+        <div class="matchup-team-record" id="homeTeamRecord">--</div>
+        <div class="matchup-team-seed" id="homeTeamSeed"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Head to Head Record -->
+  <div class="section-card">
+    <div class="section-header gold">
+      <span style="font-size: 1.3rem;">⚔️</span>
+      <h2>Head-to-Head</h2>
+    </div>
+    <div class="section-content">
+      <div class="h2h-summary" id="h2hSummary">
+        Loading head-to-head record...
+      </div>
+    </div>
+  </div>
+
+  <!-- Season Journey -->
+  <div class="section-card">
+    <div class="section-header">
+      <span style="font-size: 1.3rem;">🛤️</span>
+      <h2>Season Journey</h2>
+    </div>
+    <div class="section-content">
+      <div class="journey-grid" id="journeyGrid">
+        <!-- Two columns for each team's journey -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Hitters -->
+  <div class="section-card">
+    <div class="section-header gold">
+      <span style="font-size: 1.3rem;">⭐</span>
+      <h2>Top Hitters</h2>
+    </div>
+    <div class="section-content">
+      <div class="comparison-grid" id="topHittersGrid">
+        Loading top hitters...
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Batting Stats -->
+  <div class="section-card">
+    <div class="section-header">
+      <span style="font-size: 1.3rem;">⚾</span>
+      <h2>Team Batting Comparison</h2>
+    </div>
+    <div class="section-content">
+      <div class="stats-comparison" id="battingComparison">
+        Loading batting stats...
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Pitching Stats -->
+  <div class="section-card">
+    <div class="section-header">
+      <span style="font-size: 1.3rem;">🥎</span>
+      <h2>Team Pitching Comparison</h2>
+    </div>
+    <div class="section-content">
+      <div class="stats-comparison" id="pitchingComparison">
+        Loading pitching stats...
+      </div>
+    </div>
+  </div>
+
+  <!-- Previous Matchups This Season -->
+  <div class="section-card">
+    <div class="section-header">
+      <span style="font-size: 1.3rem;">📜</span>
+      <h2>Previous Matchups</h2>
+    </div>
+    <div class="section-content">
+      <div id="historyContent">
+        Loading matchup history...
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { db, collection, doc, getDoc, getDocs, query, where, orderBy } from './firebase-config.js';
+  import {
+    getSeasonPlayerStatsOptimized,
+    getSeasonPitchingStatsOptimized,
+    getSeasonGames,
+    getCurrentSeason,
+    getAllSeasons
+  } from './firebase-data.js';
+
+  // Global data
+  let currentSeason = null;
+  let allGames = [];
+  let seasonGames = [];
+  let playerData = [];
+  let pitchingData = [];
+  let teamsData = {};
+  
+  // Target teams from URL
+  let homeTeam = '';
+  let awayTeam = '';
+  let gameDate = '';
+  let gameTime = '';
+
+  // URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramHome = urlParams.get('home');
+  const paramAway = urlParams.get('away');
+  const paramDate = urlParams.get('date');
+  const paramTime = urlParams.get('time') || '6:30 PM';
+  const gameId = urlParams.get('gameId');
+
+  // Initialize
+  init();
+
+  async function init() {
+    try {
+      console.log('🏆 Initializing Championship Preview...');
+      
+      // Get current season
+      currentSeason = await getCurrentSeason();
+      console.log('📅 Current season:', currentSeason.id);
+
+      // Load all data in parallel
+      const [seasons, batting, pitching, games, teamsSnap] = await Promise.all([
+        getAllSeasons(),
+        getSeasonPlayerStatsOptimized(currentSeason.id),
+        getSeasonPitchingStatsOptimized(currentSeason.id),
+        getSeasonGames(currentSeason.id),
+        getDocs(collection(db, 'teams'))
+      ]);
+
+      // Process teams
+      teamsSnap.forEach(docSnap => {
+        teamsData[docSnap.id] = { id: docSnap.id, ...docSnap.data() };
+      });
+
+      // Store season games
+      seasonGames = games;
+
+      // Load all historical games for H2H
+      const gamePromises = seasons.map(async (season) => {
+        try {
+          const seasonGamesList = await getSeasonGames(season.id);
+          return seasonGamesList.map(g => ({
+            ...g,
+            seasonId: season.id,
+            year: season.year,
+            season: season.season
+          }));
+        } catch (err) {
+          console.warn(`Could not load games for ${season.id}:`, err);
+          return [];
+        }
+      });
+      
+      const allSeasonGames = await Promise.all(gamePromises);
+      allGames = allSeasonGames.flat();
+      console.log(`📊 Loaded ${allGames.length} total games`);
+
+      // Process player data
+      playerData = (batting || []).map(p => ({
+        ...p,
+        name: p.playerName || p.name || p.id,
+        team: p.team || p.currentTeam || ''
+      }));
+
+      pitchingData = (pitching || []).map(p => ({
+        ...p,
+        name: p.playerName || p.name || p.id,
+        team: p.team || p.currentTeam || ''
+      }));
+
+      console.log(`👥 Players: ${playerData.length}, Pitchers: ${pitchingData.length}`);
+
+      // Determine teams from URL or find championship game
+      if (paramHome && paramAway) {
+        homeTeam = paramHome;
+        awayTeam = paramAway;
+        gameDate = paramDate || 'TBD';
+        gameTime = paramTime;
+      } else if (gameId) {
+        // Find game by ID
+        const game = seasonGames.find(g => g.id === gameId);
+        if (game) {
+          homeTeam = game.homeTeamName || capitalize(game.homeTeamId);
+          awayTeam = game.awayTeamName || capitalize(game.awayTeamId);
+          gameDate = formatGameDate(game.date);
+          gameTime = game.time || paramTime;
+        }
+      } else {
+        // Try to find the championship game
+        const champGame = seasonGames.find(g => {
+          const round = (g.round || g.playoff_round || '').toLowerCase();
+          const gameType = (g.gameType || g.game_type || '').toLowerCase();
+          return gameType === 'playoff' && round.includes('champ');
+        });
+        
+        if (champGame) {
+          homeTeam = champGame.homeTeamName || capitalize(champGame.homeTeamId);
+          awayTeam = champGame.awayTeamName || capitalize(champGame.awayTeamId);
+          gameDate = formatGameDate(champGame.date);
+          gameTime = champGame.time || paramTime;
+        }
+      }
+
+      if (!homeTeam || !awayTeam) {
+        showError('Championship teams not found. Please specify teams in URL.');
+        return;
+      }
+
+      console.log(`🏆 Championship: ${awayTeam} @ ${homeTeam}`);
+
+      // Render everything
+      renderHero();
+      renderMatchup();
+      renderCountdown();
+      renderH2H();
+      renderJourneys();
+      renderTopHitters();
+      renderBattingComparison();
+      renderPitchingComparison();
+      renderHistory();
+
+    } catch (error) {
+      console.error('❌ Error initializing:', error);
+      showError('Error loading championship data. Please try again.');
+    } finally {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+  }
+
+  function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  function formatTeamName(teamId) {
+    if (!teamId) return 'Unknown';
+    return teamId
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+      .trim();
+  }
+
+  function formatGameDate(date) {
+    if (!date) return 'TBD';
+    if (date.seconds) {
+      return new Date(date.seconds * 1000).toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+    if (date.toDate) {
+      return date.toDate().toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+    return date;
+  }
+
+  function formatSeasonName(seasonId) {
+    const parts = seasonId.split('-');
+    if (parts.length >= 2) {
+      const year = parts[0];
+      const season = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+      return `${season} ${year}`;
+    }
+    return seasonId;
+  }
+
+  function normalizeTeamName(name) {
+    return (name || '').toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+  }
+
+  function teamsMatch(name1, name2) {
+    const n1 = normalizeTeamName(name1);
+    const n2 = normalizeTeamName(name2);
+    return n1 === n2 || n1.includes(n2) || n2.includes(n1);
+  }
+
+  function getTeamName(game, side) {
+    return game[`${side}TeamName`] || game[`${side}Team`] || capitalize(game[`${side}TeamId`]) || '';
+  }
+
+  function renderHero() {
+    document.getElementById('heroTitle').textContent = 'Championship Preview';
+    document.getElementById('heroSubtitle').textContent = formatSeasonName(currentSeason.id);
+    
+    document.getElementById('gameDate').innerHTML = `📅 ${gameDate}`;
+    document.getElementById('gameTime').innerHTML = `⏰ ${gameTime}`;
+    document.getElementById('gameLocation').innerHTML = `📍 Mountainside`;
+  }
+
+  function renderCountdown() {
+    const container = document.getElementById('countdownContainer');
+    
+    // Try to parse the game date/time
+    let gameDateTime = null;
+    
+    if (gameDate && gameDate !== 'TBD') {
+      try {
+        // Parse date and time together
+        const dateStr = gameDate.replace(/,/g, '');
+        const timeStr = gameTime || '6:30 PM';
+        const fullDateStr = `${dateStr} ${timeStr}`;
+        gameDateTime = new Date(fullDateStr);
+        
+        // If invalid, try another format
+        if (isNaN(gameDateTime.getTime())) {
+          // Try parsing just the date
+          gameDateTime = new Date(gameDate);
+          if (!isNaN(gameDateTime.getTime())) {
+            // Add default game time (6:30 PM)
+            gameDateTime.setHours(18, 30, 0, 0);
+          }
+        }
+      } catch (e) {
+        console.warn('Could not parse game date for countdown:', e);
+      }
+    }
+
+    if (!gameDateTime || isNaN(gameDateTime.getTime())) {
+      container.innerHTML = `
+        <div class="countdown-complete">🏆 Championship Game</div>
+      `;
+      return;
+    }
+
+    function updateCountdown() {
+      const now = new Date();
+      const diff = gameDateTime - now;
+
+      if (diff <= 0) {
+        container.innerHTML = `
+          <div class="countdown-complete">🏆 It's Game Time!</div>
+        `;
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      container.innerHTML = `
+        <div class="countdown-container">
+          <div class="countdown-item">
+            <div class="countdown-value">${days}</div>
+            <div class="countdown-label">Days</div>
+          </div>
+          <div class="countdown-item">
+            <div class="countdown-value">${hours}</div>
+            <div class="countdown-label">Hours</div>
+          </div>
+          <div class="countdown-item">
+            <div class="countdown-value">${minutes}</div>
+            <div class="countdown-label">Mins</div>
+          </div>
+          <div class="countdown-item">
+            <div class="countdown-value">${seconds}</div>
+            <div class="countdown-label">Secs</div>
+          </div>
+        </div>
+      `;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  }
+
+  function renderMatchup() {
+    console.log('🎯 renderMatchup called with:', { homeTeam, awayTeam });
+    
+    // Away team
+    const awayTeamData = teamsData[awayTeam.toLowerCase()] || teamsData[normalizeTeamName(awayTeam)];
+    document.getElementById('awayTeamName').innerHTML = `<a href="team.html?team=${encodeURIComponent(awayTeam)}">${formatTeamName(awayTeam)}</a>`;
+    
+    // Use logos directory pattern (like weekend-preview), with teamsData as fallback
+    const awayLogoPath = `logos/${awayTeam.toLowerCase().replace(/\s+/g, '_')}.png`;
+    const awayLogoEl = document.getElementById('awayTeamLogo');
+    awayLogoEl.style.display = 'block'; // Ensure it's visible
+    awayLogoEl.src = awayTeamData?.logo || awayLogoPath;
+    awayLogoEl.alt = formatTeamName(awayTeam);
+    awayLogoEl.onerror = function() { 
+      console.warn('❌ Away logo failed to load:', this.src);
+      this.style.display = 'none'; 
+    };
+    console.log('🏷️ Away team:', awayTeam, '| Logo path:', awayLogoEl.src);
+    
+    const awayRecord = calculateTeamRecord(awayTeam);
+    document.getElementById('awayTeamRecord').textContent = awayRecord ? `${awayRecord.wins}-${awayRecord.losses}` : '--';
+
+    // Home team
+    const homeTeamData = teamsData[homeTeam.toLowerCase()] || teamsData[normalizeTeamName(homeTeam)];
+    document.getElementById('homeTeamName').innerHTML = `<a href="team.html?team=${encodeURIComponent(homeTeam)}">${formatTeamName(homeTeam)}</a>`;
+    
+    // Use logos directory pattern (like weekend-preview), with teamsData as fallback
+    const homeLogoPath = `logos/${homeTeam.toLowerCase().replace(/\s+/g, '_')}.png`;
+    const homeLogoEl = document.getElementById('homeTeamLogo');
+    homeLogoEl.style.display = 'block'; // Ensure it's visible
+    homeLogoEl.src = homeTeamData?.logo || homeLogoPath;
+    homeLogoEl.alt = formatTeamName(homeTeam);
+    homeLogoEl.onerror = function() { 
+      console.warn('❌ Home logo failed to load:', this.src);
+      this.style.display = 'none'; 
+    };
+    console.log('🏷️ Home team:', homeTeam, '| Logo path:', homeLogoEl.src);
+
+    const homeRecord = calculateTeamRecord(homeTeam);
+    document.getElementById('homeTeamRecord').textContent = homeRecord ? `${homeRecord.wins}-${homeRecord.losses}` : '--';
+
+    // Calculate seeds based on regular season standings
+    const seeds = calculateSeeds();
+    const awaySeed = seeds[normalizeTeamName(awayTeam)];
+    const homeSeed = seeds[normalizeTeamName(homeTeam)];
+    
+    document.getElementById('awayTeamSeed').textContent = awaySeed ? `#${awaySeed} Seed` : '';
+    document.getElementById('homeTeamSeed').textContent = homeSeed ? `#${homeSeed} Seed` : '';
+  }
+
+  function calculateTeamRecord(teamName) {
+    let wins = 0, losses = 0, ties = 0;
+
+    seasonGames.forEach(game => {
+      const home = getTeamName(game, 'home');
+      const away = getTeamName(game, 'away');
+      const winner = game.winner || '';
+      
+      const isHome = teamsMatch(home, teamName);
+      const isAway = teamsMatch(away, teamName);
+      
+      if (!isHome && !isAway) return;
+      if (game.homeScore === undefined || game.awayScore === undefined) return;
+
+      if (winner.toLowerCase() === 'tie') {
+        ties++;
+      } else if (teamsMatch(winner, teamName)) {
+        wins++;
+      } else if (winner) {
+        losses++;
+      }
+    });
+
+    return { wins, losses, ties };
+  }
+
+  function calculateSeeds() {
+    // Calculate standings from regular season games only with proper tiebreakers
+    const standings = {};
+    
+    seasonGames.forEach(game => {
+      const gameType = (game.gameType || game.game_type || '').toLowerCase();
+      if (gameType === 'playoff') return;
+      
+      const home = getTeamName(game, 'home');
+      const away = getTeamName(game, 'away');
+      const winner = game.winner || '';
+      const homeScore = parseInt(game.homeScore) || 0;
+      const awayScore = parseInt(game.awayScore) || 0;
+      
+      if (game.homeScore === undefined || game.awayScore === undefined) return;
+
+      [home, away].forEach(team => {
+        const key = normalizeTeamName(team);
+        if (!standings[key]) {
+          standings[key] = { 
+            name: team, 
+            wins: 0, 
+            losses: 0, 
+            runsFor: 0, 
+            runsAgainst: 0,
+            h2h: {} 
+          };
+        }
+      });
+
+      const homeKey = normalizeTeamName(home);
+      const awayKey = normalizeTeamName(away);
+
+      // Track runs
+      standings[homeKey].runsFor += homeScore;
+      standings[homeKey].runsAgainst += awayScore;
+      standings[awayKey].runsFor += awayScore;
+      standings[awayKey].runsAgainst += homeScore;
+
+      // Initialize h2h if needed
+      if (!standings[homeKey].h2h[awayKey]) {
+        standings[homeKey].h2h[awayKey] = { wins: 0, losses: 0 };
+      }
+      if (!standings[awayKey].h2h[homeKey]) {
+        standings[awayKey].h2h[homeKey] = { wins: 0, losses: 0 };
+      }
+
+      if (teamsMatch(winner, home)) {
+        standings[homeKey].wins++;
+        standings[awayKey].losses++;
+        standings[homeKey].h2h[awayKey].wins++;
+        standings[awayKey].h2h[homeKey].losses++;
+      } else if (teamsMatch(winner, away)) {
+        standings[awayKey].wins++;
+        standings[homeKey].losses++;
+        standings[awayKey].h2h[homeKey].wins++;
+        standings[homeKey].h2h[awayKey].losses++;
+      }
+    });
+
+    // Calculate win percentage and run differential
+    const teamsArray = Object.values(standings).map(team => ({
+      ...team,
+      winPct: (team.wins + team.losses) > 0 ? team.wins / (team.wins + team.losses) : 0,
+      runDifferential: team.runsFor - team.runsAgainst
+    }));
+
+    // Sort with proper tiebreakers
+    const sorted = sortWithTiebreakers(teamsArray);
+
+    const seeds = {};
+    sorted.forEach((team, index) => {
+      seeds[normalizeTeamName(team.name)] = index + 1;
+    });
+
+    return seeds;
+  }
+
+  /**
+   * Compare head-to-head record between two teams
+   */
+  function compareHeadToHead(teamA, teamB) {
+    const keyB = normalizeTeamName(teamB.name);
+    const aVsB = teamA.h2h[keyB];
+    
+    if (!aVsB) return 0;
+    
+    const totalGames = aVsB.wins + aVsB.losses;
+    if (totalGames === 0) return 0;
+    
+    const aH2HWinPct = aVsB.wins / totalGames;
+    const bH2HWinPct = aVsB.losses / totalGames;
+    
+    if (aH2HWinPct !== bH2HWinPct) {
+      return bH2HWinPct - aH2HWinPct; // Higher win pct = better = lower return value for sort
+    }
+    
+    return 0;
+  }
+
+  /**
+   * Sort teams with proper tiebreaker handling
+   * Tiebreaker order:
+   * 1. Win Percentage
+   * 2. Head-to-Head (2-team ties ONLY)
+   * 3. Runs Allowed (fewer is better)
+   * 4. Run Differential (higher is better)
+   */
+  function sortWithTiebreakers(teams) {
+    // First sort by win percentage
+    const sorted = [...teams].sort((a, b) => b.winPct - a.winPct);
+    
+    // Find groups of teams with identical win percentages
+    const winPctGroups = [];
+    let currentGroup = [sorted[0]];
+    
+    for (let i = 1; i < sorted.length; i++) {
+      if (Math.abs(sorted[i].winPct - sorted[i-1].winPct) < 0.0001) {
+        currentGroup.push(sorted[i]);
+      } else {
+        winPctGroups.push(currentGroup);
+        currentGroup = [sorted[i]];
+      }
+    }
+    winPctGroups.push(currentGroup);
+    
+    // Apply appropriate tiebreakers to each group
+    const brokenTies = winPctGroups.map(group => {
+      if (group.length === 1) {
+        return group;
+      } else if (group.length === 2) {
+        // 2-team tie: Use Head-to-Head
+        const [a, b] = group;
+        const h2hComp = compareHeadToHead(a, b);
+        
+        if (h2hComp !== 0) {
+          return h2hComp > 0 ? [b, a] : [a, b];
+        } else {
+          // H2H tied, use Runs Allowed
+          return breakTieByRunsAllowed(group);
+        }
+      } else {
+        // 3+ team tie: Skip H2H, use Runs Allowed directly
+        return breakTieByRunsAllowed(group);
+      }
+    });
+    
+    return brokenTies.flat();
+  }
+
+  /**
+   * Break ties using Runs Allowed (fewer is better), then Run Differential
+   */
+  function breakTieByRunsAllowed(teams) {
+    return [...teams].sort((a, b) => {
+      // Runs Allowed (fewer is better)
+      if (a.runsAgainst !== b.runsAgainst) {
+        return a.runsAgainst - b.runsAgainst;
+      }
+      // Run Differential (higher is better)
+      return b.runDifferential - a.runDifferential;
+    });
+  }
+
+  function renderH2H() {
+    // Find all games between these teams (all-time)
+    const h2hGames = allGames.filter(g => {
+      const home = getTeamName(g, 'home');
+      const away = getTeamName(g, 'away');
+      const hasTeam1 = teamsMatch(home, homeTeam) || teamsMatch(away, homeTeam);
+      const hasTeam2 = teamsMatch(home, awayTeam) || teamsMatch(away, awayTeam);
+      return hasTeam1 && hasTeam2 && g.winner;
+    });
+
+    let homeWins = 0, awayWins = 0, ties = 0;
+
+    h2hGames.forEach(game => {
+      const winner = game.winner || '';
+      if (winner.toLowerCase() === 'tie') {
+        ties++;
+      } else if (teamsMatch(winner, homeTeam)) {
+        homeWins++;
+      } else if (teamsMatch(winner, awayTeam)) {
+        awayWins++;
+      }
+    });
+
+    const total = homeWins + awayWins + ties;
+    
+    let html = '';
+    if (total === 0) {
+      html = `
+        <div class="h2h-record">First Meeting!</div>
+        <div class="h2h-subtitle">These teams have never faced each other</div>
+      `;
+    } else {
+      const recordStr = ties > 0 
+        ? `${formatTeamName(homeTeam)} ${homeWins} - ${awayWins} - ${ties} ${formatTeamName(awayTeam)}`
+        : `${formatTeamName(homeTeam)} ${homeWins} - ${awayWins} ${formatTeamName(awayTeam)}`;
+      
+      html = `
+        <div class="h2h-record">${recordStr}</div>
+        <div class="h2h-subtitle">All-time series (${total} games)</div>
+      `;
+    }
+
+    document.getElementById('h2hSummary').innerHTML = html;
+  }
+
+  function renderJourneys() {
+    const container = document.getElementById('journeyGrid');
+    
+    // Get journey for each team
+    const awayJourney = getTeamJourney(awayTeam);
+    const homeJourney = getTeamJourney(homeTeam);
+
+    container.innerHTML = `
+      <div class="journey-column">
+        <div class="journey-column-header">
+          <span>🛤️</span> ${formatTeamName(awayTeam)}
+        </div>
+        ${renderJourneySteps(awayJourney, awayTeam)}
+      </div>
+      <div class="journey-column">
+        <div class="journey-column-header">
+          <span>🛤️</span> ${formatTeamName(homeTeam)}
+        </div>
+        ${renderJourneySteps(homeJourney, homeTeam)}
+      </div>
+    `;
+  }
+
+  function getTeamJourney(teamName) {
+    const teamGames = seasonGames
+      .filter(g => {
+        const home = getTeamName(g, 'home');
+        const away = getTeamName(g, 'away');
+        return teamsMatch(home, teamName) || teamsMatch(away, teamName);
+      })
+      .map(g => {
+        const home = getTeamName(g, 'home');
+        const away = getTeamName(g, 'away');
+        const isHome = teamsMatch(home, teamName);
+        const opponent = isHome ? away : home;
+        const teamScore = isHome ? g.homeScore : g.awayScore;
+        const oppScore = isHome ? g.awayScore : g.homeScore;
+        const gameType = (g.gameType || g.game_type || '').toLowerCase();
+        const round = g.round || g.playoff_round || (gameType === 'playoff' ? 'Playoff' : 'Regular');
+        const isPlayoff = gameType === 'playoff';
+        const isChampionship = round.toLowerCase().includes('champ');
+        
+        // Check if game has been played (has a winner and scores)
+        const hasBeenPlayed = g.winner && g.winner.trim() !== '' && 
+                              teamScore !== undefined && oppScore !== undefined &&
+                              (teamScore !== 0 || oppScore !== 0 || g.winner.toLowerCase() !== 'tie');
+        
+        const didWin = hasBeenPlayed && teamsMatch(g.winner, teamName);
+        const isPending = !hasBeenPlayed;
+        
+        // Parse date for sorting
+        let dateObj = new Date(0);
+        if (g.date) {
+          if (g.date.seconds) {
+            dateObj = new Date(g.date.seconds * 1000);
+          } else if (g.date.toDate) {
+            dateObj = g.date.toDate();
+          } else {
+            dateObj = new Date(g.date);
+          }
+        }
+
+        return {
+          opponent,
+          teamScore: hasBeenPlayed ? teamScore : null,
+          oppScore: hasBeenPlayed ? oppScore : null,
+          didWin,
+          isPending,
+          round,
+          isPlayoff,
+          isChampionship,
+          date: dateObj
+        };
+      })
+      // Only include played games OR championship games (even if pending)
+      .filter(g => !g.isPending || g.isChampionship)
+      .sort((a, b) => {
+        // Championship always last
+        if (a.isChampionship && !b.isChampionship) return 1;
+        if (b.isChampionship && !a.isChampionship) return -1;
+        return a.date - b.date;
+      });
+
+    return teamGames;
+  }
+
+  function renderJourneySteps(journey, teamName) {
+    if (journey.length === 0) {
+      return '<div class="empty-state"><p>No games found</p></div>';
+    }
+
+    return journey.map(game => {
+      const typeClass = game.isChampionship ? 'championship' : (game.isPlayoff ? 'playoff' : '');
+      
+      // Handle pending games (championship not yet played)
+      if (game.isPending) {
+        return `
+          <div class="journey-step ${typeClass}">
+            <div class="journey-round">${game.round}</div>
+            <div class="journey-result">
+              <span style="color: var(--accent-color); font-weight: 700;">❓ TBD</span>
+              vs ${formatTeamName(game.opponent)}
+            </div>
+            <div class="journey-score">-</div>
+          </div>
+        `;
+      }
+      
+      const resultClass = game.didWin ? 'win' : 'loss';
+      const indicator = game.didWin ? '✅' : '❌';
+      const resultText = game.didWin ? 'W' : 'L';
+      
+      return `
+        <div class="journey-step ${typeClass} ${resultClass}">
+          <div class="journey-round">${game.round}</div>
+          <div class="journey-result">
+            <span class="${game.didWin ? 'win-indicator' : 'loss-indicator'}">${indicator} ${resultText}</span>
+            vs ${formatTeamName(game.opponent)}
+          </div>
+          <div class="journey-score">${game.teamScore}-${game.oppScore}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderTopHitters() {
+    const container = document.getElementById('topHittersGrid');
+    
+    const awayPlayers = getTopPlayers(awayTeam, 5);
+    const homePlayers = getTopPlayers(homeTeam, 5);
+
+    container.innerHTML = `
+      <div class="team-players">
+        <div class="team-players-header">${formatTeamName(awayTeam)}</div>
+        ${renderPlayerCards(awayPlayers)}
+      </div>
+      <div class="vs-divider">VS</div>
+      <div class="team-players">
+        <div class="team-players-header">${formatTeamName(homeTeam)}</div>
+        ${renderPlayerCards(homePlayers)}
+      </div>
+    `;
+  }
+
+  function getTopPlayers(teamName, count) {
+    return playerData
+      .filter(p => {
+        if (!teamsMatch(p.team, teamName)) return false;
+        // Require minimum 20 plate appearances
+        const pa = (p.atBats || p.ab || 0) + (p.walks || p.bb || 0) + (p.hbp || 0) + (p.sf || 0);
+        return pa >= 20;
+      })
+      .sort((a, b) => {
+        const bpiA = a.acesBPI || a.AcesWar || 0;
+        const bpiB = b.acesBPI || b.AcesWar || 0;
+        return bpiB - bpiA;
+      })
+      .slice(0, count);
+  }
+
+  function renderPlayerCards(players) {
+    if (players.length === 0) {
+      return '<div class="no-data">No players found</div>';
+    }
+
+    return players.map((player, index) => {
+      const playerId = player.id || player.playerId || player.name?.toLowerCase().replace(/\s+/g, '_');
+      const ba = (player.ba || player.avg || player.battingAverage || 0).toFixed(3);
+      const hits = player.hits || player.h || 0;
+      const runs = player.runs || player.r || 0;
+      const acesBPI = (player.acesBPI || player.AcesWar || 0).toFixed(1);
+      const isMVP = index === 0;
+
+      return `
+        <div class="player-card ${isMVP ? 'mvp' : ''}">
+          <span class="player-rank">${index + 1}</span>
+          <span class="player-name">
+            <a href="player.html?id=${encodeURIComponent(playerId)}">${player.name || 'Unknown'}</a>
+          </span>
+          <div class="player-stats">
+            <div class="player-stat">
+              <div class="player-stat-value">${ba}</div>
+              <div class="player-stat-label">AVG</div>
+            </div>
+            <div class="player-stat">
+              <div class="player-stat-value">${hits}</div>
+              <div class="player-stat-label">Hits</div>
+            </div>
+            <div class="player-stat">
+              <div class="player-stat-value">${runs}</div>
+              <div class="player-stat-label">Runs</div>
+            </div>
+            <div class="player-stat">
+              <div class="player-stat-value">${acesBPI}</div>
+              <div class="player-stat-label">BPI</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderBattingComparison() {
+    const container = document.getElementById('battingComparison');
+    
+    const awayStats = calculateTeamBattingStats(awayTeam);
+    const homeStats = calculateTeamBattingStats(homeTeam);
+
+    // Determine advantages
+    const avgAdv = parseFloat(awayStats.avg) > parseFloat(homeStats.avg) ? 'away' : 
+                   parseFloat(homeStats.avg) > parseFloat(awayStats.avg) ? 'home' : 'tie';
+    const runsAdv = parseFloat(awayStats.runsPerGame) > parseFloat(homeStats.runsPerGame) ? 'away' :
+                    parseFloat(homeStats.runsPerGame) > parseFloat(awayStats.runsPerGame) ? 'home' : 'tie';
+    const hitsAdv = parseFloat(awayStats.hitsPerGame) > parseFloat(homeStats.hitsPerGame) ? 'away' :
+                    parseFloat(homeStats.hitsPerGame) > parseFloat(awayStats.hitsPerGame) ? 'home' : 'tie';
+
+    container.innerHTML = `
+      <div class="team-stats-box">
+        <h4>${formatTeamName(awayTeam)}</h4>
+        <div class="stat-row">
+          <span class="stat-label">Team AVG</span>
+          <span class="stat-value ${avgAdv === 'away' ? 'advantage' : ''}">.${awayStats.avg}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Runs/Game</span>
+          <span class="stat-value ${runsAdv === 'away' ? 'advantage' : ''}">${awayStats.runsPerGame}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Hits/Game</span>
+          <span class="stat-value ${hitsAdv === 'away' ? 'advantage' : ''}">${awayStats.hitsPerGame}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Total Runs</span>
+          <span class="stat-value">${awayStats.totalRuns}</span>
+        </div>
+      </div>
+      <div class="vs-divider">VS</div>
+      <div class="team-stats-box">
+        <h4>${formatTeamName(homeTeam)}</h4>
+        <div class="stat-row">
+          <span class="stat-label">Team AVG</span>
+          <span class="stat-value ${avgAdv === 'home' ? 'advantage' : ''}">.${homeStats.avg}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Runs/Game</span>
+          <span class="stat-value ${runsAdv === 'home' ? 'advantage' : ''}">${homeStats.runsPerGame}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Hits/Game</span>
+          <span class="stat-value ${hitsAdv === 'home' ? 'advantage' : ''}">${homeStats.hitsPerGame}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Total Runs</span>
+          <span class="stat-value">${homeStats.totalRuns}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function calculateTeamBattingStats(teamName) {
+    const teamPlayers = playerData.filter(p => teamsMatch(p.team, teamName));
+    
+    if (teamPlayers.length === 0) {
+      return { avg: '000', runsPerGame: '0.0', hitsPerGame: '0.0', totalRuns: 0 };
+    }
+
+    const totalAtBats = teamPlayers.reduce((sum, p) => sum + (Number(p.atBats || p.ab || 0)), 0);
+    const totalHits = teamPlayers.reduce((sum, p) => sum + (Number(p.hits || p.h || 0)), 0);
+    const totalRuns = teamPlayers.reduce((sum, p) => sum + (Number(p.runs || p.r || 0)), 0);
+    const totalGames = Math.max(...teamPlayers.map(p => Number(p.games || p.g || 0)), 1);
+
+    const avg = totalAtBats > 0 ? Math.round((totalHits / totalAtBats) * 1000) : 0;
+    const runsPerGame = (totalRuns / totalGames).toFixed(1);
+    const hitsPerGame = (totalHits / totalGames).toFixed(1);
+
+    return {
+      avg: avg.toString().padStart(3, '0'),
+      runsPerGame,
+      hitsPerGame,
+      totalRuns
+    };
+  }
+
+  function renderPitchingComparison() {
+    const container = document.getElementById('pitchingComparison');
+    
+    const awayStats = calculateTeamPitchingStats(awayTeam);
+    const homeStats = calculateTeamPitchingStats(homeTeam);
+
+    // Determine advantages (lower ERA is better)
+    const eraAdv = parseFloat(awayStats.era) < parseFloat(homeStats.era) ? 'away' :
+                   parseFloat(homeStats.era) < parseFloat(awayStats.era) ? 'home' : 'tie';
+
+    container.innerHTML = `
+      <div class="team-stats-box">
+        <h4>${formatTeamName(awayTeam)}</h4>
+        <div class="stat-row">
+          <span class="stat-label">Team ERA</span>
+          <span class="stat-value ${eraAdv === 'away' ? 'advantage' : ''}">${awayStats.era}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Innings Pitched</span>
+          <span class="stat-value">${awayStats.totalIP}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Runs Allowed</span>
+          <span class="stat-value">${awayStats.totalRunsAllowed}</span>
+        </div>
+      </div>
+      <div class="vs-divider">VS</div>
+      <div class="team-stats-box">
+        <h4>${formatTeamName(homeTeam)}</h4>
+        <div class="stat-row">
+          <span class="stat-label">Team ERA</span>
+          <span class="stat-value ${eraAdv === 'home' ? 'advantage' : ''}">${homeStats.era}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Innings Pitched</span>
+          <span class="stat-value">${homeStats.totalIP}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Runs Allowed</span>
+          <span class="stat-value">${homeStats.totalRunsAllowed}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function calculateTeamPitchingStats(teamName) {
+    const teamPitchers = pitchingData.filter(p => teamsMatch(p.team, teamName));
+    
+    if (teamPitchers.length === 0) {
+      return { era: 'N/A', totalIP: '0.0', totalRunsAllowed: 0 };
+    }
+
+    const totalIP = teamPitchers.reduce((sum, p) => sum + parseFloat(p.inningsPitched || p.IP || 0), 0);
+    const totalRunsAllowed = teamPitchers.reduce((sum, p) => sum + (Number(p.runsAllowed || p['runs allowed'] || 0)), 0);
+
+    const era = totalIP > 0 ? ((totalRunsAllowed * 7) / totalIP).toFixed(2) : 'N/A';
+
+    return {
+      era,
+      totalIP: totalIP.toFixed(1),
+      totalRunsAllowed
+    };
+  }
+
+  function renderHistory() {
+    const container = document.getElementById('historyContent');
+    
+    // Get all matchups between these teams
+    const matchups = allGames.filter(g => {
+      const home = getTeamName(g, 'home');
+      const away = getTeamName(g, 'away');
+      const hasTeam1 = teamsMatch(home, homeTeam) || teamsMatch(away, homeTeam);
+      const hasTeam2 = teamsMatch(home, awayTeam) || teamsMatch(away, awayTeam);
+      return hasTeam1 && hasTeam2 && g.winner;
+    }).sort((a, b) => {
+      // Sort by date descending
+      const dateA = a.date?.seconds ? a.date.seconds : new Date(a.date || 0).getTime() / 1000;
+      const dateB = b.date?.seconds ? b.date.seconds : new Date(b.date || 0).getTime() / 1000;
+      return dateB - dateA;
+    });
+
+    if (matchups.length === 0) {
+      container.innerHTML = '<div class="no-data">No previous matchups found between these teams.</div>';
+      return;
+    }
+
+    const tableHtml = `
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Home</th>
+            <th>Score</th>
+            <th>Away</th>
+            <th>Winner</th>
+            <th>Season</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${matchups.map(game => {
+            const home = getTeamName(game, 'home');
+            const away = getTeamName(game, 'away');
+            const homeScore = game.homeScore ?? game['home score'] ?? '-';
+            const awayScore = game.awayScore ?? game['away score'] ?? '-';
+            const winner = game.winner || '';
+            const isHomeWinner = teamsMatch(winner, home);
+            const isAwayWinner = teamsMatch(winner, away);
+            
+            // Format date
+            let dateStr = '';
+            if (game.date) {
+              if (game.date.seconds) {
+                dateStr = new Date(game.date.seconds * 1000).toLocaleDateString();
+              } else {
+                dateStr = new Date(game.date).toLocaleDateString();
+              }
+            }
+            
+            // Format season
+            const seasonStr = game.seasonId ? formatSeasonName(game.seasonId) : 
+                             (game.season && game.year ? `${capitalize(game.season)} ${game.year}` : '');
+
+            return `
+              <tr>
+                <td>${dateStr}</td>
+                <td class="${isHomeWinner ? 'winner-highlight' : ''}">${formatTeamName(home)}</td>
+                <td>${homeScore} - ${awayScore}</td>
+                <td class="${isAwayWinner ? 'winner-highlight' : ''}">${formatTeamName(away)}</td>
+                <td class="winner-highlight">${formatTeamName(winner)}</td>
+                <td>${seasonStr}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top: 1rem; text-align: center; color: #666; font-size: 0.9rem;">
+        Showing ${matchups.length} previous matchup${matchups.length !== 1 ? 's' : ''}
+      </div>
+    `;
+
+    container.innerHTML = tableHtml;
+  }
+
+  function showError(message) {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.querySelector('.page-container').innerHTML = `
+      <div class="section-card">
+        <div class="section-content">
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <p>${message}</p>
+            <p style="margin-top: 1rem;">
+              <a href="playoffs.html" style="color: var(--primary-color);">Return to Playoffs</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Hide loading on window load
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }, 500);
+  });
+</script>
+
+<script src="team-colors.js"></script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

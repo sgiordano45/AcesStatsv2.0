@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Who Am I? - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  
+  /* Who Am I theme - Teal/Mystery */
+  --clue-hidden: #1e3a5f;
+  --clue-revealed: #0d9488;
+  --clue-gradient: linear-gradient(135deg, #0d9488, #0891b2);
+  --correct: #10b981;
+  --incorrect: #ef4444;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.softball-spinner::before {
+  content: '⚾';
+  font-size: 60px;
+  animation: spin 1.5s ease-in-out infinite;
+  display: block;
+}
+
+@keyframes spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+
+/* Page Container */
+.page-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Page Header */
+.page-header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #0d9488 100%);
+  color: white;
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.back-link {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(255,255,255,0.15);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.back-link:hover {
+  background: rgba(255,255,255,0.25);
+  color: white;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.page-header h1 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.page-header .subtitle {
+  opacity: 0.9;
+  font-size: 0.9rem;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.puzzle-date {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-top: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Score Display */
+.score-display {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  background: var(--card-bg);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.score-item {
+  text-align: center;
+}
+
+.score-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--clue-revealed);
+}
+
+.score-label {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* User Stats Section */
+.user-stats-container {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.user-stats-content {
+  text-align: center;
+}
+
+.sign-in-prompt {
+  color: var(--text-light);
+  font-size: 0.85rem;
+}
+
+.sign-in-prompt a {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.user-greeting {
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.lifetime-stats {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.lifetime-stat {
+  text-align: center;
+}
+
+.lifetime-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--clue-revealed);
+  display: block;
+}
+
+.lifetime-label {
+  font-size: 0.65rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Clues Container */
+.clues-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-md);
+}
+
+.clues-title {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Clue Cards */
+.clue-card {
+  background: var(--clue-hidden);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.clue-card:last-child {
+  margin-bottom: 0;
+}
+
+.clue-card.revealed {
+  background: var(--clue-gradient);
+  cursor: default;
+}
+
+.clue-card.hidden:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+}
+
+.clue-card.next-clue {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(13, 148, 136, 0); }
+}
+
+.clue-number {
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.clue-content {
+  flex: 1;
+  color: white;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.clue-card.hidden .clue-content {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.clue-points {
+  background: rgba(255,255,255,0.2);
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+
+/* Guess Section */
+.guess-section {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-md);
+}
+
+.guess-input-container {
+  position: relative;
+}
+
+.guess-input {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.guess-input:focus {
+  border-color: var(--clue-revealed);
+}
+
+.guess-input:disabled {
+  background: #f7fafc;
+  cursor: not-allowed;
+}
+
+/* Autocomplete Dropdown */
+.autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+  display: none;
+}
+
+.autocomplete-dropdown.active {
+  display: block;
+}
+
+.autocomplete-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item:hover {
+  background: #f7fafc;
+}
+
+.autocomplete-item.selected {
+  background: rgba(13, 148, 136, 0.1);
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-btn.primary {
+  background: var(--clue-gradient);
+  color: white;
+}
+
+.action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.4);
+}
+
+.action-btn.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.action-btn.secondary {
+  background: var(--card-bg);
+  color: var(--text-dark);
+  border: 2px solid var(--border-color);
+}
+
+.action-btn.secondary:hover {
+  border-color: var(--clue-revealed);
+  color: var(--clue-revealed);
+}
+
+/* Result Display */
+.result-display {
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+  animation: fadeIn 0.5s ease;
+}
+
+.result-display.correct {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  border: 2px solid var(--correct);
+}
+
+.result-display.incorrect {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  border: 2px solid var(--incorrect);
+}
+
+.result-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.result-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.result-player {
+  font-size: 1.25rem;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.result-score {
+  font-size: 1rem;
+  color: var(--text-light);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Wrong Guess Feedback */
+.wrong-guess {
+  text-align: center;
+  color: var(--incorrect);
+  font-weight: 600;
+  margin-top: 0.75rem;
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+/* Game Over Buttons */
+.game-over-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+/* How to Play */
+.how-to-play {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.how-to-play h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.how-to-play-content {
+  display: none;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+.how-to-play.expanded .how-to-play-content {
+  display: block;
+}
+
+.points-table {
+  width: 100%;
+  margin: 1rem 0;
+  border-collapse: collapse;
+}
+
+.points-table th,
+.points-table td {
+  padding: 0.5rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.points-table th {
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  padding: 1rem;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.3s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.stat-box {
+  padding: 0.5rem;
+}
+
+.stat-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+}
+
+/* Share Button */
+.share-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--clue-gradient);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 auto;
+  display: block;
+}
+
+.share-btn:hover {
+  opacity: 0.9;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text-dark);
+  color: white;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 480px) {
+  .clue-card {
+    padding: 0.85rem 1rem;
+  }
+  
+  .clue-number {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+  
+  .clue-content {
+    font-size: 0.9rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<!-- Navigation placeholder -->
+<nav id="main-nav"></nav>
+
+<div class="page-container">
+  <div class="page-header">
+    <a href="games.html" class="back-link">← Games</a>
+    <h1>🎭 Who Am I?</h1>
+    <p class="subtitle">Reveal clues and guess the player</p>
+    <div class="puzzle-date" id="puzzleDate">Puzzle #1</div>
+  </div>
+
+  <!-- Score Display -->
+  <div class="score-display">
+    <div class="score-item">
+      <div class="score-value" id="cluesRevealed">0/7</div>
+      <div class="score-label">Clues</div>
+    </div>
+    <div class="score-item">
+      <div class="score-value" id="pointsAvailable">7</div>
+      <div class="score-label">Points Available</div>
+    </div>
+  </div>
+
+  <!-- User Stats Section -->
+  <div class="user-stats-container" id="userStatsContainer">
+    <div class="user-stats-content">
+      <div class="sign-in-prompt">
+        <span>🔒</span>
+        <a href="signin.html">Sign in</a> to track your stats across devices
+      </div>
+    </div>
+  </div>
+
+  <!-- Clues Container -->
+  <div class="clues-container">
+    <div class="clues-title">🔍 Clues</div>
+    <div id="cluesList">
+      <!-- Clues generated by JS -->
+    </div>
+  </div>
+
+  <!-- Guess Section -->
+  <div class="guess-section" id="guessSection">
+    <div class="guess-input-container">
+      <input type="text" class="guess-input" id="guessInput" placeholder="Type a player's name..." autocomplete="off">
+      <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+    </div>
+    <div id="wrongGuess" class="wrong-guess" style="display: none;"></div>
+    <div class="action-buttons">
+      <button class="action-btn secondary" onclick="revealNextClue()" id="revealBtn">💡 Reveal Clue</button>
+      <button class="action-btn primary" onclick="submitGuess()" id="submitBtn">✓ Submit Guess</button>
+    </div>
+  </div>
+
+  <!-- Result Display (shown after game ends) -->
+  <div id="resultDisplay" style="display: none;"></div>
+
+  <!-- Game Over Buttons -->
+  <div class="game-over-buttons" id="gameOverButtons" style="display: none;">
+    <button class="action-btn primary" onclick="showStats()">📊 Stats</button>
+    <button class="action-btn secondary" onclick="shareResults()">📤 Share</button>
+  </div>
+
+  <!-- How to Play -->
+  <div class="how-to-play" id="howToPlay">
+    <h3 onclick="toggleHowToPlay()">📖 How to Play <span id="howToPlayToggle">▼</span></h3>
+    <div class="how-to-play-content">
+      <p>Guess the mystery Aces player by revealing clues one at a time!</p>
+      
+      <p><strong>How it works:</strong></p>
+      <ul>
+        <li>Start with 7 clues hidden</li>
+        <li>Click "Reveal Clue" to uncover the next hint</li>
+        <li>Guess the player at any time</li>
+        <li>Earlier guesses earn more points!</li>
+      </ul>
+      
+      <p><strong>Point Values:</strong></p>
+      <table class="points-table">
+        <tr><th>Clues Revealed</th><th>Points</th></tr>
+        <tr><td>0 (blind guess!)</td><td>8 pts</td></tr>
+        <tr><td>1</td><td>7 pts</td></tr>
+        <tr><td>2</td><td>6 pts</td></tr>
+        <tr><td>3</td><td>5 pts</td></tr>
+        <tr><td>4</td><td>4 pts</td></tr>
+        <tr><td>5</td><td>3 pts</td></tr>
+        <tr><td>6</td><td>2 pts</td></tr>
+        <tr><td>7</td><td>1 pt</td></tr>
+      </table>
+      
+      <p>Clues get easier as you go - early clues are stats, later clues reveal teams!</p>
+      <p style="margin-top: 1rem;">A new puzzle is available each day at midnight!</p>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Modal -->
+<div class="modal-overlay" id="statsModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>📊 Statistics</h2>
+    </div>
+    
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-number" id="statPlayed">0</div>
+        <div class="stat-label">Played</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="statWins">0</div>
+        <div class="stat-label">Wins</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="statAvgScore">0</div>
+        <div class="stat-label">Avg Score</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="statStreak">0</div>
+        <div class="stat-label">Streak</div>
+      </div>
+    </div>
+    
+    <button class="share-btn" onclick="shareResults()">📤 Share Results</button>
+    
+    <div class="action-buttons" style="margin-top: 1rem;">
+      <button class="action-btn secondary" onclick="closeStatsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { 
+  db, 
+  doc,
+  getDoc
+} from './firebase-config.js';
+
+import {
+  setDoc,
+  serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+import { getAllPlayerStatsOptimized } from './firebase-data.js';
+
+import {
+  getCurrentUser,
+  onAuthChange
+} from './firebase-auth.js';
+
+// ============================================
+// VERSION CHECK - Increment to clear old localStorage data
+// ============================================
+const DATA_VERSION = 3;
+const VERSION_KEY = 'acesWhoAmI_dataVersion';
+
+(function checkDataVersion() {
+  const storedVersion = localStorage.getItem(VERSION_KEY);
+  if (!storedVersion || parseInt(storedVersion) < DATA_VERSION) {
+    console.log('🔄 Clearing old Who Am I data (version update)');
+    localStorage.removeItem('acesWhoAmI_game');
+    localStorage.removeItem('acesWhoAmI_stats');
+    localStorage.setItem(VERSION_KEY, String(DATA_VERSION));
+  }
+})();
+
+// ============================================
+// CONFIGURATION
+// ============================================
+const LAUNCH_YEAR = 2026;
+const LAUNCH_MONTH = 0; // January (0-indexed)
+const LAUNCH_DAY = 6;
+const NUM_CLUES = 7;
+const MAX_POINTS = 8; // Points for blind guess
+
+// ============================================
+// SUBSTITUTE SEASON HELPER
+// ============================================
+function isSubstituteSeason(season) {
+  return season.sub === 'Yes' || season.sub === 'yes' || season.sub === true;
+}
+
+function getNonSubSeasons(player) {
+  if (!player.seasons) return [];
+  return Object.entries(player.seasons)
+    .filter(([, s]) => !isSubstituteSeason(s))
+    .map(([id, s]) => ({ seasonId: id, ...s }));
+}
+
+// ============================================
+// AUTH STATE
+// ============================================
+let currentUser = null;
+let userStats = null;
+
+// ============================================
+// GAME STATE
+// ============================================
+let allPlayers = [];
+let playerNames = [];
+let todaysPuzzle = null;
+let gameState = {
+  cluesRevealed: 0,
+  guesses: [],
+  gameOver: false,
+  won: false,
+  score: 0
+};
+
+// ============================================
+// SEEDED RANDOM
+// ============================================
+function seededRandom(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function getDayNumber() {
+  // Use UTC to avoid timezone edge cases causing same day across midnight
+  const start = new Date(Date.UTC(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY));
+  const now = new Date();
+  const nowUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const daysSinceLaunch = Math.floor((nowUTC - start) / (1000 * 60 * 60 * 24));
+  return Math.max(1, daysSinceLaunch + 1);
+}
+
+function shuffleWithSeed(array, seed) {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    seed++;
+    const j = Math.floor(seededRandom(seed) * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+// ============================================
+// CLUE GENERATION
+// ============================================
+function generateClues(player) {
+  const clues = [];
+  const seasons = getNonSubSeasons(player);
+  const career = player.career || {};
+  
+  // Sort seasons by year (newest first)
+  seasons.sort((a, b) => b.seasonId.localeCompare(a.seasonId));
+  
+  // Get unique teams
+  const teams = [...new Set(seasons.map(s => s.team).filter(Boolean))];
+  
+  // Get season with best hits
+  const bestHitsSeason = seasons.reduce((best, s) => 
+    (s.hits || 0) > (best?.hits || 0) ? s : best, null);
+  
+  // Get season with best runs
+  const bestRunsSeason = seasons.reduce((best, s) => 
+    (s.runs || 0) > (best?.runs || 0) ? s : best, null);
+  
+  // Get season with best walks
+  const bestWalksSeason = seasons.reduce((best, s) => 
+    (s.walks || 0) > (best?.walks || 0) ? s : best, null);
+  
+  // CLUE 1 (Hardest): Specific season stat
+  if (bestHitsSeason && bestHitsSeason.hits >= 10) {
+    const [year, szn] = bestHitsSeason.seasonId.split('-');
+    clues.push(`Had ${bestHitsSeason.hits} hits in ${szn.charAt(0).toUpperCase() + szn.slice(1)} ${year}`);
+  } else if (career.hits) {
+    clues.push(`Has ${career.hits} career hits`);
+  } else {
+    clues.push(`Has played in the league`);
+  }
+  
+  // CLUE 2: Another specific season stat
+  if (bestRunsSeason && bestRunsSeason.runs >= 5) {
+    const [year, szn] = bestRunsSeason.seasonId.split('-');
+    clues.push(`Scored ${bestRunsSeason.runs} runs in ${szn.charAt(0).toUpperCase() + szn.slice(1)} ${year}`);
+  } else if (career.runs) {
+    clues.push(`Has scored ${career.runs} career runs`);
+  } else {
+    clues.push(`Has scored runs in the league`);
+  }
+  
+  // CLUE 3: Career stat or walks (with truthful fallback)
+  if (bestWalksSeason && bestWalksSeason.walks >= 5) {
+    const [year, szn] = bestWalksSeason.seasonId.split('-');
+    clues.push(`Drew ${bestWalksSeason.walks} walks in ${szn.charAt(0).toUpperCase() + szn.slice(1)} ${year}`);
+  } else if (career.walks && career.walks > 0) {
+    clues.push(`Has ${career.walks} career walk${career.walks !== 1 ? 's' : ''}`);
+  } else {
+    // Fallback: Use batting average tier instead of false walk claim
+    const avg = career.battingAverage || 0;
+    if (avg >= 0.400) {
+      clues.push(`Career batting average is .400 or above`);
+    } else if (avg >= 0.300) {
+      clues.push(`Career batting average is between .300 and .399`);
+    } else if (avg >= 0.200) {
+      clues.push(`Career batting average is between .200 and .299`);
+    } else if (avg > 0) {
+      clues.push(`Career batting average is below .200`);
+    } else {
+      clues.push(`Has at-bats in the league`);
+    }
+  }
+  
+  // CLUE 4: Career games
+  const careerGames = career.games || seasons.reduce((sum, s) => sum + (s.games || 0), 0);
+  clues.push(`Has played ${careerGames} career games`);
+  
+  // CLUE 5: Number of seasons
+  clues.push(`Has played ${seasons.length} season${seasons.length !== 1 ? 's' : ''} in the league`);
+  
+  // CLUE 6: Number of teams
+  if (teams.length > 1) {
+    clues.push(`Has played for ${teams.length} different teams`);
+  } else if (teams.length === 1) {
+    clues.push(`Has only played for one team`);
+  } else {
+    clues.push(`Team history available`);
+  }
+  
+  // CLUE 7 (Easiest): Team journey (chronological)
+  if (teams.length > 0) {
+    // Sort seasons chronologically (oldest first) to show journey
+    // Season IDs are like "2023-summer-blue" or "2023-fall-green"
+    // Need proper chronological sort: summer comes before fall within same year
+    const seasonOrder = { 'spring': 1, 'summer': 2, 'fall': 3, 'winter': 4 };
+    const sortedSeasons = [...seasons].sort((a, b) => {
+      const [yearA, sznA] = a.seasonId.split('-');
+      const [yearB, sznB] = b.seasonId.split('-');
+      if (yearA !== yearB) return yearA.localeCompare(yearB);
+      return (seasonOrder[sznA] || 5) - (seasonOrder[sznB] || 5);
+    });
+    const teamJourney = sortedSeasons.map(s => s.team).filter(Boolean);
+    
+    // Dedupe consecutive same teams
+    const journeySteps = [];
+    teamJourney.forEach(team => {
+      if (journeySteps.length === 0 || journeySteps[journeySteps.length - 1] !== team) {
+        journeySteps.push(team);
+      }
+    });
+    
+    if (journeySteps.length === 1) {
+      clues.push(`All seasons on ${journeySteps[0]}`);
+    } else if (journeySteps.length > 1) {
+      clues.push(`Team journey: ${journeySteps.join(' → ')}`);
+    } else {
+      clues.push(`Is a league member`);
+    }
+  } else {
+    clues.push(`Is a league member`);
+  }
+  
+  return clues.slice(0, NUM_CLUES);
+}
+
+// ============================================
+// PUZZLE GENERATION
+// ============================================
+function generateDailyPuzzle() {
+  const dayNum = getDayNumber();
+  const seed = dayNum * 98735;
+  
+  console.log(`[Who Am I] Day #${dayNum}, Seed: ${seed}`);
+  
+  // Filter to players with enough data (10+ career games, non-sub seasons)
+  const eligiblePlayers = allPlayers
+    .filter(p => {
+      const seasons = getNonSubSeasons(p);
+      if (seasons.length === 0) return false;
+      const careerGames = p.career?.games || p.careerGames || 0;
+      return careerGames >= 10;
+    })
+    .sort((a, b) => {
+      // Double-ensure consistent order even after filtering
+      const nameA = (a.name || a.playerName || '').toLowerCase();
+      const nameB = (b.name || b.playerName || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  
+  console.log(`[Who Am I] ${eligiblePlayers.length} eligible players`);
+  
+  const shuffled = shuffleWithSeed(eligiblePlayers, seed);
+  const player = shuffled[0];
+  const clues = generateClues(player);
+  
+  console.log(`[Who Am I] Selected: ${player.name || player.playerName}`);
+  
+  return {
+    dayNum,
+    player,
+    playerName: player.name || player.playerName,
+    clues
+  };
+}
+
+// ============================================
+// UI RENDERING
+// ============================================
+function renderClues() {
+  const container = document.getElementById('cluesList');
+  container.innerHTML = '';
+  
+  todaysPuzzle.clues.forEach((clue, index) => {
+    const isRevealed = index < gameState.cluesRevealed;
+    const isNext = index === gameState.cluesRevealed && !gameState.gameOver;
+    const points = MAX_POINTS - index - 1;
+    
+    const card = document.createElement('div');
+    card.className = `clue-card ${isRevealed ? 'revealed' : 'hidden'} ${isNext ? 'next-clue' : ''}`;
+    card.innerHTML = `
+      <div class="clue-number">${index + 1}</div>
+      <div class="clue-content">${isRevealed ? clue : 'Click to reveal...'}</div>
+      <div class="clue-points">${points} pt${points !== 1 ? 's' : ''}</div>
+    `;
+    
+    if (isNext) {
+      card.onclick = revealNextClue;
+    }
+    
+    container.appendChild(card);
+  });
+  
+  updateScoreDisplay();
+}
+
+function updateScoreDisplay() {
+  document.getElementById('cluesRevealed').textContent = `${gameState.cluesRevealed}/${NUM_CLUES}`;
+  const pointsAvailable = Math.max(1, MAX_POINTS - gameState.cluesRevealed);
+  document.getElementById('pointsAvailable').textContent = pointsAvailable;
+}
+
+function showResult(won, score) {
+  const resultDiv = document.getElementById('resultDisplay');
+  const guessSection = document.getElementById('guessSection');
+  const gameOverButtons = document.getElementById('gameOverButtons');
+  
+  guessSection.style.display = 'none';
+  gameOverButtons.style.display = 'flex';
+  
+  if (won) {
+    resultDiv.className = 'result-display correct';
+    resultDiv.innerHTML = `
+      <div class="result-icon">🎉</div>
+      <div class="result-title">Correct!</div>
+      <div class="result-player">${todaysPuzzle.playerName}</div>
+      <div class="result-score">You scored ${score} point${score !== 1 ? 's' : ''}!</div>
+    `;
+  } else {
+    resultDiv.className = 'result-display incorrect';
+    resultDiv.innerHTML = `
+      <div class="result-icon">😔</div>
+      <div class="result-title">Not quite!</div>
+      <div class="result-player">It was ${todaysPuzzle.playerName}</div>
+      <div class="result-score">Better luck tomorrow!</div>
+    `;
+  }
+  
+  resultDiv.style.display = 'block';
+  
+  // Reveal all clues
+  gameState.cluesRevealed = NUM_CLUES;
+  renderClues();
+}
+
+// ============================================
+// GAME LOGIC
+// ============================================
+window.revealNextClue = function() {
+  if (gameState.gameOver) return;
+  if (gameState.cluesRevealed >= NUM_CLUES) return;
+  
+  gameState.cluesRevealed++;
+  renderClues();
+  saveGameState();
+  
+  // If all clues revealed, they must guess
+  if (gameState.cluesRevealed >= NUM_CLUES) {
+    document.getElementById('revealBtn').style.display = 'none';
+  }
+};
+
+window.submitGuess = async function() {
+  if (gameState.gameOver) return;
+  
+  const input = document.getElementById('guessInput');
+  const guess = input.value.trim();
+  
+  if (!guess) {
+    showToast('Enter a player name!');
+    return;
+  }
+  
+  // Check if correct
+  const guessLower = guess.toLowerCase();
+  const answerLower = todaysPuzzle.playerName.toLowerCase();
+  
+  // Also check against variations
+  const isCorrect = guessLower === answerLower || 
+    answerLower.includes(guessLower) ||
+    guessLower.includes(answerLower);
+  
+  gameState.guesses.push(guess);
+  
+  if (isCorrect) {
+    gameState.won = true;
+    gameState.gameOver = true;
+    gameState.score = Math.max(1, MAX_POINTS - gameState.cluesRevealed);
+    
+    showResult(true, gameState.score);
+    await updateLifetimeStats();
+    saveGameState();
+    
+    setTimeout(() => showStats(), 1500);
+  } else {
+    // Wrong guess
+    const wrongGuess = document.getElementById('wrongGuess');
+    wrongGuess.textContent = `❌ "${guess}" is not correct`;
+    wrongGuess.style.display = 'block';
+    input.value = '';
+    
+    setTimeout(() => {
+      wrongGuess.style.display = 'none';
+    }, 2000);
+    
+    // Auto-reveal next clue on wrong guess
+    if (gameState.cluesRevealed < NUM_CLUES) {
+      setTimeout(() => {
+        revealNextClue();
+      }, 1000);
+    } else {
+      // All clues revealed and wrong - game over
+      gameState.gameOver = true;
+      gameState.score = 0;
+      showResult(false, 0);
+      await updateLifetimeStats();
+      saveGameState();
+    }
+  }
+};
+
+// ============================================
+// AUTOCOMPLETE
+// ============================================
+function setupAutocomplete() {
+  const input = document.getElementById('guessInput');
+  const dropdown = document.getElementById('autocompleteDropdown');
+  let selectedIndex = -1;
+  
+  input.addEventListener('input', () => {
+    const query = input.value.trim().toLowerCase();
+    dropdown.innerHTML = '';
+    selectedIndex = -1;
+    
+    if (query.length < 2) {
+      dropdown.classList.remove('active');
+      return;
+    }
+    
+    const matches = playerNames.filter(name => 
+      name.toLowerCase().includes(query)
+    ).slice(0, 8);
+    
+    if (matches.length === 0) {
+      dropdown.classList.remove('active');
+      return;
+    }
+    
+    matches.forEach((name, idx) => {
+      const item = document.createElement('div');
+      item.className = 'autocomplete-item';
+      item.textContent = name;
+      item.onclick = () => {
+        input.value = name;
+        dropdown.classList.remove('active');
+      };
+      dropdown.appendChild(item);
+    });
+    
+    dropdown.classList.add('active');
+  });
+  
+  input.addEventListener('keydown', (e) => {
+    const items = dropdown.querySelectorAll('.autocomplete-item');
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+      updateSelected(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIndex = Math.max(selectedIndex - 1, -1);
+      updateSelected(items);
+    } else if (e.key === 'Enter') {
+      if (selectedIndex >= 0 && items[selectedIndex]) {
+        input.value = items[selectedIndex].textContent;
+        dropdown.classList.remove('active');
+        e.preventDefault();
+      } else if (!dropdown.classList.contains('active')) {
+        submitGuess();
+      }
+    } else if (e.key === 'Escape') {
+      dropdown.classList.remove('active');
+    }
+  });
+  
+  function updateSelected(items) {
+    items.forEach((item, idx) => {
+      item.classList.toggle('selected', idx === selectedIndex);
+    });
+  }
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.guess-input-container')) {
+      dropdown.classList.remove('active');
+    }
+  });
+}
+
+// ============================================
+// STATS & SHARING
+// ============================================
+function getLocalStats() {
+  try {
+    const stored = localStorage.getItem('acesWhoAmI_stats');
+    if (stored) return JSON.parse(stored);
+  } catch (e) {}
+  
+  return {
+    gamesPlayed: 0,
+    wins: 0,
+    totalScore: 0,
+    currentStreak: 0,
+    maxStreak: 0,
+    lastPlayedPuzzle: 0
+  };
+}
+
+function saveLocalStats(stats) {
+  try {
+    localStorage.setItem('acesWhoAmI_stats', JSON.stringify(stats));
+  } catch (e) {}
+}
+
+async function updateLifetimeStats() {
+  // For logged-in users, load from Firebase first to prevent version-clear overwrites
+  let stats;
+  if (currentUser) {
+    stats = await loadStatsFromFirebase();
+  }
+  // Fall back to localStorage if not logged in or Firebase failed
+  if (!stats) {
+    stats = getLocalStats();
+  }
+  
+  if (stats.lastPlayedPuzzle === todaysPuzzle.dayNum) {
+    return;
+  }
+  
+  // Check for lucky guess - won with 2 or fewer clues revealed
+  const isLuckyGuess = gameState.won && gameState.cluesRevealed <= 2;
+  
+  stats.gamesPlayed++;
+  stats.lastPlayedPuzzle = todaysPuzzle.dayNum;
+  stats.totalScore += gameState.score;
+  
+  if (gameState.won) {
+    stats.wins++;
+    stats.currentStreak++;
+    stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
+    
+    // Track best clue count (fewest clues to win)
+    if (!stats.bestClueCount || gameState.cluesRevealed < stats.bestClueCount) {
+      stats.bestClueCount = gameState.cluesRevealed;
+    }
+  } else {
+    stats.currentStreak = 0;
+  }
+  
+  // Track lucky guess achievement
+  if (isLuckyGuess) {
+    stats.hasLuckyGuess = true;
+  }
+  
+  saveLocalStats(stats);
+  
+  if (currentUser) {
+    saveStatsToFirebase(stats);
+  }
+}
+
+window.showStats = async function() {
+  const modal = document.getElementById('statsModal');
+  
+  // Load from Firebase first if logged in, otherwise use localStorage
+  let stats;
+  if (currentUser) {
+    stats = await loadStatsFromFirebase();
+  }
+  if (!stats) {
+    stats = getLocalStats();
+  }
+  
+  document.getElementById('statPlayed').textContent = stats.gamesPlayed;
+  document.getElementById('statWins').textContent = stats.wins;
+  document.getElementById('statAvgScore').textContent = stats.gamesPlayed > 0 
+    ? (stats.totalScore / stats.gamesPlayed).toFixed(1) 
+    : '0';
+  document.getElementById('statStreak').textContent = stats.currentStreak;
+  
+  modal.classList.add('active');
+};
+
+window.closeStatsModal = function() {
+  document.getElementById('statsModal').classList.remove('active');
+};
+
+window.shareResults = function() {
+  if (!gameState.gameOver) return;
+  
+  const dayNum = todaysPuzzle.dayNum;
+  const cluesUsed = gameState.cluesRevealed;
+  const score = gameState.score;
+  
+  let squares = '';
+  for (let i = 0; i < NUM_CLUES; i++) {
+    if (i < cluesUsed) {
+      squares += gameState.won && i === cluesUsed - 1 ? '🟩' : '🟨';
+    } else {
+      squares += '⬜';
+    }
+  }
+  
+  const result = gameState.won ? `${score} pts` : 'X';
+  
+  const text = `Who Am I? #${dayNum}\n${squares}\nScore: ${result}\n\nhttps://mountainsideaces.com/who-am-i.html`;
+  
+  if (navigator.share) {
+    navigator.share({ text }).catch(() => copyToClipboard(text));
+  } else {
+    copyToClipboard(text);
+  }
+};
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Copied to clipboard!');
+  }).catch(() => {
+    showToast('Could not copy');
+  });
+}
+
+function showToast(text) {
+  const toast = document.getElementById('toast');
+  toast.textContent = text;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ============================================
+// FIREBASE PERSISTENCE
+// ============================================
+async function saveStatsToFirebase(stats) {
+  if (!currentUser) return;
+  
+  try {
+    const statsRef = doc(db, 'acesWhoAmIGames', currentUser.uid);
+    await setDoc(statsRef, {
+      ...stats,
+      lastPlayedAt: serverTimestamp(),
+      displayName: currentUser.displayName || 'Anonymous'
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error saving stats:', error);
+  }
+}
+
+async function loadStatsFromFirebase() {
+  if (!currentUser) return null;
+  
+  try {
+    const statsRef = doc(db, 'acesWhoAmIGames', currentUser.uid);
+    const statsDoc = await getDoc(statsRef);
+    
+    if (statsDoc.exists()) {
+      const data = statsDoc.data();
+      return {
+        gamesPlayed: data.gamesPlayed || 0,
+        wins: data.wins || 0,
+        totalScore: data.totalScore || 0,
+        currentStreak: data.currentStreak || 0,
+        maxStreak: data.maxStreak || 0,
+        lastPlayedPuzzle: data.lastPlayedPuzzle || 0
+      };
+    }
+  } catch (error) {
+    console.error('Error loading stats from Firebase:', error);
+  }
+  return null;
+}
+
+function saveGameStateLocal() {
+  try {
+    localStorage.setItem('acesWhoAmI_game', JSON.stringify({
+      dayNum: todaysPuzzle.dayNum,
+      cluesRevealed: gameState.cluesRevealed,
+      guesses: gameState.guesses,
+      gameOver: gameState.gameOver,
+      won: gameState.won,
+      score: gameState.score
+    }));
+  } catch (e) {}
+}
+
+function loadGameStateLocal() {
+  try {
+    const stored = localStorage.getItem('acesWhoAmI_game');
+    if (stored) {
+      const data = JSON.parse(stored);
+      if (data.dayNum === todaysPuzzle.dayNum) {
+        gameState.cluesRevealed = data.cluesRevealed || 0;
+        gameState.guesses = data.guesses || [];
+        gameState.gameOver = data.gameOver || false;
+        gameState.won = data.won || false;
+        gameState.score = data.score || 0;
+        return true;
+      }
+    }
+  } catch (e) {}
+  return false;
+}
+
+async function saveGameStateFirebase() {
+  if (!currentUser) return;
+  
+  try {
+    const gameRef = doc(db, 'acesWhoAmIGames', currentUser.uid, 'dailyGames', String(todaysPuzzle.dayNum));
+    await setDoc(gameRef, {
+      dayNum: todaysPuzzle.dayNum,
+      cluesRevealed: gameState.cluesRevealed,
+      guesses: gameState.guesses,
+      gameOver: gameState.gameOver,
+      won: gameState.won,
+      score: gameState.score,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error saving to Firebase:', error);
+  }
+}
+
+async function loadGameStateFirebase() {
+  if (!currentUser) return false;
+  
+  try {
+    const gameRef = doc(db, 'acesWhoAmIGames', currentUser.uid, 'dailyGames', String(todaysPuzzle.dayNum));
+    const gameDoc = await getDoc(gameRef);
+    
+    if (gameDoc.exists()) {
+      const data = gameDoc.data();
+      if (data.dayNum === todaysPuzzle.dayNum) {
+        gameState.cluesRevealed = data.cluesRevealed || 0;
+        gameState.guesses = data.guesses || [];
+        gameState.gameOver = data.gameOver || false;
+        gameState.won = data.won || false;
+        gameState.score = data.score || 0;
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading from Firebase:', error);
+  }
+  return false;
+}
+
+function saveGameState() {
+  saveGameStateLocal();
+  if (currentUser) {
+    saveGameStateFirebase();
+  }
+}
+
+async function loadGameState() {
+  if (currentUser) {
+    const loaded = await loadGameStateFirebase();
+    if (loaded) return true;
+  }
+  return loadGameStateLocal();
+}
+
+// ============================================
+// USER STATS DISPLAY
+// ============================================
+async function updateUserStatsDisplay() {
+  const container = document.getElementById('userStatsContainer');
+  if (!container) return;
+  
+  if (!currentUser) {
+    container.innerHTML = `
+      <div class="user-stats-content">
+        <div class="sign-in-prompt">
+          <span>🔒</span>
+          <a href="signin.html">Sign in</a> to track your stats across devices
+        </div>
+      </div>
+    `;
+    return;
+  }
+  
+  // Load from Firebase first, fall back to localStorage
+  let stats = await loadStatsFromFirebase();
+  if (!stats) {
+    stats = getLocalStats();
+  }
+  
+  const avgScore = stats.gamesPlayed > 0 ? (stats.totalScore / stats.gamesPlayed).toFixed(1) : '0';
+  
+  container.innerHTML = `
+    <div class="user-stats-content">
+      <div class="user-greeting">👋 ${currentUser.displayName || 'Player'}</div>
+      <div class="lifetime-stats">
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${stats.gamesPlayed}</span>
+          <span class="lifetime-label">Played</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${stats.wins}</span>
+          <span class="lifetime-label">Wins</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${avgScore}</span>
+          <span class="lifetime-label">Avg Score</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${stats.currentStreak}</span>
+          <span class="lifetime-label">Streak</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================
+// AUTH STATE
+// ============================================
+function setupAuthListener() {
+  onAuthChange(async (user) => {
+    currentUser = user;
+    
+    if (user && todaysPuzzle) {
+      const firebaseHasState = await loadGameStateFirebase();
+      if (firebaseHasState) {
+        renderClues();
+        if (gameState.gameOver) {
+          showResult(gameState.won, gameState.score);
+        }
+      }
+    }
+    
+    await updateUserStatsDisplay();
+  });
+}
+
+// ============================================
+// HOW TO PLAY
+// ============================================
+window.toggleHowToPlay = function() {
+  const section = document.getElementById('howToPlay');
+  const toggle = document.getElementById('howToPlayToggle');
+  section.classList.toggle('expanded');
+  toggle.textContent = section.classList.contains('expanded') ? '▲' : '▼';
+};
+
+// ============================================
+// INITIALIZATION
+// ============================================
+async function init() {
+  try {
+    // Check if before launch
+    const launchDate = new Date(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY).setHours(0, 0, 0, 0);
+    const now = new Date().setHours(0, 0, 0, 0);
+    
+    if (now < launchDate) {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      const launchDateObj = new Date(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY);
+      document.getElementById('puzzleDate').textContent = `Launching ${launchDateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`;
+      document.querySelector('.clues-container').innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🎭</div>
+          <h3 style="margin: 0;">Coming Soon!</h3>
+        </div>
+      `;
+      document.getElementById('guessSection').style.display = 'none';
+      return;
+    }
+    
+    // Check for existing auth
+    currentUser = getCurrentUser();
+    
+    // Load players
+    console.log('Loading player data...');
+    const rawPlayers = await getAllPlayerStatsOptimized();
+    allPlayers = rawPlayers
+      .filter(p => p.migrated !== true)
+      .sort((a, b) => {
+        const nameA = (a.name || a.playerName || '').toLowerCase();
+        const nameB = (b.name || b.playerName || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+    playerNames = allPlayers.map(p => p.name || p.playerName).filter(Boolean);
+    console.log(`Loaded ${allPlayers.length} players`);
+    
+    // Generate puzzle
+    todaysPuzzle = generateDailyPuzzle();
+    console.log('Today\'s puzzle:', todaysPuzzle.playerName);
+    
+    // Display date
+    const today = new Date();
+    document.getElementById('puzzleDate').textContent = 
+      `Puzzle #${todaysPuzzle.dayNum} • ${today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}`;
+    
+    // Load saved state
+    await loadGameState();
+    
+    // Setup
+    setupAutocomplete();
+    setupAuthListener();
+    await updateUserStatsDisplay();
+    
+    // Render
+    renderClues();
+    
+    if (gameState.gameOver) {
+      showResult(gameState.won, gameState.score);
+    }
+    
+    if (gameState.cluesRevealed >= NUM_CLUES) {
+      document.getElementById('revealBtn').style.display = 'none';
+    }
+    
+    // Hide loading
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    
+  } catch (error) {
+    console.error('Error initializing game:', error);
+    document.getElementById('loadingOverlay').innerHTML = `
+      <div style="text-align: center; padding: 2rem;">
+        <p>Error loading game</p>
+        <p style="color: var(--text-light); font-size: 0.9rem;">${error.message}</p>
+        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; cursor: pointer;">Retry</button>
+      </div>
+    `;
+  }
+}
+
+// Start
+init();
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

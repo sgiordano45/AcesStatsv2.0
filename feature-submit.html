@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Feedback | Mountainside Aces</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="mobile-enhancements.css">
+  <link rel="stylesheet" href="nav-styles.css">
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --secondary-color: #1a6b4a;
+      --accent-color: #ffd700;
+      --card-bg: #ffffff;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+      --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --info-color: #3b82f6;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      min-height: 100vh;
+      color: var(--text-dark);
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.3s ease;
+    }
+
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .softball-spinner::before {
+      content: '⚾';
+      font-size: 80px;
+      animation: spin 1.5s ease-in-out infinite;
+      display: block;
+    }
+
+    @keyframes spin {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.1); }
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      padding: 3rem 2rem;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Header Nav Buttons */
+    .header-nav-buttons {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 2;
+    }
+
+    .back-home-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    .back-home-btn:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .header::after {
+      content: '💡';
+      position: absolute;
+      bottom: -30px;
+      left: -20px;
+      font-size: 150px;
+      opacity: 0.1;
+    }
+
+    .header-content {
+      max-width: 800px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    /* Container */
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Card */
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      padding: 1.25rem 1.5rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .card-content {
+      padding: 1.5rem;
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-dark);
+    }
+
+    .form-group .hint {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-top: 0.25rem;
+    }
+
+    .form-group .required {
+      color: var(--danger-color);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      background: white;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23718096' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+
+    /* Category Pills */
+    .category-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .category-pill {
+      padding: 0.5rem 1rem;
+      border: 2px solid var(--border-color);
+      border-radius: 25px;
+      background: white;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .category-pill:hover {
+      border-color: var(--primary-color);
+      background: #f0fdf4;
+    }
+
+    .category-pill.selected {
+      border-color: var(--primary-color);
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .category-pill input {
+      display: none;
+    }
+
+    /* Submit Button */
+    .submit-btn {
+      width: 100%;
+      padding: 1rem 2rem;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Alert Messages */
+    .alert {
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.95rem;
+    }
+
+    .alert-success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+
+    .alert-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+
+    .alert-info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #93c5fd;
+    }
+
+    .alert .icon {
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    /* Success State */
+    .success-container {
+      text-align: center;
+      padding: 3rem 2rem;
+    }
+
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .success-container h2 {
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .success-container p {
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-secondary {
+      padding: 0.875rem 1.5rem;
+      background: white;
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    /* Nav Link */
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      opacity: 0.9;
+      transition: opacity 0.3s;
+      margin-bottom: 1rem;
+    }
+
+    .nav-link:hover {
+      opacity: 1;
+    }
+
+    /* User Info */
+    .user-info {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .user-info .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .user-info .details {
+      flex: 1;
+    }
+
+    .user-info .name {
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .user-info .email {
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+
+    /* Anonymous Note */
+    .anonymous-note {
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      color: #92400e;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    /* Character Count */
+    .char-count {
+      text-align: right;
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-top: 0.25rem;
+    }
+
+    .char-count.warning {
+      color: var(--warning-color);
+    }
+
+    .char-count.danger {
+      color: var(--danger-color);
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      body {
+        padding-top: 60px;
+      }
+
+      .header {
+        padding: 2rem 1.5rem;
+      }
+
+      .header h1 {
+        font-size: 1.75rem;
+      }
+
+      .header p {
+        font-size: 1rem;
+      }
+
+      .container {
+        padding: 0 1rem;
+        margin: 1rem auto;
+      }
+
+      .card-content {
+        padding: 1.25rem;
+      }
+
+      .category-pill {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<!-- Page Container for Navigation -->
+<div class="page-container">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="header-nav-buttons hide-mobile">
+        <a href="index.html" class="back-home-btn">
+          <span>←</span> Home
+        </a>
+        <a href="profile.html" class="back-home-btn">
+          <span>👤</span> Profile
+        </a>
+      </div>
+      <h1>💡 Submit Feedback</h1>
+      <p>Help us improve the Mountainside Aces website with your ideas and suggestions</p>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="container">
+  <!-- Form Card -->
+  <div class="card" id="formCard">
+    <div class="card-header">
+      📝 Share Your Thoughts
+    </div>
+    <div class="card-content">
+      <!-- Alert Container -->
+      <div id="alertContainer"></div>
+
+      <!-- User Info (shown when logged in) -->
+      <div class="user-info" id="userInfo" style="display: none;">
+        <div class="avatar" id="userAvatar">?</div>
+        <div class="details">
+          <div class="name" id="userName">Loading...</div>
+          <div class="email" id="userEmail">Your submission will be linked to your account</div>
+        </div>
+      </div>
+
+      <!-- Anonymous Note (shown when not logged in) -->
+      <div class="anonymous-note" id="anonymousNote" style="display: none;">
+        <span class="icon">👤</span>
+        <div>
+          <strong>Submitting anonymously</strong><br>
+          <a href="signin.html">Sign in</a> to have your submission linked to your account and receive updates.
+        </div>
+      </div>
+
+      <form id="feedbackForm">
+        <!-- Category Selection -->
+        <div class="form-group">
+          <label>What type of feedback is this? <span class="required">*</span></label>
+          <div class="category-pills" id="categoryPills">
+            <label class="category-pill">
+              <input type="radio" name="category" value="feature" required>
+              <span>✨ New Feature</span>
+            </label>
+            <label class="category-pill">
+              <input type="radio" name="category" value="improvement">
+              <span>📈 Improvement</span>
+            </label>
+            <label class="category-pill">
+              <input type="radio" name="category" value="bug">
+              <span>🐛 Bug Report</span>
+            </label>
+            <label class="category-pill">
+              <input type="radio" name="category" value="content">
+              <span>📄 Content Issue</span>
+            </label>
+            <label class="category-pill">
+              <input type="radio" name="category" value="other">
+              <span>💬 Other</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Title -->
+        <div class="form-group">
+          <label for="title">Title <span class="required">*</span></label>
+          <input type="text" id="title" name="title" placeholder="Brief summary of your feedback" maxlength="100" required>
+          <div class="char-count"><span id="titleCount">0</span>/100</div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="description">Description <span class="required">*</span></label>
+          <textarea id="description" name="description" placeholder="Please provide as much detail as possible. For bugs, include steps to reproduce the issue." maxlength="2000" required></textarea>
+          <div class="char-count"><span id="descCount">0</span>/2000</div>
+          <p class="hint">Tip: The more detail you provide, the better we can understand and address your feedback.</p>
+        </div>
+
+        <!-- Page Reference (optional) -->
+        <div class="form-group">
+          <label for="pageRef">Related Page (optional)</label>
+          <select id="pageRef" name="pageRef">
+            <option value="">-- Select a page if applicable --</option>
+            <option value="index.html">Home Page</option>
+            <option value="players.html">Players Directory</option>
+            <option value="player.html">Player Profile</option>
+            <option value="teams.html">Teams</option>
+            <option value="team.html">Team Page</option>
+            <option value="season.html">Season Standings</option>
+            <option value="schedule.html">Schedule</option>
+            <option value="playoffs.html">Playoffs</option>
+            <option value="bracket.html">Playoff Bracket</option>
+            <option value="leaders.html">League Leaders</option>
+            <option value="batting.html">Batting Stats</option>
+            <option value="pitching.html">Pitching Stats</option>
+            <option value="charts.html">Charts</option>
+            <option value="milestones.html">Milestones</option>
+            <option value="awards.html">Awards</option>
+            <option value="game-tracker.html">Game Tracker</option>
+            <option value="submit-score.html">Submit Score</option>
+            <option value="submit-stats.html">Submit Stats</option>
+            <option value="profile.html">My Profile</option>
+            <option value="roster-management.html">Roster Management</option>
+            <option value="pictures.html">Pictures</option>
+            <option value="other">Other / Multiple Pages</option>
+          </select>
+        </div>
+
+        <!-- Priority (optional) -->
+        <div class="form-group">
+          <label for="priority">How important is this to you?</label>
+          <select id="priority" name="priority">
+            <option value="low">Nice to have</option>
+            <option value="medium" selected>Moderately important</option>
+            <option value="high">Very important</option>
+            <option value="critical">Critical / Blocking Issue</option>
+          </select>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <span>📤</span>
+          <span>Submit Feedback</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Success Card (hidden by default) -->
+  <div class="card" id="successCard" style="display: none;">
+    <div class="card-content">
+      <div class="success-container">
+        <div class="success-icon">🎉</div>
+        <h2>Thank You!</h2>
+        <p>Your feedback has been submitted successfully. We appreciate you taking the time to help improve the Mountainside Aces website.</p>
+        <a href="index.html" class="btn-secondary">
+          <span>🏠</span>
+          <span>Return Home</span>
+        </a>
+        <button type="button" class="btn-secondary" onclick="resetForm()" style="margin-left: 0.5rem;">
+          <span>📝</span>
+          <span>Submit Another</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div> <!-- End page-container -->
+
+<script type="module">
+  import { auth } from './firebase-auth.js';
+  import { db } from './firebase-config.js';
+  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { 
+    collection, 
+    addDoc,
+    serverTimestamp 
+  } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  let currentUser = null;
+
+  // DOM Elements
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  const feedbackForm = document.getElementById('feedbackForm');
+  const formCard = document.getElementById('formCard');
+  const successCard = document.getElementById('successCard');
+  const userInfo = document.getElementById('userInfo');
+  const anonymousNote = document.getElementById('anonymousNote');
+  const alertContainer = document.getElementById('alertContainer');
+  const submitBtn = document.getElementById('submitBtn');
+
+  // Check auth state
+  onAuthStateChanged(auth, (user) => {
+    loadingOverlay.classList.add('hidden');
+    
+    if (user) {
+      currentUser = user;
+      userInfo.style.display = 'flex';
+      anonymousNote.style.display = 'none';
+      
+      // Set user info
+      document.getElementById('userName').textContent = user.displayName || 'Aces Member';
+      document.getElementById('userEmail').textContent = user.email;
+      document.getElementById('userAvatar').textContent = (user.displayName || user.email || '?').charAt(0).toUpperCase();
+    } else {
+      currentUser = null;
+      userInfo.style.display = 'none';
+      anonymousNote.style.display = 'flex';
+    }
+  });
+
+  // Category pill selection
+  document.querySelectorAll('.category-pill').forEach(pill => {
+    pill.addEventListener('click', function() {
+      document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('selected'));
+      this.classList.add('selected');
+    });
+  });
+
+  // Character counters
+  const titleInput = document.getElementById('title');
+  const descInput = document.getElementById('description');
+  const titleCount = document.getElementById('titleCount');
+  const descCount = document.getElementById('descCount');
+
+  titleInput.addEventListener('input', () => {
+    const count = titleInput.value.length;
+    titleCount.textContent = count;
+    titleCount.parentElement.className = 'char-count' + (count > 90 ? ' warning' : '') + (count >= 100 ? ' danger' : '');
+  });
+
+  descInput.addEventListener('input', () => {
+    const count = descInput.value.length;
+    descCount.textContent = count;
+    descCount.parentElement.className = 'char-count' + (count > 1800 ? ' warning' : '') + (count >= 2000 ? ' danger' : '');
+  });
+
+  // Form submission
+  feedbackForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const category = document.querySelector('input[name="category"]:checked');
+    if (!category) {
+      showAlert('Please select a category for your feedback.', 'error');
+      return;
+    }
+
+    const title = titleInput.value.trim();
+    const description = descInput.value.trim();
+    const pageRef = document.getElementById('pageRef').value;
+    const priority = document.getElementById('priority').value;
+
+    if (!title || !description) {
+      showAlert('Please fill in all required fields.', 'error');
+      return;
+    }
+
+    // Disable button and show loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>⏳</span><span>Submitting...</span>';
+
+    try {
+      // Create submission document
+      const submission = {
+        category: category.value,
+        title: title,
+        description: description,
+        pageRef: pageRef || null,
+        priority: priority,
+        status: 'new',
+        submittedAt: serverTimestamp(),
+        submittedBy: currentUser ? {
+          uid: currentUser.uid,
+          displayName: currentUser.displayName || null,
+          email: currentUser.email
+        } : null,
+        isAnonymous: !currentUser,
+        adminNotes: '',
+        resolvedAt: null,
+        resolvedBy: null
+      };
+
+      // Add to Firestore
+      await addDoc(collection(db, 'featureSubmissions'), submission);
+
+      // Show success
+      formCard.style.display = 'none';
+      successCard.style.display = 'block';
+      
+      console.log('✅ Feedback submitted successfully');
+
+    } catch (error) {
+      console.error('❌ Error submitting feedback:', error);
+      showAlert('Failed to submit feedback. Please try again.', 'error');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span>📤</span><span>Submit Feedback</span>';
+    }
+  });
+
+  // Show alert message
+  function showAlert(message, type = 'info') {
+    const icons = {
+      success: '✅',
+      error: '❌',
+      info: 'ℹ️',
+      warning: '⚠️'
+    };
+
+    alertContainer.innerHTML = `
+      <div class="alert alert-${type}">
+        <span class="icon">${icons[type]}</span>
+        <span>${message}</span>
+      </div>
+    `;
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      alertContainer.innerHTML = '';
+    }, 5000);
+  }
+
+  // Reset form for another submission
+  window.resetForm = function() {
+    feedbackForm.reset();
+    document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('selected'));
+    titleCount.textContent = '0';
+    descCount.textContent = '0';
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<span>📤</span><span>Submit Feedback</span>';
+    formCard.style.display = 'block';
+    successCard.style.display = 'none';
+  };
+</script>
+
+<!-- Nav Component -->
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="mobile-enhancements.js"></script>
+
+</body>
+</html>

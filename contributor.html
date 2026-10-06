@@ -1,0 +1,2535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contributor Dashboard - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --contributor-color: #0891b2;
+    --contributor-secondary: #06b6d4;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    --success-color: #22c55e;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, var(--bg-primary, #f7fafc) 0%, var(--bg-secondary, #edf2f7) 100%);
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+
+  .loading-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--overlay-bg, rgba(255,255,255,0.95));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .softball-spinner::before {
+    content: '✨';
+    font-size: 80px;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+  }
+
+  /* Auth Gate */
+  .auth-gate {
+    max-width: 500px;
+    margin: 4rem auto;
+    padding: 3rem;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+  }
+
+  .auth-gate h2 {
+    color: var(--danger-color);
+    margin-bottom: 1rem;
+  }
+
+  .auth-gate p {
+    color: var(--text-light);
+    margin-bottom: 2rem;
+  }
+
+  .auth-gate a {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--contributor-color) 0%, var(--contributor-secondary) 100%);
+    color: white;
+    padding: 2.5rem 2rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .header::after {
+    content: '✨';
+    position: absolute;
+    bottom: -40px;
+    left: -30px;
+    font-size: 180px;
+    opacity: 0.08;
+  }
+
+  .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+  }
+
+  .header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.95rem;
+  }
+
+  .header-buttons {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  /* Navigation Buttons */
+  .nav-btn {
+    padding: 0.875rem 1.5rem;
+    border: 2px solid white;
+    background: white;
+    color: var(--contributor-color);
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: var(--accent-color);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: -1;
+  }
+
+  .nav-btn:hover::before {
+    transform: translateX(0);
+  }
+
+  .nav-btn:hover {
+    color: var(--contributor-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .role-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+  }
+
+  .role-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+  }
+
+  /* Container */
+  .container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+  }
+
+  /* Tab Navigation */
+  .tab-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    background: var(--card-bg);
+    padding: 0.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tab-btn {
+    flex: 1;
+    min-width: 150px;
+    padding: 1rem 1.5rem;
+    border: none;
+    background: transparent;
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .tab-btn:hover {
+    background: var(--hover-bg, #f1f5f9);
+    color: var(--text-dark);
+  }
+
+  .tab-btn.active {
+    background: var(--contributor-color);
+    color: white;
+  }
+
+  .tab-btn .icon {
+    font-size: 1.2rem;
+  }
+
+  .tab-btn.hidden {
+    display: none;
+  }
+
+  /* Tab Content */
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* Section Cards */
+  .section {
+    background: var(--card-bg);
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+  }
+
+  .section-header {
+    background: linear-gradient(135deg, var(--contributor-color) 0%, var(--contributor-secondary) 100%);
+    color: white;
+    padding: 1.25rem 1.5rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .section-content {
+    padding: 1.5rem;
+  }
+
+  /* Form Elements */
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: var(--input-bg, #fff);
+    color: var(--text-dark);
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--contributor-color);
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15);
+  }
+
+  .form-group textarea {
+    min-height: 150px;
+    resize: vertical;
+  }
+
+  .form-group .hint {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 0.35rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 600px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .checkbox-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+
+  .checkbox-group label {
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+  }
+
+  .btn-primary {
+    background: var(--contributor-color);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--contributor-secondary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-secondary {
+    background: var(--border-color);
+    color: var(--text-dark);
+  }
+
+  .btn-secondary:hover {
+    background: #d1d5db;
+  }
+
+  .btn-success {
+    background: var(--success-color);
+    color: white;
+  }
+
+  .btn-success:hover {
+    background: #16a34a;
+  }
+
+  .btn-danger {
+    background: var(--danger-color);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #dc2626;
+  }
+
+  .btn-whatsapp {
+    background: #25D366;
+    color: white;
+  }
+
+  .btn-whatsapp:hover {
+    background: #128C7E;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+
+  /* Item List */
+  .item-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .item-row:last-child {
+    border-bottom: none;
+  }
+
+  .item-row:hover {
+    background: var(--hover-bg, #f8fafc);
+  }
+
+  .item-row.selected {
+    background: rgba(8, 145, 178, 0.1);
+    border-left: 4px solid var(--contributor-color);
+  }
+
+  .item-info {
+    flex: 1;
+  }
+
+  .item-title {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+  }
+
+  .item-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-light);
+  }
+
+  .item-badges {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: var(--border-color);
+    color: var(--text-dark);
+  }
+
+  .badge-preview {
+    background: linear-gradient(135deg, var(--contributor-color) 0%, var(--contributor-secondary) 100%);
+    color: white;
+  }
+
+  .badge-champion {
+    background: linear-gradient(135deg, #ffd700 0%, #ffb800 100%);
+    color: #5a3e00;
+  }
+
+  .badge-locked {
+    background: var(--warning-color);
+    color: white;
+  }
+
+  .badge-has-odds {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+  }
+
+  /* Editor Panel */
+  .editor-panel {
+    background: var(--bg-secondary, #f8fafc);
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    min-height: 200px;
+  }
+
+  .editor-panel.active {
+    border-style: solid;
+    border-color: var(--contributor-color);
+    background: var(--card-bg);
+  }
+
+  .editor-panel h3 {
+    color: var(--contributor-color);
+    margin: 0 0 1.5rem 0;
+    font-size: 1.25rem;
+  }
+
+  .no-selection {
+    text-align: center;
+    color: var(--text-light);
+    padding: 2rem;
+  }
+
+  .no-selection .icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+  }
+
+  /* Season Selector */
+  .season-selector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .season-selector label {
+    font-weight: 600;
+  }
+
+  .season-selector select {
+    width: auto;
+    min-width: 200px;
+  }
+
+  /* Photo Upload Link Card */
+  .link-card {
+    background: var(--bg-secondary, linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%));
+    border: 2px solid var(--contributor-color);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .link-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .link-card .icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  .link-card h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-dark);
+  }
+
+  .link-card p {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+  }
+
+  .link-card .btn {
+    font-size: 1.1rem;
+    padding: 1rem 2rem;
+  }
+
+  /* Photo Grid */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+    max-height: 450px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background: var(--bg-secondary, #f8fafc);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }
+
+  .photo-card {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 3px solid transparent;
+    background: var(--border-color, #e2e8f0);
+    height: 140px;
+  }
+
+  .photo-card:hover {
+    transform: scale(1.03);
+    box-shadow: var(--shadow-md);
+  }
+
+  .photo-card.selected {
+    border-color: var(--contributor-color);
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.3);
+  }
+
+  .photo-card img,
+  .photo-card video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .photo-card .photo-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: white;
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .photo-card .photo-overlay .folder-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+  }
+
+  .photo-card .video-indicator {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+  }
+
+  .photo-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: var(--bg-secondary, #f8fafc);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    border: 1px solid var(--border-color);
+  }
+
+  .photo-stats span {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .photo-preview-large {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    object-fit: contain;
+    background: #000;
+  }
+
+  /* Toast Notifications */
+  .toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .toast {
+    background: var(--card-bg);
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+    animation: slideIn 0.3s ease;
+    border: 2px solid var(--border-color);
+  }
+
+  .toast-success {
+    border-color: var(--success-color);
+  }
+
+  .toast-success span {
+    color: var(--success-color);
+  }
+
+  .toast-error {
+    border-color: var(--danger-color);
+  }
+
+  .toast-error span {
+    color: var(--danger-color);
+  }
+
+  .toast-warning {
+    border-color: var(--warning-color);
+  }
+
+  .toast-warning span {
+    color: var(--warning-color);
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  /* Mobile Responsive */
+  @media (max-width: 768px) {
+    .header-content {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+
+    .header-buttons {
+      justify-content: center;
+    }
+
+    .tab-btn {
+      min-width: 100px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+    }
+
+    .tab-btn .icon {
+      font-size: 1rem;
+    }
+
+    .section-content {
+      padding: 1rem;
+    }
+
+    .btn-group {
+      flex-direction: column;
+    }
+
+    .btn-group .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .toast-container {
+      left: 1rem;
+      right: 1rem;
+      bottom: 1rem;
+    }
+
+    .toast {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<!-- Auth Gate (shown if not authorized) -->
+<div class="auth-gate" id="authGate" style="display: none;">
+  <h2>🔒 Access Required</h2>
+  <p>You must have a contributor role (Eulogist, Photographer, or Oddsmaker) to access this page.</p>
+  <a href="profile.html">← Back to Profile</a>
+</div>
+
+<!-- Main Content (shown when authorized) -->
+<div id="mainContent" style="display: none;">
+  <header class="header">
+    <div class="header-content">
+      <div>
+        <h1>✨ Contributor Dashboard</h1>
+        <p>Create content for the Mountainside Aces</p>
+        <div class="role-badges" id="userRoleBadges"></div>
+      </div>
+      <div class="header-buttons">
+        <a href="profile.html" class="nav-btn">← Back</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Tab Navigation -->
+    <div class="tab-nav" id="tabNav">
+      <button class="tab-btn hidden" data-tab="eulogies" id="tabBtnEulogies">
+        <span class="icon">✍️</span>
+        Eulogies
+      </button>
+      <button class="tab-btn hidden" data-tab="photos" id="tabBtnPhotos">
+        <span class="icon">📸</span>
+        Photos
+      </button>
+      <button class="tab-btn hidden" data-tab="odds" id="tabBtnOdds">
+        <span class="icon">🎲</span>
+        Odds & Previews
+      </button>
+      <button class="tab-btn hidden" data-tab="banners" id="tabBtnBanners">
+        <span class="icon">📢</span>
+        Banners
+      </button>
+      <button class="tab-btn hidden" data-tab="media" id="tabBtnMedia">
+        <span class="icon">📺</span>
+        Media Hub
+      </button>
+    </div>
+
+    <!-- Tab: Eulogies -->
+    <div class="tab-content" id="tab-eulogies">
+      <div class="section">
+        <div class="section-header">
+          ✍️ Team Eulogies Editor
+        </div>
+        <div class="section-content">
+          <div class="season-selector">
+            <label>Season:</label>
+            <select id="eulogySeasonSelect">
+              <option value="">Loading seasons...</option>
+            </select>
+            <button class="btn btn-secondary" onclick="loadEulogies()">🔄 Refresh</button>
+            <button class="btn btn-primary" onclick="showNewEulogyForm()">➕ Add Eulogy</button>
+          </div>
+
+          <div class="item-list" id="eulogyList">
+            <div class="empty-state">Select a season to load eulogies</div>
+          </div>
+
+          <div class="editor-panel" id="eulogyEditor">
+            <div class="no-selection">
+              <div class="icon">✍️</div>
+              <p>Select a eulogy to edit or click "Add Eulogy" to create a new one</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Photos -->
+    <div class="tab-content" id="tab-photos">
+      <!-- Upload Link Card -->
+      <div class="section">
+        <div class="section-header">
+          📤 Upload New Photos
+        </div>
+        <div class="section-content">
+          <div class="link-card">
+            <div class="icon">📷</div>
+            <h3>Upload League Photos</h3>
+            <p>Share your game photos with the Mountainside Aces community. Photos will appear in the league gallery after upload.</p>
+            <a href="photo-upload.html" class="btn btn-primary">
+              📤 Go to Photo Upload
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Uploaded Photos Section -->
+      <div class="section">
+        <div class="section-header">
+          🖼️ My Uploaded Photos
+        </div>
+        <div class="section-content">
+          <div class="btn-group" style="margin-bottom: 1.5rem;">
+            <button class="btn btn-secondary" onclick="loadMyPhotos()">🔄 Refresh</button>
+          </div>
+
+          <div class="photo-stats" id="photoStats">
+            <span>📷 <strong id="photoCount">0</strong> photos</span>
+            <span>🎥 <strong id="videoCount">0</strong> videos</span>
+          </div>
+
+          <div class="photo-grid" id="photoGrid">
+            <div class="empty-state">Loading your photos...</div>
+          </div>
+
+          <div class="editor-panel" id="photoEditor">
+            <div class="no-selection">
+              <div class="icon">📸</div>
+              <p>Select a photo above to edit its caption or move it to a different album</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Odds & Previews -->
+    <div class="tab-content" id="tab-odds">
+      <div class="section">
+        <div class="section-header">
+          🎲 Peters Preview & Odds Editor
+        </div>
+        <div class="section-content">
+          <p style="color: var(--text-light); margin-bottom: 1rem; padding: 0.75rem; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+            ✨ <strong>2026 Update:</strong> Preview and odds data now saves directly to the game record for easier maintenance.
+          </p>
+          
+          <div class="season-selector">
+            <label>Season:</label>
+            <select id="previewSeasonSelect">
+              <option value="">Loading seasons...</option>
+            </select>
+            <button class="btn btn-secondary" onclick="loadPreviews()">🔄 Refresh</button>
+          </div>
+
+          <div class="form-row">
+            <div style="flex: 1;">
+              <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Select Game to Edit:</label>
+              <div class="item-list" id="previewList">
+                <div class="empty-state">Select a season to load games</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="editor-panel" id="previewEditor">
+            <div class="no-selection">
+              <div class="icon">📋</div>
+              <p>Select a game from the list above to edit its preview</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Banner Messages -->
+    <div class="tab-content" id="tab-banners">
+      <div class="section">
+        <div class="section-header">
+          📢 Banner Messages Manager
+        </div>
+        <div class="section-content">
+          <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+            Manage the scrolling banner messages that appear on the home page. Messages are sorted by priority (lower numbers appear first).
+          </p>
+          
+          <div class="btn-group" style="margin-bottom: 1.5rem;">
+            <button class="btn btn-secondary" onclick="loadBanners()">🔄 Refresh</button>
+            <button class="btn btn-primary" onclick="showNewBannerForm()">➕ Add Banner</button>
+          </div>
+
+          <div class="item-list" id="bannerList">
+            <div class="empty-state">Loading banners...</div>
+          </div>
+
+          <div class="editor-panel" id="bannerEditor">
+            <div class="no-selection">
+              <div class="icon">📢</div>
+              <p>Select a banner to edit or click "Add Banner" to create a new one</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Media Hub -->
+    <div class="tab-content" id="tab-media">
+      <div class="section">
+        <div class="section-header">
+          📺 Media Hub Manager
+        </div>
+        <div class="section-content">
+          <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+            Manage the YouTube channels, playlists, highlight videos, and podcast links shown on the Media Hub page. Changes go live immediately.
+          </p>
+
+          <div class="btn-group" style="margin-bottom: 1.5rem;">
+            <button class="btn btn-secondary" onclick="loadMediaChannels()">🔄 Refresh</button>
+            <button class="btn btn-primary" onclick="showNewMediaForm()">➕ Add Entry</button>
+          </div>
+
+          <div class="item-list" id="mediaList">
+            <div class="empty-state">Loading media entries...</div>
+          </div>
+
+          <div class="editor-panel" id="mediaEditor">
+            <div class="no-selection">
+              <div class="icon">📺</div>
+              <p>Select an entry to edit or click "Add Entry" to create a new one</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+  import { auth, hasSpecialRole } from './firebase-auth.js';
+  import { db } from './firebase-config.js';
+  import { getStorage, ref, deleteObject } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { 
+    collection, 
+    getDocs, 
+    doc, 
+    getDoc,
+    setDoc,
+    updateDoc,
+    deleteDoc,
+    addDoc,
+    query,
+    where,
+    orderBy,
+    Timestamp,
+    serverTimestamp
+  } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  const storage = getStorage();
+
+  // ========================================
+  // GLOBAL STATE
+  // ========================================
+  let currentUser = null;
+  let userProfile = null;
+  let allSeasons = [];
+  let userRoles = {
+    eulogist: false,
+    photographer: false,
+    oddsmaker: false,
+    mediaManager: false,
+    isAdmin: false,
+    isLeagueStaff: false
+  };
+  
+  // Current selections
+  let selectedPreview = null;
+  let selectedEulogy = null;
+  let selectedPhoto = null;
+  
+  // Cached data
+  let previewsCache = [];
+  let eulogiesCache = [];
+  let bannersCache = [];
+  let myPhotosCache = [];
+
+  // Team list for dropdowns
+  const TEAMS = ['Black', 'Green', 'Red', 'Blue', 'White', 'Orange', 'Silver', 'Purple', 'Gold', 'Carolina', 'Army', 'Teal'];
+  
+  // Folder options for photos
+  const PHOTO_FOLDERS = [
+    { value: 'league', label: 'League Photos' },
+    { value: 'green', label: 'Aces Green' },
+    { value: 'blue', label: 'Aces Blue' },
+    { value: 'orange', label: 'Aces Orange' },
+    { value: 'purple', label: 'Aces Purple' },
+    { value: 'red', label: 'Aces Red' },
+    { value: 'yellow', label: 'Aces Yellow' },
+    { value: 'black', label: 'Aces Black' },
+    { value: 'white', label: 'Aces White' },
+    { value: 'gold', label: 'Aces Gold' },
+    { value: 'silver', label: 'Aces Silver' },
+    { value: 'carolina', label: 'Aces Carolina' },
+    { value: 'army', label: 'Aces Army' }
+  ];
+
+  // ========================================
+  // INITIALIZATION
+  // ========================================
+  
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      await checkAuthorization();
+    } else {
+      showAuthGate();
+    }
+  });
+
+  async function checkAuthorization() {
+    try {
+      console.log('🔐 Checking authorization for UID:', currentUser.uid);
+      
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      
+      if (!userDoc.exists()) {
+        console.log('❌ No user document found');
+        showAuthGate();
+        return;
+      }
+
+      userProfile = userDoc.data();
+      console.log('📋 User profile loaded:', userProfile);
+
+      // Check for special roles
+      userRoles.eulogist = hasSpecialRole(userProfile, 'eulogist');
+      userRoles.photographer = hasSpecialRole(userProfile, 'photographer');
+      userRoles.oddsmaker = hasSpecialRole(userProfile, 'oddsmaker');
+      userRoles.mediaManager = hasSpecialRole(userProfile, 'mediaManager');
+      
+      // Check for admin/league-staff (they get access to everything)
+      const userRole = (userProfile.userRole || '').toLowerCase();
+      userRoles.isAdmin = userProfile.isAdmin === true || userRole === 'admin';
+      userRoles.isLeagueStaff = userRole === 'league-staff';
+
+      console.log('📋 User roles:', userRoles);
+
+      // Check if user has at least one qualifying role
+      const hasAccess = userRoles.eulogist || 
+                        userRoles.photographer || 
+                        userRoles.oddsmaker || 
+                        userRoles.mediaManager ||
+                        userRoles.isAdmin || 
+                        userRoles.isLeagueStaff;
+
+      if (hasAccess) {
+        showMainContent();
+        setupTabs();
+        await initialize();
+      } else {
+        console.log('❌ User does not have any contributor roles');
+        showAuthGate();
+      }
+    } catch (error) {
+      console.error('Authorization check failed:', error);
+      showAuthGate();
+    }
+  }
+
+  function showAuthGate() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('authGate').style.display = 'block';
+    document.getElementById('mainContent').style.display = 'none';
+  }
+
+  function showMainContent() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('authGate').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    
+    // Display role badges
+    const badgesHtml = [];
+    if (userRoles.isAdmin) badgesHtml.push('<span class="role-badge">👑 Admin</span>');
+    if (userRoles.isLeagueStaff) badgesHtml.push('<span class="role-badge">🏟️ League Staff</span>');
+    if (userRoles.eulogist) badgesHtml.push('<span class="role-badge">✍️ Eulogist</span>');
+    if (userRoles.photographer) badgesHtml.push('<span class="role-badge">📸 Photographer</span>');
+    if (userRoles.oddsmaker) badgesHtml.push('<span class="role-badge">🎲 Oddsmaker</span>');
+    if (userRoles.mediaManager) badgesHtml.push('<span class="role-badge">📺 Media Manager</span>');
+    
+    document.getElementById('userRoleBadges').innerHTML = badgesHtml.join('');
+  }
+
+  function setupTabs() {
+    // Show tabs based on roles
+    const canSeeEulogies = userRoles.eulogist || userRoles.isAdmin || userRoles.isLeagueStaff;
+    const canSeePhotos = userRoles.photographer || userRoles.isAdmin || userRoles.isLeagueStaff;
+    const canSeeOdds = userRoles.oddsmaker || userRoles.isAdmin || userRoles.isLeagueStaff;
+    const canSeeBanners = userRoles.isAdmin || userRoles.isLeagueStaff;
+    const canSeeMedia = userRoles.mediaManager || userRoles.isAdmin || userRoles.isLeagueStaff;
+
+    const eulogiesTab = document.getElementById('tabBtnEulogies');
+    const photosTab = document.getElementById('tabBtnPhotos');
+    const oddsTab = document.getElementById('tabBtnOdds');
+    const bannersTab = document.getElementById('tabBtnBanners');
+    const mediaTab = document.getElementById('tabBtnMedia');
+
+    if (canSeeEulogies) eulogiesTab.classList.remove('hidden');
+    if (canSeePhotos) photosTab.classList.remove('hidden');
+    if (canSeeOdds) oddsTab.classList.remove('hidden');
+    if (canSeeBanners) bannersTab.classList.remove('hidden');
+    if (canSeeMedia) mediaTab.classList.remove('hidden');
+
+    // Set first visible tab as active
+    let firstTab = null;
+    if (canSeeEulogies) firstTab = 'eulogies';
+    else if (canSeePhotos) firstTab = 'photos';
+    else if (canSeeOdds) firstTab = 'odds';
+    else if (canSeeBanners) firstTab = 'banners';
+    else if (canSeeMedia) firstTab = 'media';
+
+    if (firstTab) {
+      document.querySelector(`[data-tab="${firstTab}"]`).classList.add('active');
+      document.getElementById(`tab-${firstTab}`).classList.add('active');
+    }
+
+    // Tab click handlers
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabId = btn.dataset.tab;
+        
+        // Update tab buttons
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+      });
+    });
+  }
+
+  async function initialize() {
+    // Load seasons
+    await loadSeasons();
+    
+    // Load initial data for visible tabs
+    const defaultSeason = getDefaultSeason();
+    if (defaultSeason) {
+      // Set season selects
+      const eulogySelect = document.getElementById('eulogySeasonSelect');
+      const previewSelect = document.getElementById('previewSeasonSelect');
+      
+      if (eulogySelect) eulogySelect.value = defaultSeason;
+      if (previewSelect) previewSelect.value = defaultSeason;
+      
+      // Load data
+      if (userRoles.eulogist || userRoles.isAdmin || userRoles.isLeagueStaff) {
+        await loadEulogies();
+      }
+      if (userRoles.oddsmaker || userRoles.isAdmin || userRoles.isLeagueStaff) {
+        await loadPreviews();
+      }
+    }
+    
+    // Load banners (no season selection needed)
+    if (userRoles.isAdmin || userRoles.isLeagueStaff) {
+      await loadBanners();
+    }
+
+    // Load photos if photographer
+    if (userRoles.photographer || userRoles.isAdmin || userRoles.isLeagueStaff) {
+      await loadMyPhotos();
+    }
+
+    // Load media channels if media manager
+    if (userRoles.mediaManager || userRoles.isAdmin || userRoles.isLeagueStaff) {
+      await loadMediaChannels();
+    }
+  }
+
+  async function loadSeasons() {
+    try {
+      const seasonsSnapshot = await getDocs(collection(db, 'seasons'));
+      allSeasons = seasonsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })).sort((a, b) => {
+        // Sort by year desc, then fall before summer (fall is later in the year)
+        if (b.year !== a.year) return b.year - a.year;
+        const typeOrder = { 'fall': 0, 'summer': 1 };
+        return (typeOrder[a.season] || 0) - (typeOrder[b.season] || 0);
+      });
+
+      // Populate season selects - format: "2025 Fall"
+      const seasonOptionsHtml = allSeasons.map(s => {
+        const label = `${s.year} ${capitalize(s.season || '')}`;
+        return `<option value="${s.id}" ${s.isActive ? 'selected' : ''}>${label}</option>`;
+      }).join('');
+
+      ['eulogySeasonSelect', 'previewSeasonSelect'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = seasonOptionsHtml;
+      });
+
+    } catch (error) {
+      console.error('Error loading seasons:', error);
+    }
+  }
+
+  function getDefaultSeason() {
+    const activeSeason = allSeasons.find(s => s.isActive);
+    return activeSeason?.id || allSeasons[0]?.id || null;
+  }
+
+  // ========================================
+  // PHOTOS TAB
+  // ========================================
+
+  window.loadMyPhotos = async function() {
+    const gridEl = document.getElementById('photoGrid');
+    gridEl.innerHTML = '<div class="empty-state">Loading your photos...</div>';
+
+    try {
+      const q = query(
+        collection(db, 'teamPhotos'),
+        where('uploadedBy', '==', currentUser.uid),
+        orderBy('uploadedAt', 'desc')
+      );
+      const snapshot = await getDocs(q);
+
+      myPhotosCache = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // Update stats
+      const photos = myPhotosCache.filter(p => p.type !== 'video');
+      const videos = myPhotosCache.filter(p => p.type === 'video');
+      document.getElementById('photoCount').textContent = photos.length;
+      document.getElementById('videoCount').textContent = videos.length;
+
+      if (myPhotosCache.length === 0) {
+        gridEl.innerHTML = '<div class="empty-state">No photos uploaded yet. Use the upload link above to add photos.</div>';
+        return;
+      }
+
+      gridEl.innerHTML = myPhotosCache.map((photo, idx) => {
+        const isVideo = photo.type === 'video';
+        const folderLabel = PHOTO_FOLDERS.find(f => f.value === photo.folder)?.label || photo.folder || 'Unknown';
+        
+        if (isVideo) {
+          return `
+            <div class="photo-card" data-idx="${idx}" onclick="selectPhoto(${idx})">
+              <video src="${photo.url}" muted></video>
+              <div class="video-indicator">🎥</div>
+              <div class="photo-overlay">
+                <span class="folder-badge">${folderLabel}</span>
+              </div>
+            </div>
+          `;
+        }
+        
+        return `
+          <div class="photo-card" data-idx="${idx}" onclick="selectPhoto(${idx})">
+            <img src="${photo.thumbnailUrl || photo.url}" alt="${photo.caption || 'Photo'}">
+            <div class="photo-overlay">
+              <span class="folder-badge">${folderLabel}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error loading photos:', error);
+      gridEl.innerHTML = '<div class="empty-state">Error loading photos</div>';
+      showToast('Error loading photos', 'error');
+    }
+  };
+
+  window.selectPhoto = function(idx) {
+    selectedPhoto = myPhotosCache[idx];
+    
+    // Update selection UI
+    document.querySelectorAll('.photo-card').forEach((card, i) => {
+      card.classList.toggle('selected', i === idx);
+    });
+
+    const isVideo = selectedPhoto.type === 'video';
+    const currentFolder = selectedPhoto.folder || 'league';
+    
+    const folderOptions = PHOTO_FOLDERS.map(f => 
+      `<option value="${f.value}" ${f.value === currentFolder ? 'selected' : ''}>${f.label}</option>`
+    ).join('');
+
+    const editorEl = document.getElementById('photoEditor');
+    editorEl.classList.add('active');
+    editorEl.innerHTML = `
+      <h3>✏️ Edit ${isVideo ? 'Video' : 'Photo'}</h3>
+      
+      ${isVideo 
+        ? `<video class="photo-preview-large" src="${selectedPhoto.url}" controls></video>`
+        : `<img class="photo-preview-large" src="${selectedPhoto.url}" alt="Selected photo">`
+      }
+      
+      <div class="form-group">
+        <label>Caption</label>
+        <textarea id="photoCaptionInput" placeholder="Add a caption...">${selectedPhoto.caption || ''}</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Album / Folder</label>
+        <select id="photoFolderSelect">
+          ${folderOptions}
+        </select>
+      </div>
+      
+      <div class="btn-group">
+        <button class="btn btn-success" onclick="updateMyPhoto()">💾 Save Changes</button>
+        <button class="btn btn-danger" onclick="deleteMyPhoto()">🗑️ Delete</button>
+        <button class="btn btn-secondary" onclick="clearPhotoSelection()">Cancel</button>
+      </div>
+    `;
+  };
+
+  window.updateMyPhoto = async function() {
+    if (!selectedPhoto) return;
+
+    const caption = document.getElementById('photoCaptionInput').value.trim();
+    const folder = document.getElementById('photoFolderSelect').value;
+
+    try {
+      await updateDoc(doc(db, 'teamPhotos', selectedPhoto.id), {
+        caption,
+        folder,
+        lastModified: serverTimestamp()
+      });
+
+      showToast('Photo updated successfully!', 'success');
+      await loadMyPhotos();
+      clearPhotoSelection();
+
+    } catch (error) {
+      console.error('Error updating photo:', error);
+      showToast('Error updating photo: ' + error.message, 'error');
+    }
+  };
+
+  window.deleteMyPhoto = async function() {
+    if (!selectedPhoto) return;
+
+    const confirmMsg = `Are you sure you want to delete this ${selectedPhoto.type === 'video' ? 'video' : 'photo'}?\n\nThis action cannot be undone.`;
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      // Delete from Storage first
+      if (selectedPhoto.storagePath) {
+        const storageRef = ref(storage, selectedPhoto.storagePath);
+        await deleteObject(storageRef);
+        console.log('✅ Deleted from Storage:', selectedPhoto.storagePath);
+      }
+
+      // Then delete from Firestore
+      await deleteDoc(doc(db, 'teamPhotos', selectedPhoto.id));
+      console.log('✅ Deleted from Firestore:', selectedPhoto.id);
+
+      showToast('Photo deleted successfully', 'success');
+      await loadMyPhotos();
+      clearPhotoSelection();
+
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+      showToast('Error deleting photo: ' + error.message, 'error');
+    }
+  };
+
+  window.clearPhotoSelection = function() {
+    selectedPhoto = null;
+    document.querySelectorAll('.photo-card').forEach(card => {
+      card.classList.remove('selected');
+    });
+    document.getElementById('photoEditor').classList.remove('active');
+    document.getElementById('photoEditor').innerHTML = `
+      <div class="no-selection">
+        <div class="icon">📸</div>
+        <p>Select a photo above to edit its caption or move it to a different album</p>
+      </div>
+    `;
+  };
+
+  // ========================================
+  // EULOGIES TAB
+  // ========================================
+  
+  window.loadEulogies = async function() {
+    const seasonId = document.getElementById('eulogySeasonSelect').value;
+    if (!seasonId) return;
+
+    const listEl = document.getElementById('eulogyList');
+    listEl.innerHTML = '<div class="empty-state">Loading eulogies...</div>';
+
+    try {
+      const q = query(
+        collection(db, 'eulogies'),
+        where('seasonId', '==', seasonId),
+        orderBy('eliminationOrder', 'asc')
+      );
+      const snapshot = await getDocs(q);
+
+      eulogiesCache = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      if (eulogiesCache.length === 0) {
+        listEl.innerHTML = '<div class="empty-state">No eulogies yet for this season. Click "Add Eulogy" to create one.</div>';
+        return;
+      }
+
+      listEl.innerHTML = eulogiesCache.map((eulogy, idx) => `
+        <div class="item-row" data-idx="${idx}" onclick="selectEulogy(${idx})">
+          <div class="item-info">
+            <div class="item-title">${eulogy.isChampion ? '🏆' : '🪦'} ${eulogy.teamName}</div>
+            <div class="item-subtitle">${eulogy.eliminatedInRound || 'Elimination round not set'}</div>
+          </div>
+          <div class="item-badges">
+            ${eulogy.isChampion ? '<span class="badge badge-champion">Champion</span>' : ''}
+          </div>
+        </div>
+      `).join('');
+
+    } catch (error) {
+      console.error('Error loading eulogies:', error);
+      listEl.innerHTML = '<div class="empty-state">Error loading eulogies</div>';
+      showToast('Error loading eulogies', 'error');
+    }
+  };
+
+  window.selectEulogy = function(idx) {
+    selectedEulogy = eulogiesCache[idx];
+    
+    document.querySelectorAll('#eulogyList .item-row').forEach((row, i) => {
+      row.classList.toggle('selected', i === idx);
+    });
+
+    renderEulogyEditor(false);
+  };
+
+  window.showNewEulogyForm = function() {
+    selectedEulogy = null;
+    document.querySelectorAll('#eulogyList .item-row').forEach(row => {
+      row.classList.remove('selected');
+    });
+    renderEulogyEditor(true);
+  };
+
+  function renderEulogyEditor(isNew) {
+    const editorEl = document.getElementById('eulogyEditor');
+    editorEl.classList.add('active');
+    
+    const teamOptions = TEAMS.map(t => 
+      `<option value="${t}" ${!isNew && selectedEulogy?.teamName === t ? 'selected' : ''}>${t}</option>`
+    ).join('');
+
+    editorEl.innerHTML = `
+      <h3>${isNew ? '➕ New Eulogy' : '✏️ Edit Eulogy'}</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Team</label>
+          <select id="eulogyTeamSelect">
+            <option value="">Select team...</option>
+            ${teamOptions}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Elimination Order</label>
+          <input type="number" id="eulogyOrderInput" value="${isNew ? '' : (selectedEulogy?.eliminationOrder || '')}" min="1" max="20" placeholder="1-20">
+          <div class="hint">Order in which team was eliminated (1 = first out)</div>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Eliminated In Round</label>
+          <input type="text" id="eulogyRoundInput" value="${isNew ? '' : (selectedEulogy?.eliminatedInRound || '')}" placeholder="e.g., Losers Round 2">
+        </div>
+      </div>
+      
+      <div class="checkbox-group">
+        <input type="checkbox" id="eulogyChampionCheck" ${!isNew && selectedEulogy?.isChampion ? 'checked' : ''}>
+        <label for="eulogyChampionCheck">🏆 This team is the champion (celebration instead of eulogy)</label>
+      </div>
+      
+      <div class="form-group" style="margin-top: 1.5rem;">
+        <label>Eulogy Text</label>
+        <textarea id="eulogyTextInput" placeholder="Write the eulogy for this team..." style="min-height: 200px;">${isNew ? '' : (selectedEulogy?.text || '')}</textarea>
+        <div class="hint">Use double line breaks for paragraphs. HTML will be escaped.</div>
+      </div>
+      
+      <div class="btn-group">
+        <button class="btn btn-success" onclick="saveEulogy(${isNew})">💾 ${isNew ? 'Create' : 'Save'}</button>
+        ${!isNew ? `<button class="btn btn-danger" onclick="deleteEulogy()">🗑️ Delete</button>` : ''}
+        <button class="btn btn-whatsapp" onclick="shareEulogyToWhatsApp()">📱 Share to WhatsApp</button>
+        <button class="btn btn-secondary" onclick="clearEulogySelection()">Cancel</button>
+      </div>
+    `;
+  }
+
+  window.saveEulogy = async function(isNew) {
+    const seasonId = document.getElementById('eulogySeasonSelect').value;
+    const teamName = document.getElementById('eulogyTeamSelect').value;
+    const eliminationOrder = parseInt(document.getElementById('eulogyOrderInput').value) || 1;
+    const eliminatedInRound = document.getElementById('eulogyRoundInput').value.trim();
+    const isChampion = document.getElementById('eulogyChampionCheck').checked;
+    const text = document.getElementById('eulogyTextInput').value.trim();
+
+    if (!teamName) {
+      showToast('Please select a team', 'warning');
+      return;
+    }
+
+    if (!text) {
+      showToast('Please enter eulogy text', 'warning');
+      return;
+    }
+
+    try {
+      const eulogyData = {
+        seasonId,
+        teamName,
+        eliminationOrder,
+        eliminatedInRound,
+        isChampion,
+        text,
+        lastUpdate: serverTimestamp(),
+        lastUpdatedBy: currentUser.uid
+      };
+
+      if (isNew) {
+        eulogyData.createdAt = serverTimestamp();
+        eulogyData.createdBy = currentUser.uid;
+        await addDoc(collection(db, 'eulogies'), eulogyData);
+        showToast('Eulogy created successfully!', 'success');
+      } else {
+        await updateDoc(doc(db, 'eulogies', selectedEulogy.id), eulogyData);
+        showToast('Eulogy updated successfully!', 'success');
+      }
+
+      await loadEulogies();
+      clearEulogySelection();
+
+    } catch (error) {
+      console.error('Error saving eulogy:', error);
+      showToast('Error saving eulogy: ' + error.message, 'error');
+    }
+  };
+
+  window.deleteEulogy = async function() {
+    if (!selectedEulogy) return;
+    
+    if (!confirm(`Are you sure you want to delete the eulogy for ${selectedEulogy.teamName}?`)) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'eulogies', selectedEulogy.id));
+      showToast('Eulogy deleted successfully!', 'success');
+      await loadEulogies();
+      clearEulogySelection();
+    } catch (error) {
+      console.error('Error deleting eulogy:', error);
+      showToast('Error deleting eulogy: ' + error.message, 'error');
+    }
+  };
+
+  window.clearEulogySelection = function() {
+    selectedEulogy = null;
+    document.querySelectorAll('#eulogyList .item-row').forEach(row => {
+      row.classList.remove('selected');
+    });
+    document.getElementById('eulogyEditor').classList.remove('active');
+    document.getElementById('eulogyEditor').innerHTML = `
+      <div class="no-selection">
+        <div class="icon">✍️</div>
+        <p>Select a eulogy to edit or click "Add Eulogy" to create a new one</p>
+      </div>
+    `;
+  };
+
+  window.shareEulogyToWhatsApp = function() {
+    const teamName = document.getElementById('eulogyTeamSelect').value;
+    const text = document.getElementById('eulogyTextInput').value.trim();
+    const isChampion = document.getElementById('eulogyChampionCheck').checked;
+    const seasonId = document.getElementById('eulogySeasonSelect').value;
+
+    if (!teamName || !text) {
+      showToast('Please fill in team and eulogy text first', 'warning');
+      return;
+    }
+
+    // Build the recap URL with season parameter
+    const baseUrl = 'https://acessoftballreference.com';
+    const recapUrl = `${baseUrl}/recap.html?season=${seasonId}`;
+
+    // Format the message
+    const title = isChampion ? `🏆 Championship Celebration: Aces ${teamName} 🏆` : `⚰️ Requiem for Aces ${teamName}`;
+    
+    const message = `${title}
+
+${text}
+
+See the full Year in Review and all eulogies at:
+${recapUrl}`;
+
+    shareToWhatsApp(message);
+  };
+
+  // ========================================
+  // PREVIEWS/ODDS TAB - UPDATED FOR 2026+
+  // Now saves directly to games collection
+  // ========================================
+
+  window.loadPreviews = async function() {
+    const seasonId = document.getElementById('previewSeasonSelect').value;
+    if (!seasonId) return;
+
+    const listEl = document.getElementById('previewList');
+    listEl.innerHTML = '<div class="empty-state">Loading games...</div>';
+
+    try {
+      // 2026+ CHANGE: Only fetch games - preview data is now stored directly on games
+      const gamesSnap = await getDocs(collection(db, 'seasons', seasonId, 'games'));
+
+      const games = gamesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Map games - preview fields are now directly on the game document
+      previewsCache = games.map(game => {
+        return {
+          ...game,
+          // Preview fields are now directly on the game document
+          previewText: game.preview || '',
+          homeOdds: game.homeOdds || null,
+          awayOdds: game.awayOdds || null,
+          previewStatus: game.previewStatus || game.status || 'scheduled'
+        };
+      }).sort((a, b) => {
+        const dateA = a.date?.seconds || 0;
+        const dateB = b.date?.seconds || 0;
+        return dateA - dateB;
+      });
+
+      if (previewsCache.length === 0) {
+        listEl.innerHTML = '<div class="empty-state">No games found for this season</div>';
+        return;
+      }
+
+      listEl.innerHTML = previewsCache.map((game, idx) => {
+        const dateStr = formatDate(game.date);
+        const hasPreview = game.previewText && game.previewText.trim() !== '';
+        const hasOdds = game.homeOdds !== null || game.awayOdds !== null;
+        const homeTeam = game.homeTeamName || game.homeTeam || capitalize(game.homeTeamId);
+        const awayTeam = game.awayTeamName || game.awayTeam || capitalize(game.awayTeamId);
+        const isCompleted = game.status === 'completed' || game.winner;
+        
+        return `
+          <div class="item-row ${isCompleted ? 'completed-game' : ''}" data-idx="${idx}" onclick="selectPreview(${idx})">
+            <div class="item-info">
+              <div class="item-title">${awayTeam} @ ${homeTeam}</div>
+              <div class="item-subtitle">${dateStr} ${game.time || ''} ${isCompleted ? '✓ Final' : ''}</div>
+            </div>
+            <div class="item-badges">
+              ${hasPreview ? '<span class="badge badge-preview">Preview</span>' : ''}
+              ${hasOdds ? '<span class="badge badge-has-odds">Odds</span>' : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error loading previews:', error);
+      listEl.innerHTML = '<div class="empty-state">Error loading previews</div>';
+      showToast('Error loading previews', 'error');
+    }
+  };
+
+  window.selectPreview = function(idx) {
+    selectedPreview = previewsCache[idx];
+    
+    // Update selection UI
+    document.querySelectorAll('#previewList .item-row').forEach((row, i) => {
+      row.classList.toggle('selected', i === idx);
+    });
+
+    const homeTeam = selectedPreview.homeTeamName || selectedPreview.homeTeam || capitalize(selectedPreview.homeTeamId);
+    const awayTeam = selectedPreview.awayTeamName || selectedPreview.awayTeam || capitalize(selectedPreview.awayTeamId);
+    const dateStr = formatDate(selectedPreview.date);
+    const isCompleted = selectedPreview.status === 'completed' || selectedPreview.winner;
+
+    const editorEl = document.getElementById('previewEditor');
+    editorEl.classList.add('active');
+    editorEl.innerHTML = `
+      <h3>✏️ Edit Preview: ${awayTeam} @ ${homeTeam}</h3>
+      <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+        ${dateStr}
+        ${isCompleted ? '<span style="color: var(--success-color); font-weight: 600;"> • Game Completed</span>' : ''}
+      </p>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Away Team Odds (${awayTeam})</label>
+          <input type="number" id="awayOddsInput" value="${selectedPreview.awayOdds || ''}" placeholder="e.g., +150 or -120">
+          <div class="hint">Positive = underdog, Negative = favorite</div>
+        </div>
+        <div class="form-group">
+          <label>Home Team Odds (${homeTeam})</label>
+          <input type="number" id="homeOddsInput" value="${selectedPreview.homeOdds || ''}" placeholder="e.g., +150 or -120">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Peters Preview Text</label>
+        <textarea id="previewTextInput" placeholder="Enter Peter's preview text for this game...">${selectedPreview.previewText || ''}</textarea>
+        <div class="hint">This text appears in the game preview page and weekend preview</div>
+      </div>
+      
+      <div class="btn-group">
+        <button class="btn btn-success" onclick="savePreview()">💾 Save Preview</button>
+        <button class="btn btn-whatsapp" onclick="sharePreviewToWhatsApp()">📱 Share to WhatsApp</button>
+        <button class="btn btn-secondary" onclick="clearPreviewSelection()">Cancel</button>
+      </div>
+    `;
+  };
+
+  // 2026+ CHANGE: Save preview data directly to the game document
+  window.savePreview = async function() {
+    if (!selectedPreview) return;
+
+    const seasonId = document.getElementById('previewSeasonSelect').value;
+    const previewText = document.getElementById('previewTextInput').value.trim();
+    const homeOdds = parseInt(document.getElementById('homeOddsInput').value) || null;
+    const awayOdds = parseInt(document.getElementById('awayOddsInput').value) || null;
+
+    try {
+      // 2026+ CHANGE: Write directly to the game document instead of separate previews collection
+      const gameRef = doc(db, 'seasons', seasonId, 'games', selectedPreview.id);
+      
+      await updateDoc(gameRef, {
+        homeOdds: homeOdds,
+        awayOdds: awayOdds,
+        preview: previewText,
+        previewStatus: previewText ? 'preview_available' : 'scheduled',
+        previewUpdatedAt: serverTimestamp(),
+        previewUpdatedBy: currentUser.uid
+      });
+
+      showToast('Preview saved successfully!', 'success');
+      await loadPreviews();
+      clearPreviewSelection();
+
+    } catch (error) {
+      console.error('Error saving preview:', error);
+      showToast('Error saving preview: ' + error.message, 'error');
+    }
+  };
+
+  window.clearPreviewSelection = function() {
+    selectedPreview = null;
+    document.querySelectorAll('#previewList .item-row').forEach(row => {
+      row.classList.remove('selected');
+    });
+    document.getElementById('previewEditor').classList.remove('active');
+    document.getElementById('previewEditor').innerHTML = `
+      <div class="no-selection">
+        <div class="icon">📋</div>
+        <p>Select a game from the list above to edit its preview</p>
+      </div>
+    `;
+  };
+
+  window.sharePreviewToWhatsApp = function() {
+    if (!selectedPreview) {
+      showToast('No preview selected', 'warning');
+      return;
+    }
+
+    // Get current values from the form
+    const previewText = document.getElementById('previewTextInput').value.trim();
+    const homeOdds = document.getElementById('homeOddsInput').value;
+    const awayOdds = document.getElementById('awayOddsInput').value;
+
+    // Get team names
+    const homeTeam = selectedPreview.homeTeamName || selectedPreview.homeTeam || capitalize(selectedPreview.homeTeamId);
+    const awayTeam = selectedPreview.awayTeamName || selectedPreview.awayTeam || capitalize(selectedPreview.awayTeamId);
+
+    // Format date and time
+    let dateTimeStr = 'TBD';
+    if (selectedPreview.date?.seconds) {
+      const d = new Date(selectedPreview.date.seconds * 1000);
+      dateTimeStr = d.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        month: 'short', 
+        day: 'numeric'
+      });
+      // Add time if available
+      if (selectedPreview.time) {
+        dateTimeStr += ` @ ${selectedPreview.time}`;
+      }
+    }
+
+    // Build the message
+    const baseUrl = 'https://acessoftballreference.com';
+    const previewUrl = `${baseUrl}/weekend-preview.html`;
+
+    let message = `⚾ ${awayTeam} @ ${homeTeam} - Game Preview
+
+📅 ${dateTimeStr}`;
+
+    // Add odds section if either odds exists
+    if (awayOdds || homeOdds) {
+      const awayOddsFormatted = awayOdds ? (awayOdds > 0 ? `+${awayOdds}` : awayOdds) : 'N/A';
+      const homeOddsFormatted = homeOdds ? (homeOdds > 0 ? `+${homeOdds}` : homeOdds) : 'N/A';
+      message += `
+
+📊 Peters Odds
+${awayTeam}: ${awayOddsFormatted} / ${homeTeam}: ${homeOddsFormatted}`;
+    }
+
+    // Add preview text if exists
+    if (previewText) {
+      message += `
+
+📝 Peters Preview
+${previewText}`;
+    }
+
+    // Add link
+    message += `
+
+See upcoming matchups at:
+${previewUrl}`;
+
+    shareToWhatsApp(message);
+  };
+
+  // ========================================
+  // BANNER MESSAGES TAB
+  // ========================================
+  
+  let selectedBanner = null;
+  
+  window.loadBanners = async function() {
+    const listEl = document.getElementById('bannerList');
+    listEl.innerHTML = '<div class="empty-state">Loading banners...</div>';
+
+    try {
+      const q = query(
+        collection(db, 'bannerMessages'),
+        orderBy('priority', 'asc')
+      );
+      const snapshot = await getDocs(q);
+
+      bannersCache = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      if (bannersCache.length === 0) {
+        listEl.innerHTML = '<div class="empty-state">No banners yet. Click "Add Banner" to create one.</div>';
+        return;
+      }
+
+      listEl.innerHTML = bannersCache.map((banner, idx) => {
+        const statusClass = banner.isActive ? 'badge-preview' : '';
+        const statusText = banner.isActive ? 'Active' : 'Inactive';
+        const messagePreview = (banner.message || '').substring(0, 50) + ((banner.message || '').length > 50 ? '...' : '');
+        
+        // Format date range if exists
+        let dateInfo = '';
+        if (banner.startDate || banner.endDate) {
+          const start = banner.startDate?.toDate ? banner.startDate.toDate().toLocaleDateString() : '';
+          const end = banner.endDate?.toDate ? banner.endDate.toDate().toLocaleDateString() : '';
+          if (start && end) dateInfo = `${start} - ${end}`;
+          else if (start) dateInfo = `From ${start}`;
+          else if (end) dateInfo = `Until ${end}`;
+        }
+        
+        return `
+          <div class="item-row" data-idx="${idx}" onclick="selectBanner(${idx})">
+            <div class="item-info">
+              <div class="item-title">${messagePreview || '(No message)'}</div>
+              <div class="item-subtitle">Priority: ${banner.priority || 0} ${dateInfo ? '• ' + dateInfo : ''}</div>
+            </div>
+            <div class="item-badges">
+              <span class="badge ${statusClass}">${statusText}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error loading banners:', error);
+      listEl.innerHTML = '<div class="empty-state">Error loading banners</div>';
+      showToast('Error loading banners', 'error');
+    }
+  };
+
+  window.selectBanner = function(idx) {
+    selectedBanner = bannersCache[idx];
+    
+    document.querySelectorAll('#bannerList .item-row').forEach((row, i) => {
+      row.classList.toggle('selected', i === idx);
+    });
+
+    renderBannerEditor(false);
+  };
+
+  window.showNewBannerForm = function() {
+    selectedBanner = null;
+    document.querySelectorAll('#bannerList .item-row').forEach(row => {
+      row.classList.remove('selected');
+    });
+    renderBannerEditor(true);
+  };
+
+  function renderBannerEditor(isNew) {
+    const editorEl = document.getElementById('bannerEditor');
+    editorEl.classList.add('active');
+    
+    // Format dates for input fields
+    let startDateValue = '';
+    let endDateValue = '';
+    if (!isNew && selectedBanner) {
+      if (selectedBanner.startDate?.toDate) {
+        startDateValue = selectedBanner.startDate.toDate().toISOString().split('T')[0];
+      }
+      if (selectedBanner.endDate?.toDate) {
+        endDateValue = selectedBanner.endDate.toDate().toISOString().split('T')[0];
+      }
+    }
+
+    editorEl.innerHTML = `
+      <h3>${isNew ? '➕ New Banner' : '✏️ Edit Banner'}</h3>
+      
+      <div class="form-group">
+        <label>Banner Message</label>
+        <textarea id="bannerMessageInput" placeholder="Enter the banner message text..." style="min-height: 100px;">${isNew ? '' : (selectedBanner?.message || '')}</textarea>
+        <div class="hint">This text will scroll across the banner on the home page. Emojis are supported! 🎉</div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Priority</label>
+          <input type="number" id="bannerPriorityInput" value="${isNew ? '10' : (selectedBanner?.priority || 10)}" min="1" max="100" placeholder="1-100">
+          <div class="hint">Lower numbers appear first (1 = highest priority)</div>
+        </div>
+        <div class="form-group">
+          <div class="checkbox-group" style="margin-top: 1.75rem;">
+            <input type="checkbox" id="bannerActiveCheck" ${isNew || selectedBanner?.isActive ? 'checked' : ''}>
+            <label for="bannerActiveCheck">✅ Banner is Active</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Start Date (Optional)</label>
+          <input type="date" id="bannerStartDate" value="${startDateValue}">
+          <div class="hint">Banner will only show on or after this date</div>
+        </div>
+        <div class="form-group">
+          <label>End Date (Optional)</label>
+          <input type="date" id="bannerEndDate" value="${endDateValue}">
+          <div class="hint">Banner will stop showing after this date</div>
+        </div>
+      </div>
+      
+      <div class="btn-group">
+        <button class="btn btn-success" onclick="saveBanner(${isNew})">💾 ${isNew ? 'Create' : 'Save'}</button>
+        ${!isNew ? `<button class="btn btn-danger" onclick="deleteBanner()">🗑️ Delete</button>` : ''}
+        <button class="btn btn-secondary" onclick="clearBannerSelection()">Cancel</button>
+      </div>
+    `;
+  }
+
+  window.saveBanner = async function(isNew) {
+    const message = document.getElementById('bannerMessageInput').value.trim();
+    const priority = parseInt(document.getElementById('bannerPriorityInput').value) || 10;
+    const isActive = document.getElementById('bannerActiveCheck').checked;
+    const startDateStr = document.getElementById('bannerStartDate').value;
+    const endDateStr = document.getElementById('bannerEndDate').value;
+
+    if (!message) {
+      showToast('Please enter a banner message', 'warning');
+      return;
+    }
+
+    try {
+      const bannerData = {
+        message,
+        priority,
+        isActive,
+        lastUpdated: serverTimestamp(),
+        lastUpdatedBy: currentUser.uid
+      };
+      
+      // Handle optional dates
+      if (startDateStr) {
+        bannerData.startDate = Timestamp.fromDate(new Date(startDateStr + 'T00:00:00'));
+      } else {
+        bannerData.startDate = null;
+      }
+      
+      if (endDateStr) {
+        bannerData.endDate = Timestamp.fromDate(new Date(endDateStr + 'T23:59:59'));
+      } else {
+        bannerData.endDate = null;
+      }
+
+      if (isNew) {
+        bannerData.createdAt = serverTimestamp();
+        bannerData.createdBy = currentUser.uid;
+        await addDoc(collection(db, 'bannerMessages'), bannerData);
+        showToast('Banner created successfully!', 'success');
+      } else {
+        await updateDoc(doc(db, 'bannerMessages', selectedBanner.id), bannerData);
+        showToast('Banner updated successfully!', 'success');
+      }
+
+      await loadBanners();
+      clearBannerSelection();
+
+    } catch (error) {
+      console.error('Error saving banner:', error);
+      showToast('Error saving banner: ' + error.message, 'error');
+    }
+  };
+
+  window.deleteBanner = async function() {
+    if (!selectedBanner) return;
+    
+    if (!confirm(`Are you sure you want to delete this banner?\n\n"${selectedBanner.message?.substring(0, 50)}..."`)) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'bannerMessages', selectedBanner.id));
+      showToast('Banner deleted successfully!', 'success');
+      await loadBanners();
+      clearBannerSelection();
+    } catch (error) {
+      console.error('Error deleting banner:', error);
+      showToast('Error deleting banner: ' + error.message, 'error');
+    }
+  };
+
+  window.clearBannerSelection = function() {
+    selectedBanner = null;
+    document.querySelectorAll('#bannerList .item-row').forEach(row => {
+      row.classList.remove('selected');
+    });
+    document.getElementById('bannerEditor').classList.remove('active');
+    document.getElementById('bannerEditor').innerHTML = `
+      <div class="no-selection">
+        <div class="icon">📢</div>
+        <p>Select a banner to edit or click "Add Banner" to create a new one</p>
+      </div>
+    `;
+  };
+
+  // ========================================
+  // MEDIA HUB TAB
+  // ========================================
+
+  let mediaCache = [];
+  let selectedMedia = null;
+
+  const MEDIA_TYPES = [
+    { value: 'youtube_channel',  label: 'YouTube Channel' },
+    { value: 'youtube_playlist', label: 'YouTube Playlist' },
+    { value: 'highlight',        label: 'Single Video / Highlight' },
+    { value: 'podcast',          label: 'Podcast' },
+  ];
+
+  const MEDIA_TEAMS = ['League', 'Black', 'Green', 'Red', 'Blue', 'White', 'Orange', 'Silver', 'Purple', 'Gold', 'Carolina', 'Army', 'Teal'];
+
+  window.loadMediaChannels = async function() {
+    const listEl = document.getElementById('mediaList');
+    if (!listEl) return;
+    listEl.innerHTML = '<div class="empty-state">Loading media entries...</div>';
+
+    try {
+      const snap = await getDocs(query(collection(db, 'mediaChannels'), orderBy('order', 'asc')));
+      mediaCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      if (mediaCache.length === 0) {
+        listEl.innerHTML = '<div class="empty-state">No entries yet. Click "Add Entry" to create one.</div>';
+        return;
+      }
+
+      const TYPE_LABELS = {
+        youtube_channel:  'YouTube Channel',
+        youtube_playlist: 'Playlist',
+        highlight:        'Highlight',
+        podcast:          'Podcast',
+      };
+
+      listEl.innerHTML = mediaCache.map((item, idx) => {
+        const activeClass = item.active !== false ? 'badge-preview' : '';
+        const activeText  = item.active !== false ? 'Active' : 'Inactive';
+        const typeLabel   = TYPE_LABELS[item.type] || item.type || '—';
+        const team        = item.team || 'League';
+        return `
+          <div class="item-row" data-idx="${idx}" onclick="selectMedia(${idx})">
+            <div class="item-info">
+              <div class="item-title">${item.title || '(Untitled)'}</div>
+              <div class="item-subtitle">${typeLabel} &bull; ${team} &bull; Order: ${item.order ?? '—'}</div>
+            </div>
+            <div class="item-badges">
+              <span class="badge ${activeClass}">${activeText}</span>
+            </div>
+          </div>`;
+      }).join('');
+
+    } catch (err) {
+      console.error('Error loading media channels:', err);
+      listEl.innerHTML = '<div class="empty-state">Error loading entries.</div>';
+      showToast('Error loading media entries', 'error');
+    }
+  };
+
+  window.selectMedia = function(idx) {
+    selectedMedia = mediaCache[idx];
+    document.querySelectorAll('#mediaList .item-row').forEach((row, i) => {
+      row.classList.toggle('selected', i === idx);
+    });
+    renderMediaEditor(false);
+  };
+
+  window.showNewMediaForm = function() {
+    selectedMedia = null;
+    document.querySelectorAll('#mediaList .item-row').forEach(r => r.classList.remove('selected'));
+    renderMediaEditor(true);
+  };
+
+  function renderMediaEditor(isNew) {
+    const el = document.getElementById('mediaEditor');
+    el.classList.add('active');
+
+    const typeOptions = MEDIA_TYPES.map(t =>
+      `<option value="${t.value}" ${!isNew && selectedMedia?.type === t.value ? 'selected' : ''}>${t.label}</option>`
+    ).join('');
+
+    const teamOptions = MEDIA_TEAMS.map(t =>
+      `<option value="${t}" ${!isNew && selectedMedia?.team === t ? 'selected' : ''}>${t}</option>`
+    ).join('');
+
+    const v = isNew ? {} : (selectedMedia || {});
+
+    el.innerHTML = `
+      <h3>${isNew ? '➕ New Media Entry' : '✏️ Edit Media Entry'}</h3>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Type</label>
+          <select id="mediaTypeInput" onchange="toggleMediaFields()">
+            ${typeOptions}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Team</label>
+          <select id="mediaTeamInput">${teamOptions}</select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="mediaTitleInput" value="${v.title || ''}" placeholder="e.g. Green Team Highlights">
+      </div>
+
+      <div class="form-group">
+        <label>Description <span style="font-weight:400;color:var(--text-light)">(optional)</span></label>
+        <textarea id="mediaDescInput" style="min-height:80px;">${v.description || ''}</textarea>
+      </div>
+
+      <!-- YouTube Channel fields -->
+      <div id="mediaFieldsChannel">
+        <div class="form-group">
+          <label>Channel URL</label>
+          <input type="url" id="mediaChannelUrlInput" value="${v.channelUrl || ''}" placeholder="https://www.youtube.com/@handle">
+          <div class="hint">Full YouTube channel URL — opens in a new tab</div>
+        </div>
+        <div class="form-group">
+          <label>Team Color Override <span style="font-weight:400;color:var(--text-light)">(optional hex)</span></label>
+          <input type="text" id="mediaTeamColorInput" value="${v.teamColor || ''}" placeholder="#2d7d32 — leave blank to auto-derive from team">
+        </div>
+      </div>
+
+      <!-- Playlist / Highlight embed fields -->
+      <div id="mediaFieldsEmbed">
+        <div class="form-group">
+          <label>YouTube ID</label>
+          <input type="text" id="mediaEmbedIdInput" value="${v.embedId || ''}" placeholder="">
+          <div class="hint" id="embedIdHint">For playlists: the ID after <code>?list=</code> in the URL. For highlights: the ID after <code>?v=</code>.</div>
+        </div>
+      </div>
+
+      <!-- Podcast fields -->
+      <div id="mediaFieldsPodcast">
+        <div class="form-group">
+          <label>Spotify Show ID <span style="font-weight:400;color:var(--text-light)">(optional)</span></label>
+          <input type="text" id="mediaSpotifyIdInput" value="${v.spotifyShowId || ''}" placeholder="ID after open.spotify.com/show/">
+        </div>
+        <div class="form-group">
+          <label>Apple Podcasts URL <span style="font-weight:400;color:var(--text-light)">(optional)</span></label>
+          <input type="url" id="mediaAppleUrlInput" value="${v.applePodcastsUrl || ''}" placeholder="https://podcasts.apple.com/...">
+        </div>
+        <div class="form-group">
+          <label>Generic Podcast URL <span style="font-weight:400;color:var(--text-light)">(fallback if no Spotify/Apple)</span></label>
+          <input type="url" id="mediaPodcastUrlInput" value="${v.podcastUrl || ''}" placeholder="https://...">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Sort Order</label>
+          <input type="number" id="mediaOrderInput" value="${v.order ?? 10}" min="1" max="999">
+          <div class="hint">Lower numbers appear first within each section</div>
+        </div>
+        <div class="form-group">
+          <div class="checkbox-group" style="margin-top:1.75rem;">
+            <input type="checkbox" id="mediaActiveCheck" ${v.active !== false ? 'checked' : ''}>
+            <label for="mediaActiveCheck">Active (visible on Media Hub)</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-success" onclick="saveMedia(${isNew})">💾 ${isNew ? 'Create' : 'Save Changes'}</button>
+        ${!isNew ? `<button class="btn btn-danger" onclick="deleteMedia()">🗑️ Delete</button>` : ''}
+        <button class="btn btn-secondary" onclick="clearMediaSelection()">Cancel</button>
+      </div>
+    `;
+
+    // Show correct fields for current type
+    toggleMediaFields();
+  }
+
+  window.toggleMediaFields = function() {
+    const type = document.getElementById('mediaTypeInput')?.value;
+    if (!type) return;
+
+    const showChannel  = type === 'youtube_channel';
+    const showEmbed    = type === 'youtube_playlist' || type === 'highlight';
+    const showPodcast  = type === 'podcast';
+
+    document.getElementById('mediaFieldsChannel').style.display = showChannel ? 'block' : 'none';
+    document.getElementById('mediaFieldsEmbed').style.display   = showEmbed   ? 'block' : 'none';
+    document.getElementById('mediaFieldsPodcast').style.display = showPodcast ? 'block' : 'none';
+
+    // Update embed ID hint for playlist vs highlight
+    const hintEl = document.getElementById('embedIdHint');
+    if (hintEl) {
+      hintEl.innerHTML = type === 'youtube_playlist'
+        ? 'Playlist ID — the part after <code>?list=</code> in the YouTube playlist URL'
+        : 'Video ID — the part after <code>?v=</code> in the YouTube video URL';
+    }
+  };
+
+  window.saveMedia = async function(isNew) {
+    const type  = document.getElementById('mediaTypeInput').value;
+    const team  = document.getElementById('mediaTeamInput').value;
+    const title = document.getElementById('mediaTitleInput').value.trim();
+    const desc  = document.getElementById('mediaDescInput').value.trim();
+    const order = parseInt(document.getElementById('mediaOrderInput').value) || 10;
+    const active = document.getElementById('mediaActiveCheck').checked;
+
+    if (!title) { showToast('Please enter a title', 'warning'); return; }
+
+    const data = {
+      type, team, title,
+      description: desc || null,
+      order, active,
+      lastUpdated: serverTimestamp(),
+      lastUpdatedBy: currentUser.uid,
+    };
+
+    // Type-specific fields
+    if (type === 'youtube_channel') {
+      const url   = document.getElementById('mediaChannelUrlInput').value.trim();
+      const color = document.getElementById('mediaTeamColorInput').value.trim();
+      if (!url) { showToast('Please enter a channel URL', 'warning'); return; }
+      data.channelUrl = url;
+      data.teamColor  = color || null;
+    } else if (type === 'youtube_playlist' || type === 'highlight') {
+      const embedId = document.getElementById('mediaEmbedIdInput').value.trim();
+      if (!embedId) { showToast('Please enter a YouTube ID', 'warning'); return; }
+      data.embedId = embedId;
+    } else if (type === 'podcast') {
+      data.spotifyShowId   = document.getElementById('mediaSpotifyIdInput').value.trim() || null;
+      data.applePodcastsUrl = document.getElementById('mediaAppleUrlInput').value.trim() || null;
+      data.podcastUrl      = document.getElementById('mediaPodcastUrlInput').value.trim() || null;
+      if (!data.spotifyShowId && !data.applePodcastsUrl && !data.podcastUrl) {
+        showToast('Please enter at least one podcast link', 'warning');
+        return;
+      }
+    }
+
+    // Remove null fields — Firestore rejects undefined but accepts null;
+    // however keeping nulls is fine for clearing old values on edit
+    try {
+      if (isNew) {
+        data.createdAt = serverTimestamp();
+        data.createdBy = currentUser.uid;
+        await addDoc(collection(db, 'mediaChannels'), data);
+        showToast('Media entry created!', 'success');
+      } else {
+        await updateDoc(doc(db, 'mediaChannels', selectedMedia.id), data);
+        showToast('Media entry updated!', 'success');
+      }
+      await loadMediaChannels();
+      clearMediaSelection();
+    } catch (err) {
+      console.error('Error saving media entry:', err);
+      showToast('Error saving: ' + err.message, 'error');
+    }
+  };
+
+  window.deleteMedia = async function() {
+    if (!selectedMedia) return;
+    if (!confirm(`Delete "${selectedMedia.title}"? This cannot be undone.`)) return;
+    try {
+      await deleteDoc(doc(db, 'mediaChannels', selectedMedia.id));
+      showToast('Entry deleted', 'success');
+      await loadMediaChannels();
+      clearMediaSelection();
+    } catch (err) {
+      console.error('Error deleting media entry:', err);
+      showToast('Error deleting: ' + err.message, 'error');
+    }
+  };
+
+  window.clearMediaSelection = function() {
+    selectedMedia = null;
+    document.querySelectorAll('#mediaList .item-row').forEach(r => r.classList.remove('selected'));
+    const el = document.getElementById('mediaEditor');
+    el.classList.remove('active');
+    el.innerHTML = `
+      <div class="no-selection">
+        <div class="icon">📺</div>
+        <p>Select an entry to edit or click "Add Entry" to create a new one</p>
+      </div>`;
+  };
+
+  // ========================================
+  // UTILITY FUNCTIONS
+  // ========================================
+
+  function shareToWhatsApp(message) {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile && navigator.share) {
+      // Mobile: native share sheet — WhatsApp appears directly, emojis safe
+      navigator.share({ text: message })
+        .then(() => showToast('Shared successfully!', 'success'))
+        .catch((err) => { if (err.name !== 'AbortError') showToast('Share failed', 'error'); });
+    } else {
+      // Desktop: copy to clipboard + toast, user pastes into WhatsApp
+      navigator.clipboard.writeText(message)
+        .then(() => showToast('Copied! Open WhatsApp and paste.', 'success'))
+        .catch(() => showToast('Could not copy — try again', 'error'));
+    }
+  }
+
+  function formatDate(timestamp) {
+    if (!timestamp?.seconds) return 'TBD';
+    const d = new Date(timestamp.seconds * 1000);
+    return d.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+
+  function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
+    toast.innerHTML = `<span>${icon}</span> ${message}`;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
+
+  // Make functions globally available
+  window.showToast = showToast;
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="team-colors.js"></script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

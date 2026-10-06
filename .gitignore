@@ -1,0 +1,14 @@
+backup/
+ios/
+node_modules/
+.DS_Store
+
+# Claude working files
+.claude/
+.pending-commit
+
+# Local-only folders
+Claude Download Zips/
+Documents/
+*.png
+*.pdf

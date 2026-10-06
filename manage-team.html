@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Team - Mountainside Aces</title>
+  <meta name="theme-color" content="#2d5016">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --secondary-color: #1a6b4a;
+      --accent-color: #ffd700;
+      --card-bg: #ffffff;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+      --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      padding: 2rem;
+      border-radius: 16px;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-lg);
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .header::before {
+      content: '⚙️';
+      position: absolute;
+      bottom: -40px;
+      right: -40px;
+      font-size: 200px;
+      opacity: 0.05;
+    }
+    
+    .header-content {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .header p {
+      opacity: 0.9;
+      font-size: 1rem;
+    }
+    
+    .role-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-color);
+    }
+    
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .user-list {
+      display: grid;
+      gap: 1rem;
+    }
+    
+    .user-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: white;
+      transition: all 0.2s ease;
+    }
+    
+    .user-card:hover {
+      box-shadow: var(--shadow-sm);
+      border-color: var(--primary-color);
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+    }
+    
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: white;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+    
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    
+    .user-details {
+      flex: 1;
+    }
+    
+    .user-name {
+      font-weight: 600;
+      color: var(--text-dark);
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .user-meta {
+      font-size: 0.875rem;
+      color: var(--text-light);
+    }
+    
+    .role-indicator {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+    
+    .role-indicator.team-staff {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .role-indicator.captain {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .role-indicator.player {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .role-indicator.fan {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+    }
+    
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--secondary-color);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #b91c1c;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-secondary {
+      background: #e2e8f0;
+      color: var(--text-dark);
+    }
+    
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-light);
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--border-color);
+      border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-light);
+    }
+    
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.3;
+    }
+    
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .alert-info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+    
+    .alert-success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    
+    .alert-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+    
+    .search-box {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .search-box:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+    }
+    
+    @media (max-width: 768px) {
+      .user-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      
+      .user-info {
+        width: 100%;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-content">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h1>Team Management</h1>
+            <p>Manage team staff roles and permissions</p>
+            <span class="role-badge" id="userRoleBadge">Loading...</span>
+          </div>
+          <div style="display: flex; gap: 1rem;">
+            <a href="index.html" class="btn btn-secondary" style="background: white; color: var(--primary-color); text-decoration: none;">
+              🏠 Home
+            </a>
+            <a href="profile.html" class="btn btn-secondary" style="background: white; color: var(--primary-color); text-decoration: none;">
+              👤 My Profile
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="loadingState" class="loading">
+      <div class="spinner"></div>
+      <p>Loading team data...</p>
+    </div>
+
+    <div id="contentArea" style="display: none;">
+      <!-- Team Players Section -->
+      <div class="card">
+        <h2 class="section-title">
+          👥 Your Team Players
+        </h2>
+        <p style="color: var(--text-light); margin-bottom: 1rem;">
+          Players registered and linked to <strong id="teamName">your team</strong>
+        </p>
+        <input type="text" id="searchPlayers" class="search-box" placeholder="Search players...">
+        <div id="playersList" class="user-list">
+          <!-- Players will be loaded here -->
+        </div>
+      </div>
+
+      <!-- Fans Section -->
+      <div class="card">
+        <h2 class="section-title">
+          📣 Registered Fans
+        </h2>
+        <p style="color: var(--text-light); margin-bottom: 1rem;">
+          Fans, family, and supporters who may help with team activities
+        </p>
+        <input type="text" id="searchFans" class="search-box" placeholder="Search fans...">
+        <div id="fansList" class="user-list">
+          <!-- Fans will be loaded here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { onAuthChange, getCurrentUser, getUserProfile, updateUserProfile } from './firebase-auth.js';
+    import { getAllPlayers } from './firebase-data.js';
+
+    let currentUser = null;
+    let userProfile = null;
+    let allUsers = [];
+    let players = [];
+    let fans = [];
+
+    // USER_ROLES constant to match firebase-auth.js
+    const USER_ROLES = {
+      PLAYER: 'player',
+      CAPTAIN: 'captain',
+      TEAM_STAFF: 'team-staff',
+      LEAGUE_STAFF: 'league-staff',
+      FAN: 'fan',
+      FAMILY: 'family',
+      ADMIN: 'admin'
+    };
+
+    // Initialize
+    onAuthChange(async (user) => {
+      if (!user) {
+        window.location.href = 'signin.html';
+        return;
+      }
+
+      currentUser = user;
+      await loadData();
+    });
+
+    async function loadData() {
+      try {
+        // Get user profile
+        const profileResult = await getUserProfile(currentUser.uid);
+        if (!profileResult.success) {
+          showError('Failed to load your profile');
+          return;
+        }
+
+        userProfile = profileResult.data;
+
+        // Check if user is captain or league-staff
+        const isCaptain = userProfile.isCaptain || userProfile.userRole === USER_ROLES.CAPTAIN;
+        const isLeagueStaff = userProfile.userRole === USER_ROLES.LEAGUE_STAFF;
+        const isAdmin = userProfile.userRole === USER_ROLES.ADMIN;
+
+        if (!isCaptain && !isLeagueStaff && !isAdmin) {
+          showError('You do not have permission to access this page. Only team captains and league staff can manage team staff.');
+          setTimeout(() => {
+            window.location.href = 'profile.html';
+          }, 3000);
+          return;
+        }
+
+        // Update role badge
+        if (isAdmin) {
+          document.getElementById('userRoleBadge').textContent = '👑 Admin';
+        } else if (isLeagueStaff) {
+          document.getElementById('userRoleBadge').textContent = '⚙️ League Staff';
+        } else {
+          document.getElementById('userRoleBadge').textContent = '🎯 Team Captain';
+        }
+
+        // Update team name
+        if (userProfile.linkedTeam) {
+          document.getElementById('teamName').textContent = userProfile.linkedTeam;
+        }
+
+        // Load all users
+        allUsers = await getAllPlayers();
+
+        // Normalize uid: getAllPlayers returns {id, ...doc.data()} but uid may not
+        // be stored in the doc data for legacy accounts. Use id as the canonical uid.
+        allUsers = allUsers.map(u => ({ ...u, uid: u.uid || u.id }));
+        
+        // Filter to only verified users (excludes placeholder accounts)
+        allUsers = allUsers.filter(u => u.emailVerified === true);
+        console.log(`✅ Loaded ${allUsers.length} verified users`);
+        
+        // Filter players on captain's team
+        players = allUsers.filter(u => {
+          const isPlayer = u.linkedPlayer && u.linkedTeam === userProfile.linkedTeam;
+          return isPlayer && u.uid !== currentUser.uid; // Exclude self
+        });
+
+        // Filter fans (users with fan or family role, or no role)
+        fans = allUsers.filter(u => {
+          const isFan = u.userRole === USER_ROLES.FAN || 
+                       u.userRole === USER_ROLES.FAMILY || 
+                       !u.userRole ||
+                       (!u.linkedPlayer && !u.isCaptain);
+          return isFan && u.uid !== currentUser.uid; // Exclude self
+        });
+
+        // Sort alphabetically
+        players.sort((a, b) => (a.displayName || a.email).localeCompare(b.displayName || b.email));
+        fans.sort((a, b) => (a.displayName || a.email).localeCompare(b.displayName || b.email));
+
+        renderLists();
+
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('contentArea').style.display = 'block';
+
+        // Add search listeners
+        document.getElementById('searchPlayers').addEventListener('input', (e) => {
+          filterList('players', e.target.value);
+        });
+        document.getElementById('searchFans').addEventListener('input', (e) => {
+          filterList('fans', e.target.value);
+        });
+
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showError('Failed to load team data: ' + error.message);
+      }
+    }
+
+    function renderLists() {
+      renderUserList(players, 'playersList');
+      renderUserList(fans, 'fansList');
+    }
+
+    function renderUserList(users, containerId) {
+      const container = document.getElementById(containerId);
+      
+      if (users.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <p>No users found</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = users.map(user => {
+        const isTeamStaff = user.userRole === USER_ROLES.TEAM_STAFF;
+        const displayName = user.displayName || user.email;
+        const initials = getInitials(displayName);
+        const roleLabel = getRoleLabel(user);
+
+        return `
+          <div class="user-card" data-user-id="${user.uid}">
+            <div class="user-info">
+              ${user.photoURL ? 
+                `<div class="avatar"><img src="${user.photoURL}" alt="${displayName}"></div>` :
+                `<div class="avatar">${initials}</div>`
+              }
+              <div class="user-details">
+                <div class="user-name">
+                  ${displayName}
+                  ${roleLabel ? `<span class="role-indicator ${roleLabel.class}">${roleLabel.text}</span>` : ''}
+                </div>
+                <div class="user-meta">
+                  ${user.email}
+                  ${user.linkedPlayer ? ` • Player: ${user.linkedPlayer}` : ''}
+                </div>
+              </div>
+            </div>
+            <div>
+              ${isTeamStaff ? 
+                `<button class="btn btn-danger" onclick="removeTeamStaff('${user.uid}')">
+                  Remove Staff
+                </button>` :
+                `<button class="btn btn-primary" onclick="assignTeamStaff('${user.uid}')">
+                  Make Team Staff
+                </button>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function getInitials(name) {
+      if (!name) return '??';
+      const parts = name.trim().split(' ');
+      if (parts.length > 1) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+      return name.substring(0, 2).toUpperCase();
+    }
+
+    function getRoleLabel(user) {
+      if (user.userRole === USER_ROLES.TEAM_STAFF) {
+        return { text: 'Team Staff', class: 'team-staff' };
+      }
+      if (user.isCaptain || user.userRole === USER_ROLES.CAPTAIN) {
+        return { text: 'Captain', class: 'captain' };
+      }
+      if (user.linkedPlayer) {
+        return { text: 'Player', class: 'player' };
+      }
+      if (user.userRole === USER_ROLES.FAN || user.userRole === USER_ROLES.FAMILY) {
+        return { text: 'Fan', class: 'fan' };
+      }
+      return null;
+    }
+
+    async function assignTeamStaff(userId) {
+      if (!confirm('Are you sure you want to assign this user as Team Staff? They will be able to help manage team activities.')) {
+        return;
+      }
+
+      try {
+        const teamKey = userProfile.linkedTeam.charAt(0).toUpperCase() + userProfile.linkedTeam.slice(1);
+        const user = allUsers.find(u => u.uid === userId);
+        const existingTeamRoles = user.teamRoles || {};
+
+        const updatedTeamRoles = {
+          ...existingTeamRoles,
+          [teamKey]: {
+            ...(existingTeamRoles[teamKey] || {}),
+            role: 'team-staff',
+            status: 'active',
+            approvedBy: getCurrentUser()?.uid,
+            approvedAt: new Date().toISOString()
+          }
+        };
+
+        const result = await updateUserProfile(userId, {
+          teamRoles: updatedTeamRoles,
+          linkedTeam: teamKey
+        });
+
+        if (result.success) {
+          showSuccess('Team staff role assigned successfully!');
+          await loadData();
+        } else {
+          showError('Failed to assign team staff role');
+        }
+      } catch (error) {
+        console.error('Error assigning team staff:', error);
+        showError('Error assigning team staff: ' + error.message);
+      }
+    }
+
+    async function removeTeamStaff(userId) {
+      if (!confirm('Are you sure you want to remove this team staff role? They will lose access to team management features.')) {
+        return;
+      }
+
+      try {
+        const teamKey = userProfile.linkedTeam.charAt(0).toUpperCase() + userProfile.linkedTeam.slice(1);
+        const user = allUsers.find(u => u.uid === userId);
+        const existingTeamRoles = user.teamRoles || {};
+
+        const updatedTeamRoles = {
+          ...existingTeamRoles,
+          [teamKey]: {
+            ...(existingTeamRoles[teamKey] || {}),
+            status: 'removed',
+            removedBy: getCurrentUser()?.uid,
+            removedAt: new Date().toISOString()
+          }
+        };
+
+        const result = await updateUserProfile(userId, {
+          teamRoles: updatedTeamRoles
+        });
+
+        if (result.success) {
+          showSuccess('Team staff role removed successfully!');
+          await loadData();
+        } else {
+          showError('Failed to remove team staff role');
+        }
+      } catch (error) {
+        console.error('Error removing team staff:', error);
+        showError('Error removing team staff: ' + error.message);
+      }
+    }
+
+    function filterList(listType, searchTerm) {
+      const filtered = (listType === 'players' ? players : fans).filter(user => {
+        const displayName = (user.displayName || user.email).toLowerCase();
+        const email = user.email.toLowerCase();
+        const search = searchTerm.toLowerCase();
+        return displayName.includes(search) || email.includes(search);
+      });
+
+      renderUserList(filtered, listType === 'players' ? 'playersList' : 'fansList');
+    }
+
+    function showSuccess(message) {
+      const alert = document.createElement('div');
+      alert.className = 'alert alert-success';
+      alert.innerHTML = `<span style="font-size: 1.5rem;">✓</span><span>${message}</span>`;
+      document.querySelector('.container').insertBefore(alert, document.querySelector('.container').firstChild);
+      setTimeout(() => alert.remove(), 5000);
+    }
+
+    function showError(message) {
+      const alert = document.createElement('div');
+      alert.className = 'alert alert-error';
+      alert.innerHTML = `<span style="font-size: 1.5rem;">⚠</span><span>${message}</span>`;
+      document.querySelector('.container').insertBefore(alert, document.querySelector('.container').firstChild);
+      setTimeout(() => alert.remove(), 8000);
+    }
+
+    // Make functions global for onclick handlers
+    window.assignTeamStaff = assignTeamStaff;
+    window.removeTeamStaff = removeTeamStaff;
+  </script>
+  <script src="theme-toggle.js"></script>
+</body>
+</html>

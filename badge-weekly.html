@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Badge Report — Admin | Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<link rel="stylesheet" href="dark-mode.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --admin-color: #6b21a8;
+  --admin-secondary: #7c3aed;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --gold: #ffd700;
+  --silver: #c0c0c0;
+  --bronze: #cd7f32;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+/* ── Auth Gate ── */
+.auth-gate {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 60vh;
+  text-align: center; padding: 2rem;
+}
+.auth-gate h2 { font-size: 1.5rem; color: var(--text-dark); margin-bottom: 0.5rem; }
+.auth-gate p  { color: var(--text-light); }
+
+/* ── Loading ── */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; transition: opacity 0.3s;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.spinner { font-size: 3rem; animation: spin 1.5s ease-in-out infinite; }
+@keyframes spin { 0%,100%{transform:rotate(0)} 50%{transform:rotate(180deg)} }
+
+/* ── Page Header ── */
+.page-header {
+  background: linear-gradient(135deg, var(--admin-color) 0%, var(--admin-secondary) 100%);
+  padding: 2.5rem 2rem 2rem;
+  color: #fff;
+}
+.page-header h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.25rem; }
+.page-header p  { opacity: 0.85; font-size: 0.95rem; }
+
+/* ── Main Layout ── */
+.main-content {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+.card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ── Controls ── */
+.controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 600px) {
+  .controls-grid { grid-template-columns: 1fr; }
+}
+.control-group label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.4rem;
+}
+.control-group select,
+.control-group input[type="date"] {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  background: var(--card-bg);
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: center;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.quick-range-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+.quick-range-label {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  font-weight: 600;
+}
+.btn-quick {
+  padding: 0.3rem 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--card-bg);
+  color: var(--text-dark);
+  transition: all 0.15s;
+}
+.btn-quick:hover { border-color: var(--admin-color); color: var(--admin-color); }
+.btn-quick.active { background: var(--admin-color); color: #fff; border-color: var(--admin-color); }
+
+.btn-generate {
+  margin-top: 1.25rem;
+  width: 100%;
+  padding: 0.85rem;
+  background: linear-gradient(135deg, var(--admin-color), var(--admin-secondary));
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-generate:hover { opacity: 0.9; }
+.btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Stats Bar ── */
+.stats-bar {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--border-color);
+  border-radius: 20px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.stat-pill.gold   { background: rgba(255,215,0,0.2); color: #856404; }
+.stat-pill.silver { background: rgba(192,192,192,0.3); color: #555; }
+.stat-pill.bronze { background: rgba(205,127,50,0.2); color: #7c3d00; }
+.stat-pill.hidden { background: rgba(107,70,168,0.15); color: #6b21a8; }
+
+/* ── Preview Section ── */
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.btn-copy {
+  padding: 0.5rem 1.1rem;
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-copy:hover { background: var(--secondary-color); }
+.btn-copy.copied { background: #10b981; }
+
+.preview-box {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.25rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-dark);
+  min-height: 120px;
+}
+
+/* ── Badge List Preview ── */
+.badge-preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.badge-preview-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border-left: 4px solid var(--border-color);
+  background: #fafafa;
+  font-size: 0.875rem;
+}
+.badge-preview-item.gold   { border-left-color: var(--gold); background: #fffef5; }
+.badge-preview-item.silver { border-left-color: var(--silver); background: #fafafa; }
+.badge-preview-item.bronze { border-left-color: var(--bronze); background: #fdf9f5; }
+.badge-preview-item.hidden { border-left-color: #7c3aed; background: #faf5ff; }
+
+.badge-preview-icon { font-size: 1.4rem; line-height: 1; flex-shrink: 0; }
+.badge-preview-info { flex: 1; }
+.badge-preview-player { font-weight: 700; color: var(--text-dark); }
+.badge-preview-team   { font-size: 0.8rem; color: var(--text-light); }
+.badge-preview-name   { color: var(--admin-color); font-weight: 600; }
+.badge-preview-date   { font-size: 0.75rem; color: var(--text-light); margin-top: 0.1rem; }
+.tier-label {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 0.15rem 0.5rem; border-radius: 10px; flex-shrink: 0; align-self: flex-start;
+  margin-top: 0.15rem;
+}
+.tier-label.gold   { background: rgba(255,215,0,0.25); color: #856404; }
+.tier-label.silver { background: rgba(192,192,192,0.3); color: #555; }
+.tier-label.bronze { background: rgba(205,127,50,0.2); color: #7c3d00; }
+.tier-label.hidden { background: rgba(124,58,237,0.15); color: #6b21a8; }
+
+.section-divider {
+  font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text-light);
+  padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);
+  margin-bottom: 0.25rem;
+}
+
+.empty-state {
+  text-align: center; padding: 3rem 2rem;
+  color: var(--text-light); font-size: 0.95rem;
+}
+.empty-state .emoji { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+
+/* Dark mode overrides */
+[data-theme="dark"] .preview-box { background: var(--bg-elevated); }
+[data-theme="dark"] .badge-preview-item { background: var(--bg-elevated); }
+[data-theme="dark"] .badge-preview-item.gold   { background: #2d2500; }
+[data-theme="dark"] .badge-preview-item.silver { background: var(--bg-elevated); }
+[data-theme="dark"] .badge-preview-item.bronze { background: #2a1a00; }
+[data-theme="dark"] .badge-preview-item.hidden { background: #1e0a3c; }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner">🏆</div>
+</div>
+
+<!-- Auth Gate -->
+<div class="auth-gate" id="authGate" style="display:none;">
+  <h2>🔒 Admin Access Required</h2>
+  <p>This page is restricted to league admins.</p>
+</div>
+
+<!-- Main -->
+<div id="mainContent" style="display:none;">
+  <div class="page-header">
+    <h1>🏆 Weekly Badge Report</h1>
+    <p>Generate a shareable badge summary for the WhatsApp chat</p>
+  </div>
+
+  <div class="main-content">
+
+    <!-- Controls -->
+    <div class="card">
+      <div class="card-title">⚙️ Report Settings</div>
+      <div class="controls-grid">
+        <div class="control-group">
+          <label>Season</label>
+          <select id="seasonSelect"></select>
+        </div>
+        <div class="control-group">
+          <label>From Date</label>
+          <input type="date" id="dateFrom">
+        </div>
+        <div class="control-group">
+          <label>To Date</label>
+          <input type="date" id="dateTo">
+        </div>
+      </div>
+      <div class="options-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="includeHidden" checked>
+          Include hidden badges
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="includeNoDate" checked>
+          Include season milestone badges
+        </label>
+      </div>
+      <div class="quick-range-row">
+        <span class="quick-range-label">Quick range:</span>
+        <button class="btn-quick" onclick="setRange('week')">This Week</button>
+        <button class="btn-quick" onclick="setRange('month')">This Month</button>
+        <button class="btn-quick active" onclick="setRange('season')" id="rangeSeasonBtn">Full Season</button>
+      </div>
+      <button class="btn-generate" id="generateBtn" onclick="generate()">
+        Generate Report
+      </button>
+    </div>
+
+    <!-- Stats bar (hidden until generated) -->
+    <div class="card" id="statsCard" style="display:none;">
+      <div class="stats-bar" id="statsBar"></div>
+    </div>
+
+    <!-- Visual Preview -->
+    <div class="card" id="visualCard" style="display:none;">
+      <div class="card-title">👁️ Visual Preview</div>
+      <div class="badge-preview-list" id="visualPreview"></div>
+    </div>
+
+    <!-- WhatsApp Copy -->
+    <div class="card" id="copyCard" style="display:none;">
+      <div class="preview-header">
+        <div class="card-title" style="margin:0; border:none; padding:0;">📱 WhatsApp Format</div>
+        <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">Copy</button>
+      </div>
+      <div class="preview-box" id="whatsappPreview"></div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { auth, getUserProfile } from './firebase-auth.js';
+  import { db } from './firebase-config.js';
+  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { getCurrentSeason } from './firebase-data.js';
+  import { BADGE_DEFINITIONS } from './badge-calculator.js';
+  import { NavigationComponent } from './nav-component.js';
+
+  // ── Badge seasons ──────────────────────────────────────────
+  const BADGE_SEASONS = [
+    { id: '2026-summer', label: '2026 Summer' },
+    { id: '2025-fall',   label: '2025 Fall' }
+  ];
+
+  // ── State ──────────────────────────────────────────────────
+  let allPlayerBadges = {};
+  let currentSeasonId = '2026-summer';
+
+  // ── Helpers ───────────────────────────────────────────────
+  function formatDate(d) {
+    if (!d) return '';
+    const date = new Date(d);
+    if (isNaN(date)) return d;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function formatDateShort(d) {
+    if (!d) return '';
+    const date = new Date(d);
+    if (isNaN(date)) return '';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function toDateStr(d) {
+    const date = new Date(d);
+    return date.toISOString().split('T')[0];
+  }
+
+  function getTierEmoji(tier) {
+    return { gold: '🥇', silver: '🥈', bronze: '🥉' }[tier] || '⭐';
+  }
+
+  function capitalize(s) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+  }
+
+  // ── Auth ──────────────────────────────────────────────────
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const result = await getUserProfile(user.uid);
+      if (result.success && result.data.isAdmin === true) {
+        await init();
+        document.getElementById('mainContent').style.display = 'block';
+      } else {
+        document.getElementById('authGate').style.display = 'flex';
+      }
+    } else {
+      document.getElementById('authGate').style.display = 'flex';
+    }
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  });
+
+  // ── Init ──────────────────────────────────────────────────
+  async function init() {
+    // Populate season select
+    const select = document.getElementById('seasonSelect');
+    let activeSeason;
+    try { activeSeason = await getCurrentSeason(); } catch(e) {}
+
+    BADGE_SEASONS.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.label + (activeSeason && s.id === activeSeason.id ? ' (Current)' : '');
+      if (activeSeason && s.id === activeSeason.id) opt.selected = true;
+      select.appendChild(opt);
+    });
+    currentSeasonId = select.value || BADGE_SEASONS[0].id;
+    select.addEventListener('change', () => { currentSeasonId = select.value; });
+
+    // Default date range: full season (Jan 1 of current year → today)
+    const today = new Date();
+    const seasonStart = new Date(today.getFullYear(), 0, 1); // Jan 1
+    document.getElementById('dateTo').value = toDateStr(today);
+    document.getElementById('dateFrom').value = toDateStr(seasonStart);
+  }
+
+  // ── Quick Range Buttons ────────────────────────────────────
+  window.setRange = function(range) {
+    const today = new Date();
+    let from;
+    if (range === 'week') {
+      from = new Date(today);
+      from.setDate(from.getDate() - 7);
+    } else if (range === 'month') {
+      from = new Date(today);
+      from.setDate(from.getDate() - 30);
+    } else {
+      // season = Jan 1 of current year
+      from = new Date(today.getFullYear(), 0, 1);
+    }
+    document.getElementById('dateFrom').value = toDateStr(from);
+    document.getElementById('dateTo').value = toDateStr(today);
+
+    // Update active button
+    document.querySelectorAll('.btn-quick').forEach(b => b.classList.remove('active'));
+    const map = { week: 0, month: 1, season: 2 };
+    document.querySelectorAll('.btn-quick')[map[range]]?.classList.add('active');
+  };
+
+  // ── Load Badge Data ────────────────────────────────────────
+  async function loadBadges(seasonId) {
+    allPlayerBadges = {};
+    const badgesSnap = await getDocs(collection(db, 'playerBadges'));
+    badgesSnap.forEach(docSnap => {
+      if (docSnap.id.startsWith(seasonId + '_')) {
+        const playerId = docSnap.id.replace(seasonId + '_', '');
+        allPlayerBadges[playerId] = docSnap.data();
+      }
+    });
+  }
+
+  // ── Generate ───────────────────────────────────────────────
+  window.generate = async function() {
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.textContent = 'Loading…';
+
+    try {
+      await loadBadges(currentSeasonId);
+
+      const fromStr = document.getElementById('dateFrom').value;
+      const toStr   = document.getElementById('dateTo').value;
+      const fromDate = fromStr ? new Date(fromStr + 'T00:00:00') : null;
+      const toDate   = toStr   ? new Date(toStr   + 'T23:59:59') : null;
+      const includeHidden  = document.getElementById('includeHidden').checked;
+      const includeNoDate  = document.getElementById('includeNoDate').checked;
+
+      // Collect matching badges
+      const earned = [];
+
+      Object.entries(allPlayerBadges).forEach(([playerId, playerData]) => {
+        if (!playerData.earned) return;
+
+        Object.entries(playerData.earned).forEach(([badgeId, badge]) => {
+          // Hidden filter
+          if (badge.hidden && !includeHidden) return;
+
+          // Date filter — prefer earnedAt (when badge was first awarded), fall back to gameDate
+          const filterDate = badge.earnedAt
+            ? new Date(badge.earnedAt)
+            : (badge.gameDate ? new Date(badge.gameDate) : null);
+          if (!filterDate) {
+            if (!includeNoDate) return;
+          } else {
+            if (fromDate && filterDate < fromDate) return;
+            if (toDate   && filterDate > toDate)   return;
+          }
+
+          earned.push({
+            playerId,
+            playerName: playerData.playerName || playerId,
+            teamId: playerData.teamId || '',
+            badge,
+            gameDate: badge.gameDate ? new Date(badge.gameDate) : null,
+            tier: badge.tier || (badge.hidden ? 'hidden' : null)
+          });
+        });
+      });
+
+      // Sort: gold → silver → bronze → hidden → no-tier; then by date desc
+      const tierOrder = { gold: 0, silver: 1, bronze: 2, hidden: 3, null: 4 };
+      earned.sort((a, b) => {
+        const ta = tierOrder[a.tier] ?? 4;
+        const tb = tierOrder[b.tier] ?? 4;
+        if (ta !== tb) return ta - tb;
+        if (a.gameDate && b.gameDate) return b.gameDate - a.gameDate;
+        return 0;
+      });
+
+      // Render
+      renderStats(earned);
+      renderVisual(earned, fromStr, toStr);
+      renderWhatsApp(earned, fromStr, toStr);
+
+      ['statsCard','visualCard','copyCard'].forEach(id => {
+        document.getElementById(id).style.display = 'block';
+      });
+    } catch(err) {
+      console.error(err);
+      alert('Error loading badges: ' + err.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Generate Report';
+  };
+
+  // ── Render Stats Bar ───────────────────────────────────────
+  function renderStats(earned) {
+    const counts = { gold: 0, silver: 0, bronze: 0, hidden: 0 };
+    earned.forEach(e => { if (counts[e.tier] !== undefined) counts[e.tier]++; });
+    const players = new Set(earned.map(e => e.playerId)).size;
+
+    document.getElementById('statsBar').innerHTML = `
+      <div class="stat-pill">${earned.length} badges · ${players} players</div>
+      ${counts.gold   ? `<div class="stat-pill gold">🥇 ${counts.gold} Gold</div>` : ''}
+      ${counts.silver ? `<div class="stat-pill silver">🥈 ${counts.silver} Silver</div>` : ''}
+      ${counts.bronze ? `<div class="stat-pill bronze">🥉 ${counts.bronze} Bronze</div>` : ''}
+      ${counts.hidden ? `<div class="stat-pill hidden">⭐ ${counts.hidden} Hidden</div>` : ''}
+    `;
+  }
+
+  // ── Render Visual Preview ──────────────────────────────────
+  function renderVisual(earned, fromStr, toStr) {
+    const container = document.getElementById('visualPreview');
+    if (earned.length === 0) {
+      container.innerHTML = `<div class="empty-state"><span class="emoji">🎖️</span>No badges found for this date range.</div>`;
+      return;
+    }
+
+    const tiers = ['gold','silver','bronze','hidden',null];
+    const tierLabels = { gold:'🥇 Gold', silver:'🥈 Silver', bronze:'🥉 Bronze', hidden:'⭐ Hidden', null:'📊 Other' };
+    let html = '';
+
+    tiers.forEach(tier => {
+      const group = earned.filter(e => e.tier === tier);
+      if (group.length === 0) return;
+      html += `<div class="section-divider">${tierLabels[tier]}</div>`;
+      group.forEach(e => {
+        const def = BADGE_DEFINITIONS[e.badge.badgeId || e.badge.id] || {};
+        const icon = def.icon || '🏅';
+        const tierClass = e.tier || '';
+        html += `
+          <div class="badge-preview-item ${tierClass}">
+            <div class="badge-preview-icon">${icon}</div>
+            <div class="badge-preview-info">
+              <div class="badge-preview-player">${e.playerName} <span class="badge-preview-team">(${capitalize(e.teamId)})</span></div>
+              <div class="badge-preview-name">"${e.badge.name}"</div>
+              <div class="badge-preview-date">${e.badge.description || ''}${e.gameDate ? ' · ' + formatDateShort(e.gameDate) : ''}</div>
+            </div>
+            ${e.tier ? `<div class="tier-label ${e.tier}">${capitalize(e.tier)}</div>` : ''}
+          </div>
+        `;
+      });
+    });
+
+    container.innerHTML = html;
+  }
+
+  // ── Render WhatsApp Text ───────────────────────────────────
+  function renderWhatsApp(earned, fromStr, toStr) {
+    const fromLabel = fromStr ? formatDate(fromStr + 'T12:00:00') : '';
+    const toLabel   = toStr   ? formatDate(toStr   + 'T12:00:00') : '';
+    const dateRange = fromLabel && toLabel ? `${fromLabel} – ${toLabel}` : 'Recent';
+    const players = new Set(earned.map(e => e.playerId)).size;
+
+    let lines = [];
+    lines.push(`🏆 *Aces Badge Report*`);
+    lines.push(`_${dateRange}_`);
+    lines.push('');
+
+    if (earned.length === 0) {
+      lines.push('_No badges earned in this period._');
+    } else {
+      const tiers = ['gold','silver','bronze','hidden',null];
+      const tierHeaders = {
+        gold:   '🥇 *Gold Badges*',
+        silver: '🥈 *Silver Badges*',
+        bronze: '🥉 *Bronze Badges*',
+        hidden: '⭐ *Hidden Badges Unlocked*',
+        null:   '📊 *Other Badges*'
+      };
+
+      tiers.forEach(tier => {
+        const group = earned.filter(e => e.tier === tier);
+        if (group.length === 0) return;
+        lines.push(tierHeaders[tier]);
+        group.forEach(e => {
+          const def = BADGE_DEFINITIONS[e.badge.badgeId || e.badge.id] || {};
+          const icon = def.icon || '🏅';
+          const team = e.teamId ? ` (${capitalize(e.teamId)})` : '';
+          const dateNote = e.gameDate ? ` · ${formatDateShort(e.gameDate)}` : '';
+          const hiddenNote = e.badge.hidden && e.badge.revealText ? `\n  _${e.badge.revealText}_` : '';
+          lines.push(`${icon} *${e.playerName}*${team} — "${e.badge.name}"${dateNote}${hiddenNote}`);
+        });
+        lines.push('');
+      });
+
+      lines.push(`📊 _${earned.length} badge${earned.length !== 1 ? 's' : ''} earned by ${players} player${players !== 1 ? 's' : ''}_`);
+    }
+
+    document.getElementById('whatsappPreview').textContent = lines.join('\n');
+  }
+
+  // ── Copy to Clipboard ──────────────────────────────────────
+  window.copyToClipboard = function() {
+    const text = document.getElementById('whatsappPreview').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  };
+
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

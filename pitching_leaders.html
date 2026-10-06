@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Career Leaders - Aces Stats</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+  
+  .page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+    padding: 3rem 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .page-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ffd700 0%, #ffed4e 100%);
+  }
+  
+  .page-header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .page-header p {
+    margin: 1rem 0 0 0;
+    font-size: 1.1rem;
+    opacity: 0.9;
+  }
+  
+  .back-nav {
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    border: 1px solid #e1e5e9;
+  }
+  
+  .nav-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .nav-link {
+    padding: 0.8rem 1.5rem;
+    border: 2px solid #667eea;
+    background: white;
+    color: #667eea;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .nav-link:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+  }
+  
+  .nav-link.pitching {
+    border-color: #11998e;
+    color: #11998e;
+  }
+  
+  .nav-link.pitching:hover {
+    background: #11998e;
+    color: white;
+  }
+  
+  .view-selector {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    border: 1px solid #e1e5e9;
+    text-align: center;
+  }
+  
+  .view-selector h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 1.3rem;
+  }
+  
+  .toggle-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .toggle-btn {
+    padding: 0.8rem 1.5rem;
+    border: 2px solid #e1e5e9;
+    background: white;
+    color: #333;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  .toggle-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+  }
+  
+  .toggle-btn.active.pitching {
+    background: #11998e;
+    border-color: #11998e;
+  }
+  
+  .toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  
+  .leaders-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+  
+  .leader-section {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    border: 1px solid #e1e5e9;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  
+  .leader-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .leader-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+  }
+  
+  .leader-section h3 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin: 0;
+    padding: 1.5rem;
+    font-size: 1.2rem;
+    text-align: center;
+    font-weight: 700;
+  }
+  
+  .leader-section.pitching h3 {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  }
+  
+  .leader-section.pitching::before {
+    background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
+  }
+  
+  .leader-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+  }
+  
+  .leader-table th,
+  .leader-table td {
+    padding: 1rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e1e5e9;
+  }
+  
+  .leader-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .leader-table tr:nth-child(even) {
+    background-color: #fafafa;
+  }
+  
+  .leader-table tr:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .rank {
+    text-align: center;
+    font-weight: bold;
+    color: #667eea;
+    width: 50px;
+    font-size: 1.1rem;
+  }
+  
+  .pitching .rank {
+    color: #11998e;
+  }
+  
+  .stat-value {
+    text-align: center;
+    font-weight: bold;
+    min-width: 80px;
+    color: #333;
+    font-size: 1.05rem;
+  }
+  
+  .leader-table a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+  }
+  
+  .leader-table a:hover {
+    color: #5a67d8;
+    text-decoration: underline;
+  }
+  
+  .pitching .leader-table a {
+    color: #11998e;
+  }
+  
+  .pitching .leader-table a:hover {
+    color: #0f8a80;
+  }
+  
+  .minimum-note {
+    font-style: italic;
+    color: #666;
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.9rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e1e5e9;
+  }
+  
+  /* Loading state */
+  .loading {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    border: 1px solid #e1e5e9;
+  }
+  
+  .loading::before {
+    content: "⳺";
+    display: block;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    animation: spin 2s linear infinite;
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    .page-container {
+      padding: 1rem;
+    }
+    
+    .page-header {
+      padding: 2rem 1rem;
+    }
+    
+    .page-header h1 {
+      font-size: 2rem;
+    }
+    
+    .leaders-container {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    
+    .nav-container {
+      justify-content: center;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .nav-link {
+      padding: 10px 15px;
+      font-size: 14px;
+      text-align: center;
+      justify-content: center;
+    }
+    
+    .toggle-buttons {
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .toggle-btn {
+      width: 100%;
+      max-width: 200px;
+    }
+    
+    .leader-table th,
+    .leader-table td {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.9rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .nav-link {
+      display: block;
+      margin: 0.25rem 0;
+      text-align: center;
+    }
+    
+    .leader-table th,
+    .leader-table td {
+      padding: 0.5rem 0.25rem;
+      font-size: 0.8rem;
+    }
+    
+    .rank {
+      width: 40px;
+    }
+  }
+</style>
+  <link rel="stylesheet" href="mobile-enhancements.css">
+</head>
+<body>
+<div class="page-container">
+  <div class="page-header">
+    <h1 id="pageTitle">📊 Mountainside Aces - Career Leaders</h1>
+    <p>All-time statistical leaders and records</p>
+  </div>
+
+  <div class="filters-nav">
+    <nav class="nav-container">
+      <a href="index.html" class="nav-link">🏠 Home</a>
+      <a href="current-season.html" class="nav-link">🍂 Current Season</a>
+      <a href="batting.html" class="nav-link batting">⚾ Batting Stats</a>
+      <a href="pitching.html" class="nav-link pitching">🥎 Pitching Stats</a>
+      <a href="teams.html" class="nav-link">🏆 All Teams</a>
+      <a href="players.html" class="nav-link">👤 All Players</a>
+      <a href="seasons.html" class="nav-link">📅 All Seasons</a>
+      <a href="leaders.html" class="nav-link">📊 Career Leaders</a>
+      <a href="compare.html" class="nav-link">⚖️ Player Comparison</a>
+      <a href="h2h_grid.html" class="nav-link">⚔️ Head-to-Head Grid</a>
+      <a href="pictures.html" class="nav-link">📷 Gallery</a>
+      <a href="charts.html" class="nav-link">📈 Performance Charts</a>
+    </nav>
+  </div>
+
+  <!-- Mobile Navigation -->
+  <div class="mobile-nav-container">
+    <div class="mobile-nav-header">
+      <div class="mobile-nav-title">⚾ Mountainside Aces</div>
+      <button class="hamburger-menu" onclick="toggleMobileMenu()" aria-label="Toggle navigation">☰</button>
+    </div>
+    <nav class="mobile-nav-menu" id="mobileNavMenu">
+      <a href="index.html" class="mobile-nav-item">🏠 Home</a>
+      <a href="current-season.html" class="mobile-nav-item">🍂 Current Season</a>
+      <a href="weekend-preview.html" class="mobile-nav-item">🔮 Weekend Preview</a>
+      <a href="projections.html" class="mobile-nav-item">📈 Playoff Projections</a>
+      <a href="batting.html" class="mobile-nav-item">⚾ Batting Stats</a>
+      <a href="pitching.html" class="mobile-nav-item">🥎 Pitching Stats</a>
+      <a href="teams.html" class="mobile-nav-item">🏆 All Teams</a>
+      <a href="players.html" class="mobile-nav-item">👤 All Players</a>
+      <a href="seasons.html" class="mobile-nav-item">📅 All Seasons</a>
+      <a href="awards.html" class="mobile-nav-item">🏅 Awards</a>
+      <a href="leaders.html" class="mobile-nav-item">📊 Career Leaders</a>
+      <a href="milestones.html" class="mobile-nav-item">🎯 Milestones</a>
+      <a href="compare.html" class="mobile-nav-item">📈 Player Comparison</a>
+      <a href="team_compare.html" class="mobile-nav-item">🆚 Team Comparison</a>
+      <a href="h2h_grid.html" class="mobile-nav-item">⚔️ Head-to-Head Grid</a>
+	  <a href="pictures.html" class="mobile-nav-item">📷 Gallery</a>
+    </nav>
+  </div>
+
+  </div>
+
+  <div class="view-selector">
+    <h3>Select Leader Category</h3>
+    <div class="toggle-buttons">
+      <button id="pitchingLeadersBtn" class="toggle-btn active pitching" onclick="switchToView('pitching')">
+        🥎 Pitching Leaders
+      </button>
+      <button id="battingLeadersBtn" class="toggle-btn" onclick="switchToView('batting')">
+        ⚾ Batting Leaders
+      </button>
+    </div>
+  </div>
+
+  <div id="leaders-container" class="leaders-container">
+    <div class="loading">Loading career leaders...</div>
+  </div>
+</div>
+
+<script>
+let allPitchingData = [];
+let allBattingData = [];
+let currentView = 'pitching';
+
+// Load both pitching and batting data
+Promise.all([
+  fetch("pitching.json").then(res => res.json()),
+  fetch("data.json").then(res => res.json())
+])
+  .then(([pitchingData, battingData]) => {
+    allPitchingData = cleanPitchingData(pitchingData);
+    allBattingData = cleanBattingData(battingData);
+    generateLeaderboards();
+  })
+  .catch(error => {
+    console.error("Error loading data:", error);
+    document.getElementById("leaders-container").innerHTML = 
+      '<div class="loading" style="color: #dc3545;">Error loading statistics data. Please check that data files are available.</div>';
+  });
+
+function switchToView(view) {
+  currentView = view;
+  
+  // Update button styles
+  const pitchingBtn = document.getElementById('pitchingLeadersBtn');
+  const battingBtn = document.getElementById('battingLeadersBtn');
+  
+  if (view === 'pitching') {
+    pitchingBtn.classList.add('active', 'pitching');
+    battingBtn.classList.remove('active');
+    document.getElementById('pageTitle').textContent = '🥎 Mountainside Aces - Pitching Career Leaders';
+  } else {
+    battingBtn.classList.add('active');
+    pitchingBtn.classList.remove('active', 'pitching');
+    document.getElementById('pageTitle').textContent = '⚾ Mountainside Aces - Batting Career Leaders';
+  }
+  
+  generateLeaderboards();
+}
+
+function cleanPitchingData(data) {
+  return data.map(p => ({
+    ...p,
+    name: p.name ? p.name.trim() : "",
+    team: p.team ? p.team.trim() : "",
+    games: Number(p.games) || 0,
+    IP: p.IP ? String(p.IP).trim() : "0",
+    runsAllowed: Number(p["runs allowed"]) || 0,
+    ERA: p.ERA === "N/A" || !p.ERA ? "N/A" : Number(p.ERA)
+  }));
+}
+
+function cleanBattingData(data) {
+  return data.map(p => ({
+    ...p,
+    name: p.name ? p.name.trim() : "",
+    team: p.team ? p.team.trim() : "",
+    games: Number(p.games) || 0,
+    atBats: Number(p.atBats) || 0,
+    hits: Number(p.hits) || 0,
+    runs: Number(p.runs) || 0,
+    walks: Number(p.walks) || 0,
+    AcesWar: p.AcesWar === "N/A" || !p.AcesWar ? "N/A" : Number(p.AcesWar)
+  }));
+}
+
+function aggregatePitcherStats() {
+  const pitcherStats = {};
+  
+  allPitchingData.forEach(p => {
+    if (!p.name) return;
+    
+    if (!pitcherStats[p.name]) {
+      pitcherStats[p.name] = {
+        name: p.name,
+        games: 0,
+        totalIP: 0,
+        runsAllowed: 0,
+        eraValues: []
+      };
+    }
+    
+    pitcherStats[p.name].games += p.games;
+    pitcherStats[p.name].totalIP += parseFloat(p.IP) || 0;
+    pitcherStats[p.name].runsAllowed += p.runsAllowed;
+    
+    if (p.ERA !== "N/A" && !isNaN(p.ERA)) {
+      // For career ERA calculation, we need to weight by innings pitched
+      const ip = parseFloat(p.IP) || 0;
+      if (ip > 0) {
+        pitcherStats[p.name].eraValues.push({
+          era: Number(p.ERA),
+          innings: ip
+        });
+      }
+    }
+  });
+  
+  // Calculate career ERA as weighted average
+  return Object.values(pitcherStats).map(p => {
+    let careerERA = 0;
+    if (p.eraValues.length > 0) {
+      // Calculate weighted average ERA
+      let totalEarnedRuns = 0;
+      let totalInnings = 0;
+      
+      p.eraValues.forEach(era => {
+        const earnedRuns = (era.era * era.innings) / 7;
+        totalEarnedRuns += earnedRuns;
+        totalInnings += era.innings;
+      });
+      
+      careerERA = totalInnings > 0 ? (totalEarnedRuns * 7) / totalInnings : 0;
+    }
+    
+    return {
+      ...p,
+      careerERA: careerERA
+    };
+  });
+}
+
+function aggregatePlayerStats() {
+  const playerStats = {};
+  
+  allBattingData.forEach(p => {
+    if (!p.name) return;
+    
+    if (!playerStats[p.name]) {
+      playerStats[p.name] = {
+        name: p.name,
+        games: 0,
+        atBats: 0,
+        hits: 0,
+        runs: 0,
+        walks: 0,
+        plateAppearances: 0,
+        acesWarValues: []
+      };
+    }
+    
+    playerStats[p.name].games += p.games;
+    playerStats[p.name].atBats += p.atBats;
+    playerStats[p.name].hits += p.hits;
+    playerStats[p.name].runs += p.runs;
+    playerStats[p.name].walks += p.walks;
+    playerStats[p.name].plateAppearances += (p.atBats + p.walks);
+    
+    if (p.AcesWar !== "N/A" && !isNaN(p.AcesWar)) {
+      playerStats[p.name].acesWarValues.push(Number(p.AcesWar));
+    }
+  });
+  
+  // Calculate derived stats
+  return Object.values(playerStats).map(p => ({
+    ...p,
+    battingAverage: p.atBats > 0 ? p.hits / p.atBats : 0,
+    onBasePercentage: p.plateAppearances > 0 ? (p.hits + p.walks) / p.plateAppearances : 0,
+    avgAcesWar: p.acesWarValues.length > 0 ? 
+      p.acesWarValues.reduce((a, b) => a + b, 0) / p.acesWarValues.length : 0
+  }));
+}
+
+function generateLeaderboards() {
+  const container = document.getElementById("leaders-container");
+  container.innerHTML = "";
+  
+  if (currentView === 'pitching') {
+    generatePitchingLeaderboards();
+  } else {
+    generateBattingLeaderboards();
+  }
+}
+
+function generatePitchingLeaderboards() {
+  const pitchers = aggregatePitcherStats();
+  const container = document.getElementById("leaders-container");
+  
+  // Define leaderboard categories
+  const categories = [
+    {
+      title: "Games Pitched",
+      stat: "games",
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "Innings Pitched",
+      stat: "totalIP", 
+      format: (val) => val.toFixed(1),
+      minimum: 0
+    },
+    {
+      title: "Runs Allowed (Fewest)",
+      stat: "runsAllowed",
+      format: (val) => val.toString(), 
+      minimum: 40,
+      minimumField: "totalIP",
+      minimumNote: "Minimum 40 innings pitched",
+      sortAscending: true
+    },
+    {
+      title: "Career ERA",
+      stat: "careerERA",
+      format: (val) => val.toFixed(2),
+      minimum: 15,
+      minimumField: "totalIP",
+      minimumNote: "Minimum 15 innings pitched",
+      sortAscending: true
+    }
+  ];
+  
+  categories.forEach(category => {
+    const leaderHTML = generateLeaderTable(pitchers, category);
+    container.innerHTML += leaderHTML;
+  });
+}
+
+function generateBattingLeaderboards() {
+  const players = aggregatePlayerStats();
+  const container = document.getElementById("leaders-container");
+  
+  // Define leaderboard categories
+  const categories = [
+    {
+      title: "Games Played",
+      stat: "games",
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "At-Bats",
+      stat: "atBats", 
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "Hits",
+      stat: "hits",
+      format: (val) => val.toString(), 
+      minimum: 0
+    },
+    {
+      title: "Runs Scored",
+      stat: "runs",
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "Walks",
+      stat: "walks",
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "Batting Average",
+      stat: "battingAverage",
+      format: (val) => val.toFixed(3),
+      minimum: 40,
+      minimumField: "plateAppearances",
+      minimumNote: "Minimum 40 plate appearances"
+    },
+    {
+      title: "On-Base Percentage", 
+      stat: "onBasePercentage",
+      format: (val) => val.toFixed(3),
+      minimum: 40,
+      minimumField: "plateAppearances", 
+      minimumNote: "Minimum 40 plate appearances"
+    },
+    {
+      title: "AcesBPI (Average)",
+      stat: "avgAcesWar",
+      format: (val) => val.toFixed(2),
+      minimum: 0,
+      filter: (p) => p.acesWarValues.length > 0
+    }
+  ];
+  
+  categories.forEach(category => {
+    const leaderHTML = generateLeaderTable(players, category);
+    container.innerHTML += leaderHTML;
+  });
+}
+
+function generateLeaderTable(players, category) {
+  // Filter players based on minimum requirements
+  let qualifyingPlayers = players.filter(p => {
+    if (category.filter && !category.filter(p)) return false;
+    if (category.minimumField) {
+      return p[category.minimumField] >= category.minimum;
+    }
+    return p[category.stat] >= category.minimum;
+  });
+  
+  // Sort by the stat
+  const sortAscending = category.sortAscending || false;
+  qualifyingPlayers.sort((a, b) => {
+    if (sortAscending) {
+      return a[category.stat] - b[category.stat];
+    } else {
+      return b[category.stat] - a[category.stat];
+    }
+  });
+  
+  // Take top 10
+  const top10 = qualifyingPlayers.slice(0, 10);
+  
+  const categoryClass = currentView === 'pitching' ? 'pitching' : '';
+  
+  let html = `
+    <div class="leader-section ${categoryClass}">
+      <h3>${category.title}</h3>
+      <table class="leader-table">
+        <thead>
+          <tr>
+            <th class="rank">Rank</th>
+            <th>Player</th>
+            <th class="stat-value">${category.title}</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  top10.forEach((player, index) => {
+    const rank = index + 1;
+    const statValue = category.format(player[category.stat]);
+    
+    // Link to appropriate player page based on current view
+    const playerLink = currentView === 'pitching' ? 
+      `pitcher.html?name=${encodeURIComponent(player.name)}` :
+      `player.html?name=${encodeURIComponent(player.name)}`;
+    
+    html += `
+      <tr>
+        <td class="rank">${rank}</td>
+        <td><a href="${playerLink}">${player.name}</a></td>
+        <td class="stat-value">${statValue}</td>
+      </tr>
+    `;
+  });
+  
+  html += `
+        </tbody>
+      </table>
+  `;
+  
+  if (category.minimumNote) {
+    html += `<div class="minimum-note">${category.minimumNote}</div>`;
+  }
+  
+  html += `</div>`;
+  
+  return html;
+}
+</script>
+  <script src="team-colors.js"></script>
+ <script src="mobile-enhancements.js"></script>
+ <script src="theme-toggle.js"></script>
+</body>
+</html>

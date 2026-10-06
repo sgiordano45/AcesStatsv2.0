@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playoff Bracket Predictor - Mountainside Aces</title>
+  <link rel="icon" type="image/png" href="aces-favicon.png">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a6b4a 0%, #2d5016 100%);
+      color: #2d3748;
+      min-height: 100vh;
+      padding-bottom: 3rem;
+    }
+
+    /* Header */
+    .page-header {
+      background: linear-gradient(135deg, rgba(26, 107, 74, 0.95) 0%, rgba(45, 80, 22, 0.95) 100%);
+      color: white;
+      padding: 3rem 1rem;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-header h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .page-header p {
+      font-size: 1.3rem;
+      opacity: 0.95;
+    }
+
+    /* Navigation */
+    .nav-container {
+      background: white;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .nav-link {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #1a6b4a 0%, #2d5016 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+
+    /* Controls */
+    .controls {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    .controls h3 {
+      color: #2d5016;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1a6b4a 0%, #2d5016 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #2d3748;
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e0;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .progress-indicator {
+      background: #f7fafc;
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid #1a6b4a;
+      margin-top: 1rem;
+    }
+
+    .progress-indicator strong {
+      color: #2d5016;
+      font-size: 1.1rem;
+    }
+
+    /* Bracket Section */
+    .bracket-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    .bracket-section h3 {
+      color: #2d5016;
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 3px solid #1a6b4a;
+    }
+
+    .round-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #2d5016;
+      margin-bottom: 1rem;
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border-radius: 8px;
+      border-left: 4px solid #1a6b4a;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .game-card {
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      background: #f8fafc;
+      transition: all 0.3s ease;
+    }
+
+    .game-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .game-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #2d5016;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .matchup {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .team-option {
+      padding: 1rem;
+      border: 2px solid #cbd5e0;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .team-option:hover {
+      border-color: #1a6b4a;
+      transform: translateX(4px);
+    }
+
+    .team-option.selected {
+      background: linear-gradient(135deg, #1a6b4a 0%, #2d5016 100%);
+      color: white;
+      border-color: #2d5016;
+      font-weight: 700;
+    }
+
+    .team-option.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .team-option.disabled:hover {
+      transform: none;
+      border-color: #cbd5e0;
+    }
+
+    .team-seed {
+      font-weight: 700;
+      color: #1a6b4a;
+      margin-right: 0.5rem;
+    }
+
+    .team-option.selected .team-seed {
+      color: white;
+    }
+
+    .team-record {
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+
+    .team-option.selected .team-record {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .vs-divider {
+      text-align: center;
+      color: #64748b;
+      font-weight: 600;
+      margin: 0.25rem 0;
+    }
+
+    .winner-indicator {
+      display: inline-block;
+      margin-left: 0.5rem;
+      color: #fbbf24;
+      font-size: 1.2rem;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: #64748b;
+    }
+
+    .spinner {
+      border: 4px solid #f3f4f6;
+      border-top: 4px solid #1a6b4a;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Visual Bracket Styles (for print) */
+    .visual-bracket {
+      display: none;
+    }
+
+    @media print {
+      body {
+        background: white;
+        color: black;
+        padding: 0;
+      }
+
+      .page-header {
+        background: white;
+        color: #2d5016;
+        padding: 1rem;
+        border-bottom: 3px solid #2d5016;
+      }
+
+      .nav-container,
+      .controls,
+      .no-print,
+      .bracket-section {
+        display: none !important;
+      }
+
+      /* Show visual bracket on print */
+      .visual-bracket {
+        display: block !important;
+        padding: 1rem;
+        page-break-after: always;
+      }
+
+      .visual-bracket h2 {
+        color: #2d5016;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #1a6b4a;
+        padding-bottom: 0.5rem;
+      }
+
+      .bracket-container {
+        display: flex;
+        flex-direction: row;
+        gap: 3rem;
+        justify-content: space-between;
+        margin: 2rem 0;
+      }
+
+      .bracket-column {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        min-width: 200px;
+      }
+
+      .bracket-round {
+        margin-bottom: 2rem;
+      }
+
+      .round-label {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #2d5016;
+        text-align: center;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+      }
+
+      .bracket-game {
+        position: relative;
+        margin: 1.5rem 0;
+      }
+
+      .bracket-matchup {
+        border: 2px solid #cbd5e0;
+        border-radius: 4px;
+        background: white;
+        overflow: hidden;
+      }
+
+      .bracket-team {
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+      }
+
+      .bracket-team:last-child {
+        border-bottom: none;
+      }
+
+      .bracket-team.winner {
+        background: #f0fdf4;
+        border-left: 4px solid #2d5016;
+        font-weight: 700;
+      }
+
+      .bracket-team.winner::after {
+        content: '✓';
+        color: #2d5016;
+        font-weight: 700;
+        margin-left: 0.5rem;
+      }
+
+      .team-seed {
+        font-weight: 700;
+        color: #64748b;
+        margin-right: 0.5rem;
+      }
+
+      .team-record {
+        font-size: 0.75rem;
+        color: #94a3b8;
+      }
+
+      .game-time {
+        text-align: center;
+        font-size: 0.7rem;
+        color: #64748b;
+        margin-top: 0.25rem;
+      }
+
+      /* Championship section */
+      .championship-section {
+        text-align: center;
+        padding: 2rem;
+        border: 3px solid #2d5016;
+        border-radius: 8px;
+        margin: 2rem auto;
+        max-width: 400px;
+      }
+
+      .championship-section h3 {
+        color: #2d5016;
+        margin-bottom: 1rem;
+      }
+
+      .champion-team {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1a6b4a;
+        padding: 1rem;
+        background: #f0fdf4;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+
+      /* Losers bracket on separate page */
+      .losers-bracket-page {
+        page-break-before: always;
+      }
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .page-header h1 {
+        font-size: 2rem;
+      }
+
+      .page-header p {
+        font-size: 1rem;
+      }
+
+      .container {
+        padding: 0 1rem;
+      }
+
+      .controls,
+      .bracket-section {
+        padding: 1.5rem;
+      }
+
+      .games-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="mobile-enhancements.css">
+</head>
+<body>
+  <!-- Header -->
+  <div class="page-header">
+    <h1>🏆 Playoff Bracket Predictor</h1>
+    <p>Make your predictions and print your bracket!</p>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav-container no-print">
+    <a href="index.html" class="nav-link">🏠 Home</a>
+    <a href="current-season.html" class="nav-link">📊 Current Season</a>
+    <a href="projections.html" class="nav-link">🔮 Projections</a>
+    <a href="teams.html" class="nav-link">👥 Teams</a>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Controls -->
+    <div class="controls no-print">
+      <h3>Bracket Controls</h3>
+      <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #3b82f6;">
+        <strong>📋 How to Use:</strong>
+        <ol style="margin: 0.5rem 0 0 1.5rem; line-height: 1.8;">
+          <li>Start with <strong>Play-in Games</strong> - pick winners of #7 vs #10 and #8 vs #9</li>
+          <li>Move to <strong>First Round</strong> - play-in winners auto-populate in games 1 & 2</li>
+          <li><strong>Play-in losers get a 2nd game!</strong> They'll appear in <strong>Losers Round 1</strong></li>
+          <li>Continue through each round - teams marked <em style="color: #94a3b8;">"TBD"</em> will populate as you fill out earlier games</li>
+          <li>Your picks auto-save - use buttons below to manage your bracket</li>
+        </ol>
+      </div>
+      <div class="button-group">
+        <button class="btn btn-primary" onclick="saveBracket()">
+          💾 Save Predictions
+        </button>
+        <button class="btn btn-primary" onclick="window.print()">
+          🖨️ Print Bracket
+        </button>
+        <button class="btn btn-secondary" onclick="loadBracket()">
+          📂 Load Saved Predictions
+        </button>
+        <button class="btn btn-danger" onclick="resetBracket()">
+          🔄 Reset Bracket
+        </button>
+      </div>
+      <div class="progress-indicator">
+        <strong>Progress:</strong> <span id="progressText">0 of 0 games predicted</span>
+      </div>
+    </div>
+
+    <!-- Bracket Content -->
+    <div id="bracketContent" class="loading">
+      <div class="spinner"></div>
+      <p>Loading playoff bracket...</p>
+    </div>
+
+    <!-- Visual Bracket for Print -->
+    <div id="visualBracket" class="visual-bracket"></div>
+  </div>
+
+  <!-- Firebase and Data Scripts -->
+  <script type="module">
+    import { getCurrentSeason, getSeasonGames } from './firebase-data.js';
+    
+    // Global state
+    window.playoffTeams = [];
+    window.predictions = {
+      playIn: {},
+      firstRound: {},
+      winnersRound2: {},
+      losersRound1: {},
+      losersRound2: {},
+      losersRound3: {},
+      losersSemis: {},
+      winnersRound3: {},
+      losersFinal: {},
+      championship: {},
+      ifNecessary: {}
+    };
+
+    // Load data on page load
+    async function loadSeasonData() {
+      try {
+        console.log('🔄 Loading current season data...');
+        
+        // Get current season (checks for isActive field)
+        const currentSeason = await getCurrentSeason();
+        
+        if (!currentSeason) {
+          throw new Error('No active season found. Please set isActive=true in your seasons collection.');
+        }
+
+        console.log('✅ Current season:', currentSeason);
+        const seasonId = currentSeason.id;
+
+        // Get games for current season
+        const allGames = await getSeasonGames(seasonId);
+        console.log(`✅ Loaded ${allGames.length} games for ${seasonId}`);
+
+        // Map games to expected format (same as current-season.html and playoffs.html)
+        const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+        
+        const games = allGames.map(g => {
+          const dateObj = g.date && g.date.seconds ? 
+            new Date(g.date.seconds * 1000) : 
+            new Date(g.date || Date.now());
+          const dateString = dateObj.toLocaleDateString('en-US');
+          
+          return {
+            "home team": g.homeTeamName || capitalize(g.homeTeamId) || "",
+            "away team": g.awayTeamName || capitalize(g.awayTeamId) || "",
+            "home score": g.homeScore !== undefined ? g.homeScore : null,
+            "away score": g.awayScore !== undefined ? g.awayScore : null,
+            winner: capitalize(g.winner),
+            game_type: g.gameType === "regular" ? "Regular" :
+                       g.gameType === "playoff" ? "Playoff" :
+                       capitalize(g.gameType) || "Regular",
+            date: dateString
+          };
+        });
+
+        // Filter to completed regular season games
+        const today = new Date();
+        const parseGameDate = (dateStr) => {
+          const [month, day, year] = dateStr.split('/').map(Number);
+          return new Date(year, month - 1, day);
+        };
+        
+        const completedGames = games.filter(g =>
+          g.winner && g.winner.trim() !== "" && parseGameDate(g.date) < today
+        );
+        
+        const regularGames = completedGames.filter(g => g.game_type === 'Regular');
+        
+        console.log(`📊 Processing ${regularGames.length} completed regular season games`);
+
+        // Calculate standings using the EXACT logic from playoffs.html
+        const standings = calculateStandings(regularGames);
+        window.playoffTeams = standings.slice(0, 10);
+
+        console.log(`✅ Top 10 playoff teams:`, window.playoffTeams);
+
+        // Build bracket
+        buildBracket();
+
+        // Try to load saved predictions
+        const saved = localStorage.getItem('playoffPredictions');
+        if (saved) {
+          window.predictions = JSON.parse(saved);
+          updateBracketDisplay();
+          console.log('✅ Loaded saved predictions');
+        }
+
+      } catch (error) {
+        console.error('❌ Error loading season data:', error);
+        document.getElementById('bracketContent').innerHTML = `
+          <div style="text-align: center; padding: 3rem; color: #ef4444;">
+            <h3>Error Loading Data</h3>
+            <p>${error.message}</p>
+            <p style="font-size: 0.9rem; color: #64748b; margin-top: 1rem;">
+              Make sure you have a season with <code>isActive: true</code> in your Firebase seasons collection.
+            </p>
+            <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
+              Retry
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // EXACT calculateStandings logic from playoffs.html
+    function calculateStandings(regularGames) {
+      if (regularGames.length === 0) {
+        console.log('⚠️ No completed games yet - returning empty standings');
+        return [];
+      }
+
+      const teamStats = {};
+
+      regularGames.forEach(game => {
+        const homeTeam = game["home team"];
+        const awayTeam = game["away team"];
+        const winner = game.winner;
+        const homeScore = parseInt(game["home score"]) || 0;
+        const awayScore = parseInt(game["away score"]) || 0;
+
+        if (!teamStats[homeTeam]) {
+          teamStats[homeTeam] = {
+            name: homeTeam, wins: 0, losses: 0, ties: 0,
+            runsFor: 0, runsAgainst: 0, h2h: {}
+          };
+        }
+        if (!teamStats[awayTeam]) {
+          teamStats[awayTeam] = {
+            name: awayTeam, wins: 0, losses: 0, ties: 0,
+            runsFor: 0, runsAgainst: 0, h2h: {}
+          };
+        }
+
+        teamStats[homeTeam].runsFor += homeScore;
+        teamStats[homeTeam].runsAgainst += awayScore;
+        teamStats[awayTeam].runsFor += awayScore;
+        teamStats[awayTeam].runsAgainst += homeScore;
+
+        if (!teamStats[homeTeam].h2h[awayTeam]) {
+          teamStats[homeTeam].h2h[awayTeam] = { wins: 0, losses: 0, ties: 0 };
+        }
+        if (!teamStats[awayTeam].h2h[homeTeam]) {
+          teamStats[awayTeam].h2h[homeTeam] = { wins: 0, losses: 0, ties: 0 };
+        }
+
+        if (winner === "Tie") {
+          teamStats[homeTeam].ties++;
+          teamStats[awayTeam].ties++;
+          teamStats[homeTeam].h2h[awayTeam].ties++;
+          teamStats[awayTeam].h2h[homeTeam].ties++;
+        } else if (winner === homeTeam) {
+          teamStats[homeTeam].wins++;
+          teamStats[awayTeam].losses++;
+          teamStats[homeTeam].h2h[awayTeam].wins++;
+          teamStats[awayTeam].h2h[homeTeam].losses++;
+        } else if (winner === awayTeam) {
+          teamStats[awayTeam].wins++;
+          teamStats[homeTeam].losses++;
+          teamStats[awayTeam].h2h[homeTeam].wins++;
+          teamStats[homeTeam].h2h[awayTeam].losses++;
+        }
+      });
+
+      const preliminaryStandings = Object.values(teamStats)
+        .map(team => {
+          const totalDecided = team.wins + team.losses;
+          team.winPct = totalDecided > 0 ? (team.wins / totalDecided) : 0;
+          team.runDifferential = team.runsFor - team.runsAgainst;
+          return team;
+        });
+
+      const standings = preliminaryStandings.sort((a, b) => {
+        // First tiebreaker: Win percentage
+        if (a.winPct !== b.winPct) return b.winPct - a.winPct;
+        
+        // Check if there are 3+ teams tied at this win percentage
+        const teamsAtSameWinPct = preliminaryStandings.filter(t => t.winPct === a.winPct);
+        
+        // Second tiebreaker: Only use H2H if EXACTLY 2 teams are tied
+        if (teamsAtSameWinPct.length === 2) {
+          const h2hComp = compareHeadToHead(a, b);
+          if (h2hComp !== 0) return h2hComp;
+        }
+        
+        // Third tiebreaker: Runs Against (for 3+ teams tied, or if H2H didn't resolve)
+        if (a.runsAgainst !== b.runsAgainst) return a.runsAgainst - b.runsAgainst;
+        
+        // Fourth tiebreaker: Run Differential
+        return b.runDifferential - a.runDifferential;
+      });
+
+      return standings;
+    }
+
+    function compareHeadToHead(teamA, teamB) {
+      const aVsB = teamA.h2h[teamB.name];
+      const bVsA = teamB.h2h[teamA.name];
+      
+      if (!aVsB || !bVsA) return 0;
+      
+      const aH2HWinPct = (aVsB.wins + aVsB.losses) > 0 ? aVsB.wins / (aVsB.wins + aVsB.losses) : 0;
+      const bH2HWinPct = (bVsA.wins + bVsA.losses) > 0 ? bVsA.wins / (bVsA.wins + bVsA.losses) : 0;
+      
+      if (aH2HWinPct !== bH2HWinPct) {
+        return bH2HWinPct - aH2HWinPct;
+      }
+      
+      return 0;
+    }
+
+    function buildBracket() {
+      const teams = window.playoffTeams;
+      
+      if (teams.length < 10) {
+        document.getElementById('bracketContent').innerHTML = `
+          <div style="text-align: center; padding: 3rem;">
+            <h3>Insufficient Teams</h3>
+            <p>Need at least 10 teams for playoff bracket. Currently have ${teams.length} teams.</p>
+          </div>
+        `;
+        return;
+      }
+
+      console.log('🏗️ Building bracket with predictions:', window.predictions);
+      console.log('📊 Playoff teams:', teams.map((t, i) => `${i+1}. ${t.name}`));
+
+      const html = `
+        <!-- Play-in Round -->
+        <div class="bracket-section">
+          <h3>Play-in Round</h3>
+          <div class="round-title">Sunday, November 16, 2025</div>
+          <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #f59e0b;">
+            <strong>ℹ️ Everyone gets 2 games:</strong> Losers drop to Losers Bracket Round 1 where they face teams that lost to #1 or #2 seeds.
+          </div>
+          <div class="games-grid">
+            ${createGameCard('playIn', 'game1', 7, 10, 'Play-in Game 1 (Game 3) - 10:00 AM', 'Winner faces #2 seed | Loser drops to Losers Bracket')}
+            ${createGameCard('playIn', 'game2', 8, 9, 'Play-in Game 2 (Game 1) - 8:00 AM', 'Winner faces #1 seed | Loser drops to Losers Bracket')}
+          </div>
+        </div>
+
+        <!-- First Round -->
+        <div class="bracket-section">
+          <h3>First Round (Winners Bracket)</h3>
+          <div class="round-title">November 16 & 23, 2025</div>
+          <div class="games-grid">
+            ${createGameCard('firstRound', 'game1', 1, 'playIn-game2-winner', 'Game 2: #1 vs Winner 8v9 - 11/16 9:00 AM', 'Winner → Winners Semi | Loser → Losers Round 1')}
+            ${createGameCard('firstRound', 'game2', 2, 'playIn-game1-winner', 'Game 6: #2 vs Winner 7v10 - 11/23 9:00 AM', 'Winner → Winners Semi | Loser → Losers Round 1')}
+            ${createGameCard('firstRound', 'game3', 3, 6, 'Game 5: #3 vs #6 - 11/16 12:00 PM', 'Winner → Winners Semi | Loser → Losers Round 2')}
+            ${createGameCard('firstRound', 'game4', 4, 5, 'Game 4: #4 vs #5 - 11/16 11:00 AM', 'Winner → Winners Semi | Loser → Losers Round 2')}
+          </div>
+        </div>
+
+        <!-- Losers Round 1 -->
+        <div class="bracket-section">
+          <h3>Losers Bracket - Round 1 (Elimination Round)</h3>
+          <div class="round-title">Sunday, November 23, 2025</div>
+          <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #ef4444;">
+            <strong>🎯 Play-in losers get their 2nd game here:</strong> They face teams that lost to the #1 and #2 seeds in First Round.
+          </div>
+          <div class="games-grid">
+            ${createGameCard('losersRound1', 'game1', 'firstRound-game2-loser', 'playIn-game2-loser', 'Game 7: Loser Game 6 vs Loser Game 1 - 10:00 AM', 'Loser is eliminated')}
+            ${createGameCard('losersRound1', 'game2', 'firstRound-game1-loser', 'playIn-game1-loser', 'Game 8: Loser Game 2 vs Loser Game 3 - 11:00 AM', 'Loser is eliminated')}
+          </div>
+        </div>
+
+        <!-- Winners Round 2 -->
+        <div class="bracket-section">
+          <h3>Winners Bracket - Round 2 (Semi-Finals)</h3>
+          <div class="round-title">Sunday, November 30, 2025</div>
+          <div class="games-grid">
+            ${createGameCard('winnersRound2', 'game1', 'firstRound-game1-winner', 'firstRound-game4-winner', 'Game 11: Winner Game 2 vs Winner Game 4 - 10:00 AM', 'Winner → Winners Final')}
+            ${createGameCard('winnersRound2', 'game2', 'firstRound-game2-winner', 'firstRound-game3-winner', 'Game 12: Winner Game 6 vs Winner Game 5 - 11:00 AM', 'Winner → Winners Final')}
+          </div>
+        </div>
+
+        <!-- Losers Round 2 -->
+        <div class="bracket-section">
+          <h3>Losers Bracket - Round 2 (Elimination Round)</h3>
+          <div class="round-title">November 23 & 30, 2025</div>
+          <div class="games-grid">
+            ${createGameCard('losersRound2', 'game1', 'firstRound-game4-loser', 'losersRound1-game2-winner', 'Game 9: Loser Game 4 vs Winner Game 8 - 11/23 12:00 PM', 'Loser is eliminated')}
+            ${createGameCard('losersRound2', 'game2', 'firstRound-game3-loser', 'losersRound1-game1-winner', 'Game 10: Loser Game 5 vs Winner Game 7 - 11/30 9:00 AM', 'Loser is eliminated')}
+          </div>
+        </div>
+
+        <!-- Winners Final -->
+        <div class="bracket-section">
+          <h3>Winners Bracket Final</h3>
+          <div class="round-title">Monday, December 1, 2025</div>
+          <div class="games-grid">
+            ${createGameCard('winnersRound3', 'game1', 'winnersRound2-game1-winner', 'winnersRound2-game2-winner', 'Game 15: Winner Game 11 vs Winner Game 12 - 8:00 PM', 'Winner → Championship (0 losses)')}
+          </div>
+        </div>
+
+        <!-- Losers Round 3 -->
+        <div class="bracket-section">
+          <h3>Losers Bracket - Round 3 (Elimination Round)</h3>
+          <div class="round-title">November 30 - December 1, 2025</div>
+          <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #f59e0b;">
+            <strong>ℹ️ Winners Semi-Final losers enter here:</strong> Teams that lost in Winners Semi-Finals get their 2nd game.
+          </div>
+          <div class="games-grid">
+            ${createGameCard('losersRound3', 'game1', 'winnersRound2-game2-loser', 'losersRound2-game1-winner', 'Game 13: Loser Game 12 vs Winner Game 9 - 11/30 12:00 PM', 'Loser is eliminated')}
+            ${createGameCard('losersRound3', 'game2', 'winnersRound2-game1-loser', 'losersRound2-game2-winner', 'Game 14: Loser Game 11 vs Winner Game 10 - 12/1 7:00 PM', 'Loser is eliminated')}
+          </div>
+        </div>
+
+        <!-- Losers Semifinals -->
+        <div class="bracket-section">
+          <h3>Losers Bracket - Semifinals</h3>
+          <div class="round-title">Tuesday, December 2, 2025</div>
+          <div class="games-grid">
+            ${createGameCard('losersSemis', 'game1', 'losersRound3-game1-winner', 'losersRound3-game2-winner', 'Game 16: Winner Game 13 vs Winner Game 14 - 7:00 PM', 'Winner → Losers Final | Loser is eliminated')}
+          </div>
+        </div>
+
+        <!-- Losers Final -->
+        <div class="bracket-section">
+          <h3>Losers Bracket Final</h3>
+          <div class="round-title">Tuesday, December 2, 2025</div>
+          <div class="games-grid">
+            ${createGameCard('losersFinal', 'game1', 'losersSemis-game1-winner', 'winnersRound3-game1-loser', 'Game 17: Loser Game 15 vs Winner Game 16 - 8:00 PM', 'Winner → Championship (1 loss)')}
+          </div>
+        </div>
+
+        <!-- Championship -->
+        <div class="bracket-section">
+          <h3>🏆 Championship Game</h3>
+          <div class="round-title">Sunday, December 7, 2025</div>
+          <div class="games-grid">
+            ${createGameCard('championship', 'game1', 'winnersRound3-game1-winner', 'losersFinal-game1-winner', 'Game 18: Championship - 10:00 AM', 'Winner Game 15 (0 losses) vs Winner Game 17 (1 loss)')}
+          </div>
+        </div>
+
+        <!-- Championship Game 2 (If Necessary) -->
+        <div class="bracket-section">
+          <h3>🏆 Championship Game 2 (If Necessary)</h3>
+          <div class="round-title">Sunday, December 7, 2025</div>
+          <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #f59e0b;">
+            <strong>ℹ️ True Double Elimination:</strong> This game is only played if the team from Winners bracket (Game 15 winner) loses Game 18. They would have 1 loss and get a rematch.
+          </div>
+          <div class="games-grid">
+            ${createGameCard('ifNecessary', 'game1', 'championship-game1-winner', 'championship-game1-loser', 'Game 19: Championship Rematch - 11:00 AM', 'Winner is League Champion! 🏆 | Both teams have 1 loss')}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('bracketContent').innerHTML = html;
+      updateProgress();
+      generateVisualBracket();
+    }
+
+    function createGameCard(round, gameId, seed1, seed2, title, note) {
+      const gameKey = `${round}-${gameId}`;
+      const team1 = getTeamInfo(seed1);
+      const team2 = getTeamInfo(seed2);
+      
+      const prediction = window.predictions[round]?.[gameId];
+      
+      // Debug logging for games that should have teams
+      if (round !== 'playIn' && round !== 'firstRound') {
+        console.log(`🎮 ${title}:`, {
+          team1: team1.name,
+          team1Ready: team1.ready,
+          team2: team2.name, 
+          team2Ready: team2.ready,
+          prediction: prediction || 'none'
+        });
+      }
+
+      return `
+        <div class="game-card" data-game="${gameKey}">
+          <div class="game-title">${title}</div>
+          <div class="matchup">
+            <div class="team-option ${prediction === 'team1' ? 'selected' : ''} ${!team1.ready ? 'disabled' : ''}"
+                 onclick="${team1.ready ? `selectWinner('${round}', '${gameId}', 'team1')` : 'return false;'}"
+                 data-team="team1"
+                 style="${!team1.ready ? 'opacity: 0.4; cursor: not-allowed;' : ''}">
+              <span>
+                ${team1.seed ? `<span class="team-seed">#${team1.seed}</span>` : ''}
+                ${team1.ready ? team1.name : `<em style="color: #94a3b8;">${team1.name}</em>`}
+                ${prediction === 'team1' ? '<span class="winner-indicator">👑</span>' : ''}
+              </span>
+              ${team1.record && team1.ready ? `<span class="team-record">${team1.record}</span>` : ''}
+            </div>
+            <div class="vs-divider">VS</div>
+            <div class="team-option ${prediction === 'team2' ? 'selected' : ''} ${!team2.ready ? 'disabled' : ''}"
+                 onclick="${team2.ready ? `selectWinner('${round}', '${gameId}', 'team2')` : 'return false;'}"
+                 data-team="team2"
+                 style="${!team2.ready ? 'opacity: 0.4; cursor: not-allowed;' : ''}">
+              <span>
+                ${team2.seed ? `<span class="team-seed">#${team2.seed}</span>` : ''}
+                ${team2.ready ? team2.name : `<em style="color: #94a3b8;">${team2.name}</em>`}
+                ${prediction === 'team2' ? '<span class="winner-indicator">👑</span>' : ''}
+              </span>
+              ${team2.record && team2.ready ? `<span class="team-record">${team2.record}</span>` : ''}
+            </div>
+          </div>
+          <div style="text-align: center; margin-top: 1rem; color: #64748b; font-size: 0.9rem;">
+            ${note}
+          </div>
+        </div>
+      `;
+    }
+
+    function getTeamInfo(identifier) {
+      const teams = window.playoffTeams;
+      
+      // Direct seed number
+      if (typeof identifier === 'number') {
+        const team = teams[identifier - 1];
+        if (!team) {
+          return { name: 'TBD (Invalid Seed)', ready: false };
+        }
+        return {
+          name: team.name,
+          seed: identifier,
+          record: `${team.wins}-${team.losses}${team.ties > 0 ? `-${team.ties}` : ''}`,
+          ready: true
+        };
+      }
+
+      // Reference to another game's winner/loser
+      const parts = identifier.split('-');
+      if (parts.length < 3) {
+        return { name: `TBD (${identifier})`, ready: false };
+      }
+      
+      const refRound = parts[0];
+      const refGame = parts[1];
+      const refResult = parts[2]; // 'winner' or 'loser'
+      
+      const prediction = window.predictions[refRound]?.[refGame];
+      
+      if (!prediction) {
+        return {
+          name: `TBD (${identifier.replace(/-/g, ' ')})`,
+          ready: false
+        };
+      }
+
+      // Get both teams from the source game
+      const sourceTeam1 = getSourceTeamIdentifier(refRound, refGame, 'team1');
+      const sourceTeam2 = getSourceTeamIdentifier(refRound, refGame, 'team2');
+      
+      // Make sure both source teams are ready
+      if (!sourceTeam1.ready || !sourceTeam2.ready) {
+        return {
+          name: `TBD (waiting for ${refRound} ${refGame})`,
+          ready: false
+        };
+      }
+
+      // Return winner or loser based on prediction
+      if (refResult === 'winner') {
+        return prediction === 'team1' ? sourceTeam1 : sourceTeam2;
+      } else if (refResult === 'loser') {
+        return prediction === 'team1' ? sourceTeam2 : sourceTeam1;
+      }
+      
+      return { name: 'TBD (invalid result)', ready: false };
+    }
+
+    function getSourceTeamIdentifier(round, gameId, teamSlot) {
+      // COMPLETE mapping of ALL games in the bracket - CORRECTED STRUCTURE
+      const gameMap = {
+        // Play-in Games
+        'playIn-game1': { team1: 7, team2: 10 },
+        'playIn-game2': { team1: 8, team2: 9 },
+        
+        // First Round (Winners Bracket)
+        'firstRound-game1': { team1: 1, team2: 'playIn-game2-winner' },
+        'firstRound-game2': { team1: 2, team2: 'playIn-game1-winner' },
+        'firstRound-game3': { team1: 3, team2: 6 },
+        'firstRound-game4': { team1: 4, team2: 5 },
+        
+        // Losers Round 1 - CORRECTED: Loser of #2's game plays loser of 8v9, Loser of #1's game plays loser of 7v10
+        'losersRound1-game1': { team1: 'firstRound-game2-loser', team2: 'playIn-game2-loser' },
+        'losersRound1-game2': { team1: 'firstRound-game1-loser', team2: 'playIn-game1-loser' },
+        
+        // Winners Round 2 (Semi-Finals) - Game 11 and Game 12
+        'winnersRound2-game1': { team1: 'firstRound-game1-winner', team2: 'firstRound-game4-winner' },  // Game 11: Game 2 winner vs Game 4 winner
+        'winnersRound2-game2': { team1: 'firstRound-game2-winner', team2: 'firstRound-game3-winner' },  // Game 12: Game 6 winner vs Game 5 winner
+        
+        // Losers Round 2 - First Round losers (3v6, 4v5) face Losers R1 winners
+        'losersRound2-game1': { team1: 'firstRound-game4-loser', team2: 'losersRound1-game2-winner' },
+        'losersRound2-game2': { team1: 'firstRound-game3-loser', team2: 'losersRound1-game1-winner' },
+        
+        // Winners Final
+        'winnersRound3-game1': { team1: 'winnersRound2-game1-winner', team2: 'winnersRound2-game2-winner' },
+        
+        // Losers Round 3 - Winners Semi losers enter - Game 13 and Game 14
+        'losersRound3-game1': { team1: 'winnersRound2-game2-loser', team2: 'losersRound2-game1-winner' },  // Game 13: Game 12 Loser vs Game 9 Winner
+        'losersRound3-game2': { team1: 'winnersRound2-game1-loser', team2: 'losersRound2-game2-winner' },  // Game 14: Game 11 Loser vs Game 10 Winner
+        
+        // Losers Semifinals
+        'losersSemis-game1': { team1: 'losersRound3-game1-winner', team2: 'losersRound3-game2-winner' },
+        
+        // Losers Final - Losers Semi winner faces Winners Final loser
+        'losersFinal-game1': { team1: 'losersSemis-game1-winner', team2: 'winnersRound3-game1-loser' },
+        
+        // Championship
+        'championship-game1': { team1: 'winnersRound3-game1-winner', team2: 'losersFinal-game1-winner' },
+        
+        // Championship Game 2 (If Necessary) - Game 19
+        'ifNecessary-game1': { team1: 'championship-game1-winner', team2: 'championship-game1-loser' }
+      };
+
+      const gameKey = `${round}-${gameId}`;
+      const identifiers = gameMap[gameKey];
+      
+      if (identifiers) {
+        const identifier = identifiers[teamSlot];
+        return getTeamInfo(identifier);
+      }
+
+      return { name: 'TBD', ready: false };
+    }
+
+    window.selectWinner = function(round, gameId, winner) {
+      const gameKey = `${round}-${gameId}`;
+      const card = document.querySelector(`[data-game="${gameKey}"]`);
+      const teamOptions = card.querySelectorAll('.team-option');
+      
+      // Check if team is ready (not disabled)
+      const selectedOption = card.querySelector(`[data-team="${winner}"]`);
+      if (selectedOption.classList.contains('disabled')) {
+        alert('This matchup is not yet determined. Complete earlier games first.');
+        return;
+      }
+
+      // Store prediction
+      if (!window.predictions[round]) {
+        window.predictions[round] = {};
+      }
+      window.predictions[round][gameId] = winner;
+
+      // Update display
+      updateBracketDisplay();
+      updateProgress();
+
+      // Auto-save
+      saveBracket(true);
+    };
+
+    function updateBracketDisplay() {
+      // Rebuild entire bracket to ensure all dependencies are updated
+      buildBracket();
+    }
+
+    function updateProgress() {
+      // Total games in the bracket:
+      // Play-in: 2, First Round: 4, Winners R2: 2, Losers R1: 2, 
+      // Losers R2: 2, Winners Final: 1, Losers R3: 2, Losers Semis: 1,
+      // Losers Final: 1, Championship: 1, If Necessary: 1 = 19 total
+      const totalGames = 19;
+      let completedGames = 0;
+
+      Object.values(window.predictions).forEach(round => {
+        completedGames += Object.keys(round).length;
+      });
+
+      document.getElementById('progressText').textContent = 
+        `${completedGames} of ${totalGames} games predicted`;
+    }
+
+    window.saveBracket = function(silent = false) {
+      localStorage.setItem('playoffPredictions', JSON.stringify(window.predictions));
+      if (!silent) {
+        alert('✅ Bracket predictions saved!');
+      }
+    };
+
+    window.loadBracket = function() {
+      const saved = localStorage.getItem('playoffPredictions');
+      if (saved) {
+        window.predictions = JSON.parse(saved);
+        updateBracketDisplay();
+        alert('✅ Saved predictions loaded!');
+      } else {
+        alert('No saved predictions found.');
+      }
+    };
+
+    window.resetBracket = function() {
+      if (confirm('Are you sure you want to reset all predictions? This cannot be undone.')) {
+        window.predictions = {
+          playIn: {},
+          firstRound: {},
+          winnersRound2: {},
+          losersRound1: {},
+          losersRound2: {},
+          winnersRound3: {},
+          losersFinal: {},
+          semiFinal: {},
+          championship: {},
+          ifNecessary: {}
+        };
+        localStorage.removeItem('playoffPredictions');
+        updateBracketDisplay();
+        alert('✅ Bracket reset!');
+      }
+    };
+
+    function generateVisualBracket() {
+      const container = document.getElementById('visualBracket');
+      
+      // Helper to create a bracket game display
+      const createBracketGame = (round, gameId, seed1, seed2, label, timeInfo) => {
+        const team1 = getTeamInfo(seed1);
+        const team2 = getTeamInfo(seed2);
+        const prediction = window.predictions[round]?.[gameId];
+        
+        const winner1 = prediction === 'team1';
+        const winner2 = prediction === 'team2';
+        
+        return `
+          <div class="bracket-game">
+            <div class="bracket-matchup">
+              <div class="bracket-team ${winner1 ? 'winner' : ''}">
+                <span>
+                  ${team1.seed ? `<span class="team-seed">#${team1.seed}</span>` : ''}
+                  ${team1.ready ? team1.name : '<em>TBD</em>'}
+                </span>
+                ${team1.record && team1.ready ? `<span class="team-record">${team1.record}</span>` : ''}
+              </div>
+              <div class="bracket-team ${winner2 ? 'winner' : ''}">
+                <span>
+                  ${team2.seed ? `<span class="team-seed">#${team2.seed}</span>` : ''}
+                  ${team2.ready ? team2.name : '<em>TBD</em>'}
+                </span>
+                ${team2.record && team2.ready ? `<span class="team-record">${team2.record}</span>` : ''}
+              </div>
+            </div>
+            ${timeInfo ? `<div class="game-time">${timeInfo}</div>` : ''}
+          </div>
+        `;
+      };
+
+      // Winners Bracket
+      const winnersHTML = `
+        <h2>🏆 Winners Bracket</h2>
+        <div class="bracket-container">
+          <!-- Play-in Round -->
+          <div class="bracket-column">
+            <div class="round-label">Play-in</div>
+            ${createBracketGame('playIn', 'game1', 7, 10, 'Game 3', '11/16 10:00 AM')}
+            ${createBracketGame('playIn', 'game2', 8, 9, 'Game 1', '11/16 8:00 AM')}
+          </div>
+
+          <!-- First Round -->
+          <div class="bracket-column">
+            <div class="round-label">First Round</div>
+            ${createBracketGame('firstRound', 'game1', 1, 'playIn-game2-winner', 'Game 2', '11/16 9:00 AM')}
+            ${createBracketGame('firstRound', 'game2', 2, 'playIn-game1-winner', 'Game 6', '11/23 9:00 AM')}
+            ${createBracketGame('firstRound', 'game3', 3, 6, 'Game 5', '11/16 12:00 PM')}
+            ${createBracketGame('firstRound', 'game4', 4, 5, 'Game 4', '11/16 11:00 AM')}
+          </div>
+
+          <!-- Semi-Finals -->
+          <div class="bracket-column">
+            <div class="round-label">Semi-Finals</div>
+            ${createBracketGame('winnersRound2', 'game1', 'firstRound-game1-winner', 'firstRound-game4-winner', 'Game 11', '11/30 10:00 AM')}
+            ${createBracketGame('winnersRound2', 'game2', 'firstRound-game2-winner', 'firstRound-game3-winner', 'Game 12', '11/30 11:00 AM')}
+          </div>
+
+          <!-- Winners Final -->
+          <div class="bracket-column">
+            <div class="round-label">Winners Final</div>
+            ${createBracketGame('winnersRound3', 'game1', 'winnersRound2-game1-winner', 'winnersRound2-game2-winner', 'Game 15', '12/1 8:00 AM')}
+          </div>
+        </div>
+      `;
+
+      // Losers Bracket
+      const losersHTML = `
+        <div class="losers-bracket-page">
+          <h2>Losers Bracket</h2>
+          <div class="bracket-container">
+            <!-- Losers Round 1 -->
+            <div class="bracket-column">
+              <div class="round-label">Losers R1</div>
+              ${createBracketGame('losersRound1', 'game1', 'firstRound-game2-loser', 'playIn-game2-loser', 'Game 7', '11/23 10:00 AM')}
+              ${createBracketGame('losersRound1', 'game2', 'firstRound-game1-loser', 'playIn-game1-loser', 'Game 8', '11/23 11:00 AM')}
+            </div>
+
+            <!-- Losers Round 2 -->
+            <div class="bracket-column">
+              <div class="round-label">Losers R2</div>
+              ${createBracketGame('losersRound2', 'game1', 'firstRound-game4-loser', 'losersRound1-game2-winner', 'Game 9', '11/30 9:00 AM')}
+              ${createBracketGame('losersRound2', 'game2', 'firstRound-game3-loser', 'losersRound1-game1-winner', 'Game 10', '11/30 12:00 PM')}
+            </div>
+
+            <!-- Losers Round 3 -->
+            <div class="bracket-column">
+              <div class="round-label">Losers R3</div>
+              ${createBracketGame('losersRound3', 'game1', 'winnersRound2-game2-loser', 'losersRound2-game1-winner', 'Game 13', '12/1 12:00 PM')}
+              ${createBracketGame('losersRound3', 'game2', 'winnersRound2-game1-loser', 'losersRound2-game2-winner', 'Game 14', '12/2 7:00 AM')}
+            </div>
+
+            <!-- Losers Semis -->
+            <div class="bracket-column">
+              <div class="round-label">Losers Semis</div>
+              ${createBracketGame('losersSemis', 'game1', 'losersRound3-game1-winner', 'losersRound3-game2-winner', 'Game 16', '12/2 8:00 AM')}
+            </div>
+
+            <!-- Losers Final -->
+            <div class="bracket-column">
+              <div class="round-label">Losers Final</div>
+              ${createBracketGame('losersFinal', 'game1', 'losersSemis-game1-winner', 'winnersRound3-game1-loser', 'Game 17', '12/7 10:00 AM')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Championship
+      const championshipWinner = window.predictions.championship?.game1;
+      const championTeam = championshipWinner ? 
+        getTeamInfo(championshipWinner === 'team1' ? 'winnersRound3-game1-winner' : 'losersFinal-game1-winner') : 
+        null;
+
+      const championshipHTML = `
+        <div class="championship-section">
+          <h3>🏆 CHAMPIONSHIP</h3>
+          ${createBracketGame('championship', 'game1', 'winnersRound3-game1-winner', 'losersFinal-game1-winner', 'Game 18', '12/7 11:00 AM')}
+          ${window.predictions.ifNecessary?.game1 ? `
+            <div style="margin-top: 1rem;">
+              <div class="round-label">If Necessary</div>
+              ${createBracketGame('ifNecessary', 'game1', 'championship-game1-winner', 'championship-game1-loser', 'Game 19', '12/7 12:00 PM')}
+            </div>
+          ` : ''}
+          ${championTeam?.ready ? `
+            <div class="champion-team">
+              🏆 ${championTeam.name}
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      container.innerHTML = winnersHTML + losersHTML + championshipHTML;
+    }
+
+    // Update the updateBracketDisplay to also update visual bracket
+    const originalUpdateBracketDisplay = updateBracketDisplay;
+    updateBracketDisplay = function() {
+      originalUpdateBracketDisplay();
+      generateVisualBracket();
+    };
+
+    // Initialize on load
+    loadSeasonData();
+
+  </script>
+  <script src="mobile-enhancements.js"></script>
+  <script src="theme-toggle.js"></script>
+</body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View As User | Admin | Mountainside Aces</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="nav-styles.css">
+  <link rel="stylesheet" href="mobile-enhancements.css">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <style>
+    .admin-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .admin-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid var(--accent-color, #1a365d);
+    }
+    
+    .admin-header h1 {
+      color: var(--accent-color, #1a365d);
+      margin-bottom: 10px;
+    }
+    
+    .admin-header p {
+      color: #666;
+      font-size: 1rem;
+    }
+    
+    .warning-box {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 15px 20px;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .warning-box .icon {
+      font-size: 1.5em;
+      flex-shrink: 0;
+    }
+    
+    .warning-box .text {
+      flex: 1;
+    }
+    
+    .warning-box h4 {
+      margin: 0 0 5px 0;
+      color: #856404;
+    }
+    
+    .warning-box p {
+      margin: 0;
+      color: #856404;
+      font-size: 0.9rem;
+    }
+    
+    /* Search and Filter */
+    .search-controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .search-input-wrapper {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+    
+    .search-input-wrapper input {
+      width: 100%;
+      padding: 12px 15px 12px 40px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    
+    .search-input-wrapper input:focus {
+      outline: none;
+      border-color: var(--accent-color, #1a365d);
+    }
+    
+    .search-input-wrapper::before {
+      content: "🔍";
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.1em;
+    }
+    
+    .filter-select {
+      padding: 12px 15px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      min-width: 150px;
+      cursor: pointer;
+    }
+    
+    /* User List */
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .user-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 20px;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .user-card:hover {
+      border-color: var(--accent-color, #1a365d);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .user-card.current-user {
+      background: #f0f4f8;
+      border-color: #cbd5e0;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex: 1;
+    }
+    
+    .user-avatar {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: var(--accent-color, #1a365d);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    
+    .user-details {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .user-name {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .user-meta {
+      font-size: 0.85rem;
+      color: #666;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .user-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    
+    .role-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .role-admin { background: #fef3c7; color: #92400e; }
+    .role-league-staff { background: #dbeafe; color: #1e40af; }
+    .role-captain { background: #d1fae5; color: #065f46; }
+    .role-team-staff { background: #e0e7ff; color: #3730a3; }
+    .role-player { background: #fce7f3; color: #9d174d; }
+    .role-fan { background: #f3f4f6; color: #374151; }
+    .role-family { background: #fef9c3; color: #854d0e; }
+    
+    .view-as-btn {
+      padding: 8px 16px;
+      background: var(--accent-color, #1a365d);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    
+    .view-as-btn:hover {
+      background: #2c5282;
+      transform: translateY(-1px);
+    }
+    
+    .view-as-btn:disabled {
+      background: #cbd5e0;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    /* Stats Summary */
+    .stats-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--accent-color, #1a365d);
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      color: #666;
+      text-transform: uppercase;
+    }
+    
+    /* Loading & Empty States */
+    .loading-spinner {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    .empty-state .icon {
+      font-size: 3em;
+      margin-bottom: 15px;
+    }
+    
+    /* Auth states */
+    .not-authorized {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    
+    .not-authorized h2 {
+      color: #c53030;
+      margin-bottom: 15px;
+    }
+    
+    /* Results count */
+    .results-info {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 15px;
+    }
+    
+    /* Mobile */
+    @media (max-width: 600px) {
+      .user-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      
+      .view-as-btn {
+        width: 100%;
+      }
+      
+      .search-controls {
+        flex-direction: column;
+      }
+      
+      .filter-select {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav-component></nav-component>
+  
+  <main class="admin-container">
+    <!-- Loading State -->
+    <div id="loading" class="loading-spinner">
+      <p>⏳ Loading...</p>
+    </div>
+    
+    <!-- Not Authorized -->
+    <div id="not-authorized" class="not-authorized" style="display: none;">
+      <h2>🔒 Access Denied</h2>
+      <p>You must be an administrator to access this page.</p>
+      <a href="index.html" class="btn-primary" style="display: inline-block; margin-top: 20px; padding: 10px 20px; text-decoration: none;">Return to Home</a>
+    </div>
+    
+    <!-- Main Content -->
+    <div id="main-content" style="display: none;">
+      <header class="admin-header">
+        <h1>🎭 View As User</h1>
+        <p>See the site from another user's perspective for testing and troubleshooting</p>
+      </header>
+      
+      <div class="warning-box">
+        <span class="icon">⚠️</span>
+        <div class="text">
+          <h4>View-Only Mode</h4>
+          <p>You'll see what this user sees, but any actions you take will still be performed as yourself. This is a read-only preview of their experience.</p>
+        </div>
+      </div>
+      
+      <!-- Stats Summary -->
+      <div class="stats-summary">
+        <div class="stat-item">
+          <div class="stat-value" id="total-users">-</div>
+          <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="total-players">-</div>
+          <div class="stat-label">Players</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="total-captains">-</div>
+          <div class="stat-label">Captains</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="total-fans">-</div>
+          <div class="stat-label">Fans</div>
+        </div>
+      </div>
+      
+      <!-- Search & Filter -->
+      <div class="search-controls">
+        <div class="search-input-wrapper">
+          <input type="text" id="search-input" placeholder="Search by name or email...">
+        </div>
+        <select id="role-filter" class="filter-select">
+          <option value="">All Roles</option>
+          <option value="admin">👑 Admin</option>
+          <option value="league-staff">⚙️ League Staff</option>
+          <option value="captain">🎯 Captain</option>
+          <option value="team-staff">📋 Team Staff</option>
+          <option value="player">🥎 Player</option>
+          <option value="fan">📣 Fan</option>
+          <option value="family">👨‍👩‍👧 Family</option>
+        </select>
+      </div>
+      
+      <div class="results-info" id="results-info"></div>
+      
+      <!-- User List -->
+      <div class="user-list" id="user-list">
+        <!-- Users will be populated here -->
+      </div>
+      
+      <div id="empty-state" class="empty-state" style="display: none;">
+        <div class="icon">🔍</div>
+        <p>No users match your search criteria</p>
+      </div>
+    </div>
+  </main>
+  
+  <script src="nav-config.js"></script>
+  <script src="nav-component.js"></script>
+  <script type="module">
+    import { app, db } from './firebase-data.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { isAdmin } from './firebase-auth.js';
+    import { 
+      fetchAllUsersForImpersonation, 
+      startImpersonation, 
+      isImpersonating,
+      stopImpersonation,
+      injectImpersonationBanner
+    } from './admin-impersonate.js';
+    
+    const auth = getAuth(app);
+    
+    let currentUser = null;
+    let currentUserProfile = null;
+    let allUsers = [];
+    
+    // DOM Elements
+    const loadingEl = document.getElementById('loading');
+    const notAuthorizedEl = document.getElementById('not-authorized');
+    const mainContentEl = document.getElementById('main-content');
+    const userListEl = document.getElementById('user-list');
+    const searchInput = document.getElementById('search-input');
+    const roleFilter = document.getElementById('role-filter');
+    const resultsInfo = document.getElementById('results-info');
+    const emptyState = document.getElementById('empty-state');
+    
+    // Initialize
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        await checkAdminAccess();
+      } else {
+        showNotAuthorized();
+      }
+    });
+    
+    async function checkAdminAccess() {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        
+        if (!userDoc.exists()) {
+          showNotAuthorized();
+          return;
+        }
+        
+        currentUserProfile = { uid: currentUser.uid, ...userDoc.data() };
+        
+        // Only admins can use this feature
+        if (!isAdmin(currentUserProfile)) {
+          showNotAuthorized();
+          return;
+        }
+        
+        // If currently impersonating, show banner
+        injectImpersonationBanner();
+        
+        await loadUsers();
+        showMainContent();
+        
+      } catch (error) {
+        console.error('Error checking admin access:', error);
+        showNotAuthorized();
+      }
+    }
+    
+    async function loadUsers() {
+      const fetchedUsers = await fetchAllUsersForImpersonation();
+      
+      // Filter out migrated/legacy profiles
+      // Real authenticated users have: email, Firebase UID format, and not migrated
+      allUsers = fetchedUsers.filter(user => {
+        const hasEmail = !!user.email;
+        const notMigrated = !user.migrated;
+        // Firebase UIDs are long alphanumeric strings without underscores
+        const isFirebaseUID = user.uid && user.uid.length > 20 && !user.uid.includes('_');
+        
+        return hasEmail && notMigrated && isFirebaseUID;
+      });
+      
+      console.log(`✅ Loaded ${allUsers.length} authenticated users (filtered from ${fetchedUsers.length})`);
+      updateStats();
+      renderUsers(allUsers);
+    }
+    
+    function updateStats() {
+      document.getElementById('total-users').textContent = allUsers.length;
+      document.getElementById('total-players').textContent = 
+        allUsers.filter(u => u.userRole === 'player' || u.linkedPlayer).length;
+      document.getElementById('total-captains').textContent = 
+        allUsers.filter(u => u.isCaptain || u.userRole === 'captain' || 
+          (u.teamRoles && Object.values(u.teamRoles).some(tr => tr.role === 'captain'))).length;
+      document.getElementById('total-fans').textContent = 
+        allUsers.filter(u => u.userRole === 'fan').length;
+    }
+    
+    function renderUsers(users) {
+      if (users.length === 0) {
+        userListEl.innerHTML = '';
+        emptyState.style.display = 'block';
+        resultsInfo.textContent = '';
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      resultsInfo.textContent = `Showing ${users.length} user${users.length !== 1 ? 's' : ''}`;
+      
+      userListEl.innerHTML = users.map(user => {
+        const isCurrentUser = user.uid === currentUser.uid;
+        const initials = getInitials(user.displayName);
+        const roleClass = `role-${user.userRole || 'fan'}`;
+        const roleLabel = formatRoleLabel(user);
+        
+        // Get additional info
+        const linkedInfo = [];
+        if (user.linkedPlayer) linkedInfo.push(`🥎 ${user.linkedPlayer}`);
+        if (user.linkedTeam) linkedInfo.push(`🏟️ ${capitalizeFirst(user.linkedTeam)}`);
+        
+        // Check for team roles
+        const teamRoleCount = user.teamRoles ? Object.keys(user.teamRoles).filter(
+          k => user.teamRoles[k].status === 'active'
+        ).length : 0;
+        if (teamRoleCount > 0) linkedInfo.push(`📋 ${teamRoleCount} team role${teamRoleCount > 1 ? 's' : ''}`);
+        
+        return `
+          <div class="user-card ${isCurrentUser ? 'current-user' : ''}" data-uid="${user.uid}">
+            <div class="user-info">
+              <div class="user-avatar">${initials}</div>
+              <div class="user-details">
+                <div class="user-name">${user.displayName || 'No Name'} ${isCurrentUser ? '(You)' : ''}</div>
+                <div class="user-meta">
+                  <span>📧 ${user.email}</span>
+                  ${linkedInfo.length > 0 ? linkedInfo.map(info => `<span>${info}</span>`).join('') : ''}
+                </div>
+              </div>
+            </div>
+            <span class="role-badge ${roleClass}">${roleLabel}</span>
+            <button class="view-as-btn" ${isCurrentUser ? 'disabled' : ''} data-uid="${user.uid}">
+              ${isCurrentUser ? 'Current User' : '👁️ View As'}
+            </button>
+          </div>
+        `;
+      }).join('');
+      
+      // Add click handlers
+      document.querySelectorAll('.view-as-btn:not([disabled])').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const uid = btn.dataset.uid;
+          await handleViewAs(uid);
+        });
+      });
+    }
+    
+    async function handleViewAs(userId) {
+      const result = await startImpersonation(currentUserProfile, userId);
+      
+      if (result.success) {
+        // Redirect to the correct profile page based on target user's role
+        const targetUser = allUsers.find(u => u.uid === userId);
+        const targetRole = targetUser?.userRole;
+        const isFanOrFamily = targetRole === 'fan' || targetRole === 'family';
+        window.location.href = isFanOrFamily ? 'profile-fan.html' : 'profile.html';
+      } else {
+        alert(result.message);
+      }
+    }
+    
+    function filterUsers() {
+      const searchTerm = searchInput.value.toLowerCase().trim();
+      const roleValue = roleFilter.value;
+      
+      let filtered = allUsers;
+      
+      // Filter by search term
+      if (searchTerm) {
+        filtered = filtered.filter(user => 
+          (user.displayName || '').toLowerCase().includes(searchTerm) ||
+          (user.email || '').toLowerCase().includes(searchTerm) ||
+          (user.linkedPlayer || '').toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      // Filter by role
+      if (roleValue) {
+        filtered = filtered.filter(user => {
+          // Check direct role
+          if (user.userRole === roleValue) return true;
+          
+          // Check for captain in teamRoles
+          if (roleValue === 'captain') {
+            return user.isCaptain || 
+              (user.teamRoles && Object.values(user.teamRoles).some(tr => tr.role === 'captain' && tr.status === 'active'));
+          }
+          
+          // Check for team-staff
+          if (roleValue === 'team-staff') {
+            return user.teamRoles && Object.values(user.teamRoles).some(tr => tr.role === 'team-staff' && tr.status === 'active');
+          }
+          
+          return false;
+        });
+      }
+      
+      renderUsers(filtered);
+    }
+    
+    // Event listeners for filtering
+    searchInput.addEventListener('input', filterUsers);
+    roleFilter.addEventListener('change', filterUsers);
+    
+    // Helper functions
+    function getInitials(name) {
+      if (!name) return '?';
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    
+    function formatRoleLabel(user) {
+      const roleLabels = {
+        'admin': '👑 Admin',
+        'league-staff': '⚙️ League Staff',
+        'captain': '🎯 Captain',
+        'team-staff': '📋 Team Staff',
+        'player': '🥎 Player',
+        'fan': '📣 Fan',
+        'family': '👨‍👩‍👧 Family'
+      };
+      
+      // Check for captain status
+      if (user.isCaptain || (user.teamRoles && Object.values(user.teamRoles).some(tr => tr.role === 'captain' && tr.status === 'active'))) {
+        return '🎯 Captain';
+      }
+      
+      return roleLabels[user.userRole] || '📣 Fan';
+    }
+    
+    function capitalizeFirst(str) {
+      if (!str) return '';
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    
+    // UI State helpers
+    function showNotAuthorized() {
+      loadingEl.style.display = 'none';
+      notAuthorizedEl.style.display = 'block';
+      mainContentEl.style.display = 'none';
+    }
+    
+    function showMainContent() {
+      loadingEl.style.display = 'none';
+      notAuthorizedEl.style.display = 'none';
+      mainContentEl.style.display = 'block';
+    }
+  </script>
+</body>
+</html>

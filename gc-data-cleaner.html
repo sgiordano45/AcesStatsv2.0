@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameChanger Data Cleaner</title>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAEWkrTcprzJ2KPPJu-vFJPvYOVU4ky20",
+            authDomain: "acessoftballreference-84791.firebaseapp.com",
+            projectId: "acessoftballreference-84791",
+            storageBucket: "acessoftballreference-84791.firebasestorage.app",
+            messagingSenderId: "777699560175",
+            appId: "1:777699560175:web:4092b422e7d7116352e91a"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const googleProvider = new GoogleAuthProvider();
+        
+        // Make Firebase available globally
+        window.firebaseDb = db;
+        window.firebaseAuth = auth;
+        window.firebaseDoc = doc;
+        window.firebaseGetDoc = getDoc;
+        window.firebaseSetDoc = setDoc;
+        
+        // Auth state
+        window.currentUser = null;
+        
+        // Sign in with Google
+        window.signInWithGoogle = async function() {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                console.log('✅ Signed in as:', result.user.email);
+            } catch (error) {
+                console.error('❌ Sign in error:', error);
+                alert('Sign in failed: ' + error.message);
+            }
+        };
+        
+        // Sign out
+        window.signOutUser = async function() {
+            try {
+                await signOut(auth);
+                console.log('✅ Signed out');
+            } catch (error) {
+                console.error('❌ Sign out error:', error);
+            }
+        };
+        
+        // Check if user can manage content (admin/league-staff)
+        window.checkUserPermissions = async function(user) {
+            if (!user) return false;
+            try {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    return data.isAdmin === true || 
+                           data.userType === 'league-staff' ||
+                           ['admin', 'league-staff'].includes(data.userRole) ||
+                           ['admin', 'staff', 'league-staff'].includes(data.role);
+                }
+                return false;
+            } catch (error) {
+                console.error('Error checking permissions:', error);
+                return false;
+            }
+        };
+        
+        // Update auth UI
+        function updateAuthUI(user, canManage) {
+            const authStatus = document.getElementById('authStatus');
+            const saveBtn = document.querySelector('.save-firebase-btn');
+            
+            if (user) {
+                authStatus.innerHTML = `
+                    <span style="color: #28a745;">✓ Signed in as ${user.email}</span>
+                    ${canManage ? '<span class="admin-badge">Admin</span>' : '<span class="viewer-badge">Viewer</span>'}
+                    <button onclick="signOutUser()" class="auth-btn">Sign Out</button>
+                `;
+                if (saveBtn) {
+                    saveBtn.disabled = !canManage;
+                    saveBtn.title = canManage ? 'Save mappings to Firebase' : 'Admin access required to save';
+                }
+            } else {
+                authStatus.innerHTML = `
+                    <span style="color: #666;">Not signed in</span>
+                    <button onclick="signInWithGoogle()" class="auth-btn google-btn">🔐 Sign in with Google</button>
+                `;
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                    saveBtn.title = 'Sign in as admin to save';
+                }
+            }
+        }
+        
+        // Listen for auth state changes
+        onAuthStateChanged(auth, async (user) => {
+            window.currentUser = user;
+            const canManage = await window.checkUserPermissions(user);
+            window.canManageContent = canManage;
+            updateAuthUI(user, canManage);
+            
+            // Dispatch event for other code to know auth is ready
+            window.dispatchEvent(new CustomEvent('authReady', { detail: { user, canManage } }));
+        });
+        
+        // Load name mappings from Firebase
+        window.loadNameMappingsFromFirebase = async function() {
+            try {
+                const docRef = doc(db, 'settings', 'nameMappings');
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    console.log('✅ Loaded name mappings from Firebase:', data.mappings);
+                    return data.mappings || {};
+                } else {
+                    console.log('ℹ️ No name mappings found in Firebase, using defaults');
+                    return null;
+                }
+            } catch (error) {
+                console.error('❌ Error loading name mappings:', error);
+                return null;
+            }
+        };
+        
+        // Save name mappings to Firebase
+        window.saveNameMappingsToFirebase = async function(mappings) {
+            if (!window.currentUser) {
+                alert('Please sign in first');
+                return false;
+            }
+            if (!window.canManageContent) {
+                alert('You need admin or league-staff permissions to save');
+                return false;
+            }
+            try {
+                const docRef = doc(db, 'settings', 'nameMappings');
+                await setDoc(docRef, { 
+                    mappings: mappings,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: window.currentUser.email
+                });
+                console.log('✅ Saved name mappings to Firebase');
+                return true;
+            } catch (error) {
+                console.error('❌ Error saving name mappings:', error);
+                alert('Error saving: ' + error.message);
+                return false;
+            }
+        };
+        
+        // Signal that Firebase is ready
+        window.dispatchEvent(new Event('firebaseReady'));
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #444;
+            font-size: 18px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        select, input[type="date"], input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        .file-drop {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .file-drop:hover, .file-drop.dragover {
+            border-color: #007bff;
+            background: #f0f7ff;
+        }
+        .file-drop.has-file {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        button.secondary {
+            background: #6c757d;
+        }
+        button.secondary:hover {
+            background: #545b62;
+        }
+        button.success {
+            background: #28a745;
+        }
+        button.success:hover {
+            background: #1e7e34;
+        }
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .stats {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 15px 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .stat-box .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-box .label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .tag.home {
+            background: #d4edda;
+            color: #155724;
+        }
+        .tag.away {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .tag.regular {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        .tag.playoff {
+            background: #cce5ff;
+            color: #004085;
+        }
+        .hidden {
+            display: none;
+        }
+        .info-text {
+            color: #666;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .name-mapping {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .name-mapping h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+        .name-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .name-row input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .name-row button {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        .arrow {
+            color: #999;
+        }
+        /* Auth styles */
+        .auth-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .auth-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .auth-btn.google-btn {
+            background: #4285f4;
+            color: white;
+        }
+        .auth-btn.google-btn:hover {
+            background: #3367d6;
+        }
+        .admin-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .viewer-badge {
+            background: #6c757d;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .save-firebase-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧹 GameChanger Data Cleaner</h1>
+    <p class="subtitle">Convert scraped GameChanger batting data to the standard import format</p>
+
+    <!-- Auth Bar -->
+    <div class="auth-bar">
+        <div id="authStatus">
+            <span style="color: #666;">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Step 1: Upload -->
+    <div class="card">
+        <h2>1. Upload Data</h2>
+        <div class="file-drop" id="dropZone">
+            <p>📁 Drag & drop your CSV or JSON file here</p>
+            <p style="color: #999; font-size: 13px;">or click to select a file</p>
+            <input type="file" id="fileInput" accept=".csv,.json" style="display: none;">
+        </div>
+        <p class="info-text" id="fileInfo"></p>
+    </div>
+
+    <!-- Step 2: Configure -->
+    <div class="card" id="configCard">
+        <h2>2. Configure Extraction</h2>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="teamSelect">Team to Extract</label>
+                <select id="teamSelect">
+                    <option value="">-- Select a team --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="playoffDate">Playoff Start Date</label>
+                <input type="date" id="playoffDate" value="2025-07-21">
+                <p style="font-size: 12px; color: #666; margin-top: 5px;">Games on or after this date = Playoff</p>
+            </div>
+        </div>
+
+        <!-- Name Mappings -->
+        <div class="name-mapping">
+            <h4>Player Name Corrections <span id="mappingStatus" style="font-weight: normal; font-size: 12px;"></span></h4>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Map scraped names to corrected names. Changes are automatically loaded from Firebase.</p>
+            <div id="nameMappings"></div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button type="button" class="secondary" onclick="addNameMapping()">+ Add Name Mapping</button>
+                <button type="button" class="success save-firebase-btn" onclick="saveCurrentMappings()" disabled title="Sign in as admin to save">💾 Save to Firebase</button>
+            </div>
+        </div>
+
+        <div class="button-row">
+            <button id="processBtn" disabled onclick="processData()">Process Data</button>
+        </div>
+    </div>
+
+    <!-- Step 3: Results -->
+    <div class="card hidden" id="resultsCard">
+        <h2>3. Results</h2>
+        
+        <div class="stats" id="statsSection">
+            <div class="stat-box">
+                <div class="number" id="totalRows">0</div>
+                <div class="label">Total Rows</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="totalGames">0</div>
+                <div class="label">Games</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="homeGames">0</div>
+                <div class="label">Home Games</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="awayGames">0</div>
+                <div class="label">Away Games</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="playoffGames">0</div>
+                <div class="label">Playoff Games</div>
+            </div>
+        </div>
+
+        <div class="table-container" style="margin-top: 20px;">
+            <table id="previewTable">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>GameDate</th>
+                        <th>Opponent</th>
+                        <th>IsHome</th>
+                        <th>GameType</th>
+                        <th>GameNum</th>
+                        <th>AB</th>
+                        <th>H</th>
+                        <th>R</th>
+                        <th>BB</th>
+                    </tr>
+                </thead>
+                <tbody id="previewBody"></tbody>
+            </table>
+        </div>
+
+        <div class="button-row">
+            <button class="success" onclick="downloadCSV()">⬇️ Download CSV</button>
+            <button class="secondary" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <script>
+        let rawData = null;
+        let processedData = [];
+        let fileType = null;
+
+        // File handling
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFile(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+
+        function handleFile(file) {
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target.result;
+                fileType = file.name.endsWith('.json') ? 'json' : 'csv';
+
+                try {
+                    if (fileType === 'json') {
+                        rawData = JSON.parse(content);
+                        parseJSONData();
+                    } else {
+                        rawData = parseCSV(content);
+                        parseCSVData();
+                    }
+
+                    dropZone.classList.add('has-file');
+                    document.getElementById('fileInfo').textContent = `✅ Loaded: ${file.name}`;
+                    document.getElementById('processBtn').disabled = false;
+                } catch (err) {
+                    document.getElementById('fileInfo').innerHTML = `<span class="error">❌ Error parsing file: ${err.message}</span>`;
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(content) {
+            const lines = content.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseCSVLine(lines[i]);
+                if (values.length === headers.length) {
+                    const row = {};
+                    headers.forEach((h, idx) => row[h] = values[idx]);
+                    data.push(row);
+                }
+            }
+            return data;
+        }
+
+        function parseCSVLine(line) {
+            const values = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    values.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            values.push(current.trim());
+            return values;
+        }
+
+        function parseJSONData() {
+            // Extract all teams from JSON structure
+            const teams = new Set();
+            
+            if (Array.isArray(rawData)) {
+                rawData.forEach(game => {
+                    if (game.away_team) teams.add(game.away_team);
+                    if (game.home_team) teams.add(game.home_team);
+                });
+            }
+
+            populateTeamSelect(teams);
+        }
+
+        function parseCSVData() {
+            // Extract teams from CSV
+            const teams = new Set();
+            
+            rawData.forEach(row => {
+                if (row.away_team) teams.add(row.away_team);
+                if (row.home_team) teams.add(row.home_team);
+                if (row.team) teams.add(row.team);
+            });
+
+            populateTeamSelect(teams);
+        }
+
+        function populateTeamSelect(teams) {
+            const select = document.getElementById('teamSelect');
+            select.innerHTML = '<option value="">-- Select a team --</option>';
+            
+            [...teams].sort().forEach(team => {
+                const opt = document.createElement('option');
+                opt.value = team;
+                opt.textContent = team;
+                select.appendChild(opt);
+            });
+        }
+
+        function addNameMapping(from = '', to = '') {
+            const container = document.getElementById('nameMappings');
+            const row = document.createElement('div');
+            row.className = 'name-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Original name" value="${from}" class="name-from">
+                <span class="arrow">→</span>
+                <input type="text" placeholder="Corrected name" value="${to}" class="name-to">
+                <button type="button" class="secondary" onclick="this.parentElement.remove()">✕</button>
+            `;
+            container.appendChild(row);
+        }
+
+        function getNameMappings() {
+            const mappings = {};
+            document.querySelectorAll('.name-row').forEach(row => {
+                const from = row.querySelector('.name-from').value.trim();
+                const to = row.querySelector('.name-to').value.trim();
+                if (from && to) {
+                    mappings[from] = to;
+                }
+            });
+            return mappings;
+        }
+
+        function processData() {
+            const selectedTeam = document.getElementById('teamSelect').value;
+            const playoffDate = new Date(document.getElementById('playoffDate').value);
+            const nameMappings = getNameMappings();
+
+            if (!selectedTeam) {
+                alert('Please select a team');
+                return;
+            }
+
+            processedData = [];
+
+            if (fileType === 'json') {
+                processJSONData(selectedTeam, playoffDate, nameMappings);
+            } else {
+                processCSVData(selectedTeam, playoffDate, nameMappings);
+            }
+
+            displayResults();
+        }
+
+        function processJSONData(selectedTeam, playoffDate, nameMappings) {
+            rawData.forEach(game => {
+                const gameDate = parseGameDate(game.date);
+                if (!gameDate) return;
+
+                const isHome = game.home_team === selectedTeam;
+                const opponent = stripAcesPrefix(isHome ? game.away_team : game.home_team);
+                const gameType = gameDate >= playoffDate ? 'Playoff' : 'Regular';
+
+                // Get batting stats - from JSON we need to determine which stats belong to selected team
+                if (game.batting_stats) {
+                    game.batting_stats.forEach(stat => {
+                        // Check if this player's stats are for the selected team
+                        // We'll use the home_away field matched with whether selectedTeam is home/away
+                        const statIsHome = stat.home_away === 'Home';
+                        const statBelongsToTeam = (isHome && statIsHome) || (!isHome && !statIsHome);
+                        
+                        // Also check if team field matches (if it's correct)
+                        const teamMatches = stat.team === selectedTeam;
+                        
+                        if (statBelongsToTeam || teamMatches) {
+                            let playerName = stat.name;
+                            if (nameMappings[playerName]) {
+                                playerName = nameMappings[playerName];
+                            }
+
+                            processedData.push({
+                                Player: playerName,
+                                GameDate: formatDate(gameDate),
+                                Opponent: opponent,
+                                IsHome: isHome,
+                                GameType: gameType,
+                                GameNum: '',
+                                AB: stat.AB || 0,
+                                H: stat.H || 0,
+                                R: stat.R || 0,
+                                BB: stat.BB || 0
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function processCSVData(selectedTeam, playoffDate, nameMappings) {
+            rawData.forEach(row => {
+                // Determine if this row belongs to the selected team
+                // Check team column OR infer from home/away position
+                const isHome = row.home_team === selectedTeam;
+                const isAway = row.away_team === selectedTeam;
+                
+                if (!isHome && !isAway) return;
+                
+                // Check if stats belong to selected team based on home_away column
+                const statIsHome = row.home_away === 'Home';
+                const belongsToTeam = (isHome && statIsHome) || (isAway && !statIsHome) || row.team === selectedTeam;
+                
+                if (!belongsToTeam) return;
+
+                const gameDate = parseGameDate(row.date);
+                if (!gameDate) return;
+
+                const opponent = stripAcesPrefix(isHome ? row.away_team : row.home_team);
+                const gameType = gameDate >= playoffDate ? 'Playoff' : 'Regular';
+
+                let playerName = row.name;
+                if (nameMappings[playerName]) {
+                    playerName = nameMappings[playerName];
+                }
+
+                processedData.push({
+                    Player: playerName,
+                    GameDate: formatDate(gameDate),
+                    Opponent: opponent,
+                    IsHome: isHome,
+                    GameType: gameType,
+                    GameNum: '',
+                    AB: row.AB || 0,
+                    H: row.H || 0,
+                    R: row.R || 0,
+                    BB: row.BB || 0
+                });
+            });
+        }
+
+        function parseGameDate(dateStr) {
+            if (!dateStr) return null;
+            
+            // Handle "Wed Jun 11" format
+            const match = dateStr.match(/(\w+)\s+(\w+)\s+(\d+)/);
+            if (match) {
+                const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+                const month = months[match[2]];
+                const day = parseInt(match[3]);
+                if (month !== undefined) {
+                    return new Date(2025, month, day);
+                }
+            }
+            
+            // Try standard date parsing
+            const d = new Date(dateStr);
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        function stripAcesPrefix(teamName) {
+            if (!teamName) return teamName;
+            return teamName.replace(/^Aces\s+/i, '');
+        }
+
+        function formatDate(date) {
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${month}/${day}/${year}`;
+        }
+
+        function displayResults() {
+            document.getElementById('resultsCard').classList.remove('hidden');
+
+            // Calculate stats
+            const games = new Set(processedData.map(r => r.GameDate + r.Opponent));
+            const homeGames = new Set(processedData.filter(r => r.IsHome === true).map(r => r.GameDate + r.Opponent));
+            const awayGames = new Set(processedData.filter(r => r.IsHome === false).map(r => r.GameDate + r.Opponent));
+            const playoffGames = new Set(processedData.filter(r => r.GameType === 'Playoff').map(r => r.GameDate + r.Opponent));
+
+            document.getElementById('totalRows').textContent = processedData.length;
+            document.getElementById('totalGames').textContent = games.size;
+            document.getElementById('homeGames').textContent = homeGames.size;
+            document.getElementById('awayGames').textContent = awayGames.size;
+            document.getElementById('playoffGames').textContent = playoffGames.size;
+
+            // Preview table
+            const tbody = document.getElementById('previewBody');
+            tbody.innerHTML = '';
+
+            processedData.slice(0, 100).forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.Player}</td>
+                    <td>${row.GameDate}</td>
+                    <td>${row.Opponent}</td>
+                    <td><span class="tag ${row.IsHome ? 'home' : 'away'}">${row.IsHome ? 'true' : 'false'}</span></td>
+                    <td><span class="tag ${row.GameType.toLowerCase()}">${row.GameType}</span></td>
+                    <td>${row.GameNum}</td>
+                    <td>${row.AB}</td>
+                    <td>${row.H}</td>
+                    <td>${row.R}</td>
+                    <td>${row.BB}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if (processedData.length > 100) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="10" style="text-align: center; color: #666;">... and ${processedData.length - 100} more rows</td>`;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function generateCSV() {
+            const headers = ['Player', 'GameDate', 'Opponent', 'IsHome', 'GameType', 'GameNum', 'AB', 'H', 'R', 'BB'];
+            const lines = [headers.join(',')];
+
+            processedData.forEach(row => {
+                const values = headers.map(h => {
+                    let val = row[h];
+                    // Convert boolean IsHome to true/false
+                    if (h === 'IsHome') {
+                        val = val ? 'true' : 'false';
+                    }
+                    val = val ?? '';
+                    // Quote if contains comma
+                    return String(val).includes(',') ? `"${val}"` : val;
+                });
+                lines.push(values.join(','));
+            });
+
+            return lines.join('\n');
+        }
+
+        function downloadCSV() {
+            const csv = generateCSV();
+            const team = document.getElementById('teamSelect').value.replace(/\s+/g, '_');
+            const filename = `${team}_batting_cleaned.csv`;
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function copyToClipboard() {
+            const csv = generateCSV();
+            navigator.clipboard.writeText(csv).then(() => {
+                alert('CSV copied to clipboard!');
+            });
+        }
+
+        // Default name mappings (fallback if Firebase unavailable)
+        const defaultNameMappings = {
+            'Stephen Branosky': 'Steve Branosky',
+            'Matthew Leonardelli': 'Matt Leonardelli',
+            'Robert Guarneri': 'Rob Guarneri',
+            'Michael Marcino': 'Mike Marcino',
+            'Donald Steinmetz': 'Don Steinmetz',
+            'Timothy O\'Grady': 'Tim O\'Grady',
+            'Donald Rinaldo': 'Don Rinaldo',
+            'Stephen Giordano': 'Steve Giordano',
+            'Joseph Van Kirk': 'Joe Van Kirk'
+        };
+
+        // Save current mappings to Firebase
+        async function saveCurrentMappings() {
+            const mappings = getNameMappings();
+            const statusEl = document.getElementById('mappingStatus');
+            
+            if (Object.keys(mappings).length === 0) {
+                alert('No mappings to save');
+                return;
+            }
+            
+            statusEl.textContent = '⏳ Saving...';
+            statusEl.style.color = '#666';
+            
+            if (window.saveNameMappingsToFirebase) {
+                const success = await window.saveNameMappingsToFirebase(mappings);
+                if (success) {
+                    statusEl.textContent = '✅ Saved!';
+                    statusEl.style.color = '#28a745';
+                    setTimeout(() => {
+                        statusEl.textContent = '(synced with Firebase)';
+                        statusEl.style.color = '#666';
+                    }, 2000);
+                } else {
+                    statusEl.textContent = '❌ Save failed';
+                    statusEl.style.color = '#dc3545';
+                }
+            } else {
+                statusEl.textContent = '❌ Firebase not ready';
+                statusEl.style.color = '#dc3545';
+            }
+        }
+
+        // Load and display name mappings
+        function loadMappings(mappings) {
+            // Clear existing
+            document.getElementById('nameMappings').innerHTML = '';
+            
+            // Add each mapping
+            Object.entries(mappings).forEach(([from, to]) => {
+                addNameMapping(from, to);
+            });
+        }
+
+        // Initialize name mappings - try Firebase first, fallback to defaults
+        async function initializeNameMappings() {
+            const statusEl = document.getElementById('mappingStatus');
+            statusEl.textContent = '⏳ Loading...';
+            
+            // Wait for Firebase to be ready (with timeout)
+            let firebaseReady = !!window.loadNameMappingsFromFirebase;
+            if (!firebaseReady) {
+                await new Promise(resolve => {
+                    const timeout = setTimeout(() => resolve(), 3000);
+                    window.addEventListener('firebaseReady', () => {
+                        clearTimeout(timeout);
+                        resolve();
+                    }, { once: true });
+                });
+                firebaseReady = !!window.loadNameMappingsFromFirebase;
+            }
+            
+            if (firebaseReady) {
+                const firebaseMappings = await window.loadNameMappingsFromFirebase();
+                if (firebaseMappings && Object.keys(firebaseMappings).length > 0) {
+                    loadMappings(firebaseMappings);
+                    statusEl.textContent = '(synced with Firebase)';
+                    statusEl.style.color = '#28a745';
+                    return;
+                }
+            }
+            
+            // Fallback to defaults
+            loadMappings(defaultNameMappings);
+            statusEl.textContent = '(using defaults)';
+            statusEl.style.color = '#666';
+        }
+
+        // Initialize on page load
+        initializeNameMappings();
+    </script>
+</body>
+</html>

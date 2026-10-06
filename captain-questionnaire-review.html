@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Draft Questionnaire Review - Mountainside Aces</title>
+  <meta name="theme-color" content="#2d5016">
+  <link rel="stylesheet" href="nav-styles.css">
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --secondary-color: #1a6b4a;
+      --accent-color: #ffd700;
+      --card-bg: #ffffff;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      min-height: 100vh;
+      color: var(--text-dark);
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.95);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; gap: 1rem;
+    }
+    .loading-overlay.hidden { display: none; }
+    .softball-spinner::before {
+      content: '⚾'; font-size: 72px;
+      animation: spin 1.5s ease-in-out infinite; display: block;
+    }
+    @keyframes spin {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50%       { transform: rotate(180deg) scale(1.1); }
+    }
+    .loading-text { color: var(--text-light); font-size: 1rem; }
+
+    /* Page header */
+    .page-header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white; padding: 1.75rem 1.5rem 1.5rem;
+      position: relative; overflow: hidden;
+    }
+    .page-header::before {
+      content: ''; position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      background: rgba(255,255,255,0.05); border-radius: 50%;
+    }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.25rem; position: relative; }
+    .page-header .subtitle { font-size: 0.9rem; opacity: 0.85; position: relative; }
+    .header-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+    .header-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2); border-radius: 999px;
+      padding: 0.25rem 0.75rem; font-size: 0.8rem; font-weight: 600;
+    }
+
+    /* Access denied */
+    #accessDenied {
+      max-width: 480px; margin: 3rem auto; text-align: center;
+      background: var(--card-bg); border-radius: 12px; padding: 2rem;
+      box-shadow: var(--shadow-sm); display: none;
+    }
+    #accessDenied h2 { color: #c53030; margin-bottom: 0.5rem; }
+    #accessDenied p { color: var(--text-light); }
+
+    /* Controls bar */
+    .controls-bar {
+      background: white; border-bottom: 1px solid var(--border-color);
+      padding: 1rem 1.5rem; display: flex; gap: 0.875rem; flex-wrap: wrap; align-items: center;
+    }
+    .search-wrap {
+      flex: 1; min-width: 180px; position: relative;
+    }
+    .search-wrap input {
+      width: 100%; padding: 0.55rem 0.875rem 0.55rem 2.25rem;
+      border: 1.5px solid var(--border-color); border-radius: 8px;
+      font-size: 0.9rem; font-family: inherit; background: white;
+      transition: border-color 0.15s;
+    }
+    .search-wrap input:focus { outline: none; border-color: var(--primary-color); }
+    .search-icon {
+      position: absolute; left: 0.65rem; top: 50%; transform: translateY(-50%);
+      color: var(--text-light); font-size: 0.9rem; pointer-events: none;
+    }
+
+    .sort-group { display: flex; align-items: center; gap: 0.4rem; }
+    .sort-group label {
+      font-size: 0.78rem; font-weight: 700; color: var(--text-light);
+      text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+    }
+    .sort-group select {
+      padding: 0.5rem 0.75rem;
+      border: 1.5px solid var(--border-color); border-radius: 8px;
+      font-size: 0.875rem; font-family: inherit; cursor: pointer; background: white;
+    }
+    .sort-group select:focus { outline: none; border-color: var(--primary-color); }
+
+    .results-count {
+      font-size: 0.85rem; color: var(--text-light); white-space: nowrap; margin-left: auto;
+    }
+
+    /* Main container */
+    .page-container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+
+    /* Summary stats row */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.875rem; margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--card-bg); border-radius: 10px;
+      box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+      padding: 1rem; text-align: center;
+    }
+    .stat-number { font-size: 1.75rem; font-weight: 800; color: var(--primary-color); }
+    .stat-label  { font-size: 0.78rem; color: var(--text-light); margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* No results */
+    .no-results {
+      text-align: center; padding: 3rem; color: var(--text-light); font-size: 0.95rem;
+      background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow-sm);
+    }
+
+    /* Cards grid */
+    .cards-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1rem;
+    }
+
+    /* Respondent card */
+    .resp-card {
+      background: var(--card-bg); border-radius: 12px;
+      box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+      overflow: hidden; transition: box-shadow 0.15s;
+    }
+    .resp-card:hover { box-shadow: var(--shadow-md); }
+
+    .resp-card-header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white; padding: 0.875rem 1rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    }
+    .resp-name { font-weight: 700; font-size: 1rem; }
+    .resp-date { font-size: 0.75rem; opacity: 0.8; }
+
+    .quiz-badge {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      background: rgba(255,255,255,0.2); border-radius: 999px;
+      padding: 0.25rem 0.625rem; font-size: 0.82rem; font-weight: 700;
+      white-space: nowrap;
+    }
+    .quiz-badge.perfect { background: var(--accent-color); color: #2d3748; }
+
+    .resp-card-body { padding: 1rem; display: flex; flex-direction: column; gap: 0.625rem; }
+
+    .info-row {
+      display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.875rem;
+    }
+    .info-label {
+      font-weight: 700; color: var(--text-light); font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      min-width: 72px; padding-top: 1px;
+    }
+    .info-value { color: var(--text-dark); flex: 1; line-height: 1.4; }
+
+    .positions-wrap { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+    .pos-chip {
+      background: #edf2f7; border-radius: 4px;
+      padding: 0.15rem 0.45rem; font-size: 0.78rem; font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .level-pill {
+      display: inline-block; border-radius: 999px;
+      padding: 0.1rem 0.5rem; font-size: 0.78rem; font-weight: 600;
+    }
+    .level-Beginner           { background: #ebf8ff; color: #2b6cb0; }
+    .level-Recreational       { background: #f0fff4; color: #276749; }
+    .level-Intermediate       { background: #fffaf0; color: #c05621; }
+    .level-Advanced           { background: #fff5f5; color: #c53030; }
+    .level-Played-competitively { background: #faf5ff; color: #6b46c1; }
+
+    .divider { border: none; border-top: 1px solid var(--border-color); margin: 0.25rem 0; }
+  </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+  <div class="loading-text" id="loadingText">Checking access…</div>
+</div>
+
+<div id="accessDenied">
+  <div style="font-size:2.5rem;margin-bottom:0.75rem;">⛔</div>
+  <h2>Access Restricted</h2>
+  <p>This page is only available to captains and staff.</p>
+</div>
+
+<div id="mainContent" style="display:none;">
+  <div class="page-header">
+    <h1>📋 Draft Questionnaire Review</h1>
+    <p class="subtitle">All submitted player questionnaires</p>
+    <div class="header-meta">
+      <span class="header-badge" id="totalBadge">Loading…</span>
+      <span class="header-badge">Captains &amp; Staff Only</span>
+    </div>
+  </div>
+
+  <div class="controls-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search by name…" oninput="applyFilters()">
+    </div>
+    <div class="sort-group">
+      <label for="sortSelect">Sort by</label>
+      <select id="sortSelect" onchange="applyFilters()">
+        <option value="name">Name (A→Z)</option>
+        <option value="name-desc">Name (Z→A)</option>
+        <option value="quiz-desc">Quiz Score (High→Low)</option>
+        <option value="quiz-asc">Quiz Score (Low→High)</option>
+        <option value="softball-desc">Softball Exp (Most)</option>
+        <option value="softball-asc">Softball Exp (Least)</option>
+        <option value="date-desc">Submitted (Newest)</option>
+      </select>
+    </div>
+    <div class="results-count" id="resultsCount"></div>
+  </div>
+
+  <div class="page-container">
+
+    <!-- Summary stats -->
+    <div class="stats-row" id="statsRow" style="display:none;">
+      <div class="stat-card">
+        <div class="stat-number" id="statTotal">—</div>
+        <div class="stat-label">Respondents</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="statAvgQuiz">—</div>
+        <div class="stat-label">Avg Quiz Score</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="statPerfect">—</div>
+        <div class="stat-label">Perfect Scores</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="statAvgSoftball">—</div>
+        <div class="stat-label">Avg Softball Yrs</div>
+      </div>
+    </div>
+
+    <div id="noResults" class="no-results" style="display:none;">
+      No questionnaires match your search.
+    </div>
+
+    <div class="cards-grid" id="cardsGrid"></div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { db, doc, getDoc, getDocs, collection } from './firebase-config.js';
+  import { onAuthChange } from './firebase-auth.js';
+  import { NavigationComponent } from './nav-component.js';
+
+  const LEVEL_ORDER = {
+    'Beginner': 1,
+    'Recreational': 2,
+    'Intermediate': 3,
+    'Advanced': 4,
+    'Played competitively': 5
+  };
+
+  let allData = [];
+
+  // ─── Auth ─────────────────────────────────────────────────────────────────
+  onAuthChange(async (user) => {
+    if (!user) {
+      hideLoading();
+      document.getElementById('accessDenied').style.display = '';
+      return;
+    }
+
+    setLoadingText('Checking permissions…');
+
+    try {
+      const userSnap = await getDoc(doc(db, 'users', user.uid));
+      if (!userSnap.exists()) { denyAccess(); return; }
+
+      const p = userSnap.data();
+      const role  = (p.role      || '').toLowerCase();
+      const uRole = (p.userRole  || '').toLowerCase();
+      const ok = p.isAdmin === true
+        || p.isCaptain === true
+        || ['admin','staff','captain','league-staff'].includes(role)
+        || ['admin','staff','captain','league-staff'].includes(uRole);
+
+      if (!ok) { denyAccess(); return; }
+
+      setLoadingText('Loading questionnaires…');
+      await loadAllQuestionnaires();
+      hideLoading();
+      document.getElementById('mainContent').style.display = '';
+    } catch (e) {
+      console.error('Error:', e);
+      denyAccess();
+    }
+  });
+
+  function denyAccess() {
+    hideLoading();
+    document.getElementById('accessDenied').style.display = '';
+  }
+
+  // ─── Load data ─────────────────────────────────────────────────────────────
+  async function loadAllQuestionnaires() {
+    const snap = await getDocs(collection(db, 'draftQuestionnaires'));
+    allData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Summary stats
+    const total = allData.length;
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('totalBadge').textContent = `${total} Response${total !== 1 ? 's' : ''}`;
+
+    if (total > 0) {
+      const avgQuiz = (allData.reduce((s, d) => s + (d.quizScore || 0), 0) / total).toFixed(1);
+      const perfect = allData.filter(d => d.quizScore === 5).length;
+      const avgSoftball = (allData.reduce((s, d) => s + (d.softballYears || 0), 0) / total).toFixed(1);
+      document.getElementById('statAvgQuiz').textContent = avgQuiz + '/5';
+      document.getElementById('statPerfect').textContent = perfect;
+      document.getElementById('statAvgSoftball').textContent = avgSoftball;
+      document.getElementById('statsRow').style.display = '';
+    }
+
+    applyFilters();
+  }
+
+  // ─── Filter + sort ─────────────────────────────────────────────────────────
+  window.applyFilters = function() {
+    const query = document.getElementById('searchInput').value.trim().toLowerCase();
+    const sort  = document.getElementById('sortSelect').value;
+
+    let filtered = allData.filter(d => {
+      if (!query) return true;
+      return (d.displayName || '').toLowerCase().includes(query);
+    });
+
+    filtered.sort((a, b) => {
+      switch (sort) {
+        case 'name':
+          return (a.displayName || '').localeCompare(b.displayName || '');
+        case 'name-desc':
+          return (b.displayName || '').localeCompare(a.displayName || '');
+        case 'quiz-desc':
+          return (b.quizScore || 0) - (a.quizScore || 0);
+        case 'quiz-asc':
+          return (a.quizScore || 0) - (b.quizScore || 0);
+        case 'softball-desc':
+          return (LEVEL_ORDER[b.softballLevel] || 0) - (LEVEL_ORDER[a.softballLevel] || 0)
+              || (b.softballYears || 0) - (a.softballYears || 0);
+        case 'softball-asc':
+          return (LEVEL_ORDER[a.softballLevel] || 0) - (LEVEL_ORDER[b.softballLevel] || 0)
+              || (a.softballYears || 0) - (b.softballYears || 0);
+        case 'date-desc': {
+          const ta = a.submittedAt?.toMillis?.() || 0;
+          const tb = b.submittedAt?.toMillis?.() || 0;
+          return tb - ta;
+        }
+        default: return 0;
+      }
+    });
+
+    renderCards(filtered);
+    document.getElementById('resultsCount').textContent = `${filtered.length} of ${allData.length}`;
+  };
+
+  // ─── Render ────────────────────────────────────────────────────────────────
+  function renderCards(data) {
+    const grid = document.getElementById('cardsGrid');
+    const noRes = document.getElementById('noResults');
+    grid.innerHTML = '';
+
+    if (data.length === 0) {
+      noRes.style.display = '';
+      return;
+    }
+    noRes.style.display = 'none';
+
+    data.forEach(d => grid.appendChild(buildCard(d)));
+  }
+
+  function buildCard(d) {
+    const card = document.createElement('div');
+    card.className = 'resp-card';
+
+    const score    = d.quizScore ?? '?';
+    const perfect  = score === 5;
+    const dateStr  = d.submittedAt?.toDate
+      ? d.submittedAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : '—';
+
+    const positions = (d.preferredPositions || []).join(', ') || '—';
+    const posPills  = (d.preferredPositions || [])
+      .map(p => `<span class="pos-chip">${p}</span>`).join('') || '<span style="color:var(--text-light)">—</span>';
+
+    const baseballLevelClass = (d.baseballLevel || '').replace(/\s+/g, '-');
+    const softballLevelClass = (d.softballLevel || '').replace(/\s+/g, '-');
+
+    card.innerHTML = `
+      <div class="resp-card-header">
+        <div>
+          <div class="resp-name">${escHtml(d.displayName || 'Unknown')}</div>
+          <div class="resp-date">Submitted ${dateStr}</div>
+        </div>
+        <div class="quiz-badge ${perfect ? 'perfect' : ''}">
+          ${perfect ? '⭐' : '🧠'} ${score}/5
+        </div>
+      </div>
+      <div class="resp-card-body">
+        <div class="info-row">
+          <span class="info-label">Age</span>
+          <span class="info-value">${d.age ?? '—'}</span>
+        </div>
+        <hr class="divider">
+        <div class="info-row">
+          <span class="info-label">Baseball</span>
+          <span class="info-value">
+            ${d.baseballYears ?? 0} yr${d.baseballYears !== 1 ? 's' : ''}
+            ${d.baseballLevel ? `· <span class="level-pill level-${baseballLevelClass}">${escHtml(d.baseballLevel)}</span>` : ''}
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Softball</span>
+          <span class="info-value">
+            ${d.softballYears ?? 0} yr${d.softballYears !== 1 ? 's' : ''}
+            ${d.softballLevel ? `· <span class="level-pill level-${softballLevelClass}">${escHtml(d.softballLevel)}</span>` : ''}
+          </span>
+        </div>
+        <hr class="divider">
+        <div class="info-row">
+          <span class="info-label">Positions</span>
+          <span class="info-value"><div class="positions-wrap">${posPills}</div></span>
+        </div>
+      </div>`;
+
+    return card;
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function hideLoading() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  }
+  function setLoadingText(t) {
+    document.getElementById('loadingText').textContent = t;
+  }
+</script>
+
+</body>
+</html>

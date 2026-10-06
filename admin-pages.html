@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Hub - Mountainside Aces</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6b21a8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="mobile-enhancements.css">
+    <link rel="stylesheet" href="nav-styles.css">
+    
+    <style>
+        :root {
+            --primary-color: #2d5016;
+            --secondary-color: #1a6b4a;
+            --accent-color: #ffd700;
+            --admin-color: #6b21a8;
+            --admin-secondary: #7c3aed;
+            --captain-color: #0369a1;
+            --captain-secondary: #0284c7;
+            --staff-color: #0f766e;
+            --staff-secondary: #14b8a6;
+            --data-color: #0891b2;
+            --data-secondary: #06b6d4;
+            --card-bg: #ffffff;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .softball-spinner::before {
+            content: '🛠️';
+            font-size: 80px;
+            animation: spin 1.5s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--admin-color) 0%, var(--admin-secondary) 100%);
+            padding: 4rem 2rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            color: white;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            top: -100px;
+            right: -100px;
+            border-radius: 50%;
+        }
+
+        .header::after {
+            content: '⚙️';
+            position: absolute;
+            font-size: 200px;
+            opacity: 0.05;
+            bottom: -50px;
+            left: -30px;
+            pointer-events: none;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.15rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Back Button */
+        .back-button {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(-5px);
+        }
+
+        .back-button::before {
+            content: "←";
+            font-size: 1.2rem;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 2.5rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        .section-title .icon {
+            font-size: 1.5rem;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, var(--border-color) 0%, transparent 100%);
+        }
+
+        .section-description {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--admin-color) 0%, var(--admin-secondary) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--admin-color);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .card-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-admin {
+            background: #f3e8ff;
+            color: var(--admin-color);
+        }
+
+        .badge-captain {
+            background: #e0f2fe;
+            color: var(--captain-color);
+        }
+
+        .badge-staff {
+            background: #ccfbf1;
+            color: var(--staff-color);
+        }
+
+        .badge-data {
+            background: #cffafe;
+            color: var(--data-color);
+        }
+
+        .card-description {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--admin-color);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .card-link::after {
+            content: "→";
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover .card-link::after {
+            transform: translateX(4px);
+        }
+
+        /* Colored Cards */
+        .card.admin-card::before {
+            background: linear-gradient(90deg, var(--admin-color) 0%, var(--admin-secondary) 100%);
+            opacity: 1;
+        }
+
+        .card.captain-card::before {
+            background: linear-gradient(90deg, var(--captain-color) 0%, var(--captain-secondary) 100%);
+            opacity: 1;
+        }
+
+        .card.captain-card:hover {
+            border-color: var(--captain-color);
+        }
+
+        .card.captain-card .card-link {
+            color: var(--captain-color);
+        }
+
+        .card.staff-card::before {
+            background: linear-gradient(90deg, var(--staff-color) 0%, var(--staff-secondary) 100%);
+            opacity: 1;
+        }
+
+        .card.staff-card:hover {
+            border-color: var(--staff-color);
+        }
+
+        .card.staff-card .card-link {
+            color: var(--staff-color);
+        }
+
+        .card.data-card::before {
+            background: linear-gradient(90deg, var(--data-color) 0%, var(--data-secondary) 100%);
+            opacity: 1;
+        }
+
+        .card.data-card:hover {
+            border-color: var(--data-color);
+        }
+
+        .card.data-card .card-link {
+            color: var(--data-color);
+        }
+
+        /* Quick Access Section */
+        .quick-access {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .quick-access h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .quick-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .quick-link {
+            padding: 0.6rem 1.2rem;
+            background: #f7fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quick-link:hover {
+            background: var(--admin-color);
+            color: white;
+            border-color: var(--admin-color);
+            transform: translateY(-2px);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 3rem 1.5rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .back-button {
+                top: 1rem;
+                left: 1rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                font-size: 1.35rem;
+            }
+
+            .quick-links {
+                gap: 0.5rem;
+            }
+
+            .quick-link {
+                padding: 0.5rem 0.9rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="softball-spinner"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav-component></nav-component>
+
+    <!-- Header -->
+    <div class="header">
+        <a href="index.html" class="back-button">Back to Home</a>
+        <h1>🛠️ Admin Hub</h1>
+        <p>Quick access to all administrative tools and management pages</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        
+        <!-- Quick Access -->
+        <div class="quick-access">
+            <h3>⚡ Quick Links</h3>
+            <div class="quick-links">
+                <a href="admin-content.html" class="quick-link">🎛️ Content</a>
+                <a href="admin-user-management.html" class="quick-link">👥 Users</a>
+                <a href="admin-roles.html" class="quick-link">🎭 Roles</a>
+                <a href="admin-link-players.html" class="quick-link">🔗 Link Players</a>
+                <a href="aggregate-stats.html" class="quick-link">📊 Aggregate Stats</a>
+                <a href="games-admin.html" class="quick-link">🎮 Games</a>
+                <a href="admin-submit-stats.html" class="quick-link">📝 Submit Stats</a>
+                <a href="admin-view-as.html" class="quick-link">👁️ View As</a>
+            </div>
+        </div>
+
+        <!-- User & Role Management Section -->
+        <h2 class="section-title"><span class="icon">👥</span> User & Role Management</h2>
+        <p class="section-description">Manage users, roles, permissions, and account linking</p>
+        
+        <div class="cards-grid">
+            <a href="admin-user-management.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">👥</div>
+                    <div>
+                        <div class="card-title">User Management</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">View and manage all user accounts. Edit profiles, view activity, and manage user settings across the platform.</p>
+                <span class="card-link">Manage Users</span>
+            </a>
+
+            <a href="admin-roles.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">🎭</div>
+                    <div>
+                        <div class="card-title">Role Management</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Assign and manage user roles including admin, league staff, captain, and player roles. Control permissions across the site.</p>
+                <span class="card-link">Manage Roles</span>
+            </a>
+
+            <a href="admin-link-players.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">🔗</div>
+                    <div>
+                        <div class="card-title">Admin Player Linking</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Manually link user accounts to player profiles. View unlinked fans and match them to existing players in the system.</p>
+                <span class="card-link">Link Players</span>
+            </a>
+
+            <a href="admin-view-as.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">👁️</div>
+                    <div>
+                        <div class="card-title">View As User</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Test the site as different users or roles. Debug permission issues and verify what other users see.</p>
+                <span class="card-link">View As</span>
+            </a>
+        </div>
+
+        <!-- Content & Data Management Section -->
+        <h2 class="section-title"><span class="icon">🎛️</span> Content & Data Management</h2>
+        <p class="section-description">Manage games, previews, recaps, and site content</p>
+        
+        <div class="cards-grid">
+            <a href="admin-content.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">🎛️</div>
+                    <div>
+                        <div class="card-title">Content Admin</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Manage games, previews, recaps, and other site content. Edit game details, sync data, and control what appears on the site.</p>
+                <span class="card-link">Manage Content</span>
+            </a>
+
+            <a href="games-admin.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">🎮</div>
+                    <div>
+                        <div class="card-title">Games Admin</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Direct game management interface. Create, edit, and delete games. Manage game status and scheduling.</p>
+                <span class="card-link">Manage Games</span>
+            </a>
+
+            <a href="admin-features.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">🎯</div>
+                    <div>
+                        <div class="card-title">Feature Submissions</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Review and manage feature requests and submissions from users. Track feedback and planned improvements.</p>
+                <span class="card-link">View Submissions</span>
+            </a>
+
+            <a href="admin-badges.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">🏅</div>
+                    <div>
+                        <div class="card-title">Badge Calculator</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Calculate and manage player badges. Run badge calculations, preview awards, and update badge assignments.</p>
+                <span class="card-link">Calculate Badges</span>
+            </a>
+
+            <a href="admin-dfs.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">💰</div>
+                    <div>
+                        <div class="card-title">Aces DFS Generator</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Generate weekly DFS salaries from AcesBPI and score completed weeks from submitted game stats.</p>
+                <span class="card-link">Manage DFS</span>
+            </a>
+
+            <a href="wordle-admin.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">🟩</div>
+                    <div>
+                        <div class="card-title">Wordle Admin</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Manage daily Wordle games. Set up puzzles, view statistics, and manage the word list for daily challenges.</p>
+                <span class="card-link">Manage Wordle</span>
+            </a>
+        </div>
+
+        <!-- Statistics & Data Section -->
+        <h2 class="section-title"><span class="icon">📊</span> Statistics Management</h2>
+        <p class="section-description">Submit, aggregate, and manage player and team statistics</p>
+        
+        <div class="cards-grid">
+            <a href="admin-submit-stats.html" class="card data-card">
+                <div class="card-header">
+                    <div class="card-icon">📝</div>
+                    <div>
+                        <div class="card-title">Admin Stats Entry</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Enter and edit game statistics as an admin. Submit stats for any team and any game in the system.</p>
+                <span class="card-link">Enter Stats</span>
+            </a>
+
+            <a href="aggregate-stats.html" class="card data-card">
+                <div class="card-header">
+                    <div class="card-icon">📊</div>
+                    <div>
+                        <div class="card-title">Stats Aggregator</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Aggregate and recalculate player statistics. Run batch updates to ensure all stats are current and accurate.</p>
+                <span class="card-link">Aggregate Stats</span>
+            </a>
+
+            <a href="admin-game-tracker-review.html" class="card data-card" style="border-color: #0891b2;">
+                <div class="card-header">
+                    <div class="card-icon">🎯</div>
+                    <div>
+                        <div class="card-title">Game Tracker Review</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Review and convert live-tracked game stats to official records. Verify play-by-play data before finalizing.</p>
+                <span class="card-link">Review Tracked Games</span>
+            </a>
+
+            <a href="aggregate-stats-legacy.html" class="card data-card">
+                <div class="card-header">
+                    <div class="card-icon">📜</div>
+                    <div>
+                        <div class="card-title">Legacy Stats Aggregator</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Import and aggregate statistics from legacy seasons. Handle historical data that wasn't tracked in the new system.</p>
+                <span class="card-link">Legacy Stats</span>
+            </a>
+
+            <a href="admin-mark-stats-submitted.html" class="card data-card">
+                <div class="card-header">
+                    <div class="card-icon">✅</div>
+                    <div>
+                        <div class="card-title">Mark Stats Submitted</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Bulk mark games as having stats submitted. Use for seasons where stats weren't tracked via the new system.</p>
+                <span class="card-link">Mark Games</span>
+            </a>
+        </div>
+
+        <!-- Schedule Management Section -->
+        <h2 class="section-title"><span class="icon">📅</span> Schedule Management</h2>
+        <p class="section-description">Generate, balance, and analyze league schedules</p>
+        
+        <div class="cards-grid">
+            <a href="schedule-generator.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">🎲</div>
+                    <div>
+                        <div class="card-title">Schedule Generator</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Create balanced schedules with automatic time slot assignment for summer or fall seasons. Export to Firebase or CSV.</p>
+                <span class="card-link">Generate Schedule</span>
+            </a>
+
+            <a href="schedule-balancer.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">⚖️</div>
+                    <div>
+                        <div class="card-title">Schedule Balancer</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Fine-tune generated schedules before the season. Adjust dates, times, swap home/away, and fix double-header issues.</p>
+                <span class="card-link">Balance Schedule</span>
+            </a>
+
+            <a href="offseason-schedule.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">🔍</div>
+                    <div>
+                        <div class="card-title">Schedule Analyzer</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Upload and analyze league schedules with detailed breakdowns by team. View opponents, game times, and day patterns.</p>
+                <span class="card-link">Analyze Schedule</span>
+            </a>
+
+            <a href="offseason.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">🎣</div>
+                    <div>
+                        <div class="card-title">Offseason Hub</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Central hub for offseason tasks including roster management, schedule building, and season preparation tools.</p>
+                <span class="card-link">Offseason Hub</span>
+            </a>
+
+            <a href="offseason-roster.html" class="card admin-card">
+                <div class="card-header">
+                    <div class="card-icon">📋</div>
+                    <div>
+                        <div class="card-title">Offseason Rosters</div>
+                        <span class="card-badge badge-admin">Admin</span>
+                    </div>
+                </div>
+                <p class="card-description">Manage team rosters during the offseason. Handle player assignments, new additions, and roster changes before the season.</p>
+                <span class="card-link">Manage Rosters</span>
+            </a>
+        </div>
+
+        <!-- Captain/Staff Section -->
+        <h2 class="section-title"><span class="icon">🎯</span> Captain & Staff Tools</h2>
+        <p class="section-description">Available to team captains, league staff, and admins</p>
+        
+        <div class="cards-grid">
+            <a href="approve-links.html" class="card captain-card">
+                <div class="card-header">
+                    <div class="card-icon">✅</div>
+                    <div>
+                        <div class="card-title">Approve Player Links</div>
+                        <span class="card-badge badge-captain">Captain+</span>
+                    </div>
+                </div>
+                <p class="card-description">Review and approve pending player link requests. Captains can approve for their team, staff can approve all.</p>
+                <span class="card-link">Review Requests</span>
+            </a>
+
+            <a href="roster-management.html" class="card captain-card">
+                <div class="card-header">
+                    <div class="card-icon">📋</div>
+                    <div>
+                        <div class="card-title">Roster Management</div>
+                        <span class="card-badge badge-captain">Captain+</span>
+                    </div>
+                </div>
+                <p class="card-description">Manage game-day rosters, track RSVPs, set batting orders, and handle lineup management for your team.</p>
+                <span class="card-link">Manage Roster</span>
+            </a>
+
+            <a href="manage-team.html" class="card captain-card">
+                <div class="card-header">
+                    <div class="card-icon">⚙️</div>
+                    <div>
+                        <div class="card-title">Team Staff Management</div>
+                        <span class="card-badge badge-captain">Captain+</span>
+                    </div>
+                </div>
+                <p class="card-description">Assign team staff roles to help with RSVPs, lineups, and other team management tasks.</p>
+                <span class="card-link">Manage Staff</span>
+            </a>
+
+            <a href="submit-stats.html" class="card captain-card">
+                <div class="card-header">
+                    <div class="card-icon">📊</div>
+                    <div>
+                        <div class="card-title">Submit Stats</div>
+                        <span class="card-badge badge-captain">Captain+</span>
+                    </div>
+                </div>
+                <p class="card-description">Submit game statistics for your team. Enter batting stats, track at-bats, hits, runs, and more.</p>
+                <span class="card-link">Submit Stats</span>
+            </a>
+
+            <a href="submit-score.html" class="card captain-card">
+                <div class="card-header">
+                    <div class="card-icon">🏆</div>
+                    <div>
+                        <div class="card-title">Submit Score</div>
+                        <span class="card-badge badge-captain">Captain+</span>
+                    </div>
+                </div>
+                <p class="card-description">Report final game scores. Quick way to submit the result of a completed game.</p>
+                <span class="card-link">Submit Score</span>
+            </a>
+
+            <a href="game-tracker.html" class="card captain-card">
+                <div class="card-header">
+                    <div class="card-icon">⚾</div>
+                    <div>
+                        <div class="card-title">Live Game Tracker</div>
+                        <span class="card-badge badge-captain">Captain+</span>
+                    </div>
+                </div>
+                <p class="card-description">Track games in real-time with live scoring, play-by-play, and automatic stats collection.</p>
+                <span class="card-link">Track Game</span>
+            </a>
+
+            <a href="photo-upload.html" class="card staff-card">
+                <div class="card-header">
+                    <div class="card-icon">📸</div>
+                    <div>
+                        <div class="card-title">Photo Upload</div>
+                        <span class="card-badge badge-staff">Staff+</span>
+                    </div>
+                </div>
+                <p class="card-description">Upload photos to the league gallery. Add game photos, team pictures, and event shots.</p>
+                <span class="card-link">Upload Photos</span>
+            </a>
+        </div>
+
+        <!-- User Account Tools Section -->
+        <h2 class="section-title"><span class="icon">👤</span> User Account Tools</h2>
+        <p class="section-description">Account management and user-facing pages</p>
+        
+        <div class="cards-grid">
+            <a href="link-player.html" class="card">
+                <div class="card-header">
+                    <div class="card-icon">🔗</div>
+                    <div>
+                        <div class="card-title">Link Your Account</div>
+                        <span class="card-badge badge-staff">All Users</span>
+                    </div>
+                </div>
+                <p class="card-description">Link your user account to your player profile to access personalized stats and team features.</p>
+                <span class="card-link">Link Account</span>
+            </a>
+
+            <a href="profile.html" class="card">
+                <div class="card-header">
+                    <div class="card-icon">👤</div>
+                    <div>
+                        <div class="card-title">User Profile</div>
+                        <span class="card-badge badge-staff">All Users</span>
+                    </div>
+                </div>
+                <p class="card-description">View and edit your profile, notification settings, favorites, and account preferences.</p>
+                <span class="card-link">View Profile</span>
+            </a>
+
+            <a href="aces-directory.html" class="card">
+                <div class="card-header">
+                    <div class="card-icon">📖</div>
+                    <div>
+                        <div class="card-title">Aces Directory</div>
+                        <span class="card-badge badge-staff">All Users</span>
+                    </div>
+                </div>
+                <p class="card-description">League member directory. Find contact info and connect with other players (opt-in required).</p>
+                <span class="card-link">View Directory</span>
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        // Hide loading overlay after page loads
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }, 400);
+        });
+    </script>
+
+    <script type="module">
+        import { NavigationComponent } from './nav-component.js';
+    </script>
+    <script src="mobile-enhancements.js"></script>
+</body>
+</html>

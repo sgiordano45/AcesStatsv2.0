@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Stats - Aces Stats</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    line-height: 1.6;
+    color: var(--text-dark);
+  }
+  
+  .page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  /* Loading Spinner */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .softball-spinner::before {
+    content: '⚾';
+    font-size: 80px;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    0%, 100% { 
+      transform: rotate(0deg) scale(1); 
+    }
+    50% { 
+      transform: rotate(180deg) scale(1.1); 
+    }
+  }
+  
+  /* Navigation */
+  .filters-nav {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+  }
+
+  .nav-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-link {
+    padding: 1rem 1.75rem;
+    border: 2px solid var(--primary-color);
+    background: white;
+    color: var(--primary-color);
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: -1;
+  }
+
+  .nav-link:hover::before {
+    transform: translateX(0);
+  }
+
+  .nav-link:hover {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--secondary-color);
+  }
+
+  .nav-link.active {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    box-shadow: var(--shadow-md);
+  }
+
+  .nav-link.pitching {
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+  }
+
+  .nav-link.pitching::before {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  }
+
+  .nav-link.batting {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+  
+  /* Team Header */
+  .team-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 4rem 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .team-header::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  
+  .team-header::after {
+    content: '🏆';
+    position: absolute;
+    bottom: -30px;
+    left: -30px;
+    font-size: 200px;
+    opacity: 0.08;
+    transform: rotate(-15deg);
+  }
+  
+  .team-logo {
+    height: 120px;
+    max-width: 120px;
+    object-fit: contain;
+    border: 4px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.15);
+    padding: 1rem;
+    display: none;
+    transition: all 0.4s ease;
+    z-index: 1;
+  }
+  
+  .team-logo.loaded {
+    display: block;
+    animation: fadeInScale 0.6s ease backwards;
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  .team-info {
+    flex: 1;
+    z-index: 1;
+  }
+  
+  .team-header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .team-description {
+    font-size: 1.1rem;
+    opacity: 0.95;
+    margin: 1rem 0 0 0;
+    font-weight: 500;
+  }
+  
+  /* Team Highlights Row (Championships/Runner-ups) */
+  .team-highlights {
+    display: flex;
+    gap: 12px;
+    padding: 1.5rem 0 0 0;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+  }
+  
+  .team-highlights:empty {
+    display: none;
+    padding: 0;
+  }
+  
+  .team-highlight-stat {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    padding: 12px 18px;
+    text-align: center;
+    min-width: 100px;
+    transition: all 0.2s ease;
+    cursor: default;
+  }
+  
+  .team-highlight-stat:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+  }
+  
+  .team-highlight-stat-value {
+    font-size: 1.3em;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  
+  .team-highlight-stat-label {
+    font-size: 0.7em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.85;
+    margin-top: 4px;
+  }
+  
+  .team-highlight-stat.champion {
+    background: linear-gradient(135deg, rgba(255,215,0,0.25) 0%, rgba(255,180,0,0.15) 100%);
+    border: 2px solid #ffd700;
+    box-shadow: 0 2px 8px rgba(255,215,0,0.3);
+  }
+  
+  .team-highlight-stat.champion .team-highlight-stat-value {
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+  
+  .team-highlight-stat.champion .team-highlight-stat-label {
+    color: #ffd700;
+    font-weight: 700;
+  }
+  
+  .team-highlight-stat.runner-up {
+    background: linear-gradient(135deg, rgba(192,192,192,0.25) 0%, rgba(160,160,160,0.15) 100%);
+    border: 2px solid #c0c0c0;
+    box-shadow: 0 2px 8px rgba(192,192,192,0.3);
+  }
+  
+  .team-highlight-stat.runner-up .team-highlight-stat-value {
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+  
+  .team-highlight-stat.runner-up .team-highlight-stat-label {
+    color: #e0e0e0;
+    font-weight: 700;
+  }
+  
+  @media (max-width: 768px) {
+    .team-highlights {
+      gap: 8px;
+    }
+    
+    .team-highlight-stat {
+      padding: 10px 14px;
+      min-width: 80px;
+    }
+    
+    .team-highlight-stat-value {
+      font-size: 1.1em;
+    }
+  }
+  
+  /* Summary Section */
+  .summary {
+    background: var(--card-bg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .summary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border-radius: 16px 16px 0 0;
+  }
+  
+  .summary h2 {
+    margin: 0 0 1.5rem 0;
+    color: var(--text-dark);
+    font-size: 1.8rem;
+    font-weight: 800;
+  }
+  
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .summary-item {
+    text-align: center;
+    padding: 1.75rem 1.25rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .summary-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .summary-item:hover::before {
+    opacity: 1;
+  }
+
+  .summary-item:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-md);
+    border-left-color: var(--secondary-color);
+  }
+  
+  .summary-number {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  
+  .summary-label {
+    color: var(--text-light);
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  /* Team Media Gallery */
+  .team-media-section {
+    background: var(--card-bg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .team-media-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border-radius: 16px 16px 0 0;
+  }
+  
+  .team-media-section h2 {
+    margin: 0 0 1.5rem 0;
+    color: var(--text-dark);
+    font-size: 1.8rem;
+    font-weight: 800;
+  }
+
+  .media-gallery-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.25rem;
+    max-height: 450px;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+
+  .media-gallery-container::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .media-gallery-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 12px;
+  }
+
+  .media-gallery-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border-radius: 12px;
+  }
+
+  .media-gallery-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+  }
+  
+  .media-item {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+  }
+
+  .media-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 1;
+  }
+  
+  .media-item:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .media-item:hover::before {
+    opacity: 1;
+  }
+  
+  .media-thumbnail {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    transition: transform 0.4s ease;
+  }
+
+  .media-item:hover .media-thumbnail {
+    transform: scale(1.05);
+  }
+  
+  .media-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(45, 80, 22, 0.9), transparent);
+    padding: 0.75rem;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .media-item:hover .media-overlay {
+    opacity: 1;
+  }
+  
+  .video-indicator::after {
+    content: "▶";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5rem;
+    color: white;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    background: rgba(45, 80, 22, 0.85);
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+
+  .video-indicator:hover::after {
+    background: rgba(26, 107, 74, 0.95);
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  
+  .no-media {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-light);
+    font-style: italic;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: 2px dashed var(--border-color);
+  }
+  
+  .no-media::before {
+    content: "📷";
+    display: block;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+  }
+  
+  /* Lightbox */
+  .team-lightbox {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.95);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .team-lightbox.active {
+    display: flex;
+  }
+  
+  .team-lightbox-content {
+    max-width: 90%;
+    max-height: 90%;
+    position: relative;
+  }
+  
+  .team-lightbox-image {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+  
+  .team-lightbox-video {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 8px;
+  }
+  
+  .team-lightbox-close {
+    position: absolute;
+    top: -50px;
+    right: 0;
+    background: rgba(45, 80, 22, 0.9);
+    border: 2px solid var(--accent-color);
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    line-height: 1;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+  }
+  
+  .team-lightbox-close:hover {
+    background: var(--accent-color);
+    color: var(--text-dark);
+    transform: scale(1.1);
+  }
+  
+  .team-lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(45, 80, 22, 0.8);
+    border: 2px solid var(--accent-color);
+    color: white;
+    font-size: 2.5rem;
+    cursor: pointer;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-weight: 700;
+  }
+  
+  .team-lightbox-nav:hover {
+    background: var(--accent-color);
+    color: var(--text-dark);
+    transform: translateY(-50%) scale(1.1);
+  }
+  
+  .team-lightbox-prev {
+    left: 20px;
+  }
+  
+  .team-lightbox-next {
+    right: 20px;
+  }
+  
+  /* Filter Section */
+  .filters-section {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    position: relative;
+  }
+
+  .filters-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border-radius: 16px 16px 0 0;
+  }
+  
+  .filters-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .filter-group label {
+    font-weight: 700;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+  }
+  
+  .filter-group select {
+    padding: 0.75rem 1.25rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: white;
+    color: var(--text-dark);
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .filter-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+  }
+
+  .filter-group select:hover {
+    border-color: var(--secondary-color);
+  }
+  
+  /* Stats Table */
+  .stats-table-container {
+    background: var(--card-bg);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    position: relative;
+    margin-bottom: 2rem;
+  }
+  
+  .stats-table-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .swipe-indicator {
+    text-align: center;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    color: #856404;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-bottom: 2px solid var(--accent-color);
+    display: none;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+  }
+  
+  thead {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  th {
+    padding: 1.25rem 1rem;
+    text-align: left;
+    font-weight: 700;
+    color: var(--text-dark);
+    border-bottom: 2px solid var(--primary-color);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+  }
+  
+  th:hover {
+    background: #e9ecef;
+  }
+  
+  th.asc::after {
+    content: " ▲";
+    color: var(--primary-color);
+  }
+  
+  th.desc::after {
+    content: " ▼";
+    color: var(--primary-color);
+  }
+  
+  td {
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+  }
+  
+  tbody tr:nth-child(even) {
+    background-color: #fafbfc;
+  }
+
+  tbody tr:hover {
+    background: linear-gradient(135deg, #f0f4f8 0%, #e9f0f7 100%);
+  }
+  
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+  
+  td a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+  
+  td a:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+  }
+  
+  .loading {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-light);
+    font-size: 1.1rem;
+  }
+
+  .loading::before {
+    content: "⚾";
+    display: block;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .page-container {
+      padding: 1rem;
+    }
+    
+    .team-header {
+      flex-direction: column;
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+    }
+    
+    .team-header h1 {
+      font-size: 2rem;
+    }
+
+    .team-header::after {
+      font-size: 150px;
+      bottom: -20px;
+      left: -20px;
+    }
+
+    .nav-link {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      text-align: center;
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .summary-grid {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    
+    .media-gallery-container {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      max-height: 350px;
+    }
+    
+    .media-thumbnail {
+      height: 150px;
+    }
+    
+    .team-lightbox-nav {
+      font-size: 1.8rem;
+      padding: 0.5rem 1rem;
+    }
+    
+    .team-lightbox-prev {
+      left: 10px;
+    }
+    
+    .team-lightbox-next {
+      right: 10px;
+    }
+
+    .team-lightbox-close {
+      top: -45px;
+      font-size: 1.5rem;
+      padding: 0.5rem 0.75rem;
+    }
+
+    .swipe-indicator {
+      display: block;
+    }
+    
+    th, td {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .filters-container {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .filter-group {
+      flex-direction: column;
+      text-align: center;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    .filter-group select {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .summary-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    
+    th, td {
+      padding: 0.5rem 0.25rem;
+      font-size: 0.8em;
+    }
+
+    .team-header h1 {
+      font-size: 1.75rem;
+    }
+
+    .media-gallery-container {
+      max-height: 300px;
+    }
+  }
+</style>
+<link rel="stylesheet" href="mobile-enhancements.css">
+</head>
+<body>
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<div class="page-container">
+  <div class="filters-nav">
+
+  </div>
+
+  
+
+  <div class="team-header">
+    <img id="team-logo" class="team-logo" src="" alt="" onerror="this.style.display='none';">
+    
+    <div class="team-info">
+      <h1>Team Stats: <span id="team-name">Loading...</span></h1>
+      <p class="team-description">Complete season-by-season statistics and performance history</p>
+      <div class="team-highlights" id="teamHighlights">
+        <!-- Championship badges will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <div class="summary">
+    <h2>Team Overview</h2>
+    <div class="summary-grid" id="summary-grid">
+      <div class="loading">Loading team statistics...</div>
+    </div>
+  </div>
+
+  <!-- Team Media Gallery Section -->
+  <div class="team-media-section">
+    <h2>📸 Team Photos & Videos</h2>
+    <div class="media-gallery-container" id="teamMediaGallery">
+      <div class="loading">Loading team media...</div>
+    </div>
+  </div>
+
+  <div class="filters-section">
+    <div class="filters-container">
+      <div class="filter-group">
+        <label for="yearFilter">Year:</label>
+        <select id="yearFilter">
+          <option value="All">All Years</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="seasonFilter">Season:</label>
+        <select id="seasonFilter">
+          <option value="All">All Seasons</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-table-container">
+    <div class="swipe-indicator">← Swipe left/right to see all columns →</div>
+    <table id="team-stats-table">
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>Season</th>
+          <th>Name</th>
+          <th>G</th>
+          <th>AB</th>
+          <th>H</th>
+          <th>R</th>
+          <th>BB</th>
+          <th>AcesBPI</th>
+          <th>BA</th>
+          <th>OBP</th>
+          <th>Sub</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="12" class="loading">Loading statistics...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Lightbox for team media -->
+<div class="team-lightbox" id="teamLightbox">
+  <div class="team-lightbox-content">
+    <button class="team-lightbox-close" onclick="closeTeamLightbox()">×</button>
+    <button class="team-lightbox-nav team-lightbox-prev" onclick="navigateTeamLightbox(-1)">‹</button>
+    <button class="team-lightbox-nav team-lightbox-next" onclick="navigateTeamLightbox(1)">›</button>
+    <img class="team-lightbox-image" id="teamLightboxImage" style="display:none;" />
+    <video class="team-lightbox-video" id="teamLightboxVideo" controls style="display:none;"></video>
+  </div>
+</div>
+
+<script type="module" src="team.js"></script>
+<script type="module">
+// Championship Badges Module
+import { db, collection, getDocs } from './firebase-config.js';
+
+/**
+ * Format season ID for display (e.g., "2024-fall" -> "Fall '24")
+ */
+function formatSeasonDisplay(seasonId) {
+  if (!seasonId) return '';
+  const parts = seasonId.split('-');
+  if (parts.length >= 2) {
+    const year = parts[0].slice(-2); // Last 2 digits of year
+    const season = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+    return `${season} '${year}`;
+  }
+  return seasonId;
+}
+
+/**
+ * Load and display championship badges for the team
+ */
+async function loadTeamChampionships(teamName) {
+  const highlightsContainer = document.getElementById('teamHighlights');
+  if (!highlightsContainer || !teamName) return;
+  
+  try {
+    console.log('🏆 Loading championships for team:', teamName);
+    
+    // Fetch champions collection (contains both champion and runner-up)
+    const championsRef = collection(db, 'champions');
+    const championsSnap = await getDocs(championsRef);
+    
+    // Build lookup maps
+    const champions = {};
+    const runnerUps = {};
+    championsSnap.forEach(doc => {
+      const data = doc.data();
+      const seasonId = data.seasonId || doc.id;
+      champions[seasonId] = data.team;
+      runnerUps[seasonId] = data.runnerUp;
+    });
+    
+    console.log('📊 Champions:', champions);
+    console.log('📊 Runner-ups:', runnerUps);
+    
+    // Find titles for this team
+    const titles = [];
+    const teamLower = teamName.toLowerCase();
+    
+    // Check all seasons for this team's championships/runner-ups
+    const allSeasonIds = new Set([...Object.keys(champions), ...Object.keys(runnerUps)]);
+    
+    allSeasonIds.forEach(seasonId => {
+      const championTeam = champions[seasonId]?.toLowerCase();
+      const runnerUpTeam = runnerUps[seasonId]?.toLowerCase();
+      
+      if (championTeam === teamLower) {
+        titles.push({
+          seasonId: seasonId,
+          type: 'champion'
+        });
+      } else if (runnerUpTeam === teamLower) {
+        titles.push({
+          seasonId: seasonId,
+          type: 'runner-up'
+        });
+      }
+    });
+    
+    // Sort titles chronologically
+    titles.sort((a, b) => {
+      const parseSeasonId = (id) => {
+        const [year, season] = id.split('-');
+        const seasonOrder = { spring: 0, summer: 1, fall: 2 };
+        return parseInt(year) * 10 + (seasonOrder[season?.toLowerCase()] || 0);
+      };
+      return parseSeasonId(a.seasonId) - parseSeasonId(b.seasonId);
+    });
+    
+    console.log('🏆 Titles for', teamName, ':', titles);
+    
+    // Render the badges
+    if (titles.length === 0) {
+      highlightsContainer.innerHTML = '';
+      return;
+    }
+    
+    let highlightsHTML = '';
+    titles.forEach(title => {
+      const seasonDisplay = formatSeasonDisplay(title.seasonId);
+      if (title.type === 'champion') {
+        highlightsHTML += `
+          <div class="team-highlight-stat champion">
+            <div class="team-highlight-stat-value">🏆 ${seasonDisplay}</div>
+            <div class="team-highlight-stat-label">Champion</div>
+          </div>
+        `;
+      } else if (title.type === 'runner-up') {
+        highlightsHTML += `
+          <div class="team-highlight-stat runner-up">
+            <div class="team-highlight-stat-value">🥈 ${seasonDisplay}</div>
+            <div class="team-highlight-stat-label">Runner-Up</div>
+          </div>
+        `;
+      }
+    });
+    
+    highlightsContainer.innerHTML = highlightsHTML;
+    
+  } catch (error) {
+    console.error('❌ Error loading team championships:', error);
+    highlightsContainer.innerHTML = '';
+  }
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const teamName = params.get('team');
+  
+  if (teamName) {
+    // Small delay to ensure Firebase is initialized
+    setTimeout(() => {
+      loadTeamChampionships(teamName);
+    }, 100);
+  }
+});
+</script>
+<script src="team-colors.js"></script>
+
+<script>
+// Hide loading overlay when page loads
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  }, 800);
+});
+
+// Update the current season team link with the team parameter
+document.addEventListener('DOMContentLoaded', function() {
+  const params = new URLSearchParams(window.location.search);
+  const teamName = params.get('team');
+  
+  if (teamName) {
+    // Update desktop nav link
+    const currentSeasonLink = document.getElementById('currentSeasonTeamLink');
+    if (currentSeasonLink) {
+      currentSeasonLink.href = `current-season-team.html?team=${encodeURIComponent(teamName)}`;
+    }
+    
+    // Update mobile nav link
+    const currentSeasonLinkMobile = document.getElementById('currentSeasonTeamLinkMobile');
+    if (currentSeasonLinkMobile) {
+      currentSeasonLinkMobile.href = `current-season-team.html?team=${encodeURIComponent(teamName)}`;
+    }
+  }
+});
+
+// Media Gallery JavaScript - Firebase Storage Integration
+</script>
+<script type="module">
+import { getPhotosByFolder } from './firebase-storage.js';
+
+let teamMedia = [];
+let currentTeamLightboxIndex = 0;
+
+/**
+ * Load team media from Firebase Storage
+ * @param {string} teamName - The team name (e.g., "Green", "Blue")
+ */
+async function loadTeamMedia(teamName) {
+  const galleryContainer = document.getElementById('teamMediaGallery');
+  
+  console.log(`📸 Loading Firebase media for team: ${teamName}`);
+  
+  if (!teamName) {
+    console.error('❌ No team name provided');
+    galleryContainer.innerHTML = '<div class="no-media">No team selected</div>';
+    return;
+  }
+  
+  // Map team name to folder identifier
+  // Example: "Green" -> "green", "Blue" -> "blue"
+  const folderName = teamName.toLowerCase()
+    .replace('aces ', '')
+    .replace(/\s+/g, '_')
+    .trim();
+  
+  console.log(`🔍 Looking for folder: ${folderName}`);
+  
+  try {
+    // Fetch photos from Firebase using the folder name
+    teamMedia = await getPhotosByFolder(folderName);
+    
+    console.log(`✅ Found ${teamMedia.length} media files for ${teamName}`);
+    
+    if (teamMedia.length === 0) {
+      galleryContainer.innerHTML = `
+        <div class="no-media">
+          No photos or videos available for this team yet.<br>
+          <small>Photos can be uploaded from the Pictures page.</small>
+        </div>
+      `;
+      return;
+    }
+    
+    renderTeamMedia();
+    
+  } catch (error) {
+    console.error('❌ Error loading team media:', error);
+    galleryContainer.innerHTML = `
+      <div class="no-media">
+        Unable to load team media. Please try again later.
+      </div>
+    `;
+  }
+}
+
+/**
+ * Render the team media gallery
+ */
+function renderTeamMedia() {
+  const galleryContainer = document.getElementById('teamMediaGallery');
+  galleryContainer.innerHTML = '';
+  
+  teamMedia.forEach((item, index) => {
+    const mediaItem = document.createElement('div');
+    mediaItem.className = 'media-item';
+    if (item.type === 'video') {
+      mediaItem.classList.add('video-indicator');
+    }
+    mediaItem.onclick = () => openTeamLightbox(index);
+    
+    const thumbnail = document.createElement(item.type === 'video' ? 'video' : 'img');
+    thumbnail.className = 'media-thumbnail';
+    thumbnail.src = item.url;
+    thumbnail.alt = item.name || 'Team photo';
+    
+    if (item.type === 'video') {
+      thumbnail.muted = true;
+      thumbnail.playsInline = true;
+    }
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'media-overlay';
+    overlay.textContent = item.name || 'Team photo';
+    
+    mediaItem.appendChild(thumbnail);
+    mediaItem.appendChild(overlay);
+    galleryContainer.appendChild(mediaItem);
+  });
+}
+
+/**
+ * Open lightbox for team media
+ * @param {number} index - Index of the media item
+ */
+function openTeamLightbox(index) {
+  currentTeamLightboxIndex = index;
+  const item = teamMedia[index];
+  const lightbox = document.getElementById('teamLightbox');
+  const image = document.getElementById('teamLightboxImage');
+  const video = document.getElementById('teamLightboxVideo');
+  
+  if (item.type === 'image') {
+    image.src = item.url;
+    image.style.display = 'block';
+    video.style.display = 'none';
+  } else {
+    video.src = item.url;
+    video.style.display = 'block';
+    image.style.display = 'none';
+  }
+  
+  lightbox.classList.add('active');
+  document.addEventListener('keydown', handleTeamLightboxKeys);
+}
+
+/**
+ * Close the team lightbox
+ */
+function closeTeamLightbox() {
+  const lightbox = document.getElementById('teamLightbox');
+  const video = document.getElementById('teamLightboxVideo');
+  
+  lightbox.classList.remove('active');
+  video.pause();
+  document.removeEventListener('keydown', handleTeamLightboxKeys);
+}
+
+/**
+ * Navigate through lightbox images
+ * @param {number} direction - Direction to navigate (-1 for previous, 1 for next)
+ */
+function navigateTeamLightbox(direction) {
+  currentTeamLightboxIndex += direction;
+  
+  if (currentTeamLightboxIndex < 0) {
+    currentTeamLightboxIndex = teamMedia.length - 1;
+  } else if (currentTeamLightboxIndex >= teamMedia.length) {
+    currentTeamLightboxIndex = 0;
+  }
+  
+  openTeamLightbox(currentTeamLightboxIndex);
+}
+
+/**
+ * Handle keyboard navigation in lightbox
+ * @param {KeyboardEvent} e - Keyboard event
+ */
+function handleTeamLightboxKeys(e) {
+  if (e.key === 'Escape') closeTeamLightbox();
+  if (e.key === 'ArrowLeft') navigateTeamLightbox(-1);
+  if (e.key === 'ArrowRight') navigateTeamLightbox(1);
+}
+
+// Make functions globally available
+window.openTeamLightbox = openTeamLightbox;
+window.closeTeamLightbox = closeTeamLightbox;
+window.navigateTeamLightbox = navigateTeamLightbox;
+
+// Click outside lightbox to close
+document.getElementById('teamLightbox')?.addEventListener('click', (e) => {
+  if (e.target.id === 'teamLightbox') {
+    closeTeamLightbox();
+  }
+});
+
+// Initialize media gallery after team name is loaded
+window.addEventListener('DOMContentLoaded', () => {
+  // Wait for the team name to be loaded from team.js
+  setTimeout(() => {
+    const teamNameElement = document.getElementById('team-name');
+    if (teamNameElement && teamNameElement.textContent !== 'Loading...') {
+      loadTeamMedia(teamNameElement.textContent);
+    }
+  }, 1000);
+});
+</script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="stat-tooltips.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

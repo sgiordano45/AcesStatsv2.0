@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+    <!-- PWA Session Persistence -->
+    <script>
+    (function(){try{var p=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;if(p){var c=window.location.pathname+window.location.search;if(c!=='/'&&c!=='/index.html'){localStorage.setItem('pwa_last_page',c);localStorage.setItem('pwa_last_page_ts',Date.now().toString())}}}catch(e){}})();
+    </script>
+    <link rel="stylesheet" href="mobile-enhancements.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playoffs - Mountainside Aces</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0D47A1 0%, #0277BD 50%, #00838F 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(2, 119, 189, 0.3);
+            border-radius: 15px;
+            border: 2px solid #00BCD4;
+        }
+
+        .playoff-logo {
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #80DEEA;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+
+        .season-info {
+            font-size: 1.2em;
+            color: #B3E5FC;
+            margin-top: 10px;
+        }
+
+        .bracket-status {
+            font-size: 1em;
+            text-align: center;
+        }
+
+        .bracket-status.projected {
+            background: rgba(0, 188, 212, 0.15);
+            border: 2px solid #00BCD4;
+            color: #80DEEA;
+        }
+
+        .bracket-status.locked {
+            background: rgba(2, 119, 189, 0.3);
+            border: 2px solid #0288D1;
+            color: #B3E5FC;
+        }
+
+        .bracket-container {
+            display: flex;
+            flex-direction: column;
+            gap: 60px;
+            margin-top: 30px;
+        }
+
+        .bracket-section {
+            background: rgba(2, 119, 189, 0.15);
+            border: 2px solid #0288D1;
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .bracket-title {
+            font-size: 2em;
+            color: #80DEEA;
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 3px solid #01579B;
+            padding-bottom: 15px;
+        }
+
+        .bracket-grid {
+            display: flex;
+            justify-content: flex-start;
+            gap: 60px;
+            overflow-x: auto;
+            padding: 20px 0;
+            align-items: flex-start;
+        }
+
+        .round {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            min-width: 280px;
+        }
+
+        .round-title {
+            text-align: center;
+            font-size: 1.1em;
+            color: #B3E5FC;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Series card (replaces old single-game .matchup) */
+        .matchup {
+            background: rgba(2, 119, 189, 0.35);
+            border: 2px solid #0277BD;
+            border-radius: 12px;
+            padding: 15px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .matchup:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 188, 212, 0.4);
+            border-color: #00BCD4;
+        }
+
+        /* Series status row between team rows */
+        .series-status {
+            text-align: center;
+            font-size: 0.85em;
+            color: #80DEEA;
+            font-weight: bold;
+            padding: 4px 0;
+            border-top: 1px solid rgba(2, 119, 189, 0.5);
+            border-bottom: 1px solid rgba(2, 119, 189, 0.5);
+            margin: 4px 0;
+        }
+
+        /* Game list below team rows */
+        .series-games {
+            margin-top: 10px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .series-game {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 5px 8px;
+            font-size: 0.78em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 62px;
+            border: 1px solid transparent;
+        }
+
+        .series-game.if-necessary {
+            opacity: 0.45;
+            border: 1px dashed #555;
+        }
+
+        .series-game.if-necessary.needed {
+            opacity: 1;
+            border: 1px dashed #00BCD4;
+        }
+
+        .series-game.played {
+            border: 1px solid #1a6b4a;
+        }
+
+        .game-num {
+            font-weight: bold;
+            color: #FFD54F;
+            font-size: 0.88em;
+        }
+
+        .game-info {
+            color: #B3E5FC;
+            font-size: 0.95em;
+        }
+
+        .game-time {
+            color: #80DEEA;
+            font-size: 0.8em;
+        }
+
+        .if-nec {
+            color: #7986CB;
+            font-style: italic;
+        }
+
+        .matchup-date {
+            text-align: center;
+            font-size: 0.85em;
+            color: #B3E5FC;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .matchup-time {
+            text-align: center;
+            font-size: 0.8em;
+            color: #80DEEA;
+            margin-bottom: 15px;
+        }
+
+        .team {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin-bottom: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .team:hover {
+            background: rgba(26, 107, 74, 0.3);
+        }
+
+        .team.winner {
+            background: rgba(26, 107, 74, 0.5);
+            border: 2px solid #1a6b4a;
+            font-weight: bold;
+        }
+
+        .team.loser {
+            opacity: 0.6;
+        }
+
+        .seed {
+            font-size: 0.85em;
+            color: #80DEEA;
+            font-weight: bold;
+            min-width: 25px;
+        }
+
+        .team-name {
+            flex: 1;
+            margin: 0 15px;
+            font-size: 1em;
+        }
+
+        .score {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #80DEEA;
+            min-width: 35px;
+            text-align: center;
+        }
+
+        .tbd {
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Championship styling */
+        .championship {
+            background: linear-gradient(135deg, rgba(0, 188, 212, 0.25), rgba(1, 87, 155, 0.35));
+            border: 3px solid #00BCD4;
+            box-shadow: 0 0 30px rgba(0, 188, 212, 0.5);
+        }
+
+        .championship .team {
+            font-size: 1.1em;
+            padding: 15px;
+        }
+
+        /* Loading and Edit states */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #B3E5FC;
+            font-size: 1.2em;
+        }
+
+        .edit-mode-toggle {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .btn {
+            background: #0277BD;
+            color: white;
+            border: 2px solid #00BCD4;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #0288D1;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 188, 212, 0.4);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .bracket-grid {
+                justify-content: flex-start;
+            }
+
+            .round {
+                min-width: 240px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .bracket-section {
+                padding: 15px;
+            }
+
+            .round {
+                min-width: 200px;
+            }
+
+            .team-name {
+                font-size: 0.9em;
+            }
+
+            .bracket-title {
+                font-size: 1.5em;
+            }
+        }
+
+        /* Modal for editing */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #0D2B4E;
+            border: 3px solid #0288D1;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 580px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            color: #80DEEA;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #B3E5FC;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #01579B;
+            border-radius: 8px;
+            background: rgba(2, 119, 189, 0.2);
+            color: white;
+            font-size: 1em;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #00BCD4;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            background: #666;
+            border-color: #888;
+        }
+
+        .btn-cancel:hover {
+            background: #555;
+        }
+
+        /* Share Bracket */
+        .btn-share {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            border-color: #a78bfa;
+        }
+        .btn-share:hover {
+            background: linear-gradient(135deg, #6d28d9, #5b21b6);
+        }
+
+        .share-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .share-modal-overlay.active { display: flex; }
+
+        .share-modal-box {
+            background: #0d1b2e;
+            border: 2px solid #7c3aed;
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-width: 96vw;
+            max-height: 92vh;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .share-modal-title {
+            color: #c4b5fd;
+            font-size: 1.15rem;
+            font-weight: 700;
+            text-align: center;
+        }
+        .share-preview-area {
+            display: flex;
+            justify-content: center;
+            overflow: auto;
+        }
+        .share-preview-area canvas {
+            border-radius: 10px;
+            max-width: 100%;
+            height: auto;
+        }
+        .share-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        nav {
+            background: rgba(2, 119, 189, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        nav a {
+            color: #B3E5FC;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: #80DEEA;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="current-season.html">Current Season</a>
+            <a href="teams.html">Teams</a>
+            <a href="players.html">Players</a>
+            <a href="playoff-history.html">📜 Playoff History</a>
+        </nav>
+
+        <header>
+            <img src="photos/2026 Summer Playoff logo.png" alt="2026 Summer Playoffs" class="playoff-logo">
+            <h1>🏆Playoff Bracket</h1>
+            <div class="season-info" id="seasonInfo">Loading season information...</div>
+            <div id="bracketStatus" class="bracket-status" style="margin-top: 15px; padding: 10px; border-radius: 8px; font-weight: 600;"></div>
+            <a href="playoff-history.html" style="display: inline-block; margin-top: 15px; color: #B3E5FC; text-decoration: none; font-size: 0.95em; opacity: 0.9; transition: opacity 0.2s;">
+                📜 View Past Playoff Brackets →
+            </a>
+        </header>
+
+        <div class="edit-mode-toggle">
+            <button class="btn" id="publishPlaceholderBtn" onclick="publishPlaceholderSchedule()" style="display: none;">
+                📅 Publish Placeholder Schedule
+            </button>
+            <button class="btn" id="lockBracketBtn" onclick="lockBracket()" style="display: none;">
+                🔒 Lock Bracket for Playoffs
+            </button>
+            <button class="btn" id="editModeBtn" onclick="toggleEditMode()" style="display: none;">
+                <span id="editModeText">Enable Edit Mode</span>
+            </button>
+            <button class="btn btn-share" id="shareBracketBtn" onclick="openShareBracket()" style="display:none;">
+                📤 Share Bracket
+            </button>
+        </div>
+
+        <!-- Hidden bracket card used as html2canvas source -->
+        <div id="shareBracketCard" style="position:fixed;left:-9999px;top:0;pointer-events:none;"></div>
+
+        <div id="bracketsContainer">
+            <div class="loading">Loading playoff bracket...</div>
+        </div>
+    </div>
+
+    <!-- Share Bracket Modal -->
+    <div id="shareModal" class="share-modal-overlay">
+        <div class="share-modal-box">
+            <div class="share-modal-title">📤 Share Bracket</div>
+            <div id="shareStatus" style="text-align:center;color:#a78bfa;font-size:0.9rem;">Generating image…</div>
+            <div class="share-preview-area" id="sharePreviewArea"></div>
+            <div class="share-actions">
+                <button class="btn" id="downloadBracketBtn" onclick="downloadBracketImage()" style="display:none;background:#7c3aed;border-color:#a78bfa;">
+                    ⬇️ Save Image
+                </button>
+                <button class="btn" id="copyBracketBtn" onclick="copyBracketImage()" style="display:none;background:#0277BD;border-color:#00BCD4;">
+                    📋 Copy Image
+                </button>
+                <button class="btn btn-cancel" onclick="closeShareModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal — series score entry -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="modalTitle">Edit Series</h2>
+            <div id="seriesGamesForm">
+                <!-- Game score inputs rendered dynamically by openEditModal() -->
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn" onclick="saveMatchup()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, collection, query, where, getDocs, doc, getDoc } from './firebase-config.js';
+        import { getCurrentSeason, getSeasonGames } from './firebase-data.js';
+        import { getCurrentUser, getUserProfile, USER_ROLES, onAuthChange } from './firebase-auth.js';
+        import { setDoc, updateDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        let currentSeason = null;
+        let playoffData = null;
+        let editMode = false;
+        let currentEditMatchup = null;
+        let teams = [];
+        let isProjected = true; // True until bracket is locked in
+        let currentUser = null;
+        let userProfile = null;
+        let userCanManagePlayoffs = false; // True if user is Admin or League-Staff
+        let authReady = false;
+
+        // Wait for auth state to be ready before loading playoff data
+        onAuthChange(async (user) => {
+            if (!authReady) {
+                authReady = true;
+                currentUser = user;
+
+                if (currentUser) {
+                    const profileResult = await getUserProfile(currentUser.uid);
+                    if (profileResult.success) {
+                        userProfile = profileResult.data;
+                        // Check if user is Admin or League-Staff
+                        userCanManagePlayoffs = (
+                            userProfile.userRole === USER_ROLES.ADMIN ||
+                            userProfile.userRole === USER_ROLES.LEAGUE_STAFF
+                        );
+                        console.log('👤 User role:', userProfile.userRole, '| Can manage playoffs:', userCanManagePlayoffs);
+                    }
+                } else {
+                    console.log('👤 No user logged in');
+                }
+
+                // Now load the playoff bracket
+                loadPlayoffBracket();
+            }
+        });
+
+        // Load current season and playoff data
+        async function loadPlayoffBracket() {
+            try {
+                // Get current season using the same method as current-season.html
+                currentSeason = await getCurrentSeason();
+
+                if (!currentSeason) {
+                    document.getElementById('bracketsContainer').innerHTML =
+                        '<div class="loading">No active season found</div>';
+                    return;
+                }
+
+                console.log('✅ Current season:', currentSeason);
+
+                // Update header
+                document.getElementById('seasonInfo').textContent =
+                    `${currentSeason.year} ${currentSeason.season.charAt(0).toUpperCase() + currentSeason.season.slice(1)} Season - Playoffs`;
+
+                // Load teams with their seeds
+                await loadTeams();
+
+                // Load or initialize playoff data
+                const playoffRef = doc(db, 'seasons', currentSeason.id, 'playoffs', 'bracket');
+                let playoffDoc;
+
+                try {
+                    playoffDoc = await getDoc(playoffRef);
+                } catch (error) {
+                    console.log('⚠️ Could not access playoff bracket document');
+                    playoffDoc = null;
+                }
+
+                if (playoffDoc && playoffDoc.exists()) {
+                    playoffData = playoffDoc.data();
+                    isProjected = playoffData.isProjected !== false; // Default to projected if not set
+                    console.log('✅ Loaded existing playoff data', isProjected ? '(PROJECTED)' : '(LOCKED)');
+                } else {
+                    // Initialize new playoff bracket (just in memory, won't save without permission)
+                    playoffData = initializePlayoffBracket();
+                    isProjected = true;
+                    console.log('📋 Initialized projected playoff bracket');
+                }
+
+                renderBracket();
+                updateLockButton();
+            } catch (error) {
+                console.error('Error loading playoff bracket:', error);
+                document.getElementById('bracketsContainer').innerHTML =
+                    '<div class="loading">Error loading playoff bracket: ' + error.message + '</div>';
+            }
+        }
+
+        async function loadTeams() {
+            // Just calculate standings - teams array will have name, wins, losses from standings
+            console.log('📊 Calculating standings to determine playoff seeds...');
+            teams = await calculateStandings();
+        }
+
+        async function calculateStandings() {
+            // Get all games for this season using getSeasonGames (same as current-season.html)
+            const allGames = await getSeasonGames(currentSeason.id);
+            console.log(`📊 Found ${allGames.length} total games for season`);
+
+            // Map games to the format expected (same as current-season.html does)
+            const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+
+            const games = allGames.map(g => {
+                const dateObj = g.date && g.date.seconds ?
+                    new Date(g.date.seconds * 1000) :
+                    new Date(g.date || Date.now());
+                const dateString = dateObj.toLocaleDateString('en-US');
+
+                return {
+                    "home team": g.homeTeamName || capitalize(g.homeTeamId) || "",
+                    "away team": g.awayTeamName || capitalize(g.awayTeamId) || "",
+                    "home score": g.homeScore !== undefined ? g.homeScore : null,
+                    "away score": g.awayScore !== undefined ? g.awayScore : null,
+                    winner: capitalize(g.winner),
+                    game_type: g.gameType === "regular" ? "Regular" :
+                               g.gameType === "playoff" ? "Playoff" :
+                               capitalize(g.gameType) || "Regular",
+                    date: dateString
+                };
+            });
+
+            // Filter to completed regular season games
+            const today = new Date();
+            const parseGameDate = (dateStr) => {
+                const [month, day, year] = dateStr.split('/').map(Number);
+                return new Date(year, month - 1, day);
+            };
+
+            const completedGames = games.filter(g =>
+                g.winner && g.winner.trim() !== "" && parseGameDate(g.date) < today
+            );
+
+            const regularGames = completedGames.filter(g => g.game_type === 'Regular');
+
+            console.log(`📊 Processing ${regularGames.length} completed regular season games`);
+
+            if (regularGames.length === 0) {
+                console.log('⚠️ No completed games yet - returning empty standings');
+                return [];
+            }
+
+            // Use the EXACT calculateStandings logic from current-season.html
+            const teamStats = {};
+
+            regularGames.forEach(game => {
+                const homeTeam = game["home team"];
+                const awayTeam = game["away team"];
+                const winner = game.winner;
+                const homeScore = parseInt(game["home score"]) || 0;
+                const awayScore = parseInt(game["away score"]) || 0;
+
+                if (!teamStats[homeTeam]) {
+                    teamStats[homeTeam] = {
+                        name: homeTeam, wins: 0, losses: 0, ties: 0,
+                        runsFor: 0, runsAgainst: 0, h2h: {}
+                    };
+                }
+                if (!teamStats[awayTeam]) {
+                    teamStats[awayTeam] = {
+                        name: awayTeam, wins: 0, losses: 0, ties: 0,
+                        runsFor: 0, runsAgainst: 0, h2h: {}
+                    };
+                }
+
+                teamStats[homeTeam].runsFor += homeScore;
+                teamStats[homeTeam].runsAgainst += awayScore;
+                teamStats[awayTeam].runsFor += awayScore;
+                teamStats[awayTeam].runsAgainst += homeScore;
+
+                if (!teamStats[homeTeam].h2h[awayTeam]) {
+                    teamStats[homeTeam].h2h[awayTeam] = { wins: 0, losses: 0, ties: 0 };
+                }
+                if (!teamStats[awayTeam].h2h[homeTeam]) {
+                    teamStats[awayTeam].h2h[homeTeam] = { wins: 0, losses: 0, ties: 0 };
+                }
+
+                if (winner === "Tie") {
+                    teamStats[homeTeam].ties++;
+                    teamStats[awayTeam].ties++;
+                    teamStats[homeTeam].h2h[awayTeam].ties++;
+                    teamStats[awayTeam].h2h[homeTeam].ties++;
+                } else if (winner === homeTeam) {
+                    teamStats[homeTeam].wins++;
+                    teamStats[awayTeam].losses++;
+                    teamStats[homeTeam].h2h[awayTeam].wins++;
+                    teamStats[awayTeam].h2h[homeTeam].losses++;
+                } else if (winner === awayTeam) {
+                    teamStats[awayTeam].wins++;
+                    teamStats[homeTeam].losses++;
+                    teamStats[awayTeam].h2h[homeTeam].wins++;
+                    teamStats[homeTeam].h2h[awayTeam].losses++;
+                }
+            });
+
+            const preliminaryStandings = Object.values(teamStats)
+                .map(team => {
+                    const totalGames = team.wins + team.losses + team.ties;
+                    team.winPct = totalGames > 0 ? (team.wins + team.ties * 0.5) / totalGames : 0;
+                    team.runDifferential = team.runsFor - team.runsAgainst;
+                    return team;
+                });
+
+            const standings = preliminaryStandings.sort((a, b) => {
+                // First: Win percentage (ties count as half-win)
+                if (Math.abs(a.winPct - b.winPct) > 0.00001) return b.winPct - a.winPct;
+
+                // Second: H2H — only if exactly 2 teams tied on win%
+                const teamsAtSamePct = preliminaryStandings.filter(t =>
+                    Math.abs(t.winPct - a.winPct) <= 0.00001
+                );
+                if (teamsAtSamePct.length === 2) {
+                    const h2hComp = compareHeadToHead(a, b);
+                    if (h2hComp !== 0) return h2hComp;
+                }
+
+                // Third: Runs Against (fewest runs allowed)
+                if (a.runsAgainst !== b.runsAgainst) return a.runsAgainst - b.runsAgainst;
+
+                // Fourth: Run Differential
+                return b.runDifferential - a.runDifferential;
+            });
+
+            // Take top 11 and add seed numbers (exactly like current-season.html)
+            const playoffTeams = standings.slice(0, 11).map((team, index) => ({
+                ...team,
+                seed: index + 1,
+                teamName: team.name // Add teamName for compatibility
+            }));
+
+            console.log('✅ Calculated playoff seeds:', playoffTeams.map(t => `${t.seed}. ${t.name} (${t.wins}-${t.losses}${t.ties ? `-${t.ties}` : ''})`));
+
+            return playoffTeams;
+        }
+
+        function compareHeadToHead(teamA, teamB) {
+            const aVsB = teamA.h2h[teamB.name];
+            const bVsA = teamB.h2h[teamA.name];
+
+            if (!aVsB || !bVsA) return 0;
+
+            const aH2HWinPct = (aVsB.wins + aVsB.losses) > 0 ? aVsB.wins / (aVsB.wins + aVsB.losses) : 0;
+            const bH2HWinPct = (bVsA.wins + bVsA.losses) > 0 ? bVsA.wins / (bVsA.wins + bVsA.losses) : 0;
+
+            return bH2HWinPct - aH2HWinPct;
+        }
+
+        function updateLockButton() {
+            const lockBtn        = document.getElementById('lockBracketBtn');
+            const placeholderBtn = document.getElementById('publishPlaceholderBtn');
+            const editBtn        = document.getElementById('editModeBtn');
+            const shareBtn       = document.getElementById('shareBracketBtn');
+
+            // Show placeholder schedule button when projected (before locking)
+            if (userCanManagePlayoffs && isProjected) {
+                placeholderBtn.style.display = 'inline-block';
+            } else {
+                placeholderBtn.style.display = 'none';
+            }
+
+            // Only show lock button if user has permission, bracket is projected, and we have enough teams
+            if (userCanManagePlayoffs && isProjected && teams.length >= 11) {
+                lockBtn.style.display = 'inline-block';
+            } else {
+                lockBtn.style.display = 'none';
+            }
+
+            // Only show edit mode button if user has permission and bracket is locked
+            if (userCanManagePlayoffs && !isProjected) {
+                editBtn.style.display = 'inline-block';
+            } else {
+                editBtn.style.display = 'none';
+            }
+
+            // Show share button whenever we have bracket data with at least some teams
+            if (playoffData && teams.length >= 4) {
+                shareBtn.style.display = 'inline-block';
+            } else {
+                shareBtn.style.display = 'none';
+            }
+        }
+
+        window.lockBracket = async function() {
+            if (!confirm(`Lock in the current playoff bracket?\n\nThis will:\n• Set the playoff seeds based on current standings\n• Create playoff game IDs\n• Make the bracket official\n\nThis cannot be undone. Continue?`)) {
+                return;
+            }
+
+            try {
+                console.log('🔒 Locking playoff bracket...');
+
+                // Update playoff data to mark as locked
+                playoffData.isProjected = false;
+                playoffData.lockedAt = new Date().toISOString();
+                playoffData.lockedSeeds = teams.map(t => ({
+                    seed: t.seed,
+                    teamName: t.teamName || t.name || '',
+                    teamId: t.id || t.name || '',
+                    record: t.ties ? `${t.wins}-${t.losses}-${t.ties}` : `${t.wins}-${t.losses}`
+                }));
+
+                // Save to Firebase
+                const playoffRef = doc(db, 'seasons', currentSeason.id, 'playoffs', 'bracket');
+                await setDoc(playoffRef, playoffData);
+
+                // Create all playoff game docs in the games collection
+                await createPlayoffGames();
+
+                isProjected = false;
+                console.log('✅ Bracket locked successfully!');
+                alert('Playoff bracket has been locked! You can now enter scores for each series.');
+
+                updateLockButton();
+                renderBracket();
+            } catch (error) {
+                console.error('Error locking bracket:', error);
+                alert('Error locking bracket: ' + error.message);
+            }
+        };
+
+        // ---------------------------------------------------------------
+        // createPlayoffGames — pre-create all 30 game docs (3 per series)
+        // with the preset Summer 2026 schedule baked in.
+        // ---------------------------------------------------------------
+        // Publish placeholder game docs so the schedule shows playoff dates
+        // before seeding is finalized. Uses seed labels / "TBD" for team names.
+        // Same doc IDs as real games — lockBracket() overwrites them cleanly.
+        // ---------------------------------------------------------------
+        window.publishPlaceholderSchedule = async function publishPlaceholderSchedule() {
+            if (!confirm('This will add placeholder playoff games to the schedule so players can see the dates. Team names will show as seeds or "TBD" until the bracket is locked. Continue?')) return;
+
+            const btn = document.getElementById('publishPlaceholderBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Publishing…';
+
+            try {
+                const bracket = initializePlayoffBracket();
+                const gamesCollection = collection(db, 'seasons', currentSeason.id, 'games');
+
+                const allSeries = [
+                    ...(bracket.round1       || []),
+                    ...(bracket.quarterfinals|| []),
+                    ...(bracket.semifinals   || []),
+                    ...(bracket.finals       || [])
+                ];
+
+                // Maps R1 series ID → short label for the QF opponent slot
+                const r1Labels = {
+                    r1s1: '6v11 Winner',
+                    r1s2: '7v10 Winner',
+                    r1s3: '8v9 Winner'
+                };
+
+                function seedLabel(slot) {
+                    if (!slot) return 'TBD';
+                    if (slot.seed) return `Seed ${slot.seed}`;
+                    if (slot.from && r1Labels[slot.from]) return r1Labels[slot.from];
+                    return 'TBD';
+                }
+
+                let count = 0;
+                for (const series of allSeries) {
+                    const home1Label = seedLabel(series.team1);
+                    const home2Label = seedLabel(series.team2);
+
+                    for (const g of series.games) {
+                        const gameId = `playoff_${series.id}_g${g.gameNum}`;
+                        const homeLabel = g.homeTeam === 1 ? home1Label : home2Label;
+                        const awayLabel = g.homeTeam === 1 ? home2Label : home1Label;
+
+                        const [yr, mo, dy] = g.date.split('-').map(Number);
+                        const [hh, mm]     = g.time.split(':').map(Number);
+                        const dateObj = new Date(yr, mo - 1, dy, hh, mm);
+
+                        await setDoc(doc(gamesCollection, gameId), {
+                            gameType:       'playoff',
+                            round:          series.round,
+                            seriesId:       series.id,
+                            gameNum:        g.gameNum,
+                            date:           Timestamp.fromDate(dateObj),
+                            time:           formatTime(g.time),
+                            homeTeamName:   homeLabel,
+                            awayTeamName:   awayLabel,
+                            ifNecessary:    g.ifNecessary,
+                            isPlaceholder:  true,
+                            homeScore:      null,
+                            awayScore:      null,
+                            winner:         null
+                        }, { merge: true });
+                        count++;
+                    }
+                }
+
+                btn.textContent = `✅ Published (${count} games)`;
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = '📅 Publish Placeholder Schedule';
+                }, 3000);
+            } catch (err) {
+                console.error('Error publishing placeholder schedule:', err);
+                alert('Error publishing schedule. Check console for details.');
+                btn.disabled = false;
+                btn.textContent = '📅 Publish Placeholder Schedule';
+            }
+        }
+
+        // ---------------------------------------------------------------
+        async function createPlayoffGames() {
+            console.log('📅 Creating playoff game docs (3 per series)...');
+
+            const gamesCollection = collection(db, 'seasons', currentSeason.id, 'games');
+
+            const allSeries = [
+                ...(playoffData.round1 || []),
+                ...(playoffData.quarterfinals || []),
+                ...(playoffData.semifinals || []),
+                ...(playoffData.finals || [])
+            ];
+
+            for (const series of allSeries) {
+                const team1Display = getTeamDisplay(series.team1, series);
+                const team2Display = getTeamDisplay(series.team2, series);
+
+                for (const g of series.games) {
+                    const gameId = `playoff_${series.id}_g${g.gameNum}`;
+                    const homeTeamName = g.homeTeam === 1 ? team1Display.name : team2Display.name;
+                    const awayTeamName  = g.homeTeam === 1 ? team2Display.name : team1Display.name;
+
+                    // Build a Firestore Timestamp from the preset date/time string
+                    const [yr, mo, dy] = g.date.split('-').map(Number);
+                    const [hh, mm]     = g.time.split(':').map(Number);
+                    const dateObj = new Date(yr, mo - 1, dy, hh, mm);
+
+                    const gameDoc = {
+                        gameType:     'playoff',
+                        round:        series.round,
+                        seriesId:     series.id,
+                        gameNum:      g.gameNum,
+                        date:         Timestamp.fromDate(dateObj),
+                        time:         formatTime(g.time),
+                        homeTeamName,
+                        awayTeamName,
+                        ifNecessary:  g.ifNecessary,
+                        homeScore:    null,
+                        awayScore:    null,
+                        winner:       null
+                    };
+
+                    try {
+                        await setDoc(doc(gamesCollection, gameId), gameDoc);
+                        console.log(`✅ Created game: ${gameId}`);
+                    } catch (err) {
+                        console.error(`Error creating game ${gameId}:`, err);
+                    }
+                }
+            }
+
+            console.log('✅ All playoff game docs created');
+        }
+
+        // ---------------------------------------------------------------
+        // initializePlayoffBracket — single-elimination, best-of-3
+        // 11 teams, seeds 1-5 get byes to Quarterfinals
+        // ---------------------------------------------------------------
+        function initializePlayoffBracket() {
+            function makeSeries(id, team1, team2, round, games) {
+                return {
+                    id,
+                    team1,
+                    team2,
+                    round,
+                    seriesWins1: 0,
+                    seriesWins2: 0,
+                    winner: null,
+                    games
+                };
+            }
+
+            return {
+                isProjected: true,
+                lockedAt: null,
+                lockedSeeds: [],
+
+                // ── Round 1: Seeds 6-11 play in ──────────────────────────────────
+                round1: [
+                    makeSeries('r1s1', { seed: 6 }, { seed: 11 }, 'Round 1', [
+                        { gameNum: 1, date: '2026-07-20', time: '19:45', homeTeam: 1, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 2, date: '2026-07-20', time: '20:45', homeTeam: 2, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 3, date: '2026-07-26', time: '17:45', homeTeam: 1, ifNecessary: true,  team1Score: null, team2Score: null }
+                    ]),
+                    makeSeries('r1s2', { seed: 7 }, { seed: 10 }, 'Round 1', [
+                        { gameNum: 1, date: '2026-07-21', time: '19:45', homeTeam: 1, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 2, date: '2026-07-21', time: '20:45', homeTeam: 2, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 3, date: '2026-07-26', time: '18:45', homeTeam: 1, ifNecessary: true,  team1Score: null, team2Score: null }
+                    ]),
+                    makeSeries('r1s3', { seed: 8 }, { seed: 9 }, 'Round 1', [
+                        { gameNum: 1, date: '2026-07-22', time: '19:45', homeTeam: 1, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 2, date: '2026-07-22', time: '20:45', homeTeam: 2, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 3, date: '2026-07-26', time: '19:45', homeTeam: 1, ifNecessary: true,  team1Score: null, team2Score: null }
+                    ])
+                ],
+
+                // ── Quarterfinals: seeds 1-5 enter; Round 1 winners fill TBD slots ─
+                // Half A: qf1 (4v5) and qf2 (1 vs r1s3 winner)
+                // Half B: qf3 (2 vs r1s2 winner) and qf4 (3 vs r1s1 winner)
+                quarterfinals: [
+                    makeSeries('qf1', { seed: 4 }, { seed: 5 }, 'Quarterfinals', [
+                        { gameNum: 1, date: '2026-07-23', time: '19:45', homeTeam: 1, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 2, date: '2026-07-23', time: '20:45', homeTeam: 2, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 3, date: '2026-07-26', time: '20:45', homeTeam: 1, ifNecessary: true,  team1Score: null, team2Score: null }
+                    ]),
+                    makeSeries('qf2', { seed: 1 }, { from: 'r1s3' }, 'Quarterfinals', [
+                        { gameNum: 1, date: '2026-07-27', time: '19:45', homeTeam: 1, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 2, date: '2026-07-27', time: '20:45', homeTeam: 2, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 3, date: '2026-07-31', time: '18:45', homeTeam: 1, ifNecessary: true,  team1Score: null, team2Score: null }
+                    ]),
+                    makeSeries('qf3', { seed: 2 }, { from: 'r1s2' }, 'Quarterfinals', [
+                        { gameNum: 1, date: '2026-07-29', time: '19:45', homeTeam: 1, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 2, date: '2026-07-29', time: '20:45', homeTeam: 2, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 3, date: '2026-07-31', time: '19:45', homeTeam: 1, ifNecessary: true,  team1Score: null, team2Score: null }
+                    ]),
+                    makeSeries('qf4', { seed: 3 }, { from: 'r1s1' }, 'Quarterfinals', [
+                        { gameNum: 1, date: '2026-07-30', time: '19:45', homeTeam: 1, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 2, date: '2026-07-30', time: '20:45', homeTeam: 2, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 3, date: '2026-07-31', time: '20:45', homeTeam: 1, ifNecessary: true,  team1Score: null, team2Score: null }
+                    ])
+                ],
+
+                // ── Semifinals ────────────────────────────────────────────────────
+                // sf1: Half A final (qf2 winner vs qf1 winner)
+                // sf2: Half B final (qf3 winner vs qf4 winner)
+                semifinals: [
+                    makeSeries('sf1', { from: 'qf2' }, { from: 'qf1' }, 'Semifinals', [
+                        { gameNum: 1, date: '2026-08-02', time: '17:45', homeTeam: 1, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 2, date: '2026-08-02', time: '18:45', homeTeam: 2, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 3, date: '2026-08-03', time: '19:45', homeTeam: 1, ifNecessary: true,  team1Score: null, team2Score: null }
+                    ]),
+                    makeSeries('sf2', { from: 'qf3' }, { from: 'qf4' }, 'Semifinals', [
+                        { gameNum: 1, date: '2026-08-02', time: '19:45', homeTeam: 1, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 2, date: '2026-08-02', time: '20:45', homeTeam: 2, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 3, date: '2026-08-03', time: '20:45', homeTeam: 1, ifNecessary: true,  team1Score: null, team2Score: null }
+                    ])
+                ],
+
+                // ── Finals ────────────────────────────────────────────────────────
+                finals: [
+                    makeSeries('f1', { from: 'sf1' }, { from: 'sf2' }, 'Finals', [
+                        { gameNum: 1, date: '2026-08-05', time: '19:45', homeTeam: 1, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 2, date: '2026-08-05', time: '20:45', homeTeam: 2, ifNecessary: false, team1Score: null, team2Score: null },
+                        { gameNum: 3, date: '2026-08-06', time: '19:45', homeTeam: 1, ifNecessary: true,  team1Score: null, team2Score: null }
+                    ])
+                ]
+            };
+        }
+
+        // ---------------------------------------------------------------
+        // renderBracket — single section, four rounds left to right
+        // ---------------------------------------------------------------
+        function renderBracket() {
+            const container = document.getElementById('bracketsContainer');
+
+            // Update status banner
+            const statusEl = document.getElementById('bracketStatus');
+            if (isProjected) {
+                statusEl.className = 'bracket-status projected';
+                if (userCanManagePlayoffs) {
+                    statusEl.innerHTML = '📊 PROJECTED BRACKET - Based on current standings. Click "Lock Bracket" when ready to start playoffs.';
+                } else {
+                    statusEl.innerHTML = '📊 PROJECTED BRACKET - Based on current standings.';
+                }
+            } else {
+                statusEl.className = 'bracket-status locked';
+                statusEl.innerHTML = '🔒 OFFICIAL PLAYOFF BRACKET - Locked on ' + (playoffData.lockedAt ? new Date(playoffData.lockedAt).toLocaleDateString() : 'N/A');
+            }
+
+            container.innerHTML = `
+                <div class="bracket-section">
+                    <div class="bracket-title">🏆 Summer 2026 Playoffs</div>
+                    <div class="bracket-grid">
+                        ${renderRound(playoffData.round1, 'Round 1')}
+                        ${renderRound(playoffData.quarterfinals, 'Quarterfinals')}
+                        ${renderRound(playoffData.semifinals, 'Semifinals')}
+                        ${renderRound(playoffData.finals, 'Finals')}
+                    </div>
+                </div>
+            `;
+
+            // Add click handlers if in edit mode
+            if (editMode && !isProjected) {
+                document.querySelectorAll('.matchup').forEach(matchup => {
+                    matchup.style.cursor = 'pointer';
+                    matchup.addEventListener('click', function(e) {
+                        if (e.target.closest('.game-link')) return;
+                        const matchupId = this.dataset.matchupId;
+                        openEditModal(matchupId);
+                    });
+                });
+            }
+        }
+
+        // Render one round column (array of series objects)
+        function renderRound(seriesArray, title) {
+            return `
+                <div class="round">
+                    <div class="round-title">${title}</div>
+                    ${seriesArray.map(s => renderSeries(s)).join('')}
+                </div>
+            `;
+        }
+
+        // Render one series card
+        function renderSeries(series) {
+            const team1 = getTeamDisplay(series.team1, series);
+            const team2 = getTeamDisplay(series.team2, series);
+
+            const team1Class = series.winner === 1 ? 'winner' : (series.winner === 2 ? 'loser' : '');
+            const team2Class = series.winner === 2 ? 'winner' : (series.winner === 1 ? 'loser' : '');
+
+            const sw1 = series.seriesWins1 || 0;
+            const sw2 = series.seriesWins2 || 0;
+            const seriesStatus = series.winner ? 'Series Won' : (sw1 + sw2 > 0 ? `${sw1}-${sw2}` : '0-0');
+
+            // Game 3 is "needed" once each team has 1 win
+            const isSeriesActive = sw1 === 1 && sw2 === 1;
+            const isFinals = series.id === 'f1';
+
+            const gamesHtml = (series.games || []).map(g => {
+                const isPlayed = g.team1Score !== null && g.team2Score !== null;
+                const showIfNec = g.ifNecessary && !isSeriesActive && !isPlayed;
+                const needsGame3 = g.ifNecessary && isSeriesActive;
+
+                let gameClass = 'series-game';
+                if (g.ifNecessary) gameClass += ' if-necessary';
+                if (needsGame3)    gameClass += ' needed';
+                if (isPlayed)      gameClass += ' played';
+
+                let infoHtml;
+                if (showIfNec) {
+                    infoHtml = '<span class="if-nec">If Nec.</span>';
+                } else if (isPlayed) {
+                    infoHtml = `<span class="game-info">${g.team1Score}-${g.team2Score}</span>`;
+                } else {
+                    const dateStr = g.date ? formatDate(g.date) : 'TBD';
+                    infoHtml = `<span class="game-info">${dateStr}</span>` +
+                               (g.time ? `<span class="game-time">${formatTime(g.time)}</span>` : '');
+                }
+
+                return `<div class="${gameClass}"><span class="game-num">G${g.gameNum}</span>${infoHtml}</div>`;
+            }).join('');
+
+            const cardClass = isFinals ? 'matchup championship' : 'matchup';
+
+            return `
+                <div class="${cardClass}" data-matchup-id="${series.id}">
+                    <div class="team ${team1Class}">
+                        <span class="seed">${team1.seed || ''}</span>
+                        <span class="team-name">${team1.name}${isProjected && team1.record ? ` <span style="opacity:0.7;font-size:0.85em;">${team1.record}</span>` : ''}</span>
+                        <span class="score">${sw1}</span>
+                    </div>
+                    <div class="series-status">${seriesStatus}</div>
+                    <div class="team ${team2Class}">
+                        <span class="seed">${team2.seed || ''}</span>
+                        <span class="team-name">${team2.name}${isProjected && team2.record ? ` <span style="opacity:0.7;font-size:0.85em;">${team2.record}</span>` : ''}</span>
+                        <span class="score">${sw2}</span>
+                    </div>
+                    <div class="series-games">${gamesHtml}</div>
+                </div>
+            `;
+        }
+
+        // ---------------------------------------------------------------
+        // Helper: get team by seed (respects lockedSeeds when locked)
+        // ---------------------------------------------------------------
+        function getTeamBySeed(seed) {
+            // When bracket is locked, ALWAYS use lockedSeeds (frozen at lock time)
+            if (!isProjected && playoffData && playoffData.lockedSeeds) {
+                const lockedTeam = playoffData.lockedSeeds.find(t => t.seed === seed);
+                if (lockedTeam) {
+                    return {
+                        seed: lockedTeam.seed,
+                        name: lockedTeam.teamName,
+                        teamId: lockedTeam.teamId,
+                        record: lockedTeam.record ? `(${lockedTeam.record})` : ''
+                    };
+                }
+            }
+            // Fallback to dynamically calculated teams (for projected brackets)
+            const team = teams.find(t => t.seed === seed);
+            if (team) {
+                return {
+                    seed: team.seed,
+                    name: team.name || team.teamName,
+                    teamId: team.id,
+                    record: (team.wins !== undefined) ? `(${team.wins}-${team.losses}${team.ties ? `-${team.ties}` : ''})` : ''
+                };
+            }
+            return null;
+        }
+
+        function getTeamDisplay(teamData, matchup = null) {
+            if (!teamData) return { name: 'TBD', seed: '', record: '' };
+
+            if (teamData.seed) {
+                const team = getTeamBySeed(teamData.seed);
+                return {
+                    seed: teamData.seed,
+                    name: team ? team.name : `Seed ${teamData.seed}`,
+                    teamId: team ? team.teamId : null,
+                    record: team ? team.record : ''
+                };
+            }
+
+            if (teamData.from) {
+                // This team comes from winning a previous series
+                const sourceSeries = findMatchup(teamData.from);
+                if (sourceSeries && sourceSeries.winner) {
+                    // Series has been decided — show the actual winner
+                    const winningTeam = sourceSeries.winner === 1 ? sourceSeries.team1 : sourceSeries.team2;
+                    return getTeamDisplay(winningTeam);
+                }
+                if (sourceSeries) {
+                    const t1 = getSourceTeamName(sourceSeries.team1);
+                    const t2 = getSourceTeamName(sourceSeries.team2);
+                    return { name: `Winner of ${t1} vs ${t2}`, seed: '', record: '' };
+                }
+                return { name: `Winner of ${teamData.from}`, seed: '', record: '' };
+            }
+
+            // loserFrom retained for compatibility but unused in single-elimination
+            if (teamData.loserFrom) {
+                const sourceSeries = findMatchup(teamData.loserFrom);
+                if (sourceSeries && sourceSeries.winner) {
+                    const losingTeam = sourceSeries.winner === 1 ? sourceSeries.team2 : sourceSeries.team1;
+                    return getTeamDisplay(losingTeam);
+                }
+                if (sourceSeries) {
+                    const t1 = getSourceTeamName(sourceSeries.team1);
+                    const t2 = getSourceTeamName(sourceSeries.team2);
+                    return { name: `Loser of ${t1} vs ${t2}`, seed: '', record: '' };
+                }
+                return { name: `Loser of ${teamData.loserFrom}`, seed: '', record: '' };
+            }
+
+            return { name: 'TBD', seed: '', record: '' };
+        }
+
+        function getSourceTeamName(teamData) {
+            if (!teamData) return 'TBD';
+
+            if (teamData.seed) {
+                const team = getTeamBySeed(teamData.seed);
+                return team ? (team.name || `Seed ${teamData.seed}`) : `Seed ${teamData.seed}`;
+            }
+
+            if (teamData.from) {
+                const sourceSeries = findMatchup(teamData.from);
+                if (sourceSeries && sourceSeries.winner) {
+                    const winningTeam = sourceSeries.winner === 1 ? sourceSeries.team1 : sourceSeries.team2;
+                    return getSourceTeamName(winningTeam);
+                }
+                if (sourceSeries) {
+                    const t1 = getSourceTeamName(sourceSeries.team1);
+                    const t2 = getSourceTeamName(sourceSeries.team2);
+                    return `${t1}/${t2} Winner`;
+                }
+                return `Winner ${teamData.from}`;
+            }
+
+            if (teamData.loserFrom) {
+                const sourceSeries = findMatchup(teamData.loserFrom);
+                if (sourceSeries && sourceSeries.winner) {
+                    const losingTeam = sourceSeries.winner === 1 ? sourceSeries.team2 : sourceSeries.team1;
+                    return getSourceTeamName(losingTeam);
+                }
+                if (sourceSeries) {
+                    const t1 = getSourceTeamName(sourceSeries.team1);
+                    const t2 = getSourceTeamName(sourceSeries.team2);
+                    return `${t1}/${t2} Loser`;
+                }
+                return `Loser ${teamData.loserFrom}`;
+            }
+
+            return 'TBD';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
+            return date.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                timeZone: 'America/New_York'
+            });
+        }
+
+        function formatTime(timeStr) {
+            if (!timeStr) return '';
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const period = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+        }
+
+        // ---------------------------------------------------------------
+        // findMatchup — searches round1, quarterfinals, semifinals, finals
+        // ---------------------------------------------------------------
+        function findMatchup(matchupId) {
+            const allSeries = [
+                ...(playoffData.round1       || []),
+                ...(playoffData.quarterfinals || []),
+                ...(playoffData.semifinals    || []),
+                ...(playoffData.finals        || [])
+            ];
+            return allSeries.find(s => s.id === matchupId) || null;
+        }
+
+        // ---------------------------------------------------------------
+        // Edit mode toggle
+        // ---------------------------------------------------------------
+        window.toggleEditMode = function() {
+            if (!userCanManagePlayoffs) {
+                alert('Only League Staff and Admins can edit playoff brackets.');
+                return;
+            }
+
+            if (isProjected) {
+                alert('Cannot edit projected bracket. Please lock the bracket first to set official playoff matchups.');
+                return;
+            }
+
+            editMode = !editMode;
+            document.getElementById('editModeText').textContent =
+                editMode ? 'Disable Edit Mode' : 'Enable Edit Mode';
+            renderBracket();
+        };
+
+        // ---------------------------------------------------------------
+        // openEditModal — renders per-game score inputs for a series
+        // ---------------------------------------------------------------
+        window.openEditModal = function(matchupId) {
+            if (!editMode) return;
+
+            currentEditMatchup = findMatchup(matchupId);
+            if (!currentEditMatchup) return;
+
+            const series = currentEditMatchup;
+            const team1 = getTeamDisplay(series.team1, series);
+            const team2 = getTeamDisplay(series.team2, series);
+
+            document.getElementById('modalTitle').textContent =
+                `Edit Series: ${team1.name} vs ${team2.name}`;
+
+            const formContainer = document.getElementById('seriesGamesForm');
+            formContainer.innerHTML = (series.games || []).map(g => {
+                const s1 = g.team1Score !== null ? g.team1Score : '';
+                const s2 = g.team2Score !== null ? g.team2Score : '';
+                const gameDateLabel = g.date ? formatDate(g.date) : 'TBD';
+                const gameTimeLabel = g.time ? formatTime(g.time) : '';
+                const ifNecLabel    = g.ifNecessary ? ' <span style="color:#888;font-size:0.85em;">(If Necessary)</span>' : '';
+
+                return `
+                    <div style="border:1px solid #01579B;border-radius:8px;padding:12px;margin-bottom:12px;">
+                        <div style="color:#80DEEA;font-weight:bold;margin-bottom:6px;">
+                            Game ${g.gameNum}${ifNecLabel}
+                        </div>
+                        <div style="font-size:0.82em;color:#B3E5FC;margin-bottom:10px;">
+                            ${gameDateLabel}${gameTimeLabel ? ' · ' + gameTimeLabel : ''}
+                        </div>
+                        <div style="display:flex;gap:10px;align-items:flex-end;">
+                            <div style="flex:1;">
+                                <label style="display:block;font-size:0.82em;color:#B3E5FC;margin-bottom:4px;">${team1.name}</label>
+                                <input type="number" min="0" id="g${g.gameNum}_t1" value="${s1}"
+                                    style="width:100%;padding:8px;border:2px solid #01579B;border-radius:6px;background:rgba(2,119,189,0.2);color:white;font-size:1em;">
+                            </div>
+                            <div style="color:#80DEEA;font-weight:bold;padding-bottom:10px;">vs</div>
+                            <div style="flex:1;">
+                                <label style="display:block;font-size:0.82em;color:#B3E5FC;margin-bottom:4px;">${team2.name}</label>
+                                <input type="number" min="0" id="g${g.gameNum}_t2" value="${s2}"
+                                    style="width:100%;padding:8px;border:2px solid #01579B;border-radius:6px;background:rgba(2,119,189,0.2);color:white;font-size:1em;">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('editModal').classList.add('active');
+        };
+
+        window.closeModal = function() {
+            document.getElementById('editModal').classList.remove('active');
+            currentEditMatchup = null;
+        };
+
+        // ---------------------------------------------------------------
+        // saveMatchup — recalculates series wins, saves bracket + game docs
+        // ---------------------------------------------------------------
+        window.saveMatchup = async function() {
+            if (!currentEditMatchup) return;
+
+            const series = currentEditMatchup;
+
+            // Collect per-game scores from the form
+            for (const g of series.games) {
+                const el1 = document.getElementById(`g${g.gameNum}_t1`);
+                const el2 = document.getElementById(`g${g.gameNum}_t2`);
+                const v1 = el1 ? el1.value : '';
+                const v2 = el2 ? el2.value : '';
+                g.team1Score = v1 !== '' ? parseInt(v1) : null;
+                g.team2Score = v2 !== '' ? parseInt(v2) : null;
+            }
+
+            // Recalculate series wins from game scores
+            let sw1 = 0;
+            let sw2 = 0;
+            for (const g of series.games) {
+                if (g.team1Score !== null && g.team2Score !== null) {
+                    if (g.team1Score > g.team2Score)      sw1++;
+                    else if (g.team2Score > g.team1Score) sw2++;
+                }
+            }
+            series.seriesWins1 = sw1;
+            series.seriesWins2 = sw2;
+
+            // Determine series winner (best of 3 — first to 2)
+            if (sw1 >= 2)      series.winner = 1;
+            else if (sw2 >= 2) series.winner = 2;
+            else               series.winner = null;
+
+            try {
+                // Persist full bracket doc
+                const playoffRef = doc(db, 'seasons', currentSeason.id, 'playoffs', 'bracket');
+                await setDoc(playoffRef, playoffData);
+
+                // Update each game doc with scores / winner
+                const gamesCollection = collection(db, 'seasons', currentSeason.id, 'games');
+                const team1Name = getTeamDisplay(series.team1, series).name;
+                const team2Name = getTeamDisplay(series.team2, series).name;
+                for (const g of series.games) {
+                    const gameId  = `playoff_${series.id}_g${g.gameNum}`;
+                    const gameRef = doc(gamesCollection, gameId);
+
+                    if (g.team1Score === null && g.team2Score === null) continue;
+
+                    const homeScore = g.homeTeam === 1 ? g.team1Score : g.team2Score;
+                    const awayScore = g.homeTeam === 1 ? g.team2Score : g.team1Score;
+                    const homeName  = g.homeTeam === 1 ? team1Name : team2Name;
+                    const awayName  = g.homeTeam === 1 ? team2Name : team1Name;
+                    const updates = { homeScore, awayScore };
+
+                    if (g.team1Score !== null && g.team2Score !== null) {
+                        if (g.team1Score > g.team2Score) {
+                            updates.winner = g.homeTeam === 1 ? homeName : awayName;
+                        } else if (g.team2Score > g.team1Score) {
+                            updates.winner = g.homeTeam === 1 ? awayName : homeName;
+                        }
+                    }
+
+                    try {
+                        await updateDoc(gameRef, updates);
+                    } catch (err) {
+                        console.error(`Error updating game doc ${gameId}:`, err);
+                    }
+                }
+
+                // If a series winner was determined, update team names in dependent series docs
+                if (series.winner) {
+                    await updateDependentSeries(series.id);
+                }
+
+                closeModal();
+                renderBracket();
+            } catch (error) {
+                console.error('Error saving series:', error);
+                alert('Error saving series. Please try again.');
+            }
+        };
+
+        // ---------------------------------------------------------------
+        // updateDependentSeries — when a series is decided, push the
+        // winner's actual team name into the Firebase game docs for any
+        // series that references it via { from: seriesId }.
+        // ---------------------------------------------------------------
+        async function updateDependentSeries(completedSeriesId) {
+            console.log(`🔄 Updating dependent series after ${completedSeriesId} completed...`);
+
+            const gamesCollection = collection(db, 'seasons', currentSeason.id, 'games');
+
+            const dependentRounds = [
+                ...(playoffData.quarterfinals || []),
+                ...(playoffData.semifinals    || []),
+                ...(playoffData.finals        || [])
+            ];
+
+            for (const series of dependentRounds) {
+                const dep1 = series.team1 && series.team1.from === completedSeriesId;
+                const dep2 = series.team2 && series.team2.from === completedSeriesId;
+                if (!dep1 && !dep2) continue;
+
+                const team1Display = getTeamDisplay(series.team1, series);
+                const team2Display = getTeamDisplay(series.team2, series);
+
+                for (const g of (series.games || [])) {
+                    const gameId = `playoff_${series.id}_g${g.gameNum}`;
+                    const homeTeamName = g.homeTeam === 1 ? team1Display.name : team2Display.name;
+                    const awayTeamName = g.homeTeam === 1 ? team2Display.name : team1Display.name;
+
+                    try {
+                        const gameRef = doc(gamesCollection, gameId);
+                        await updateDoc(gameRef, { homeTeamName, awayTeamName });
+                        console.log(`✅ Updated teams in ${gameId}: ${homeTeamName} vs ${awayTeamName}`);
+                    } catch (err) {
+                        console.error(`Error updating ${gameId}:`, err);
+                    }
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------
+        // SHARE BRACKET — generate a clean PNG image of the bracket
+        // ---------------------------------------------------------------
+
+        let _shareBracketCanvas = null;
+
+        function getTeamLogoUrl(teamName) {
+            if (!teamName || teamName === 'TBD' || teamName.includes('Winner') || teamName.includes('vs')) return null;
+            // logos/{name_lowercase}.png — spaces → underscores
+            return `logos/${teamName.toLowerCase().replace(/\s+/g, '_')}.png`;
+        }
+
+        function buildShareCardHtml() {
+            const subtitle = isProjected
+                ? 'Projected Bracket'
+                : 'Official Bracket' + (playoffData.lockedAt ? ' · Locked ' + new Date(playoffData.lockedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '');
+
+            const r1 = playoffData.round1       || [];
+            const qf = playoffData.quarterfinals || [];
+            const sf = playoffData.semifinals    || [];
+            const fn = playoffData.finals        || [];
+
+            // Split into left half (first 2 QFs) and right half (last 2 QFs)
+            const qfLeft  = [qf[0] || null, qf[1] || null];
+            const qfRight = [qf[2] || null, qf[3] || null];
+            const sfLeft  = sf[0] || null;
+            const sfRight = sf[1] || null;
+            const finalS  = fn[0] || null;
+
+            // Find which R1 play-in games feed into each QF (via team1.from / team2.from)
+            function r1FeedersFor(qfSeries) {
+                if (!qfSeries) return [];
+                const fromIds = [qfSeries.team1?.from, qfSeries.team2?.from].filter(Boolean);
+                return r1.filter(s => fromIds.includes(s.id));
+            }
+            const r1L0 = r1FeedersFor(qfLeft[0]);
+            const r1L1 = r1FeedersFor(qfLeft[1]);
+            const r1R0 = r1FeedersFor(qfRight[0]);
+            const r1R1 = r1FeedersFor(qfRight[1]);
+
+            // Team row — compact for narrow columns
+            const teamRowHtml = (team, isWinner) => {
+                const logo = getTeamLogoUrl(team.name);
+                const logoHtml = logo
+                    ? `<img src="${logo}" width="18" height="18" style="object-fit:contain;flex-shrink:0;border-radius:2px;" onerror="this.style.visibility='hidden'">`
+                    : `<div style="width:18px;height:18px;flex-shrink:0;"></div>`;
+                const bg     = isWinner ? 'rgba(26,107,74,0.55)' : 'rgba(0,0,0,0.38)';
+                const border = isWinner ? '1px solid #1a6b4a'    : '1px solid transparent';
+                const color  = isWinner ? '#6ee7b7' : '#fff';
+                const weight = isWinner ? '700'     : '400';
+                return `<div style="display:flex;align-items:center;gap:5px;padding:5px 6px;background:${bg};border-radius:5px;margin-bottom:2px;border:${border};">
+                    ${logoHtml}
+                    <span style="color:#80DEEA;font-size:9px;font-weight:700;min-width:11px;text-align:center;">${team.seed || ''}</span>
+                    <span style="color:${color};font-size:10px;flex:1;font-weight:${weight};overflow-wrap:break-word;word-break:break-word;line-height:1.3;">${team.name}</span>
+                </div>`;
+            };
+
+            const seriesCardHtml = (s) => {
+                if (!s) return '';
+                const t1 = getTeamDisplay(s.team1, s);
+                const t2 = getTeamDisplay(s.team2, s);
+                const t1win = s.winner === 1;
+                const t2win = s.winner === 2;
+                const sw1 = s.seriesWins1 || 0, sw2 = s.seriesWins2 || 0;
+                const status = s.winner
+                    ? `<div style="text-align:center;font-size:8px;margin-top:3px;padding-top:3px;border-top:1px solid rgba(2,119,189,0.4);color:#6ee7b7;font-weight:700;">✓ ${t1win ? t1.name : t2.name}</div>`
+                    : (sw1 + sw2 > 0 ? `<div style="text-align:center;font-size:8px;margin-top:3px;padding-top:3px;border-top:1px solid rgba(2,119,189,0.4);color:#80DEEA;">${sw1}–${sw2}</div>` : '');
+                return `<div style="background:rgba(2,119,189,0.22);border:1px solid #0277BD;border-radius:7px;padding:6px;">
+                    ${teamRowHtml(t1, t1win)}
+                    ${teamRowHtml(t2, t2win)}
+                    ${status}
+                </div>`;
+            };
+
+            // A column split into top half and bottom half, each containing one bracket slot
+            const splitColHtml = (w, topContent, botContent) => `
+                <div style="width:${w}px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;">
+                    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+                        ${topContent || '<div></div>'}
+                    </div>
+                    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+                        ${botContent || '<div></div>'}
+                    </div>
+                </div>`;
+
+            // A full-height column with single centered content
+            const centerColHtml = (w, content) => `
+                <div style="width:${w}px;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;">
+                    ${content || ''}
+                </div>`;
+
+            const finalsHtml = finalS
+                ? seriesCardHtml(finalS)
+                : `<div style="background:rgba(2,119,189,0.12);border:1px dashed #0277BD;border-radius:7px;padding:18px 6px;text-align:center;color:#4a6080;font-size:10px;">TBD</div>`;
+
+            // Column widths: r1(108) | qf(128) | sf(118) | finals(134) | sf(118) | qf(128) | r1(108)
+            // = 842 + 6 gaps×6px = 878 + 2×20px padding = 918 ≈ 920px card
+            return `
+                <div style="width:920px;background:linear-gradient(135deg,#0b1929 0%,#0d2040 60%,#091525 100%);padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;border-radius:14px;">
+                    <div style="text-align:center;margin-bottom:14px;">
+                        <div style="color:#80DEEA;font-size:20px;font-weight:800;letter-spacing:0.5px;">🏆 Aces Playoffs</div>
+                        <div style="color:#B3E5FC;font-size:11px;margin-top:4px;opacity:0.75;">${subtitle}</div>
+                    </div>
+                    <div style="display:flex;align-items:stretch;gap:6px;min-height:400px;">
+
+                        ${splitColHtml(108,
+                            r1L0.map(seriesCardHtml).join(''),
+                            r1L1.map(seriesCardHtml).join('')
+                        )}
+                        ${splitColHtml(128,
+                            seriesCardHtml(qfLeft[0]),
+                            seriesCardHtml(qfLeft[1])
+                        )}
+                        ${centerColHtml(118, seriesCardHtml(sfLeft))}
+
+                        <div style="width:134px;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+                            <div style="color:#FFD700;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:7px;text-align:center;">🏆 Finals</div>
+                            <div style="width:100%;">${finalsHtml}</div>
+                        </div>
+
+                        ${centerColHtml(118, seriesCardHtml(sfRight))}
+                        ${splitColHtml(128,
+                            seriesCardHtml(qfRight[0]),
+                            seriesCardHtml(qfRight[1])
+                        )}
+                        ${splitColHtml(108,
+                            r1R0.map(seriesCardHtml).join(''),
+                            r1R1.map(seriesCardHtml).join('')
+                        )}
+
+                    </div>
+                    <div style="text-align:center;margin-top:12px;font-size:10px;color:#4a6080;letter-spacing:0.5px;">mountainsideaces.com</div>
+                </div>`;
+        }
+
+        // Dynamically load html2canvas on first use
+        function loadHtml2Canvas() {
+            return new Promise((resolve, reject) => {
+                if (window.html2canvas) { resolve(window.html2canvas); return; }
+                const s = document.createElement('script');
+                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                s.onload = () => resolve(window.html2canvas);
+                s.onerror = () => reject(new Error('Failed to load html2canvas'));
+                document.head.appendChild(s);
+            });
+        }
+
+        window.openShareBracket = async function() {
+            if (!playoffData) { alert('Bracket data not loaded yet.'); return; }
+
+            // Show modal in loading state
+            document.getElementById('shareModal').classList.add('active');
+            document.getElementById('shareStatus').textContent = 'Generating image…';
+            document.getElementById('sharePreviewArea').innerHTML = '';
+            document.getElementById('downloadBracketBtn').style.display = 'none';
+            document.getElementById('copyBracketBtn').style.display    = 'none';
+            _shareBracketCanvas = null;
+
+            try {
+                // Ensure html2canvas is loaded
+                const html2canvas = await loadHtml2Canvas();
+
+                // Build and inject the share card HTML off-screen
+                const card = document.getElementById('shareBracketCard');
+                card.innerHTML = buildShareCardHtml();
+
+                // Wait a tick so images start loading, then use html2canvas
+                await new Promise(r => setTimeout(r, 150));
+
+                const canvas = await html2canvas(card.firstElementChild, {
+                    backgroundColor: null,
+                    scale: 2,               // 2× for retina quality
+                    useCORS: true,
+                    logging: false,
+                    scrollX: 0,
+                    scrollY: 0
+                });
+
+                _shareBracketCanvas = canvas;
+
+                // Show preview
+                canvas.style.borderRadius = '10px';
+                canvas.style.maxWidth = '100%';
+                document.getElementById('sharePreviewArea').appendChild(canvas);
+                document.getElementById('shareStatus').textContent = 'Tap "Save Image" to download or "Copy Image" to share.';
+                document.getElementById('downloadBracketBtn').style.display = 'inline-block';
+                document.getElementById('copyBracketBtn').style.display    = 'inline-block';
+
+            } catch (err) {
+                console.error('Share bracket error:', err);
+                document.getElementById('shareStatus').textContent = `Error generating image: ${err.message}`;
+            }
+        };
+
+        window.closeShareModal = function() {
+            document.getElementById('shareModal').classList.remove('active');
+        };
+
+        window.downloadBracketImage = function() {
+            if (!_shareBracketCanvas) return;
+            const link = document.createElement('a');
+            link.download = '2026-summer-playoff-bracket.png';
+            link.href = _shareBracketCanvas.toDataURL('image/png');
+            link.click();
+        };
+
+        window.copyBracketImage = async function() {
+            if (!_shareBracketCanvas) return;
+            try {
+                // Wrap toBlob in a Promise so ClipboardItem receives it synchronously
+                // within the user gesture — avoids NotAllowedError from async callback
+                const blobPromise = new Promise(resolve =>
+                    _shareBracketCanvas.toBlob(resolve, 'image/png')
+                );
+                await navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blobPromise })
+                ]);
+                const btn = document.getElementById('copyBracketBtn');
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => { btn.textContent = '📋 Copy Image'; }, 2000);
+            } catch (err) {
+                // Fallback — just trigger download if clipboard API unavailable
+                console.warn('Clipboard write failed, falling back to download:', err);
+                downloadBracketImage();
+            }
+        };
+
+        // Initialize — auth state change handler will call loadPlayoffBracket()
+    </script>
+    <script src="mobile-enhancements.js"></script>
+    <script src="theme-toggle.js"></script>
+</body>
+</html>

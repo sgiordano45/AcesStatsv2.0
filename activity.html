@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>League Activity - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+/* CSS Variables */
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+}
+
+/* Base styles - required on every page */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+/* Page Header - standard pattern */
+.page-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  padding: 4rem 2rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+  color: white;
+  text-align: center;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.page-header::after {
+  content: '📰';
+  position: absolute;
+  bottom: -30px;
+  left: -30px;
+  font-size: 200px;
+  opacity: 0.05;
+}
+
+.page-header h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+.page-header p {
+  font-size: 1.2rem;
+  opacity: 0.95;
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  margin: 0.5rem 0 0 0;
+}
+
+/* Loading Overlay - standard pattern */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.3s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.softball-spinner::before {
+  content: '⚾';
+  font-size: 80px;
+  animation: spin 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+
+/* Dashboard Container */
+.dashboard-container {
+  max-width: 1400px;
+  margin: 3rem auto;
+  padding: 0 2rem;
+}
+
+/* Activity Wrapper */
+.activity-wrapper {
+  width: 100%;
+}
+
+/* Filters Bar */
+.filters-bar {
+  background: var(--card-bg);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.filter-select {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: white;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* Date Group */
+.date-group {
+  margin-bottom: 1.5rem;
+}
+
+.date-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-light);
+  margin-bottom: 0.75rem;
+  padding-left: 0.5rem;
+}
+
+/* Activity Item */
+.activity-item {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 0.75rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.activity-item:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+.activity-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  border-radius: 12px;
+}
+
+.activity-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-dark);
+  margin-bottom: 0.25rem;
+}
+
+.activity-title a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.activity-title a:hover {
+  text-decoration: underline;
+}
+
+.activity-description {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+}
+
+.activity-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.activity-type {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.activity-type.milestone { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+.activity-type.badge { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+.activity-type.game { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+.activity-type.career_high { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+.activity-type.photo { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+.activity-type.standings { background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); }
+.activity-type.streak { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); }
+
+/* Share Button */
+.share-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.share-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: #f7fafc;
+}
+
+/* Digest Button */
+.digest-btn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+.digest-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.digest-btn:active { transform: translateY(0); }
+
+/* Digest Modal */
+.digest-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+.digest-modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+.digest-modal {
+  background: white;
+  border-radius: 16px;
+  width: 92%;
+  max-width: 520px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.digest-modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.digest-modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-dark);
+}
+.digest-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-light);
+  padding: 0.25rem;
+  line-height: 1;
+}
+.digest-range-bar {
+  padding: 0.75rem 1.5rem;
+  background: #f7fafc;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+.digest-range-bar select {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  background: white;
+  cursor: pointer;
+}
+.digest-text-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-dark);
+  white-space: pre-wrap;
+  min-height: 120px;
+}
+.digest-text-area .digest-category-heading {
+  font-weight: 700;
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.95rem;
+  color: var(--primary-color);
+}
+.digest-text-area .digest-category-heading:first-child { margin-top: 0; }
+.digest-text-area .digest-entry { padding-left: 0.25rem; }
+.digest-empty {
+  color: var(--text-light);
+  font-style: italic;
+  text-align: center;
+  padding: 2rem 0;
+}
+.digest-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+.digest-copy-btn {
+  flex: 1;
+  padding: 0.7rem;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+.digest-copy-btn:hover { opacity: 0.9; }
+.digest-copy-btn.copied { background: #10b981; }
+
+/* Share Modal */
+.share-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.share-modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.share-modal {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  padding: 2rem;
+  box-shadow: var(--shadow-lg);
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+
+.share-modal-overlay.active .share-modal {
+  transform: scale(1);
+}
+
+.share-modal h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.share-preview {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.share-preview-type {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  opacity: 0.9;
+  margin-bottom: 0.5rem;
+}
+
+.share-preview-headline {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.share-preview-subheadline {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.share-preview-footer {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  margin-top: 1rem;
+}
+
+.share-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.share-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.share-option:hover {
+  border-color: var(--primary-color);
+  background: #f7fafc;
+}
+
+.share-option-icon {
+  font-size: 1.5rem;
+}
+
+.share-option-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.share-close {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.share-close:hover {
+  background: #f7fafc;
+  border-color: var(--primary-color);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-dark);
+}
+
+.empty-state p {
+  margin: 0;
+  color: var(--text-light);
+}
+
+/* Load More */
+.load-more-container {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.load-more-btn {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.load-more-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.load-more-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--text-dark);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  z-index: 10001;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Inline loading */
+.activity-container.loading::after {
+  content: '⚾';
+  display: block;
+  text-align: center;
+  font-size: 3rem;
+  padding: 2rem;
+  animation: spin 1.5s ease-in-out infinite;
+}
+
+/* Responsive - mobile adjustments */
+@media (max-width: 768px) {
+  .page-header {
+    padding: 3rem 1.5rem;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem;
+  }
+
+  .page-header p {
+    font-size: 1rem;
+  }
+
+  .dashboard-container {
+    padding: 0 1rem;
+    margin: 2rem auto;
+  }
+
+  .filters-bar {
+    padding: 1rem;
+  }
+
+  .activity-item {
+    padding: 1rem;
+  }
+
+  .activity-item:hover {
+    transform: none;
+  }
+
+  .share-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .share-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<header class="page-header">
+  <h1>📰 League Activity</h1>
+  <p>Latest updates from across the league</p>
+</header>
+
+<div class="dashboard-container">
+  <div class="filters-nav">
+    <!-- Desktop navigation injected here by nav-component.js -->
+  </div>
+
+  <div class="filters-bar">
+    <div class="filter-group">
+      <label for="typeFilter">Type:</label>
+      <select id="typeFilter" class="filter-select">
+        <option value="all">All Activity</option>
+        <option value="game">Games</option>
+        <option value="milestone">Milestones</option>
+        <option value="badge">Badges</option>
+        <option value="career_high">Career Highs</option>
+        <option value="streak">Streaks</option>
+        <option value="standings">Standings</option>
+        <option value="photo">Photos</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="timeFilter">Time:</label>
+      <select id="timeFilter" class="filter-select">
+        <option value="week">Past Week</option>
+        <option value="month">Past Month</option>
+        <option value="season">This Season</option>
+        <option value="all">All Time</option>
+      </select>
+    </div>
+    <button class="digest-btn" id="digestBtn">📋 Weekly Digest</button>
+  </div>
+
+  <div class="activity-wrapper">
+    <div class="activity-container" id="activityContainer">
+      <!-- Activity items rendered here -->
+    </div>
+
+    <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+      <button class="load-more-btn" id="loadMoreBtn">Load More</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div class="share-modal-overlay" id="shareModal">
+  <div class="share-modal">
+    <h3>Share Activity <span id="shareCloseX" style="cursor:pointer;">✕</span></h3>
+    <div class="share-preview" id="sharePreview"></div>
+    <div class="share-options">
+      <button class="share-option" data-action="copy">
+        <span class="share-option-icon">🔗</span>
+        <span class="share-option-label">Copy Link</span>
+      </button>
+      <button class="share-option" data-action="text">
+        <span class="share-option-icon">💬</span>
+        <span class="share-option-label">Text</span>
+      </button>
+      <button class="share-option" data-action="whatsapp">
+        <span class="share-option-icon">📱</span>
+        <span class="share-option-label">WhatsApp</span>
+      </button>
+      <button class="share-option" data-action="twitter">
+        <span class="share-option-icon">🐦</span>
+        <span class="share-option-label">Twitter</span>
+      </button>
+      <button class="share-option" data-action="facebook">
+        <span class="share-option-icon">📘</span>
+        <span class="share-option-label">Facebook</span>
+      </button>
+      <button class="share-option" data-action="download">
+        <span class="share-option-icon">📥</span>
+        <span class="share-option-label">Download</span>
+      </button>
+    </div>
+    <button class="share-close" id="shareClose">Close</button>
+  </div>
+</div>
+
+<!-- Milestone Digest Modal -->
+<div class="digest-modal-overlay" id="digestModal">
+  <div class="digest-modal">
+    <div class="digest-modal-header">
+      <h3>📋 Weekly Milestone Digest</h3>
+      <button class="digest-modal-close" id="digestModalClose">✕</button>
+    </div>
+    <div class="digest-range-bar">
+      <span>Range:</span>
+      <select id="digestRangeSelect">
+        <option value="7">Past 7 days</option>
+        <option value="14">Past 14 days</option>
+        <option value="30">Past 30 days</option>
+      </select>
+      <span id="digestDateRange" style="color: var(--text-light); margin-left: auto;"></span>
+    </div>
+    <div class="digest-text-area" id="digestTextArea"></div>
+    <div class="digest-modal-footer">
+      <button class="digest-copy-btn" id="digestCopyBtn">📋 Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- Hidden canvas for image generation -->
+<canvas id="shareCanvas" width="600" height="400" style="display: none;"></canvas>
+
+<script type="module">
+import { db } from './firebase-config.js';
+import { 
+  collection, 
+  query, 
+  where, 
+  orderBy, 
+  limit, 
+  getDocs,
+  startAfter,
+  Timestamp 
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+// State
+let allActivities = [];
+let currentActivity = null;
+let lastDoc = null;
+let isLoading = false;
+const PAGE_SIZE = 40;
+
+// DOM Elements
+const activityContainer = document.getElementById('activityContainer');
+const typeFilter = document.getElementById('typeFilter');
+const timeFilter = document.getElementById('timeFilter');
+const shareModal = document.getElementById('shareModal');
+const sharePreview = document.getElementById('sharePreview');
+const shareClose = document.getElementById('shareClose');
+const shareCloseX = document.getElementById('shareCloseX');
+const toast = document.getElementById('toast');
+const shareCanvas = document.getElementById('shareCanvas');
+const loadMoreBtn = document.getElementById('loadMoreBtn');
+const loadMoreContainer = document.getElementById('loadMoreContainer');
+const loadingOverlay = document.getElementById('loadingOverlay');
+
+// Initialize
+async function init() {
+  setupEventListeners();
+  await loadActivities();
+  loadingOverlay.classList.add('hidden');
+}
+
+// Load activities from Firestore
+async function loadActivities(loadMore = false) {
+  if (isLoading) return;
+  isLoading = true;
+  
+  if (!loadMore) {
+    activityContainer.innerHTML = '';
+    activityContainer.classList.add('loading');
+    allActivities = [];
+    lastDoc = null;
+  } else {
+    loadMoreBtn.disabled = true;
+    loadMoreBtn.textContent = 'Loading...';
+  }
+  
+  try {
+    const activitiesRef = collection(db, 'activity');
+    const typeValue = typeFilter.value;
+    const timeRange = getTimeRange(timeFilter.value);
+
+    // Build constraints in the correct Firestore order:
+    // equality wheres → range where → orderBy (same field as range) → cursor → limit
+    const constraints = [];
+
+    // 1. Type filter — server-side so limit(PAGE_SIZE) isn't wasted on the wrong types.
+    //    Requires a composite index: type ASC + timestamp DESC.
+    //    Firestore will surface a link to create it on the first run if it doesn't exist yet.
+    if (typeValue !== 'all') {
+      constraints.push(where('type', '==', typeValue));
+    }
+
+    // 2. Time range — must use same field as the orderBy below
+    if (timeFilter.value !== 'all') {
+      constraints.push(where('timestamp', '>=', timeRange.start));
+    }
+
+    // 3. orderBy
+    constraints.push(orderBy('timestamp', 'desc'));
+
+    // 4. Pagination cursor — must come before limit
+    if (loadMore && lastDoc) {
+      constraints.push(startAfter(lastDoc));
+    }
+
+    // 5. limit last
+    constraints.push(limit(PAGE_SIZE));
+
+    const q = query(activitiesRef, ...constraints);
+    const snapshot = await getDocs(q);
+
+    // Process results
+    let newActivities = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      timestamp: doc.data().timestamp?.toDate() || new Date()
+    }));
+
+    // Update pagination state
+    if (snapshot.docs.length > 0) {
+      lastDoc = snapshot.docs[snapshot.docs.length - 1];
+    }
+    
+    // Merge or replace activities
+    if (loadMore) {
+      allActivities = [...allActivities, ...newActivities];
+    } else {
+      allActivities = newActivities;
+    }
+    
+    // Show/hide load more button
+    loadMoreContainer.style.display = snapshot.docs.length >= PAGE_SIZE ? 'block' : 'none';
+    
+    renderActivities();
+    
+  } catch (error) {
+    console.error('Error loading activities:', error);
+    
+    if (error.code === 'failed-precondition' || error.message?.includes('index')) {
+      // Log the full error so the Firebase Console link to create the index is visible in DevTools
+      console.error('Firestore index required:', error);
+      activityContainer.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🔧</div>
+          <h3>Index needed</h3>
+          <p>Open the browser console — Firebase will show a direct link to create the required index. It takes about a minute to build.</p>
+        </div>
+      `;
+    } else {
+      activityContainer.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">📭</div>
+          <h3>No activity yet</h3>
+          <p>Activity will appear here as games are played and milestones are reached.</p>
+        </div>
+      `;
+    }
+  } finally {
+    isLoading = false;
+    activityContainer.classList.remove('loading');
+    loadMoreBtn.disabled = false;
+    loadMoreBtn.textContent = 'Load More';
+  }
+}
+
+// Get time range based on filter
+function getTimeRange(filter) {
+  const now = new Date();
+  let start;
+  
+  switch (filter) {
+    case 'week':
+      start = new Date(now);
+      start.setDate(start.getDate() - 7);
+      break;
+    case 'month':
+      start = new Date(now);
+      start.setMonth(start.getMonth() - 1);
+      break;
+    case 'season':
+      start = new Date(now);
+      start.setMonth(start.getMonth() - 4);
+      break;
+    case 'all':
+    default:
+      start = new Date('2020-01-01');
+  }
+  
+  return { start: Timestamp.fromDate(start), end: Timestamp.fromDate(now) };
+}
+
+// Render activities
+function renderActivities() {
+  if (allActivities.length === 0) {
+    activityContainer.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <h3>No activity found</h3>
+        <p>Try changing your filters or check back later for updates.</p>
+      </div>
+    `;
+    loadMoreContainer.style.display = 'none';
+    return;
+  }
+  
+  const groups = groupByDate(allActivities);
+  
+  let html = '';
+  for (const [label, items] of Object.entries(groups)) {
+    if (items.length === 0) continue;
+    
+    html += `
+      <div class="date-group">
+        <div class="date-label">${label}</div>
+        ${items.map(item => renderActivityItem(item)).join('')}
+      </div>
+    `;
+  }
+  
+  activityContainer.innerHTML = html;
+  
+  // Add click handlers to share buttons
+  document.querySelectorAll('.share-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.dataset.id;
+      openShareModal(id);
+    });
+  });
+}
+
+// Group activities by date
+function groupByDate(activities) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const weekAgo = new Date(today);
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  
+  const groups = {
+    'Today': [],
+    'Yesterday': [],
+    'This Week': [],
+    'Earlier': []
+  };
+  
+  activities.forEach(item => {
+    const itemDate = new Date(item.timestamp);
+    const itemDay = new Date(itemDate.getFullYear(), itemDate.getMonth(), itemDate.getDate());
+    
+    if (itemDay.getTime() === today.getTime()) {
+      groups['Today'].push(item);
+    } else if (itemDay.getTime() === yesterday.getTime()) {
+      groups['Yesterday'].push(item);
+    } else if (itemDay > weekAgo) {
+      groups['This Week'].push(item);
+    } else {
+      groups['Earlier'].push(item);
+    }
+  });
+  
+  return groups;
+}
+
+// Render single activity item
+function renderActivityItem(item) {
+  const timeAgo = formatTimeAgo(item.timestamp);
+  
+  return `
+    <div class="activity-item" data-id="${item.id}">
+      <div class="activity-icon">${item.icon || '📋'}</div>
+      <div class="activity-content">
+        <div class="activity-title">
+          ${item.linkUrl ? `<a href="${item.linkUrl}">${item.title || 'Activity'}</a>` : (item.title || 'Activity')}
+        </div>
+        <div class="activity-description">${item.description || ''}</div>
+        <div class="activity-meta">
+          <span class="activity-type ${item.type}">${formatType(item.type)}</span>
+          <span>${timeAgo}</span>
+        </div>
+      </div>
+      <button class="share-btn" data-id="${item.id}">
+        <span>📤</span> Share
+      </button>
+    </div>
+  `;
+}
+
+// Format activity type for display
+function formatType(type) {
+  const types = {
+    milestone: 'Milestone',
+    badge: 'Badge',
+    game: 'Game',
+    career_high: 'Career High',
+    streak: 'Streak',
+    standings: 'Standings',
+    photo: 'Photo'
+  };
+  return types[type] || type || 'Update';
+}
+
+// Format time ago
+function formatTimeAgo(date) {
+  const now = new Date();
+  const diff = now - new Date(date);
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days}d ago`;
+  
+  return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// Open share modal
+function openShareModal(id) {
+  currentActivity = allActivities.find(a => a.id === id);
+  if (!currentActivity) return;
+  
+  const share = currentActivity.share || {};
+  
+  sharePreview.innerHTML = `
+    <div class="share-preview-type">${share.type || formatType(currentActivity.type).toUpperCase()}</div>
+    <div class="share-preview-headline">${share.headline || currentActivity.playerName || currentActivity.teamName || ''}</div>
+    <div class="share-preview-subheadline">${share.subheadline || currentActivity.title}</div>
+    <div class="share-preview-footer">⚾ Mountainside Aces</div>
+  `;
+  
+  shareModal.classList.add('active');
+}
+
+// Close share modal
+function closeShareModal() {
+  shareModal.classList.remove('active');
+  currentActivity = null;
+}
+
+// Show toast notification
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// Generate share image
+function generateShareImage() {
+  return new Promise((resolve) => {
+    const ctx = shareCanvas.getContext('2d');
+    const share = currentActivity.share || {};
+    
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, 600, 400);
+    gradient.addColorStop(0, '#2d5016');
+    gradient.addColorStop(1, '#1a6b4a');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 600, 400);
+    
+    // Header
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = 'bold 14px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚾ MOUNTAINSIDE ACES', 300, 50);
+    
+    // Type badge
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fillRect(200, 80, 200, 30);
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 12px Inter, sans-serif';
+    ctx.fillText(share.type || formatType(currentActivity.type).toUpperCase(), 300, 100);
+    
+    // Headline
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 28px Inter, sans-serif';
+    ctx.fillText(share.headline || currentActivity.playerName || currentActivity.teamName || '', 300, 180);
+    
+    // Subheadline
+    ctx.font = 'bold 42px Inter, sans-serif';
+    ctx.fillText(share.subheadline || currentActivity.title, 300, 240);
+    
+    // Date
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = '14px Inter, sans-serif';
+    const dateStr = new Date(currentActivity.timestamp).toLocaleDateString('en-US', { 
+      month: 'long', day: 'numeric', year: 'numeric' 
+    });
+    ctx.fillText(dateStr, 300, 320);
+    
+    // Footer
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '12px Inter, sans-serif';
+    ctx.fillText('acessoftballreference.com', 300, 370);
+    
+    shareCanvas.toBlob(resolve, 'image/png');
+  });
+}
+
+// Handle share actions
+async function handleShare(action) {
+  if (!currentActivity) return;
+  
+  const share = currentActivity.share || {};
+  const shareText = `${share.headline || ''} - ${share.subheadline || currentActivity.title} ⚾ Mountainside Aces`;
+  const shareUrl = `https://acessoftballreference.com${currentActivity.linkUrl || '/activity.html'}`;
+  
+  switch (action) {
+    case 'copy':
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        showToast('Link copied to clipboard!');
+      } catch (err) {
+        showToast('Failed to copy link');
+      }
+      break;
+      
+    case 'text':
+      window.open(`sms:?body=${encodeURIComponent(shareText + ' ' + shareUrl)}`);
+      break;
+      
+    case 'whatsapp':
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`);
+      break;
+      
+    case 'twitter':
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`);
+      break;
+      
+    case 'facebook':
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`);
+      break;
+      
+    case 'download':
+      const blob = await generateShareImage();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `aces-${currentActivity.type}-${Date.now()}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Image downloaded!');
+      break;
+  }
+  
+  closeShareModal();
+}
+
+// Setup event listeners
+function setupEventListeners() {
+  // Filter changes reload data
+  typeFilter.addEventListener('change', () => loadActivities(false));
+  timeFilter.addEventListener('change', () => loadActivities(false));
+  
+  // Load more button
+  loadMoreBtn.addEventListener('click', () => loadActivities(true));
+  
+  // Share modal
+  shareClose.addEventListener('click', closeShareModal);
+  shareCloseX.addEventListener('click', closeShareModal);
+  shareModal.addEventListener('click', (e) => {
+    if (e.target === shareModal) closeShareModal();
+  });
+  
+  // Share options
+  document.querySelectorAll('.share-option').forEach(btn => {
+    btn.addEventListener('click', () => handleShare(btn.dataset.action));
+  });
+  
+  // Escape key closes modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeShareModal(); closeDigestModal(); }
+  });
+
+  // Digest button
+  document.getElementById('digestBtn').addEventListener('click', openDigestModal);
+  document.getElementById('digestModalClose').addEventListener('click', closeDigestModal);
+  document.getElementById('digestModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('digestModal')) closeDigestModal();
+  });
+  document.getElementById('digestRangeSelect').addEventListener('change', renderDigest);
+  document.getElementById('digestCopyBtn').addEventListener('click', copyDigestText);
+}
+
+// ── Weekly Milestone Digest ──────────────────────────────────────────────────
+
+const DIGEST_CATEGORY_META = {
+  hits:        { label: 'Hits',         icon: '🎯' },
+  runs:        { label: 'Runs',         icon: '🏃' },
+  games:       { label: 'Games Played', icon: '📅' },
+  walks:       { label: 'Walks',        icon: '🚶' },
+  rbis:        { label: 'RBIs',         icon: '💥' },
+  career_high: { label: 'Career Highs', icon: '🔥' },
+};
+
+let digestActivities = [];
+
+async function openDigestModal() {
+  document.getElementById('digestModal').classList.add('active');
+  await renderDigest();
+}
+
+function closeDigestModal() {
+  document.getElementById('digestModal').classList.remove('active');
+}
+
+async function renderDigest() {
+  const days = parseInt(document.getElementById('digestRangeSelect').value, 10);
+  const textArea = document.getElementById('digestTextArea');
+  const dateRangeEl = document.getElementById('digestDateRange');
+  textArea.innerHTML = '<div class="digest-empty">Loading…</div>';
+
+  const fromDate = new Date();
+  fromDate.setDate(fromDate.getDate() - days);
+  const fromTimestamp = Timestamp.fromDate(fromDate);
+
+  // Date range label
+  const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  dateRangeEl.textContent = `${fmt(fromDate)} – ${fmt(new Date())}`;
+
+  try {
+    // Two targeted queries — avoids client-side limit problem where game/standings
+    // activity fills the 200-doc budget before milestones appear
+    const makeQ = (type) => query(
+      collection(db, 'activity'),
+      where('type', '==', type),
+      where('timestamp', '>=', fromTimestamp),
+      orderBy('timestamp', 'desc')
+    );
+    const [milestoneSnap, careerHighSnap] = await Promise.all([
+      getDocs(makeQ('milestone')),
+      getDocs(makeQ('career_high'))
+    ]);
+    digestActivities = [
+      ...milestoneSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+      ...careerHighSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    ];
+    // Sort combined results by timestamp desc
+    digestActivities.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+  } catch (err) {
+    console.error('Digest fetch error:', err);
+    textArea.innerHTML = '<div class="digest-empty">Could not load activities.</div>';
+    return;
+  }
+
+  if (digestActivities.length === 0) {
+    textArea.innerHTML = '<div class="digest-empty">No milestones in this period.</div>';
+    return;
+  }
+
+  // Group by category
+  const groups = {};
+  digestActivities.forEach(a => {
+    let key;
+    if (a.type === 'milestone') {
+      key = (a.data && a.data.milestoneType) ? a.data.milestoneType : 'milestone';
+    } else {
+      key = a.type; // 'career_high' or 'badge'
+    }
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(a);
+  });
+
+  // Helper: extract leading number from title for sorting
+  const milestoneNum = (a) => { const m = (a.title || '').match(/(\d+)/); return m ? parseInt(m[1], 10) : 0; };
+
+  // Render as styled HTML (also build plain text for copy)
+  let html = '';
+  for (const [key, items] of Object.entries(groups)) {
+    const meta = DIGEST_CATEGORY_META[key] || { label: key.replace(/_/g, ' '), icon: '⭐' };
+    html += `<div class="digest-category-heading">${meta.icon} ${meta.label}</div>`;
+    [...items].sort((a, b) => milestoneNum(b) - milestoneNum(a)).forEach(a => {
+      const name = a.playerName || a.teamName || '';
+      const title = a.title || '';
+      html += `<div class="digest-entry">• ${name}${name && title ? ' — ' : ''}${title}</div>`;
+    });
+  }
+  textArea.innerHTML = html;
+}
+
+function buildPlainText() {
+  const days = parseInt(document.getElementById('digestRangeSelect').value, 10);
+  const fromDate = new Date();
+  fromDate.setDate(fromDate.getDate() - days);
+  const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const dateRange = `${fmt(fromDate)} – ${fmt(new Date())}`;
+
+  const groups = {};
+  digestActivities.forEach(a => {
+    const key = (a.type === 'milestone' && a.data && a.data.milestoneType) ? a.data.milestoneType : a.type;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(a);
+  });
+
+  const milestoneNum = (a) => { const m = (a.title || '').match(/(\d+)/); return m ? parseInt(m[1], 10) : 0; };
+
+  let text = `⚾ Mountainside Aces — Milestone Recap\n${dateRange}\n`;
+  for (const [key, items] of Object.entries(groups)) {
+    const meta = DIGEST_CATEGORY_META[key] || { label: key.replace(/_/g, ' '), icon: '⭐' };
+    text += `\n${meta.icon} ${meta.label}\n`;
+    [...items].sort((a, b) => milestoneNum(b) - milestoneNum(a)).forEach(a => {
+      const name = a.playerName || a.teamName || '';
+      const title = a.title || '';
+      text += `• ${name}${name && title ? ' — ' : ''}${title}\n`;
+    });
+  }
+  text += '\nCongrats to all our Aces! 🏆';
+  return text;
+}
+
+async function copyDigestText() {
+  const btn = document.getElementById('digestCopyBtn');
+  const text = buildPlainText();
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Copy to Clipboard';
+      btn.classList.remove('copied');
+    }, 2500);
+  } catch {
+    showToast('Could not copy — try selecting the text manually.');
+  }
+}
+
+// Initialize
+init();
+</script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

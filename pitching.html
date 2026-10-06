@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mountainside Aces - Pitching Statistics</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<link rel="stylesheet" href="dark-mode.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --pitching-primary: #11998e;
+  --pitching-secondary: #38ef7d;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+/* Page Header - Pitching themed with teal/green gradient */
+.page-header {
+  background: linear-gradient(135deg, var(--pitching-primary) 0%, var(--pitching-secondary) 100%);
+  padding: 4rem 2rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+  color: white;
+  text-align: center;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.page-header::after {
+  content: '🥎';
+  position: absolute;
+  bottom: -30px;
+  left: -30px;
+  font-size: 200px;
+  opacity: 0.05;
+}
+
+.page-header h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.page-header p {
+  font-size: 1.3rem;
+  font-weight: 300;
+  opacity: 0.9;
+  position: relative;
+  z-index: 1;
+}
+
+/* Dashboard Container */
+.page-container {
+  max-width: 1400px;
+  margin: 3rem auto;
+  padding: 0 2rem;
+}
+
+/* Summary Section */
+.summary {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.summary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--pitching-primary) 0%, var(--pitching-secondary) 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.summary h2 {
+  margin: 0 0 1.5rem 0;
+  color: var(--text-dark);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.summary p {
+  margin: 0 0 1rem 0;
+  color: var(--text-dark);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.summary p:last-child {
+  margin-bottom: 0;
+  color: var(--text-light);
+  font-size: 0.95rem;
+}
+
+/* Loading Indicator */
+#loadingIndicator {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-light);
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+  position: relative;
+}
+
+#loadingIndicator::before {
+  content: "⏳";
+  display: block;
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Filters Section */
+.filters-section {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.filters-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--pitching-primary) 0%, var(--pitching-secondary) 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.filter-group select {
+  padding: 0.6rem 1.2rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: white;
+  color: var(--text-dark);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--pitching-primary);
+  box-shadow: 0 0 0 3px rgba(17,153,142,0.1);
+}
+
+/* Navigation Section */
+.filters-nav {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.filters-nav::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--pitching-primary) 0%, var(--pitching-secondary) 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.nav-section {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.nav-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-link {
+  padding: 0.8rem 1.5rem;
+  border: 2px solid var(--primary-color);
+  background: white;
+  color: var(--primary-color);
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-color);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: -1;
+}
+
+.nav-link:hover::before {
+  transform: translateX(0);
+}
+
+.nav-link:hover {
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.nav-link.batting {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.nav-link.batting::before {
+  background: var(--primary-color);
+}
+
+.nav-link.pitching {
+  border-color: var(--pitching-primary);
+  color: var(--pitching-primary);
+}
+
+.nav-link.pitching::before {
+  background: var(--pitching-primary);
+}
+
+.nav-link.pitching.active {
+  background: var(--pitching-primary);
+  color: white;
+}
+
+/* Table Container */
+.stats-table-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.stats-table-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--pitching-primary) 0%, var(--pitching-secondary) 100%);
+  z-index: 1;
+}
+
+.swipe-indicator {
+  display: none;
+  text-align: center;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+  color: #856404;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-bottom: 2px solid #ffc107;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  margin: 0;
+}
+
+thead {
+  background: linear-gradient(135deg, var(--pitching-primary) 0%, var(--pitching-secondary) 100%);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+th {
+  padding: 1rem;
+  text-align: center;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: background 0.3s ease;
+  border: none;
+}
+
+th:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+th.asc::after {
+  content: " ▲";
+  font-size: 0.8em;
+  margin-left: 0.5rem;
+}
+
+th.desc::after {
+  content: " ▼";
+  font-size: 0.8em;
+  margin-left: 0.5rem;
+}
+
+td {
+  padding: 1rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-dark);
+}
+
+tbody tr {
+  transition: all 0.3s ease;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+tbody tr:hover {
+  background: linear-gradient(90deg, rgba(17,153,142,0.05) 0%, rgba(56,239,125,0.05) 100%);
+  transform: scale(1.005);
+  box-shadow: var(--shadow-sm);
+}
+
+table a {
+  color: var(--pitching-primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+table a:hover {
+  color: #0f8a80;
+  text-decoration: underline;
+}
+
+/* Mobile Navigation */
+.mobile-nav-container {
+  display: none;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .page-header h1 {
+    font-size: 2.5rem;
+  }
+  
+  .page-header p {
+    font-size: 1.1rem;
+  }
+  
+  .page-container {
+    padding: 0 1rem;
+    margin: 2rem auto;
+  }
+  
+  .summary, .filters-section, .filters-nav {
+    padding: 1.5rem;
+  }
+  
+  .filters-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .filter-group {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  
+  .filter-group select {
+    width: 100%;
+  }
+  
+  .nav-container {
+    flex-direction: column;
+  }
+  
+  .nav-link {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .swipe-indicator {
+    display: block;
+  }
+  
+  table {
+    font-size: 0.85rem;
+  }
+  
+  th, td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .stats-table-container {
+    overflow-x: auto;
+  }
+  
+  .mobile-nav-container {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 3rem 1rem;
+  }
+  
+  .page-header h1 {
+    font-size: 2rem;
+  }
+  
+  table {
+    font-size: 0.75rem;
+  }
+  
+  th, td {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .nav-link {
+    display: block;
+    text-align: center;
+  }
+}
+</style>
+</head>
+<body>
+
+
+<div class="page-container">
+  <div class="page-header">
+    <h1>⚾ Mountainside Aces Pitching Statistics</h1>
+    <p>Complete pitching statistics for all players across all seasons</p>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div id="loadingIndicator" style="display: none;">
+    Loading pitching statistics...<br>
+    <small>Using optimized aggregated collection (fast!)</small>
+  </div>
+
+  <div class="summary">
+    <h2>Pitching Overview</h2>
+    <p id="totalsText">Loading statistics...</p>
+    <p id="leadersText">Loading leaders...</p>
+  </div>
+
+  <div class="filters-section">
+    <div class="filters-container">
+      <div class="filter-group">
+        <label for="yearFilter">Year:</label>
+        <select id="yearFilter">
+          <option value="All">All Years</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="seasonFilter">Season:</label>
+        <select id="seasonFilter">
+          <option value="All">All Seasons</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="filters-nav">
+
+  </div>
+
+  <div class="stats-table-container">
+    <div class="swipe-indicator">← Swipe left/right to see all columns →</div>
+    <table id="pitchingTable">
+      <thead>
+        <tr>
+          <th data-field="name">Name</th>
+          <th data-field="team">Team</th>
+          <th data-field="year">Year</th>
+          <th data-field="season">Season</th>
+          <th data-field="games">Games</th>
+          <th data-field="IP">Innings Pitched</th>
+          <th data-field="runsAllowed">Runs Allowed</th>
+          <th data-field="ERA">ERA</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Rows generated dynamically -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script type="module">
+  // UPDATED: Import Firebase functions with new helper
+  import { 
+    getAllPlayerStatsOptimized,
+    pitchingSeasonsObjectToArray
+  } from './firebase-data.js';
+
+  // Global variables
+  let allData = [];
+  let currentSort = { column: null, dir: "asc" };
+
+  // Helper function to capitalize strings
+  const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+
+  // Helper function to format player names from firstname_lastname to First Last
+function formatPlayerName(name) {
+  if (!name) return "";
+  
+  // If name already has spaces, capitalize each word properly
+  if (name.includes(' ')) {
+    return name.split(' ')
+      .map(word => {
+        // Handle special cases like DelleDonne, McDonald, etc.
+        if (word.toLowerCase() === 'delledonne') return 'DelleDonne';
+        if (word.toLowerCase() === 'mcdonald') return 'McDonald';
+        if (word.toLowerCase() === 'mccarthy') return 'McCarthy';
+		if (word.toLowerCase() === 'lacasse') return 'LaCasse';
+		if (word.toLowerCase() === 'mccabe') return 'McCabe';
+		if (word.toLowerCase() === "o'grady") return "O'Grady";
+		if (word.toLowerCase() === 'mcmahon') return 'McMahon';
+		if (word.toLowerCase() === 'mccorkell') return 'McCorkell';
+		if (word.toLowerCase() === 'denoble') return 'DeNoble';
+		if (word.toLowerCase() === 'digiacomo') return 'DiGiacomo';
+        // Add more special cases as needed
+        
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(' ');
+  }
+  
+  // If name has underscores, replace with spaces and capitalize
+  if (name.includes('_')) {
+    return name.split('_')
+      .map(word => {
+        // Handle special cases
+        if (word.toLowerCase() === 'delledonne') return 'DelleDonne';
+        if (word.toLowerCase() === 'mcdonald') return 'McDonald';
+        if (word.toLowerCase() === 'mccarthy') return 'McCarthy';
+        if (word.toLowerCase() === 'mccabe') return 'McCabe';
+		if (word.toLowerCase() === 'lacasse') return 'LaCasse';
+		        if (word.toLowerCase() === "o'grady") return "O'Grady";
+		if (word.toLowerCase() === 'mcmahon') return 'McMahon';
+				if (word.toLowerCase() === 'mccorkell') return 'McCorkell';
+		if (word.toLowerCase() === 'denoble') return 'DeNoble';
+		if (word.toLowerCase() === 'digiacomo') return 'DiGiacomo';
+		
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(' ');
+  }
+  
+  // Handle special cases for single words
+  if (name.toLowerCase() === 'delledonne') return 'DelleDonne';
+  if (name.toLowerCase() === 'mcdonald') return 'McDonald';
+  if (name.toLowerCase() === 'mccarthy') return 'McCarthy';
+  if (name.toLowerCase() === 'mccabe') return 'McCabe';
+  if (name.toLowerCase() === 'lacasse') return 'LaCasse';
+  if (name.toLowerCase() === "o'grady") return "O'Grady";
+  if (name.toLowerCase() === 'mcmahon') return 'McMahon';
+  		if (name.toLowerCase() === 'mccorkell') return 'McCorkell';
+		if (name.toLowerCase() === 'denoble') return 'DeNoble';
+		if (name.toLowerCase() === 'digiacomo') return 'DiGiacomo';
+  
+  
+  // Otherwise just capitalize the single name
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+}
+
+  function showLoadingIndicator() {
+    const indicator = document.getElementById('loadingIndicator');
+    if (indicator) indicator.style.display = 'block';
+  }
+
+  function hideLoadingIndicator() {
+    const indicator = document.getElementById('loadingIndicator');
+    if (indicator) indicator.style.display = 'none';
+  }
+
+  // UPDATED: Load data using optimized aggregated collection with object-keyed pitching seasons
+  async function loadData() {
+    const loadStartTime = performance.now();
+    console.log('⚡ Loading pitching data from aggregated collection (OPTIMIZED)...');
+    console.time('Total Load Time');
+    
+    showLoadingIndicator();
+    
+    try {
+      console.time('Fetch Aggregated Data');
+      const players = await getAllPlayerStatsOptimized();
+      console.timeEnd('Fetch Aggregated Data');
+      console.log(`✅ Loaded ${players?.length || 0} players from aggregated collection`);
+      
+      if (!players || players.length === 0) {
+        console.warn('⚠️ No player data found');
+        document.getElementById('totalsText').textContent = 'No player data available.';
+        hideLoadingIndicator();
+        return;
+      }
+      
+      // UPDATED: Process pitching seasons from OBJECT format (not array)
+      console.time('Process Pitching Data');
+      const allStats = [];
+
+      players.forEach(player => {
+        // CRITICAL CHANGE: pitchingSeasons is now an OBJECT with seasonId keys
+        if (player.pitchingSeasons && typeof player.pitchingSeasons === 'object') {
+          // Convert pitching seasons object to array for processing
+          const pitchingSeasonsArray = pitchingSeasonsObjectToArray(player);
+          
+          pitchingSeasonsArray.forEach(season => {
+            // Parse year and season from seasonId
+            // Format: "2024-fall" or "2025-spring"
+            let year = "";
+            let seasonName = "";
+            
+            if (season.seasonId) {
+              const parts = season.seasonId.split('-');
+              if (parts.length >= 2) {
+                year = parts[0];           // "2024"
+                seasonName = parts[1];     // "fall"
+              }
+            }
+            
+            // Fallback: try to get year and season from the season object directly
+            if (!year && season.year) year = season.year;
+            if (!seasonName && season.season) seasonName = season.season;
+            
+            // Map pitching stats with proper field names
+            // ERA is stored as earnedRunAverage in aggregated collection
+            let eraValue = "N/A";
+            if (season.earnedRunAverage !== undefined && season.earnedRunAverage !== null && season.earnedRunAverage !== "N/A") {
+              eraValue = Number(season.earnedRunAverage);
+            }
+            
+            allStats.push({
+              name: formatPlayerName(player.name || player.displayName || player.userId),
+              team: capitalize(season.team || player.currentTeam || ""),
+              year: year,
+              season: capitalize(seasonName),
+              games: Number(season.games) || 0,
+              IP: typeof season.inningsPitched === 'number' ? season.inningsPitched.toString() :
+                  (season.inningsPitched || "0"),
+              runsAllowed: Number(season.runsAllowed) || 0,
+              ERA: eraValue,
+              id: player.userId || player.id || "",
+              seasonId: season.seasonId || ""
+            });
+          });
+        }
+      });
+      
+      console.log(`✅ Processed ${allStats.length} pitching season records from ${players.length} players`);
+      
+      // Debug: Check ERA values
+      const erasFound = allStats.filter(s => s.ERA !== "N/A");
+      const erasNA = allStats.filter(s => s.ERA === "N/A");
+      console.log(`📊 ERA Stats: ${erasFound.length} with values, ${erasNA.length} N/A`);
+      if (erasFound.length > 0) {
+        console.log('📊 Sample ERA values:', erasFound.slice(0, 3).map(s => ({ 
+          name: s.name, 
+          ERA: s.ERA, 
+          IP: s.IP 
+        })));
+      }
+      
+      if (allStats.length === 0) {
+        console.warn('⚠️ No pitching data found in aggregated collection');
+        document.getElementById('totalsText').textContent = 'No pitching data available.';
+        hideLoadingIndicator();
+        return;
+      }
+      
+      allData = allStats;
+      console.timeEnd('Process Pitching Data');
+      
+      // Hide loading indicator
+      hideLoadingIndicator();
+      
+      console.time('Render UI');
+      populateFilters();
+      renderTable(allData);
+      console.timeEnd('Render UI');
+      
+      const loadEndTime = performance.now();
+      console.timeEnd('Total Load Time');
+      console.log(`🎉 Page loaded in ${(loadEndTime - loadStartTime).toFixed(0)}ms`);
+      
+    } catch (error) {
+      console.error('❌ Error loading data:', error);
+      hideLoadingIndicator();
+      document.body.innerHTML = `
+        <div class="page-container">
+          <h1>Error loading pitching statistics</h1>
+          <p>Error: ${error.message}</p>
+          <p><a href="index.html">Return to home</a></p>
+        </div>
+      `;
+    }
+  }
+
+  function populateFilters() {
+    const years = [...new Set(allData.map(p => p.year))].sort((a, b) => b.localeCompare(a));
+    const seasons = [...new Set(allData.map(p => p.season))].sort();
+
+    const yearFilter = document.getElementById("yearFilter");
+    const seasonFilter = document.getElementById("seasonFilter");
+
+    years.forEach(y => {
+      let opt = document.createElement("option");
+      opt.value = y;
+      opt.textContent = y;
+      yearFilter.appendChild(opt);
+    });
+
+    seasons.forEach(s => {
+      let opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = s;
+      seasonFilter.appendChild(opt);
+    });
+
+    yearFilter.addEventListener("change", applyFilters);
+    seasonFilter.addEventListener("change", applyFilters);
+  }
+
+  function applyFilters() {
+    const yearVal = document.getElementById("yearFilter").value;
+    const seasonVal = document.getElementById("seasonFilter").value;
+
+    let filtered = allData.filter(
+      p =>
+        (yearVal === "All" || p.year === yearVal) &&
+        (seasonVal === "All" || p.season === seasonVal)
+    );
+
+    renderTable(filtered);
+  }
+
+  function renderTable(data) {
+    const tbody = document.querySelector("#pitchingTable tbody");
+    tbody.innerHTML = "";
+
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8">No data matches the current filters.</td></tr>';
+      document.getElementById("totalsText").textContent = "No data to display.";
+      document.getElementById("leadersText").textContent = "";
+      return;
+    }
+
+    // Sort data by year (desc) → season (Fall > Summer > Spring) → team (alphabetical)
+    const seasonOrder = { 'Fall': 3, 'Summer': 2, 'Spring': 1 };
+    const sortedData = [...data].sort((a, b) => {
+      // Primary: Year (newest first)
+      if (a.year !== b.year) return b.year.localeCompare(a.year);
+      
+      // Secondary: Season (Fall > Summer > Spring)
+      const seasonA = seasonOrder[a.season] || 0;
+      const seasonB = seasonOrder[b.season] || 0;
+      if (seasonA !== seasonB) return seasonB - seasonA;
+      
+      // Tertiary: Team name (alphabetical)
+      return a.team.localeCompare(b.team);
+    });
+
+    // Calculate totals
+    let totals = {
+      games: 0,
+      totalIP: 0,
+      runsAllowed: 0,
+    };
+
+    data.forEach(p => {
+      totals.games += p.games;
+      totals.totalIP += parseFloat(p.IP) || 0;
+      totals.runsAllowed += p.runsAllowed;
+    });
+
+    // Find leaders - require 30 innings minimum for rate stats
+    const qualifyingPitchers = data.filter(p => parseFloat(p.IP) >= 30);
+    let leaders = {};
+    
+    // Games leader (most games)
+    let mostGames = data.reduce((prev, curr) =>
+      curr.games > prev.games ? curr : prev,
+      { games: -1 }
+    );
+    leaders.games = mostGames.name ? `${mostGames.name} (${mostGames.games})` : "N/A";
+
+    // Innings Pitched leader (most IP)
+    let mostIP = data.reduce((prev, curr) => {
+      let currIP = parseFloat(curr.IP) || 0;
+      let prevIP = parseFloat(prev.IP) || 0;
+      return currIP > prevIP ? curr : prev;
+    }, { IP: "0" });
+    leaders.IP = mostIP.name ? `${mostIP.name} (${mostIP.IP})` : "N/A";
+
+    // Fewest Runs Allowed leader (minimum 30 innings)
+    let fewestRuns = qualifyingPitchers.reduce((prev, curr) => {
+      return curr.runsAllowed < prev.runsAllowed ? curr : prev;
+    }, { runsAllowed: Infinity });
+    leaders.runsAllowed = fewestRuns.name ? 
+      `${fewestRuns.name} (${fewestRuns.runsAllowed})` : "N/A";
+
+    // Best ERA leader (minimum 30 innings)
+    let bestERA = qualifyingPitchers.reduce((prev, curr) => {
+      let currERA = (curr.ERA !== "N/A" && !isNaN(curr.ERA)) ? Number(curr.ERA) : Infinity;
+      let prevERA = (prev.ERA !== "N/A" && !isNaN(prev.ERA)) ? Number(prev.ERA) : Infinity;
+      return currERA < prevERA ? curr : prev;
+    }, { ERA: Infinity });
+    leaders.ERA = bestERA.name ? 
+      `${bestERA.name} (${Number(bestERA.ERA).toFixed(2)})` : "N/A";
+
+    // Update summary text
+    document.getElementById("totalsText").textContent =
+      `Totals — Games: ${totals.games}, Innings Pitched: ${totals.totalIP.toFixed(1)}, Runs Allowed: ${totals.runsAllowed}`;
+
+    document.getElementById("leadersText").innerHTML = `
+      Season Leaders — Games: ${leaders.games}, Innings Pitched: ${leaders.IP}, Fewest Runs Allowed: ${leaders.runsAllowed}, Best ERA: ${leaders.ERA}<br>
+      <small style="color: var(--text-light); font-size: 0.85rem;">* ERA and Fewest Runs Allowed require minimum 30 innings pitched</small><br>
+     
+    `;
+
+    // Generate table rows
+    sortedData.forEach(p => {
+      const row = document.createElement("tr");
+      
+      const ERA = p.ERA !== "N/A" && !isNaN(p.ERA)
+        ? Number(p.ERA).toFixed(2)
+        : "N/A";
+
+      row.innerHTML = `
+        <td><a href="pitcher.html?id=${encodeURIComponent(p.playerId || p.id)}">${p.name}</a></td>
+        <td><a href="team.html?team=${encodeURIComponent(p.team)}">${p.team}</a></td>
+        <td>${p.year}</td>
+        <td>${p.season}</td>
+        <td>${p.games}</td>
+        <td>${p.IP}</td>
+        <td>${p.runsAllowed}</td>
+        <td>${ERA}</td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    attachSorting();
+  }
+
+  function attachSorting() {
+    const headers = document.querySelectorAll("#pitchingTable th");
+    headers.forEach((th, idx) => {
+      th.onclick = () => sortTable(idx, th.getAttribute("data-field"));
+    });
+  }
+
+  function sortTable(columnIndex, field) {
+    const table = document.getElementById("pitchingTable");
+    const rows = Array.from(table.rows).slice(1);
+    const seasonOrder = { 'Fall': 3, 'Summer': 2, 'Spring': 1 };
+
+    let dir = currentSort.column === field && currentSort.dir === "asc" ? "desc" : "asc";
+    currentSort = { column: field, dir };
+
+    rows.sort((a, b) => {
+      let x = a.cells[columnIndex].innerText.trim();
+      let y = b.cells[columnIndex].innerText.trim();
+
+      let comparison = 0;
+
+      // Primary sort based on the clicked column
+      if (field === "year" || field === "season") {
+        // For year/season columns, sort by year → season → team
+        const yearA = a.cells[2].innerText.trim();
+        const yearB = b.cells[2].innerText.trim();
+        const seasonA = a.cells[3].innerText.trim();
+        const seasonB = b.cells[3].innerText.trim();
+        const teamA = a.cells[1].innerText.trim();
+        const teamB = b.cells[1].innerText.trim();
+        
+        if (yearA !== yearB) {
+          comparison = dir === "asc" ? yearA.localeCompare(yearB) : yearB.localeCompare(yearA);
+        } else {
+          const sOrderA = seasonOrder[seasonA] || 0;
+          const sOrderB = seasonOrder[seasonB] || 0;
+          if (sOrderA !== sOrderB) {
+            comparison = dir === "asc" ? sOrderA - sOrderB : sOrderB - sOrderA;
+          } else {
+            comparison = dir === "asc" ? teamA.localeCompare(teamB) : teamB.localeCompare(teamA);
+          }
+        }
+      } else if (field === "team") {
+        // For team column, sort by team first, then year/season
+        comparison = dir === "asc" ? x.localeCompare(y) : y.localeCompare(x);
+        
+        if (comparison === 0) {
+          const yearA = a.cells[2].innerText.trim();
+          const yearB = b.cells[2].innerText.trim();
+          if (yearA !== yearB) {
+            comparison = yearB.localeCompare(yearA); // Most recent first
+          } else {
+            const seasonA = a.cells[3].innerText.trim();
+            const seasonB = b.cells[3].innerText.trim();
+            const sOrderA = seasonOrder[seasonA] || 0;
+            const sOrderB = seasonOrder[seasonB] || 0;
+            comparison = sOrderB - sOrderA;
+          }
+        }
+      } else {
+        // For all other columns (stats), sort by the value with tie-breakers
+        
+        // Handle special cases
+        if (field === "ERA") {
+          // Move N/A values to the end
+          if (x === "N/A" && y !== "N/A") return 1;
+          if (y === "N/A" && x !== "N/A") return -1;
+          if (x === "N/A" && y === "N/A") comparison = 0;
+        }
+
+        if (comparison === 0) {
+          // Handle IP field (innings pitched can have decimals)
+          if (field === "IP") {
+            let xNum = parseFloat(x);
+            let yNum = parseFloat(y);
+            if (!isNaN(xNum) && !isNaN(yNum)) {
+              comparison = dir === "asc" ? xNum - yNum : yNum - xNum;
+            }
+          } else {
+            // Try parsing as numbers first
+            let xNum = parseFloat(x.replace(/,/g, ""));
+            let yNum = parseFloat(y.replace(/,/g, ""));
+
+            if (!isNaN(xNum) && !isNaN(yNum)) {
+              comparison = dir === "asc" ? xNum - yNum : yNum - xNum;
+            } else {
+              // Fall back to string comparison
+              comparison = dir === "asc" ? x.localeCompare(y) : y.localeCompare(x);
+            }
+          }
+        }
+        
+        // Tie-breaker: year → season → team
+        if (comparison === 0) {
+          const yearA = a.cells[2].innerText.trim();
+          const yearB = b.cells[2].innerText.trim();
+          if (yearA !== yearB) {
+            comparison = yearB.localeCompare(yearA); // Most recent first
+          } else {
+            const seasonA = a.cells[3].innerText.trim();
+            const seasonB = b.cells[3].innerText.trim();
+            const sOrderA = seasonOrder[seasonA] || 0;
+            const sOrderB = seasonOrder[seasonB] || 0;
+            if (sOrderA !== sOrderB) {
+              comparison = sOrderB - sOrderA;
+            } else {
+              const teamA = a.cells[1].innerText.trim();
+              const teamB = b.cells[1].innerText.trim();
+              comparison = teamA.localeCompare(teamB);
+            }
+          }
+        }
+      }
+
+      return comparison;
+    });
+
+    // Re-append sorted rows
+    rows.forEach(row => table.tBodies[0].appendChild(row));
+
+    // Update sort indicators
+    document.querySelectorAll("#pitchingTable th").forEach(th => th.classList.remove("asc", "desc"));
+    table.rows[0].cells[columnIndex].classList.add(dir);
+  }
+
+  // Initialize sorting
+  function initializeSorting() {
+    console.log('🔧 Initializing sorting...');
+    attachSorting();
+  }
+
+  // Initialize page when DOM is ready
+  function initPage() {
+    console.log('📄 Initializing page...');
+    initializeSorting();
+    loadData();
+  }
+
+  // Wait for DOM
+  if (document.readyState === 'loading') {
+    console.log('⏳ Waiting for DOM to load...');
+    document.addEventListener('DOMContentLoaded', initPage);
+  } else {
+    console.log('✅ DOM already loaded');
+    initPage();
+  }
+</script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="stat-tooltips.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

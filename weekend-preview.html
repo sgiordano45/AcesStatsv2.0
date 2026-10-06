@@ -1,0 +1,2739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekend Preview - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<link rel="stylesheet" href="dark-mode.css">
+
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: var(--text-dark);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.softball-spinner {
+  position: relative;
+}
+
+.softball-spinner::before {
+  content: '⚾';
+  font-size: 80px;
+  animation: spin 1.5s ease-in-out infinite;
+  display: block;
+}
+
+@keyframes spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+
+#news-banner-container {
+  position: relative;
+  z-index: 1000;
+  width: 100%;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  text-align: center;
+  padding: 4rem 2rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.header::after {
+  content: '🔮';
+  position: absolute;
+  bottom: -40px;
+  left: -40px;
+  font-size: 200px;
+  opacity: 0.05;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 3.5rem;
+  font-weight: 800;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.header p {
+  margin: 1rem 0 0 0;
+  font-size: 1.2rem;
+  opacity: 0.95;
+  position: relative;
+  z-index: 1;
+}
+
+/* Dashboard Container */
+.dashboard-container {
+  max-width: 1400px;
+  margin: 3rem auto;
+  padding: 0 2rem;
+}
+
+/* Navigation */
+.filters-nav {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.nav-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-link {
+  padding: 1rem 1.75rem;
+  border: 2px solid var(--primary-color);
+  background: white;
+  color: var(--primary-color);
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: var(--primary-color);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: -1;
+}
+
+.nav-link:hover::before {
+  transform: translateX(0);
+}
+
+.nav-link:hover {
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.nav-link.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* Section Title */
+.section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-dark);
+}
+
+.section-title::before {
+  content: "";
+  width: 8px;
+  height: 36px;
+  background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  border-radius: 4px;
+}
+
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, var(--border-color) 0%, transparent 100%);
+}
+
+/* Weather Module */
+.weather-module {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+.weather-module::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #2196F3 0%, #64B5F6 100%);
+}
+
+.weather-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.weather-header h3 {
+  margin: 0;
+  color: var(--text-dark);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.weather-icon {
+  font-size: 1.8rem;
+}
+
+.weather-content {
+  display: grid;
+  grid-template-columns: auto 1fr 2fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+.weather-image-section {
+  text-align: center;
+}
+
+.weather-image-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.weather-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.current-weather {
+  text-align: center;
+  min-width: 200px;
+}
+
+.temperature {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.weather-description {
+  font-size: 1.1rem;
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.weather-details {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+.forecast {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.forecast-item {
+  text-align: center;
+  background: #f8f9fa;
+  padding: 1rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.forecast-item:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-sm);
+}
+
+.forecast-day {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.forecast-temp {
+  font-size: 1.1rem;
+  color: var(--text-dark);
+  margin-bottom: 0.3rem;
+  font-weight: 700;
+}
+
+.forecast-desc {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  text-transform: capitalize;
+  line-height: 1.3;
+}
+
+.weather-loading, .weather-error {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-light);
+}
+
+.weather-status {
+  text-align: center;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #fff3cd;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #856404;
+}
+
+/* Weekend Info Box */
+.weekend-info {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.weekend-info::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+.weekend-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.weekend-info p {
+  margin: 0;
+  color: var(--text-light);
+  font-size: 1.1rem;
+}
+
+.weekend-info .loading {
+  padding: 2rem;
+  color: var(--text-light);
+}
+
+/* Games Grid */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 2rem;
+}
+
+/* Game Card */
+.game-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+
+.game-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+.game-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Share Tonight's Games button */
+.share-tonight-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: var(--primary, #2d5016);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.share-tonight-btn:hover { background: #1a6b4a; }
+.share-tonight-btn:active { transform: scale(0.97); }
+.share-tonight-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.share-week-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  margin-left: 8px;
+  padding: 8px 16px;
+  background: #1565c0;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.share-week-btn:hover { background: #0d47a1; }
+.share-week-btn:active { transform: scale(0.97); }
+.share-week-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Share button on each card */
+.card-share-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 8px;
+  padding: 5px 9px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #555;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s, transform 0.1s;
+  line-height: 1;
+}
+.card-share-btn:hover { background: rgba(255,255,255,1); transform: scale(1.05); }
+.card-share-btn:active { transform: scale(0.97); }
+
+/* Share modal */
+.share-card-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.share-card-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  position: relative;
+}
+.share-card-modal h3 { margin: 0 0 0.5rem; font-size: 1.05rem; color: #2d3748; }
+.share-card-modal p  { margin: 0 0 1.1rem; font-size: 0.85rem; color: #718096; }
+.share-card-modal-close {
+  position: absolute; top: 12px; right: 14px;
+  background: none; border: none; font-size: 1.3rem;
+  cursor: pointer; color: #718096; line-height: 1;
+}
+.share-card-opt {
+  display: flex; align-items: center; gap: 0.75rem;
+  width: 100%; padding: 0.85rem 1rem;
+  margin-bottom: 0.6rem;
+  background: #f7fafc; border: 1px solid #e2e8f0;
+  border-radius: 10px; cursor: pointer;
+  font-size: 0.875rem; text-align: left;
+  transition: background 0.15s;
+}
+.share-card-opt:hover { background: #edf2f7; }
+.share-card-opt.success { background: #f0fff4; border-color: #68d391; color: #276749; }
+.share-card-opt-icon { font-size: 1.4rem; flex-shrink: 0; }
+.share-card-opt-title { font-weight: 700; color: #2d3748; margin-bottom: 2px; }
+.share-card-opt-desc  { font-size: 0.78rem; color: #718096; }
+.share-card-opt.success .share-card-opt-title { color: #276749; }
+
+[data-theme="dark"] .card-share-btn { background: rgba(30,41,59,0.9); color: #cbd5e0; border-color: rgba(255,255,255,0.15); }
+[data-theme="dark"] .share-card-modal { background: #1e293b; }
+[data-theme="dark"] .share-card-modal h3 { color: #f1f5f9; }
+[data-theme="dark"] .share-card-opt { background: #334155; border-color: #475569; }
+[data-theme="dark"] .share-card-opt:hover { background: #3d5068; }
+[data-theme="dark"] .share-card-opt-title { color: #f1f5f9; }
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.game-date {
+  font-weight: 700;
+  color: var(--primary-color);
+  font-size: 1rem;
+}
+
+.game-type {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.teams-matchup {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.team-info {
+  text-align: center;
+}
+
+.team-logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  margin-bottom: 0.5rem;
+  border-radius: 50%;
+  background: white;
+  padding: 4px;
+  box-shadow: var(--shadow-sm);
+}
+
+.team-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 0.25rem;
+}
+
+.team-record {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.team-standing {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.vs-section {
+  text-align: center;
+}
+
+.vs-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-light);
+}
+
+.home-indicator {
+  font-size: 0.75rem;
+  color: var(--primary-color);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 0.25rem;
+}
+
+/* Game Odds */
+.game-odds {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
+}
+
+.odds-item {
+  text-align: center;
+}
+
+.odds-team {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 0.25rem;
+}
+
+.odds-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.odds-value.favorite {
+  color: var(--primary-color);
+}
+
+/* Key Players */
+.key-players {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.key-players h4 {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.players-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.team-players h5 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  text-align: center;
+}
+
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.player-name {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  text-align: center;
+  padding: 0.35rem;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+
+/* No Games Message */
+.no-games {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.no-games h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  color: var(--text-dark);
+}
+
+.no-games p {
+  color: var(--text-light);
+  margin-bottom: 1rem;
+}
+
+/* Connection Status */
+.connection-status {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.connection-status.online {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.connection-status.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 2rem;
+  }
+  
+  .header {
+    padding: 2.5rem 1.5rem;
+  }
+  
+  .dashboard-container {
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+  
+  .weather-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .forecast {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .games-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .teams-matchup {
+    grid-template-columns: 1fr auto 1fr;
+  }
+  
+  .team-logo {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .team-name {
+    font-size: 1.1rem;
+  }
+  
+  .nav-container {
+    justify-content: center;
+  }
+  
+  .nav-link {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .forecast {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .forecast-day {
+    padding: 0.75rem;
+  }
+  
+  .game-odds {
+    gap: 1rem;
+  }
+  
+  .odds-value {
+    font-size: 1rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<div id="news-banner-container"></div>
+
+<div class="filters-nav">
+</div>
+
+<header class="header">
+  <h1>Weekend Preview</h1>
+  <p>Upcoming matchups and game analysis</p>
+</header>
+
+<div class="connection-status hidden" id="connectionStatus">
+  <span class="status-icon">📡</span>
+  <span class="status-text">You're offline</span>
+</div>
+
+<div class="dashboard-container">
+
+
+  <div class="weather-module" id="weatherModule">
+    <div class="weather-loading">Loading weather forecast...</div>
+  </div>
+
+  <div class="weekend-info" id="weekendInfo">
+    <div class="loading">Loading weekend schedule...</div>
+  </div>
+
+  <div class="games-grid" id="gamesGrid">
+    <div class="loading">Loading upcoming games...</div>
+  </div>
+</div>
+
+<script src="team-colors.js"></script>
+<script type="module">
+// 2026+ UPDATE: Removed getSeasonPreviews import - preview data now comes from games collection
+import {
+  getCurrentSeason,
+  getSeasonGames,
+  getAllPlayerStatsOptimized,
+  db,
+  doc,
+  getDoc
+} from './firebase-data.js';
+
+// DIAGNOSTIC CODE - ADD THIS:
+setTimeout(() => {
+  console.log('🔍 Checking for Firebase persistence...');
+  indexedDB.databases().then(dbs => {
+    console.log('🔍 All IndexedDB databases:', dbs.map(db => db.name));
+    const fbDb = dbs.find(db => db.name === 'firebaseLocalStorageDb');
+    console.log(fbDb ? '✅ Firebase DB found!' : '❌ Firebase DB NOT found!');
+  });
+}, 2000);
+
+
+let allGames = [];
+let playerData = [];
+let currentSeasonData = null;
+let splitsCache = {};  // { playerId: { vsOpponent: { TeamName: { games, battingAverage, onBasePercentage } } } }
+let rosterIds   = {};  // { teamName: Set<playerId> }
+const today = new Date();
+today.setHours(0, 0, 0, 0); // Set to start of today
+
+const WEATHER_ZIP = "07092";
+const WEATHER_API_KEY = "c26153644bca587d9db1fc0256a01cf0";
+let forecastOverride = null;
+
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobileNavMenu');
+  menu.classList.toggle('open');
+}
+window.toggleMobileMenu = toggleMobileMenu;
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadWeekendData();
+  loadWeatherData();
+});
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  }, 800);
+});
+
+async function loadWeekendData() {
+  try {
+    console.log('📊 Loading weekend data from Firebase...');
+    
+    currentSeasonData = await getCurrentSeason();
+    console.log('✅ Current season:', currentSeasonData);
+    
+    // CHECK FOR NULL - If no cached season data, we can't load anything offline
+    if (!currentSeasonData) {
+      console.log('⚠️ No season data available');
+      throw new Error('No season data cached - please visit this page online first');
+    }
+    
+    const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+    
+    // 2026+ UPDATE: Only fetch games and players - preview data is now ON the game documents
+    const [games, players] = await Promise.all([
+      getSeasonGames(currentSeasonData.id),
+      getAllPlayerStatsOptimized()
+    ]);
+
+    console.log(`✅ Loaded: ${games?.length || 0} games, ${players?.length || 0} players`);
+    
+    // 2026+ UPDATE: Map games including preview fields directly from game documents
+    allGames = (games || []).map(g => {
+      let dateString = "";
+      
+      // Handle Firestore Timestamp objects (playoff games)
+      if (g.date && typeof g.date === 'object' && g.date.seconds) {
+        const dateObj = new Date(g.date.seconds * 1000);
+        dateString = dateObj.toLocaleDateString('en-US');
+      } 
+      // Handle Firestore Timestamp with toDate method
+      else if (g.date && typeof g.date === 'object' && typeof g.date.toDate === 'function') {
+        const dateObj = g.date.toDate();
+        dateString = dateObj.toLocaleDateString('en-US');
+      }
+      // Handle string dates (regular games)
+      else if (g.date && typeof g.date === 'string') {
+        dateString = g.date;
+      }
+      // No date set yet
+      else {
+        dateString = "";
+      }
+      
+      return {
+        "home team": g.homeTeamName || g["home team"] || capitalize(g.homeTeamId) || "",
+        "away team": g.awayTeamName || g["away team"] || capitalize(g.awayTeamId) || "",
+        "home score": g.homeScore !== undefined ? g.homeScore : (g["home score"] || null),
+        "away score": g.awayScore !== undefined ? g.awayScore : (g["away score"] || null),
+        winner: capitalize(g.winner || ""),
+        game_type: g.game_type === "Playoff" ? "Playoff" :
+                   g.gameType === "regular" ? "Regular" :
+                   g.gameType === "playoff" ? "Playoff" :
+                   capitalize(g.gameType) || "Regular",
+        date: dateString,
+        year: currentSeasonData.year.toString(),
+        season: capitalize(currentSeasonData.season),
+        id: g.id || "",
+        time: g.time || "",
+        round: g.round || "",
+        // 2026+ UPDATE: Include preview fields directly from game document
+        "home odds": g.homeOdds || null,
+        "away odds": g.awayOdds || null,
+        preview: g.preview || "",
+        previewStatus: g.previewStatus || g.status || "scheduled"
+      };
+    });
+    
+    playerData = [];
+    players.forEach(p => {
+      if (p.seasons && typeof p.seasons === 'object') {
+        const matchingKeys = Object.keys(p.seasons).filter(key =>
+          key.startsWith(currentSeasonData.id) && !key.endsWith('-sub')
+        );
+        
+        matchingKeys.forEach(seasonKey => {
+          const seasonStats = p.seasons[seasonKey];
+          playerData.push({
+            id: p.id || p.playerId || '',
+            name: p.name || p.displayName || p.id,
+            team: seasonStats.team || p.currentTeam || "",
+            year: currentSeasonData.year.toString(),
+            season: capitalize(currentSeasonData.season),
+            sub: "No",
+            atBats: Number(seasonStats.atBats) || 0,
+            AcesWar: seasonStats.acesBPI || seasonStats.AcesBPI || seasonStats.AcesWar || "N/A",
+            careerAcesBPI: (typeof p.career?.acesBPI === 'number') ? p.career.acesBPI : null,
+            careerAtBats:  (typeof p.career?.atBats  === 'number') ? p.career.atBats  : 0
+          });
+        });
+      }
+    });
+    
+    console.log(`✅ Mapped: ${allGames.length} games, ${playerData.length} player records`);
+
+    // Expose raw player docs + season ID for finals share card roster section
+    window._acesAllPlayers = players;
+    window._acesPlayerData = playerData; // processed records with numeric AcesWar/atBats/team
+    window._acesCurrentSeasonId = currentSeasonData.id;
+
+    await loadRostersAndSplits();
+
+    generateWeekendPreview();
+    
+  } catch (error) {
+    console.error('❌ Error loading weekend data:', error);
+    showError();
+  }
+}
+
+function parseGameDate(dateStr) {
+  return new Date(dateStr);
+}
+
+function getWeekendGames() {
+  const nextWeek = new Date(today);
+  nextWeek.setDate(today.getDate() + 7);
+  
+  return allGames.filter(g => {
+    const gameDate = parseGameDate(g.date);
+    const isFuture = gameDate >= today;
+    const isWithinWeek = gameDate <= nextWeek;
+    const noWinner = !g.winner || g.winner.trim() === "";
+    // Include both Regular and Playoff games
+    
+    return isFuture && isWithinWeek && noWinner;
+  }).sort((a, b) => parseGameDate(a.date) - parseGameDate(b.date));
+}
+
+function parseTimeString(timeStr) {
+  if (!timeStr) return 0;
+  
+  // Try to parse 12-hour format with AM/PM first (e.g., "9:00 AM", "12:30 PM")
+  const ampmMatch = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (ampmMatch) {
+    let hours = parseInt(ampmMatch[1]);
+    const minutes = parseInt(ampmMatch[2]);
+    const period = ampmMatch[3].toUpperCase();
+    
+    // Convert to 24-hour format
+    if (period === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+      hours = 0;
+    }
+    
+    return hours * 60 + minutes; // Return total minutes for easy comparison
+  }
+  
+  // Try to parse 24-hour format (e.g., "10:00", "14:30")
+  const twentyFourMatch = timeStr.match(/^(\d+):(\d+)$/);
+  if (twentyFourMatch) {
+    const hours = parseInt(twentyFourMatch[1]);
+    const minutes = parseInt(twentyFourMatch[2]);
+    return hours * 60 + minutes;
+  }
+  
+  return 0;
+}
+
+function calculateTeamRecord(teamName) {
+  const currentSeasonGames = allGames.filter(g =>
+    g.winner &&
+    g.winner.trim() !== "" &&
+    (g["home team"] === teamName || g["away team"] === teamName)
+  );
+
+  let wins = 0, losses = 0, ties = 0;
+  const teamLower = teamName.toLowerCase();
+  
+  currentSeasonGames.forEach(game => {
+    const winnerLower = (game.winner || "").toLowerCase();
+    if (winnerLower.includes("tie")) {
+      ties++;
+    } else if (winnerLower === teamLower) {
+      wins++;
+    } else {
+      losses++;
+    }
+  });
+
+  const totalGames = wins + losses + ties;
+  const winPct = totalGames > 0 ? (wins + ties * 0.5) / totalGames : 0;
+
+  return { wins, losses, ties, winPct };
+}
+
+function calculateTeamStanding(teamName) {
+  const completedGames = allGames.filter(g =>
+    parseGameDate(g.date) < today &&
+    g.winner &&
+    g.winner.trim() !== "" &&
+    g.game_type === 'Regular'
+  );
+  
+  const teamStats = {};
+  
+  completedGames.forEach(game => {
+    const homeTeam = game["home team"];
+    const awayTeam = game["away team"];
+    const winner = game.winner;
+    const homeScore = parseInt(game["home score"]) || 0;
+    const awayScore = parseInt(game["away score"]) || 0;
+
+    if (!teamStats[homeTeam]) {
+      teamStats[homeTeam] = {
+        name: homeTeam, wins: 0, losses: 0, ties: 0,
+        runsFor: 0, runsAgainst: 0, h2h: {}
+      };
+    }
+    if (!teamStats[awayTeam]) {
+      teamStats[awayTeam] = {
+        name: awayTeam, wins: 0, losses: 0, ties: 0,
+        runsFor: 0, runsAgainst: 0, h2h: {}
+      };
+    }
+
+    // Track runs
+    teamStats[homeTeam].runsFor += homeScore;
+    teamStats[homeTeam].runsAgainst += awayScore;
+    teamStats[awayTeam].runsFor += awayScore;
+    teamStats[awayTeam].runsAgainst += homeScore;
+
+    // Initialize h2h if needed
+    if (!teamStats[homeTeam].h2h[awayTeam]) {
+      teamStats[homeTeam].h2h[awayTeam] = { wins: 0, losses: 0, ties: 0 };
+    }
+    if (!teamStats[awayTeam].h2h[homeTeam]) {
+      teamStats[awayTeam].h2h[homeTeam] = { wins: 0, losses: 0, ties: 0 };
+    }
+
+    if (winner === "Tie") {
+      teamStats[homeTeam].ties++;
+      teamStats[awayTeam].ties++;
+      teamStats[homeTeam].h2h[awayTeam].ties++;
+      teamStats[awayTeam].h2h[homeTeam].ties++;
+    } else if (winner === homeTeam) {
+      teamStats[homeTeam].wins++;
+      teamStats[awayTeam].losses++;
+      teamStats[homeTeam].h2h[awayTeam].wins++;
+      teamStats[awayTeam].h2h[homeTeam].losses++;
+    } else if (winner === awayTeam) {
+      teamStats[awayTeam].wins++;
+      teamStats[homeTeam].losses++;
+      teamStats[awayTeam].h2h[homeTeam].wins++;
+      teamStats[homeTeam].h2h[awayTeam].losses++;
+    }
+  });
+
+  const preliminaryStandings = Object.values(teamStats).map(team => {
+    const totalGames = team.wins + team.losses + team.ties;
+    team.winPct = totalGames > 0 ? (team.wins + team.ties * 0.5) / totalGames : 0;
+    team.runDifferential = team.runsFor - team.runsAgainst;
+    return team;
+  });
+
+  // Helper function for head-to-head comparison
+  function compareHeadToHead(teamA, teamB) {
+    const aVsB = teamA.h2h[teamB.name];
+    const bVsA = teamB.h2h[teamA.name];
+    
+    if (!aVsB || !bVsA) return 0;
+    
+    const aH2HWinPct = (aVsB.wins + aVsB.losses) > 0 ? aVsB.wins / (aVsB.wins + aVsB.losses) : 0;
+    const bH2HWinPct = (bVsA.wins + bVsA.losses) > 0 ? bVsA.wins / (bVsA.wins + bVsA.losses) : 0;
+    
+    return bH2HWinPct - aH2HWinPct;
+  }
+
+  // Sort with proper tiebreakers (matching current-season.html)
+  const standings = preliminaryStandings.sort((a, b) => {
+    // 1. Win percentage (ties count as half-win)
+    if (Math.abs(a.winPct - b.winPct) > 0.00001) return b.winPct - a.winPct;
+
+    // 2. H2H — only if exactly 2 teams tied on win%
+    const teamsAtSamePct = preliminaryStandings.filter(t =>
+      Math.abs(t.winPct - a.winPct) <= 0.00001
+    );
+    if (teamsAtSamePct.length === 2) {
+      const h2hComp = compareHeadToHead(a, b);
+      if (h2hComp !== 0) return h2hComp;
+    }
+
+    // 3. Fewest runs against
+    if (a.runsAgainst !== b.runsAgainst) return a.runsAgainst - b.runsAgainst;
+
+    // 4. Run differential
+    return b.runDifferential - a.runDifferential;
+  });
+
+  const teamPosition = standings.findIndex(team => team.name === teamName) + 1;
+  return teamPosition > 0 ? teamPosition : null;
+}
+
+// 2026+ UPDATE: getGamePreview now returns the game object itself (which contains preview fields)
+// This is simpler since preview data is now directly on game objects
+function getGamePreview(homeTeam, awayTeam, gameDate) {
+  // Just return the game from allGames - it already has the preview fields
+  return allGames.find(g => {
+    const matchesTeams = (g["home team"] === homeTeam && g["away team"] === awayTeam);
+    const matchesDate = g.date === gameDate ||
+                       formatDateForComparison(g.date) === formatDateForComparison(gameDate);
+    return matchesTeams && matchesDate;
+  });
+}
+
+function formatDateForComparison(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+}
+
+function getTeamColor(teamName) {
+  const teamColors = {
+    'Black': '26, 26, 26',
+    'Green': '45, 125, 50',
+    'Red': '211, 47, 47',
+    'Blue': '25, 118, 210',
+    'White': '52, 58, 64',
+    'Orange': '245, 124, 0',
+    'Silver': '117, 117, 117',
+    'Purple': '123, 31, 162',
+    'Gold': '245, 127, 23',
+    'Carolina': '75, 156, 211',
+    'Army': '101, 67, 33'
+  };
+  
+  return teamColors[teamName] || null;
+}
+
+async function loadRostersAndSplits() {
+  // Collect unique teams from all loaded games
+  const teams = new Set();
+  allGames.forEach(g => {
+    if (g['home team']) teams.add(g['home team']);
+    if (g['away team']) teams.add(g['away team']);
+  });
+
+  const seasonId = currentSeasonData.id;
+
+  // Fetch all rosters in parallel
+  await Promise.all([...teams].map(async (team) => {
+    try {
+      const docId = `${seasonId}-${team.toLowerCase()}`;
+      const snap = await getDoc(doc(db, 'rosters', docId));
+      rosterIds[team] = snap.exists()
+        ? new Set((snap.data().players || []).flatMap(p => [p.id, p.authId].filter(Boolean)))
+        : new Set();
+    } catch (e) {
+      rosterIds[team] = new Set();
+    }
+  }));
+
+  // Collect all rostered player IDs
+  const allRosteredIds = [...new Set(
+    Object.values(rosterIds).flatMap(s => [...s])
+  )];
+
+  // Batch fetch splits for all rostered players
+  await Promise.all(allRosteredIds.map(async (pid) => {
+    if (splitsCache[pid]) return;
+    try {
+      const snap = await getDoc(doc(db, 'aggregatedPlayerStats2025Splits', pid));
+      if (snap.exists()) splitsCache[pid] = snap.data();
+    } catch (e) { /* silent */ }
+  }));
+
+  console.log(`Rosters loaded for ${Object.keys(rosterIds).length} teams, splits for ${Object.keys(splitsCache).length} players`);
+}
+
+function getTopPlayers(teamName, opponentTeam) {
+  if (!playerData || playerData.length === 0) return [];
+
+  const roster = rosterIds[teamName] || new Set();
+  const teamPlayers = playerData.filter(p => p.team === teamName && roster.has(p.id));
+
+  // Stage 1 — vs-opponent OBP, >= 2 games
+  if (opponentTeam) {
+    const vsOppCandidates = teamPlayers.map(p => {
+      const vsOpp = splitsCache[p.id]?.vsOpponent?.[opponentTeam];
+      return (vsOpp && vsOpp.games >= 2)
+        ? { ...p, _rank: vsOpp.onBasePercentage || 0 }
+        : null;
+    }).filter(Boolean).sort((a, b) => b._rank - a._rank).slice(0, 3);
+
+    if (vsOppCandidates.length > 0) return vsOppCandidates.map(p => p.name);
+  }
+
+  // Stage 2 — season AcesBPI with 2 × team games played AB threshold
+  const teamGamesPlayed = allGames.filter(g =>
+    g.winner && g.winner.trim() !== '' &&
+    (g['home team'] === teamName || g['away team'] === teamName)
+  ).length;
+  const minAtBats = teamGamesPlayed * 2;
+
+  const seasonCandidates = teamPlayers
+    .filter(p => typeof p.AcesWar === 'number' && p.AcesWar !== 'N/A' && p.atBats >= minAtBats)
+    .sort((a, b) => b.AcesWar - a.AcesWar)
+    .slice(0, 3);
+
+  // DEBUG — remove once key player logic is verified
+  const rosterSet = rosterIds[teamName] || new Set();
+  const byTeamOnly = playerData.filter(p => p.team === teamName);
+  const byRosterOnly = playerData.filter(p => rosterSet.has(p.id));
+  console.group(`🔍 Key Players: ${teamName} vs ${opponentTeam}`);
+  console.log(`Team games played: ${teamGamesPlayed}, min AB threshold: ${minAtBats}`);
+  console.log(`Roster set size for "${teamName}": ${rosterSet.size}`, [...rosterSet]);
+  console.log(`Players where p.team === "${teamName}" (${byTeamOnly.length}):`, byTeamOnly.map(p => `${p.name} | id:${p.id} | ${p.atBats}AB | BPI:${p.AcesWar}`));
+  console.log(`Players in roster set (${byRosterOnly.length}):`, byRosterOnly.map(p => `${p.name} | id:${p.id} | team:${p.team}`));
+  console.log('Final teamPlayers (both match):', teamPlayers.map(p => `${p.name} | ${p.atBats} AB | BPI: ${p.AcesWar}`));
+  console.log('Stage 2 qualifiers:', seasonCandidates.map(p => `${p.name} (BPI: ${p.AcesWar}, ABs: ${p.atBats})`));
+  console.groupEnd();
+
+  if (seasonCandidates.length > 0) return seasonCandidates.map(p => p.name);
+
+  // Stage 3 — career AcesBPI, min 20 career ABs
+  return teamPlayers
+    .filter(p => typeof p.careerAcesBPI === 'number' && p.careerAtBats >= 20)
+    .sort((a, b) => b.careerAcesBPI - a.careerAcesBPI)
+    .slice(0, 3)
+    .map(p => p.name);
+}
+
+async function loadWeatherData() {
+  try {
+    const forecastResponse = await fetch('forecast.json');
+    if (forecastResponse.ok) {
+      const forecastData = await forecastResponse.json();
+      if (forecastData && forecastData.length > 0 && forecastData[0].forecast) {
+        forecastOverride = forecastData[0].forecast.toLowerCase();
+        console.log('Loaded forecast override:', forecastOverride);
+      }
+    }
+  } catch (error) {
+    console.log('No forecast override file found');
+    forecastOverride = null;
+  }
+
+  if (WEATHER_API_KEY === "YOUR_API_KEY_HERE") {
+    document.getElementById('weatherModule').innerHTML = `
+      <div class="weather-error">
+        <div class="weather-header">
+          <span class="weather-icon">🌤️</span>
+          <h3>Weather for Mountainside, NJ</h3>
+        </div>
+        <p>Weather data unavailable - API key required</p>
+      </div>
+    `;
+    return;
+  }
+
+  const cachedWeather = getCachedWeather();
+  if (cachedWeather) {
+    console.log('Using cached weather data');
+    displayWeather(cachedWeather.current, cachedWeather.forecast);
+    return;
+  }
+
+  try {
+    console.log('Fetching fresh weather data from API');
+    const [currentResponse, forecastResponse] = await Promise.all([
+      fetch(`https://api.openweathermap.org/data/2.5/weather?zip=${WEATHER_ZIP},US&appid=${WEATHER_API_KEY}&units=imperial`),
+      fetch(`https://api.openweathermap.org/data/2.5/forecast?zip=${WEATHER_ZIP},US&appid=${WEATHER_API_KEY}&units=imperial`)
+    ]);
+
+    if (!currentResponse.ok || !forecastResponse.ok) {
+      throw new Error('Weather API request failed');
+    }
+
+    const currentWeather = await currentResponse.json();
+    const forecastData = await forecastResponse.json();
+
+    cacheWeatherData(currentWeather, forecastData);
+    displayWeather(currentWeather, forecastData);
+  } catch (error) {
+    console.error('Error loading weather:', error);
+    
+    const staleCache = getStaleWeatherCache();
+    if (staleCache) {
+      console.log('Using stale cached weather due to API error');
+      displayWeather(staleCache.current, staleCache.forecast, true);
+      return;
+    }
+    
+    document.getElementById('weatherModule').innerHTML = `
+      <div class="weather-error">
+        <div class="weather-header">
+          <span class="weather-icon">⚠️</span>
+          <h3>Weather Unavailable</h3>
+        </div>
+        <p>Unable to load weather data. Please try again later.</p>
+      </div>
+    `;
+  }
+}
+
+function getCachedWeather() {
+  try {
+    const cached = localStorage.getItem('weatherCache');
+    if (!cached) return null;
+    
+    const data = JSON.parse(cached);
+    const now = Date.now();
+    const cacheAge = now - data.timestamp;
+    const maxAge = 30 * 60 * 1000; // 30 minutes
+    
+    if (cacheAge > maxAge) return null;
+    
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+function getStaleWeatherCache() {
+  try {
+    const cached = localStorage.getItem('weatherCache');
+    if (!cached) return null;
+    return JSON.parse(cached);
+  } catch (e) {
+    return null;
+  }
+}
+
+function cacheWeatherData(current, forecast) {
+  try {
+    localStorage.setItem('weatherCache', JSON.stringify({
+      current,
+      forecast,
+      timestamp: Date.now()
+    }));
+  } catch (e) {
+    console.warn('Could not cache weather data');
+  }
+}
+
+function displayWeather(current, forecast, isStale = false) {
+  const weatherIcon = getWeatherIcon(current.weather[0].main);
+  
+  const dailyForecasts = [];
+  const processedDates = new Set();
+  let sundayWeather = null;
+  
+  forecast.list.forEach(item => {
+    const date = new Date(item.dt * 1000);
+    const dateString = date.toDateString();
+    
+    if (date.getDay() === 0 && !sundayWeather) {
+      sundayWeather = item.weather[0].main.toLowerCase();
+    }
+    
+    if (dateString !== today.toDateString() && !processedDates.has(dateString) && dailyForecasts.length < 3) {
+      processedDates.add(dateString);
+      dailyForecasts.push({
+        day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        temp: Math.round(item.main.temp),
+        description: item.weather[0].description,
+        icon: getWeatherIcon(item.weather[0].main)
+      });
+    }
+  });
+
+  let weatherImageSrc, weatherImageAlt;
+  
+  if (forecastOverride) {
+    if (forecastOverride === 'rain') {
+      weatherImageSrc = 'rainyweather.jpg';
+      weatherImageAlt = 'Rainy weather';
+    } else if (forecastOverride === 'sunny') {
+      weatherImageSrc = 'sunnyweather.png';
+      weatherImageAlt = 'Sunny weather';
+    } else {
+      const weatherCondition = sundayWeather || current.weather[0].main.toLowerCase();
+      const isRainyWeather = weatherCondition.includes('rain') ||
+                            weatherCondition.includes('thunderstorm') ||
+                            weatherCondition.includes('storm');
+      weatherImageSrc = isRainyWeather ? 'rainyweather.jpg' : 'sunnyweather.png';
+      weatherImageAlt = isRainyWeather ? 'Rainy weather' : 'Sunny weather';
+    }
+  } else {
+    const weatherCondition = sundayWeather || current.weather[0].main.toLowerCase();
+    const isRainyWeather = weatherCondition.includes('rain') ||
+                          weatherCondition.includes('thunderstorm') ||
+                          weatherCondition.includes('storm');
+    weatherImageSrc = isRainyWeather ? 'rainyweather.jpg' : 'sunnyweather.png';
+    weatherImageAlt = isRainyWeather ? 'Rainy weather' : 'Sunny weather';
+  }
+
+  const staleWarning = isStale ? `
+    <div style="background: rgba(255, 193, 7, 0.2); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem; color: #856404; text-align: center; font-weight: 600;">
+      ⚠️ Showing recent weather data - current conditions may vary
+    </div>
+  ` : '';
+
+  const weatherHTML = `
+    <div class="weather-header">
+      <span class="weather-icon">${weatherIcon}</span>
+      <h3>Weather for Mountainside, NJ</h3>
+    </div>
+    ${staleWarning}
+    <div class="weather-content">
+      <div class="weather-image-section">
+        <div class="weather-image-label">Weather Bear Gameday Forecast</div>
+        <img class="weather-image" 
+             src="${weatherImageSrc}" 
+             alt="${weatherImageAlt}"
+             onerror="this.style.display='none'">
+      </div>
+      
+      <div class="current-weather">
+        <div class="temperature">${Math.round(current.main.temp)}°F</div>
+        <div class="weather-description">${current.weather[0].description}</div>
+        <div class="weather-details">
+          Feels like ${Math.round(current.main.feels_like)}°F<br>
+          Humidity: ${current.main.humidity}%<br>
+          Wind: ${Math.round(current.wind?.speed || 0)} mph
+        </div>
+      </div>
+      
+      <div class="forecast">
+        ${dailyForecasts.map(day => `
+          <div class="forecast-item">
+            <div class="forecast-day">${day.day}</div>
+            <div class="weather-icon">${day.icon}</div>
+            <div class="forecast-temp">${day.temp}°F</div>
+            <div class="forecast-desc">${day.description}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('weatherModule').innerHTML = weatherHTML;
+}
+
+function getWeatherIcon(condition) {
+  const iconMap = {
+    'Clear': '☀️',
+    'Clouds': '☁️',
+    'Rain': '🌧️',
+    'Drizzle': '🌦️',
+    'Thunderstorm': '⛈️',
+    'Snow': '❄️',
+    'Mist': '🌫️',
+    'Fog': '🌫️',
+    'Haze': '🌫️'
+  };
+  return iconMap[condition] || '🌤️';
+}
+
+function generateWeekendPreview() {
+  const weekendGames = getWeekendGames();
+  
+  // Sort games by date and time
+  weekendGames.sort((a, b) => {
+    const dateA = parseGameDate(a.date);
+    const dateB = parseGameDate(b.date);
+    
+    // First sort by date
+    if (dateA.getTime() !== dateB.getTime()) {
+      return dateA - dateB;
+    }
+    
+    // If same date, sort by time from game object
+    const timeA = a.time;
+    const timeB = b.time;
+    
+    if (timeA && timeB) {
+      // Parse time strings (e.g., "9:00 AM", "12:30 PM", or "10:00" in 24-hour)
+      const parsedTimeA = parseTimeString(timeA);
+      const parsedTimeB = parseTimeString(timeB);
+      return parsedTimeA - parsedTimeB;
+    }
+    
+    return 0;
+  });
+  
+  
+  const weekendInfoElement = document.getElementById('weekendInfo');
+  weekendInfoElement.classList.remove('loading');
+  
+  if (weekendGames.length === 0) {
+    weekendInfoElement.innerHTML = `
+      <h3>No Upcoming Games</h3>
+      <p>No games scheduled for the next week</p>
+    `;
+    
+    const gamesGridElement = document.getElementById('gamesGrid');
+    gamesGridElement.innerHTML = `
+      <div class="no-games">
+        <h3>No Games This Weekend</h3>
+        <p>Check back later for upcoming matchups</p>
+        <a href="current-season.html" class="nav-link" style="display: inline-block; margin-top: 1rem;">
+          View Full Schedule
+        </a>
+      </div>
+    `;
+    return;
+  }
+
+  const earliestDate = parseGameDate(weekendGames[0].date);
+  const latestDate = parseGameDate(weekendGames[weekendGames.length - 1].date);
+  
+  let dateRangeText;
+  if (earliestDate.toDateString() === latestDate.toDateString()) {
+    dateRangeText = earliestDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric'
+    });
+  } else {
+    dateRangeText = `${earliestDate.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    })} - ${latestDate.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    })}`;
+  }
+
+  weekendInfoElement.innerHTML = `
+    <h3>Upcoming Games</h3>
+    <p>${weekendGames.length} games scheduled for ${dateRangeText}</p>
+    <button class="share-tonight-btn" onclick="shareTonightGames()">📤 Share Tonight's Games</button>
+    <button class="share-week-btn" onclick="shareWeekGames()">📅 Share This Week's Games</button>
+  `;
+
+  const gamesGridElement = document.getElementById('gamesGrid');
+  const gamesHtml = weekendGames.map((game, idx) => createGameCard(game, idx)).join('');
+  gamesGridElement.innerHTML = gamesHtml;
+}
+
+function createGameCard(game, cardIdx = 0) {
+  const homeTeam = game["home team"];
+  const awayTeam = game["away team"];
+  const gameDate = parseGameDate(game.date);
+  
+  const homeRecord = calculateTeamRecord(homeTeam);
+  const awayRecord = calculateTeamRecord(awayTeam);
+  
+  const homeStanding = calculateTeamStanding(homeTeam);
+  const awayStanding = calculateTeamStanding(awayTeam);
+  
+  // 2026+ UPDATE: Preview data is now directly on the game object
+  // No need to call getGamePreview() - just use the game object's fields
+  const homeRecordText = `${homeRecord.wins}-${homeRecord.losses}${homeRecord.ties > 0 ? `-${homeRecord.ties}` : ''}`;
+  const awayRecordText = `${awayRecord.wins}-${awayRecord.losses}${awayRecord.ties > 0 ? `-${awayRecord.ties}` : ''}`;
+  
+  const homeStandingText = homeStanding ? `#${homeStanding}` : 'NR';
+  const awayStandingText = awayStanding ? `#${awayStanding}` : 'NR';
+  
+  let gameDateTime;
+  // Check for time directly on game object
+  const gameTime = game.time;
+  
+  if (gameTime) {
+    const dateStr = gameDate.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+    // If time is in 24-hour format (e.g., "10:00"), convert to 12-hour with AM/PM
+    let displayTime = gameTime;
+    if (gameTime.match(/^\d{1,2}:\d{2}$/)) {
+      const [hours, minutes] = gameTime.split(':').map(Number);
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+      displayTime = `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    }
+    gameDateTime = `${dateStr} ${displayTime}`;
+  } else {
+    gameDateTime = gameDate.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  }
+
+  const homeTeamColor = getTeamColor(homeTeam);
+  const cardBackgroundStyle = homeTeamColor ?
+    `background: linear-gradient(135deg, rgba(${homeTeamColor}, 0.08) 0%, rgba(${homeTeamColor}, 0.02) 100%) !important;` :
+    '';
+
+  // 2026+ UPDATE: Get odds directly from game object
+  let oddsHtml = '';
+  if (game["home odds"] || game["away odds"]) {
+    const homeOdds = parseInt(game["home odds"] || 0);
+    const awayOdds = parseInt(game["away odds"] || 0);
+    
+    if (homeOdds !== 0 || awayOdds !== 0) {
+      const homeIsFavorite = homeOdds < 0 && (awayOdds > 0 || homeOdds > awayOdds);
+      const awayIsFavorite = awayOdds < 0 && (homeOdds > 0 || awayOdds > homeOdds);
+
+      oddsHtml = `
+        <div class="game-odds">
+          <div class="odds-item">
+            <div class="odds-team">${awayTeam}</div>
+            <div class="odds-value ${awayIsFavorite ? 'favorite' : ''}">${awayOdds > 0 ? '+' : ''}${awayOdds}</div>
+          </div>
+          <div class="odds-item">
+            <div class="odds-team">${homeTeam}</div>
+            <div class="odds-value ${homeIsFavorite ? 'favorite' : ''}">${homeOdds > 0 ? '+' : ''}${homeOdds}</div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  const homeTopPlayers = getTopPlayers(homeTeam, awayTeam);
+  const awayTopPlayers = getTopPlayers(awayTeam, homeTeam);
+  
+  let keyPlayersHtml = '';
+  if (homeTopPlayers.length > 0 || awayTopPlayers.length > 0) {
+    keyPlayersHtml = `
+      <div class="key-players">
+        <h4>Key Players</h4>
+        <div class="players-grid">
+          <div class="team-players">
+            <h5>${awayTeam}</h5>
+            <div class="player-list">
+              ${awayTopPlayers.length > 0 ? 
+                awayTopPlayers.map(player => `<span class="player-name">${player}</span>`).join('') :
+                '<span class="player-name">No data available</span>'
+              }
+            </div>
+          </div>
+          <div class="team-players">
+            <h5>${homeTeam}</h5>
+            <div class="player-list">
+              ${homeTopPlayers.length > 0 ? 
+                homeTopPlayers.map(player => `<span class="player-name">${player}</span>`).join('') :
+                '<span class="player-name">No data available</span>'
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // For playoff games with IDs, use game ID; otherwise use team names and date
+  const isPlayoffGame = game.id && game.id.startsWith('playoff_');
+  const previewLink = isPlayoffGame ? 
+    `game-preview.html?gameId=${encodeURIComponent(game.id)}` :
+    `game-preview.html?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&date=${encodeURIComponent(game.date)}`;
+
+  // Store shareable data on the window for the share handler
+  const shareKey = `game_card_${cardIdx}`;
+  const awayLogoPath = `logos/${awayTeam.toLowerCase().replace(/\s+/g, '_')}.png`;
+  const homeLogoPath = `logos/${homeTeam.toLowerCase().replace(/\s+/g, '_')}.png`;
+  window._shareCardData = window._shareCardData || {};
+  window._shareCardData[shareKey] = {
+    awayTeam, homeTeam, gameDateTime,
+    rawDate: game.date,
+    gameTime: game.time || null,
+    awayRecordText, homeRecordText,
+    awayStandingText, homeStandingText,
+    awayTopPlayers, homeTopPlayers,
+    gameType: game.game_type,
+    round: game.round || "",
+    awayLogoPath, homeLogoPath
+  };
+
+  return `
+    <a href="${previewLink}"
+       id="game-card-${cardIdx}"
+       class="game-card" style="${cardBackgroundStyle}">
+      <div class="game-header">
+        <div class="game-date">${gameDateTime}</div>
+        <div class="game-type">${game.game_type} Season</div>
+      </div>
+
+      <div class="teams-matchup">
+        <div class="team-info">
+          <img class="team-logo"
+               src="${awayLogoPath}"
+               alt="${awayTeam} logo"
+               onerror="this.style.display='none'">
+          <div class="team-name">${awayTeam}</div>
+          <div class="team-record">${awayRecordText}</div>
+          <div class="team-standing">${awayStandingText} in standings</div>
+        </div>
+
+        <div class="vs-section">
+          <div class="vs-text">@</div>
+          <div class="home-indicator">Home</div>
+        </div>
+
+        <div class="team-info">
+          <img class="team-logo"
+               src="${homeLogoPath}"
+               alt="${homeTeam} logo"
+               onerror="this.style.display='none'">
+          <div class="team-name">${homeTeam}</div>
+          <div class="team-record">${homeRecordText}</div>
+          <div class="team-standing">${homeStandingText} in standings</div>
+        </div>
+      </div>
+
+      ${oddsHtml}
+      ${keyPlayersHtml}
+      <button class="card-share-btn" onclick="event.preventDefault();event.stopPropagation();openCardShareModal('${shareKey}','game-card-${cardIdx}')" title="Share this matchup">
+        📤 Share
+      </button>
+    </a>
+  `;
+}
+
+function showError() {
+  const weekendInfoElement = document.getElementById('weekendInfo');
+  weekendInfoElement.classList.remove('loading');
+  weekendInfoElement.innerHTML = `
+    <h3>Error Loading Data</h3>
+    <p>Unable to load weekend games. Please try again later.</p>
+  `;
+  
+  document.getElementById('gamesGrid').innerHTML = `
+    <div class="no-games">
+      <h3>Error Loading Games</h3>
+      <p>There was an error loading the weekend schedule.</p>
+    </div>
+  `;
+}
+
+function updateConnectionStatus() {
+  const status = document.getElementById('connectionStatus');
+  if (!status) return;
+  
+  const icon = status.querySelector('.status-icon');
+  const text = status.querySelector('.status-text');
+  
+  if (navigator.onLine) {
+    // Show "Back online" message
+    status.classList.remove('hidden');  // SHOW IT FIRST
+    status.classList.add('online');
+    icon.textContent = '✅';
+    text.textContent = 'Back online';
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+      status.classList.add('hidden');
+    }, 3000);
+  } else {
+    // Show "You're offline" message
+    status.classList.remove('hidden', 'online');
+    icon.textContent = '📡';
+    text.textContent = "You're offline";
+  }
+}
+
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+if (!navigator.onLine) updateConnectionStatus();
+</script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="banner.js?v=3"></script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+
+<!-- Card Share Modal -->
+<div id="cardShareModal" class="share-card-modal-overlay" style="display:none;" onclick="if(event.target===this)closeCardShareModal()">
+  <div class="share-card-modal">
+    <button class="share-card-modal-close" onclick="closeCardShareModal()">&times;</button>
+    <h3>📤 Share Matchup</h3>
+    <p id="cardShareModalSubtitle">Choose how to share this game</p>
+    <button class="share-card-opt" id="cardShareImgBtn" onclick="shareCardImage()">
+      <span class="share-card-opt-icon">🖼️</span>
+      <span>
+        <div class="share-card-opt-title">Save as Image</div>
+        <div class="share-card-opt-desc">Download a PNG — perfect for group chats</div>
+      </span>
+    </button>
+    <button class="share-card-opt" id="cardShareTxtBtn" onclick="shareCardText()">
+      <span class="share-card-opt-icon">📋</span>
+      <span>
+        <div class="share-card-opt-title">Copy as Text</div>
+        <div class="share-card-opt-desc">Copy a quick matchup summary to clipboard</div>
+      </span>
+    </button>
+  </div>
+</div>
+
+<script>
+  let _activeShareKey = null;
+  let _activeCardId   = null;
+
+  function _getGameTier(d) {
+    const round = (d.round || '').toLowerCase();
+    if (/championship|finals?/.test(round)) return 'finals';
+    if (d.gameType === 'Playoff') return 'playoff';
+    return 'regular';
+  }
+
+  function openCardShareModal(shareKey, cardId) {
+    _activeShareKey = shareKey;
+    _activeCardId   = cardId;
+    const d = (window._shareCardData || {})[shareKey] || {};
+    const tier = _getGameTier(d);
+
+    // Style modal header based on game tier
+    const modal = document.querySelector('#cardShareModal .share-card-modal');
+    const h3 = modal ? modal.querySelector('h3') : null;
+    if (h3) {
+      if (tier === 'finals') {
+        h3.textContent = '🏆 Share Championship Game';
+        h3.style.color = '#92650a';
+      } else if (tier === 'playoff') {
+        h3.textContent = '🏆 Share Playoff Matchup';
+        h3.style.color = '#4a148c';
+      } else {
+        h3.textContent = '📤 Share Matchup';
+        h3.style.color = '';
+      }
+    }
+
+    document.getElementById('cardShareModalSubtitle').textContent =
+      d.awayTeam && d.homeTeam ? `${d.awayTeam} @ ${d.homeTeam}` : 'Choose how to share this game';
+    // Reset buttons
+    ['cardShareImgBtn','cardShareTxtBtn'].forEach(id => {
+      const btn = document.getElementById(id);
+      btn.classList.remove('success');
+    });
+    const imgDesc = tier === 'finals' ? 'Download a championship-themed PNG' :
+                    tier === 'playoff' ? 'Download a playoff-themed PNG' :
+                    'Download a PNG — perfect for group chats';
+    document.getElementById('cardShareImgBtn').innerHTML = `<span class="share-card-opt-icon">🖼️</span><span><div class="share-card-opt-title">Save as Image</div><div class="share-card-opt-desc">${imgDesc}</div></span>`;
+    document.getElementById('cardShareTxtBtn').innerHTML = `<span class="share-card-opt-icon">📋</span><span><div class="share-card-opt-title">Copy as Text</div><div class="share-card-opt-desc">Copy a quick matchup summary to clipboard</div></span>`;
+    document.getElementById('cardShareModal').style.display = 'flex';
+  }
+
+  function closeCardShareModal() {
+    document.getElementById('cardShareModal').style.display = 'none';
+    _activeShareKey = null;
+    _activeCardId   = null;
+  }
+
+  function _buildFinalsRosterHtml(awayTeam, homeTeam, theme) {
+    // Use the pre-processed playerData (window._acesPlayerData) — already has numeric AcesWar/atBats/team
+    const processed = window._acesPlayerData || [];
+    if (!processed.length) return '';
+
+    function getTeamRoster(teamName) {
+      const teamLower = teamName.toLowerCase();
+      // Match by team field (already extracted from season key)
+      const teamPlayers = processed.filter(p => (p.team || '').toLowerCase() === teamLower);
+
+      const batters = teamPlayers
+        .filter(p => typeof p.AcesWar === 'number' && p.atBats >= 3)
+        .sort((a, b) => b.AcesWar - a.AcesWar)
+        .slice(0, 9)
+        .map(p => ({ name: p.name, avg: p.AcesWar, ab: p.atBats }));
+
+      return { topBatters: batters, topPitcher: null };
+    }
+
+    const away = getTeamRoster(awayTeam);
+    const home = getTeamRoster(homeTeam);
+    if (!away.topBatters.length && !home.topBatters.length) return '';
+
+    const fmtAvg = v => typeof v === 'number' ? v.toFixed(1) : '---';
+    const fmtEra = v => typeof v === 'number' ? v.toFixed(2) : '---';
+
+    function buildCol(teamName, roster) {
+      const rows = roster.topBatters.map((p, i) => `
+        <div style="display:flex;align-items:baseline;gap:3px;padding:1px 0;font-size:0.66rem;line-height:1.35;color:#3d2400;">
+          <span style="color:#b8860b;font-weight:700;min-width:13px;">${i + 1}.</span>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</span>
+          <span style="font-weight:800;color:#7c5c00;flex-shrink:0;margin-left:3px;">${fmtAvg(p.avg)}</span>
+        </div>`).join('');
+
+      const pitcherHtml = roster.topPitcher ? `
+        <div style="margin-top:5px;padding-top:4px;border-top:1px solid rgba(246,200,75,0.6);">
+          <div style="font-size:0.58rem;font-weight:800;color:#92650a;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:2px;">⚾ Top Arm</div>
+          <div style="display:flex;align-items:baseline;gap:3px;font-size:0.66rem;color:#3d2400;">
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${roster.topPitcher.name}</span>
+            <span style="font-weight:800;color:#7c5c00;flex-shrink:0;">${fmtEra(roster.topPitcher.era)} ERA</span>
+          </div>
+        </div>` : '';
+
+      return `
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:0.63rem;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;color:#7c5c00;margin-bottom:4px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${teamName}</div>
+          <div style="display:flex;justify-content:space-between;font-size:0.58rem;font-weight:700;color:#b8860b;margin-bottom:2px;padding-bottom:2px;border-bottom:1px solid rgba(246,200,75,0.5);">
+            <span>Batter</span><span>BPI</span>
+          </div>
+          ${rows}
+          ${pitcherHtml}
+        </div>`;
+    }
+
+    return `
+      <div style="background:#fffbf0;border-radius:9px;padding:9px 11px;border:1px solid #f6c84b;margin-top:12px;">
+        <div style="font-size:0.62rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#92650a;margin-bottom:7px;text-align:center;">📋 Season Rosters</div>
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          ${buildCol(awayTeam, away)}
+          <div style="width:1px;background:#f6d365;flex-shrink:0;align-self:stretch;"></div>
+          ${buildCol(homeTeam, home)}
+        </div>
+      </div>`;
+  }
+
+  async function shareCardImage() {
+    const btn = document.getElementById('cardShareImgBtn');
+    btn.innerHTML = `<span class="share-card-opt-icon">⏳</span><span><div class="share-card-opt-title">Generating image…</div><div class="share-card-opt-desc">Just a moment</div></span>`;
+
+    try {
+      if (!window.html2canvas) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      const d = (window._shareCardData || {})[_activeShareKey] || {};
+      const tier = _getGameTier(d);
+
+      // Theme config per tier
+      const theme = tier === 'finals' ? {
+        headerBg:     'linear-gradient(135deg,#7c5c00 0%,#c8900a 50%,#7c5c00 100%)',
+        headerLabel:  '🏆 Championship Night',
+        accentColor:  '#92650a',
+        badgeBg:      'linear-gradient(135deg,#f6d365 0%,#fda085 100%)',
+        badgeText:    '🏆 CHAMPIONSHIP',
+        badgeColor:   '#5a3e00',
+        bodyBg:       'linear-gradient(180deg,#fffbf0 0%,#fff8e1 100%)',
+        borderColor:  '#f6c84b',
+        playersBg:    '#fffbf0',
+        playersBorder:'#f6d365',
+        vsColor:      '#92650a',
+        teamColor:    '#2d1a00',
+        stamp: `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-8deg);font-size:2.6rem;font-weight:900;color:rgba(198,140,10,0.13);letter-spacing:-1px;white-space:nowrap;pointer-events:none;user-select:none;">FINALS</div>`
+      } : tier === 'playoff' ? {
+        headerBg:     'linear-gradient(135deg,#1a237e 0%,#4a148c 100%)',
+        headerLabel:  '🏆 Playoff Preview',
+        accentColor:  '#4a148c',
+        badgeBg:      'linear-gradient(135deg,#6a1b9a 0%,#1a237e 100%)',
+        badgeText:    '🏆 PLAYOFFS',
+        badgeColor:   '#fff',
+        bodyBg:       'linear-gradient(180deg,#f5f3ff 0%,#ede7f6 100%)',
+        borderColor:  '#9c6ee8',
+        playersBg:    '#f3e8ff',
+        playersBorder:'#c084fc',
+        vsColor:      '#6a1b9a',
+        teamColor:    '#1a0533',
+        stamp: `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-8deg);font-size:2.6rem;font-weight:900;color:rgba(106,27,154,0.09);letter-spacing:-1px;white-space:nowrap;pointer-events:none;user-select:none;">PLAYOFFS</div>`
+      } : {
+        headerBg:     'linear-gradient(135deg,#2d5016 0%,#1a6b4a 100%)',
+        headerLabel:  '⚾ Weekend Preview',
+        accentColor:  '#2d5016',
+        badgeBg:      null,
+        badgeText:    null,
+        badgeColor:   null,
+        bodyBg:       '#ffffff',
+        borderColor:  '#e2e8f0',
+        playersBg:    '#f8fafc',
+        playersBorder:'#e2e8f0',
+        vsColor:      '#2d5016',
+        teamColor:    '#2d3748',
+        stamp:        ''
+      };
+
+      const roundLabel = d.round ? d.round : (tier === 'finals' ? 'Championship' : tier === 'playoff' ? 'Playoffs' : '');
+
+      // Pre-compute finals roster section (sync — data already in window._acesAllPlayers)
+      const finalsRosterHtml = tier === 'finals'
+        ? _buildFinalsRosterHtml(d.awayTeam || '', d.homeTeam || '', theme)
+        : '';
+
+      // Build off-screen render
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = `
+        position:fixed; top:-9999px; left:-9999px;
+        width:420px; background:#ffffff;
+        border-radius:16px; overflow:hidden;
+        font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+        box-shadow:0 4px 24px rgba(0,0,0,0.12);
+      `;
+
+      wrapper.innerHTML = `
+        <div style="background:${theme.headerBg};padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="color:#fff;font-weight:800;font-size:1rem;">${theme.headerLabel}</div>
+          <div style="color:rgba(255,255,255,0.8);font-size:0.75rem;font-weight:600;">acessoftballreference.com</div>
+        </div>
+        ${tier !== 'regular' ? `
+        <div style="background:${theme.badgeBg};padding:6px 20px;text-align:center;">
+          <span style="color:${tier === 'finals' ? '#5a3e00' : '#fff'};font-weight:900;font-size:0.8rem;letter-spacing:1.5px;text-transform:uppercase;">${theme.badgeText}${roundLabel && roundLabel.toLowerCase() !== (tier === 'finals' ? 'championship' : 'playoffs') ? ' · ' + roundLabel : ''}</span>
+        </div>` : ''}
+        <div style="background:${theme.bodyBg};padding:20px 24px;position:relative;">
+          ${theme.stamp}
+          <div style="font-size:0.78rem;color:#718096;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">${d.gameDateTime || ''}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
+            <div style="text-align:center;flex:1;">
+              <img src="${d.awayLogoPath || ''}" style="width:72px;height:72px;object-fit:contain;display:block;margin:0 auto 8px;" onerror="this.style.display='none';">
+              <div style="font-weight:800;font-size:1.05rem;color:${theme.teamColor};">${d.awayTeam || ''}</div>
+              <div style="font-size:0.8rem;color:#718096;margin-top:2px;">${d.awayRecordText || ''}</div>
+              <div style="font-size:0.72rem;color:#a0aec0;">${d.awayStandingText || ''}</div>
+            </div>
+            <div style="text-align:center;flex-shrink:0;">
+              <div style="font-size:1.4rem;font-weight:900;color:${theme.vsColor};">@</div>
+              ${tier === 'finals' ? '<div style="font-size:0.65rem;font-weight:800;color:#92650a;letter-spacing:1px;margin-top:2px;">WIN OR GO HOME</div>' : ''}
+              ${tier === 'playoff' ? '<div style="font-size:0.65rem;font-weight:800;color:#6a1b9a;letter-spacing:1px;margin-top:2px;">WIN OR GO HOME</div>' : ''}
+            </div>
+            <div style="text-align:center;flex:1;">
+              <img src="${d.homeLogoPath || ''}" style="width:72px;height:72px;object-fit:contain;display:block;margin:0 auto 8px;" onerror="this.style.display='none';">
+              <div style="font-weight:800;font-size:1.05rem;color:${theme.teamColor};">${d.homeTeam || ''}</div>
+              <div style="font-size:0.8rem;color:#718096;margin-top:2px;">${d.homeRecordText || ''}</div>
+              <div style="font-size:0.72rem;color:#a0aec0;">${d.homeStandingText || ''} in standings</div>
+            </div>
+          </div>
+          ${(d.awayTopPlayers?.length || d.homeTopPlayers?.length) ? `
+          <div style="background:${theme.playersBg};border-radius:10px;padding:12px 14px;border:1px solid ${theme.playersBorder};">
+            <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#718096;margin-bottom:8px;text-align:center;">Key Players</div>
+            <div style="display:flex;gap:12px;">
+              <div style="flex:1;text-align:center;">
+                <div style="font-size:0.72rem;font-weight:600;color:${theme.accentColor};margin-bottom:4px;">${d.awayTeam}</div>
+                ${(d.awayTopPlayers || []).map(p => `<div style="font-size:0.82rem;color:#2d3748;padding:2px 0;">${p}</div>`).join('')}
+              </div>
+              <div style="flex:1;text-align:center;">
+                <div style="font-size:0.72rem;font-weight:600;color:${theme.accentColor};margin-bottom:4px;">${d.homeTeam}</div>
+                ${(d.homeTopPlayers || []).map(p => `<div style="font-size:0.82rem;color:#2d3748;padding:2px 0;">${p}</div>`).join('')}
+              </div>
+            </div>
+          </div>` : ''}
+          ${finalsRosterHtml}
+          ${tier === 'finals' ? `<div style="margin-top:10px;text-align:center;font-size:0.82rem;font-weight:700;color:#92650a;letter-spacing:0.5px;">🏆 The biggest game of the season 🏆</div>` : ''}
+          <div style="margin-top:10px;font-size:0.72rem;color:#a0aec0;text-align:right;">Generated ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+        </div>
+      `;
+
+      document.body.appendChild(wrapper);
+      const canvas = await html2canvas(wrapper, { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false });
+      document.body.removeChild(wrapper);
+
+      const filename = `aces-${(d.awayTeam||'game').toLowerCase()}-vs-${(d.homeTeam||'game').toLowerCase()}-${new Date().toISOString().slice(0,10)}.png`;
+      await shareOrDownloadCanvas(canvas, filename);
+
+      btn.classList.add('success');
+      btn.innerHTML = `<span class="share-card-opt-icon">✅</span><span><div class="share-card-opt-title">Done!</div><div class="share-card-opt-desc">Shared or saved successfully</div></span>`;
+      setTimeout(closeCardShareModal, 2000);
+
+    } catch(err) {
+      console.error('Card share image error:', err);
+      btn.innerHTML = `<span class="share-card-opt-icon">🖼️</span><span><div class="share-card-opt-title">Save as Image</div><div class="share-card-opt-desc">Error — try again</div></span>`;
+    }
+  }
+
+  function getTeamHex(teamName) {
+    const colors = {
+      green:'#2d7d32', red:'#d32f2f', black:'#424242', blue:'#1976d2',
+      gold:'#CFB53B', carolina:'#4b9cd3', army:'#654321', orange:'#f57c00',
+      purple:'#7b1fa2', silver:'#bdbdbd', white:'#9e9e9e', teal:'#00897b'
+    };
+    if (!teamName) return null;
+    return colors[teamName.toLowerCase()] || null;
+  }
+
+  function shareCardText() {
+    const btn = document.getElementById('cardShareTxtBtn');
+    const d = (window._shareCardData || {})[_activeShareKey] || {};
+    const tier = _getGameTier(d);
+    const roundLabel = d.round || '';
+
+    let lines = [];
+
+    if (tier === 'finals') {
+      lines = [
+        `🏆🔥 CHAMPIONSHIP NIGHT 🔥🏆`,
+        ``,
+        `${d.awayTeam} vs. ${d.homeTeam}`,
+        `📅 ${d.gameDateTime || ''}`,
+        roundLabel ? `🏆 ${roundLabel}` : '',
+        ``,
+        `The biggest game of the season — winner takes all.`,
+        ``,
+        `${d.awayTeam}: ${d.awayRecordText || '—'} (${d.awayStandingText || '—'} in standings)`,
+        `${d.homeTeam}: ${d.homeRecordText || '—'} (${d.homeStandingText || '—'} in standings)`,
+      ].filter(l => l !== undefined);
+    } else if (tier === 'playoff') {
+      lines = [
+        `🏆 PLAYOFF TIME`,
+        ``,
+        `${d.awayTeam} @ ${d.homeTeam}`,
+        `📅 ${d.gameDateTime || ''}`,
+        roundLabel ? `Round: ${roundLabel}` : '',
+        ``,
+        `Win or go home — it all comes down to tonight.`,
+        ``,
+        `${d.awayTeam}: ${d.awayRecordText || '—'} (${d.awayStandingText || '—'} in standings)`,
+        `${d.homeTeam}: ${d.homeRecordText || '—'} (${d.homeStandingText || '—'} in standings)`,
+      ].filter(l => l !== undefined);
+    } else {
+      lines = [
+        `⚾ ${d.awayTeam} @ ${d.homeTeam}`,
+        `📅 ${d.gameDateTime || ''}`,
+        '',
+        `${d.awayTeam}: ${d.awayRecordText || '—'} (${d.awayStandingText || '—'} in standings)`,
+        `${d.homeTeam}: ${d.homeRecordText || '—'} (${d.homeStandingText || '—'} in standings)`,
+      ];
+    }
+
+    // Remove blank roundLabel lines
+    lines = lines.filter(l => l !== '');
+
+    if (d.awayTopPlayers?.length || d.homeTopPlayers?.length) {
+      lines.push('');
+      lines.push('🔑 Key Players');
+      if (d.awayTopPlayers?.length) lines.push(`${d.awayTeam}: ${d.awayTopPlayers.join(', ')}`);
+      if (d.homeTopPlayers?.length) lines.push(`${d.homeTeam}: ${d.homeTopPlayers.join(', ')}`);
+    }
+
+    lines.push('');
+    lines.push('acessoftballreference.com');
+
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      btn.classList.add('success');
+      btn.innerHTML = `<span class="share-card-opt-icon">✅</span><span><div class="share-card-opt-title">Copied!</div><div class="share-card-opt-desc">Paste it anywhere</div></span>`;
+      setTimeout(closeCardShareModal, 2000);
+    }).catch(() => {
+      alert('Could not copy to clipboard.');
+    });
+  }
+
+  // ── Share Tonight's Games ─────────────────────────────────────────────────
+  async function shareTonightGames() {
+    const btn = document.querySelector('.share-tonight-btn');
+    if (!btn) return;
+    const origLabel = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Generating…';
+
+    try {
+      // Load html2canvas if needed
+      if (!window.html2canvas) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      // Get today's date string (YYYY-MM-DD) for comparison
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      // Gather tonight's games from _shareCardData
+      const allCards = Object.values(window._shareCardData || {});
+      const tonightCards = allCards.filter(d => {
+        if (!d.rawDate) return false;
+        // rawDate may be "2026-05-04" or "May 4, 2026" — normalize via Date parse
+        const parsed = new Date(d.rawDate);
+        if (isNaN(parsed)) return false;
+        return parsed.toISOString().slice(0, 10) === todayStr;
+      });
+
+      if (!tonightCards.length) {
+        btn.innerHTML = origLabel;
+        btn.disabled = false;
+        alert('No games found for tonight.');
+        return;
+      }
+
+      // Group double-headers: two games with the same pair of teams
+      // Canonical matchup key: sorted team names joined with '_'
+      const matchupMap = new Map();
+      tonightCards.forEach(d => {
+        const key = [d.awayTeam, d.homeTeam].map(t => t.toLowerCase()).sort().join('_');
+        if (!matchupMap.has(key)) {
+          matchupMap.set(key, { games: [], key });
+        }
+        matchupMap.get(key).games.push(d);
+      });
+
+      // Build the date label
+      const tonightLabel = new Date().toLocaleDateString('en-US', {
+        weekday: 'long', month: 'long', day: 'numeric'
+      });
+
+      // Build off-screen wrapper
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = `
+        position:fixed; top:-9999px; left:-9999px;
+        width:460px; background:#ffffff;
+        border-radius:16px; overflow:hidden;
+        font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+        box-shadow:0 4px 24px rgba(0,0,0,0.12);
+      `;
+
+      // Detect if any of tonight's games are playoffs/finals for header theming
+      const hasFinalsTonight = tonightCards.some(c => _getGameTier(c) === 'finals');
+      const hasPlayoffTonight = !hasFinalsTonight && tonightCards.some(c => _getGameTier(c) === 'playoff');
+
+      const tonightHeaderBg = hasFinalsTonight
+        ? 'linear-gradient(135deg,#7c5c00 0%,#c8900a 50%,#7c5c00 100%)'
+        : hasPlayoffTonight
+        ? 'linear-gradient(135deg,#1a237e 0%,#4a148c 100%)'
+        : 'linear-gradient(135deg,#2d5016 0%,#1a6b4a 100%)';
+
+      const tonightHeaderLabel = hasFinalsTonight
+        ? '🏆 Championship Night'
+        : hasPlayoffTonight
+        ? '🏆 Playoff Night'
+        : '⚾ Tonight\'s Games';
+
+      const tonightSubheaderBg = hasFinalsTonight
+        ? '#fffbf0'
+        : hasPlayoffTonight
+        ? '#f5f3ff'
+        : '#f0fdf4';
+
+      const tonightSubheaderBorder = hasFinalsTonight
+        ? '#f6d365'
+        : hasPlayoffTonight
+        ? '#c084fc'
+        : '#d1fae5';
+
+      const tonightSubheaderColor = hasFinalsTonight
+        ? '#92650a'
+        : hasPlayoffTonight
+        ? '#4a148c'
+        : '#2d5016';
+
+      // Header
+      let html = `
+        <div style="background:${tonightHeaderBg};padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="color:#fff;font-weight:800;font-size:1rem;">${tonightHeaderLabel}</div>
+          <div style="color:rgba(255,255,255,0.8);font-size:0.75rem;font-weight:600;">acessoftballreference.com</div>
+        </div>
+        <div style="padding:6px 20px 4px;background:${tonightSubheaderBg};border-bottom:1px solid ${tonightSubheaderBorder};">
+          <div style="font-size:0.78rem;font-weight:700;color:${tonightSubheaderColor};text-transform:uppercase;letter-spacing:0.5px;">${tonightLabel}</div>
+        </div>
+        <div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px;">
+      `;
+
+      // One block per matchup group
+      matchupMap.forEach(({ games }) => {
+        // Use first game for team/player/record info (same teams regardless of home/away flip)
+        const d = games[0];
+        const awayColor = getTeamHex(d.awayTeam);
+        const homeColor = getTeamHex(d.homeTeam);
+
+        // Collect game times
+        const times = games
+          .map(g => g.gameTime || (g.gameDateTime || '').split(' ').slice(-2).join(' '))
+          .filter(Boolean)
+          .join(' & ');
+
+        // Merge key players by TEAM NAME, not by home/away position
+        // (double-headers flip home/away, so flatMapping position gives wrong results)
+        const teamPlayerMap = new Map();
+        games.forEach(g => {
+          if (!teamPlayerMap.has(g.awayTeam)) teamPlayerMap.set(g.awayTeam, new Set());
+          if (!teamPlayerMap.has(g.homeTeam)) teamPlayerMap.set(g.homeTeam, new Set());
+          (g.awayTopPlayers || []).forEach(p => teamPlayerMap.get(g.awayTeam).add(p));
+          (g.homeTopPlayers || []).forEach(p => teamPlayerMap.get(g.homeTeam).add(p));
+        });
+
+        // Use first game's away/home for display order
+        const awayTeam = d.awayTeam;
+        const homeTeam = d.homeTeam;
+        const awayPlayers = [...(teamPlayerMap.get(awayTeam) || [])];
+        const homePlayers = [...(teamPlayerMap.get(homeTeam) || [])];
+
+        // Determine tier for this matchup group
+        const blockTier = _getGameTier(d);
+        const blockTheme = blockTier === 'finals' ? {
+          wrapperBg:    'linear-gradient(135deg,#7c5c00 0%,#c8900a 50%,#7c5c00 100%)',
+          innerBg:      'linear-gradient(180deg,#fffbf0 0%,#fff8e1 100%)',
+          border:       '#f6c84b',
+          badgeBg:      'linear-gradient(135deg,#f6d365 0%,#fda085 100%)',
+          badgeText:    '🏆 CHAMPIONSHIP',
+          badgeColor:   '#5a3e00',
+          metaColor:    '#92650a',
+          vsColor:      '#92650a',
+          teamColor:    '#2d1a00',
+          playerLabel:  '#92650a',
+          playerDiv:    '#f6d365',
+          footerText:   `<div style="text-align:center;font-size:0.72rem;font-weight:700;color:#92650a;margin-top:10px;letter-spacing:0.5px;">🏆 Biggest game of the season 🏆</div>`
+        } : blockTier === 'playoff' ? {
+          wrapperBg:    'linear-gradient(135deg,#1a237e 0%,#4a148c 100%)',
+          innerBg:      'linear-gradient(180deg,#f5f3ff 0%,#ede7f6 100%)',
+          border:       '#9c6ee8',
+          badgeBg:      'linear-gradient(135deg,#6a1b9a 0%,#1a237e 100%)',
+          badgeText:    '🏆 PLAYOFFS',
+          badgeColor:   '#fff',
+          metaColor:    '#6a1b9a',
+          vsColor:      '#6a1b9a',
+          teamColor:    '#1a0533',
+          playerLabel:  '#6a1b9a',
+          playerDiv:    '#c084fc',
+          footerText:   `<div style="text-align:center;font-size:0.72rem;font-weight:700;color:#6a1b9a;margin-top:10px;letter-spacing:0.5px;">⚔️ Win or go home</div>`
+        } : {
+          wrapperBg:    null,
+          innerBg:      '#f8fafc',
+          border:       '#e2e8f0',
+          badgeBg:      null,
+          badgeText:    null,
+          badgeColor:   null,
+          metaColor:    '#718096',
+          vsColor:      '#2d5016',
+          teamColor:    '#2d3748',
+          playerLabel:  '#2d5016',
+          playerDiv:    '#e2e8f0',
+          footerText:   ''
+        };
+
+        const roundLabelBlock = d.round || '';
+        const metaLabel = blockTier !== 'regular'
+          ? `${times ? times + ' · ' : ''}${roundLabelBlock || (blockTier === 'finals' ? 'Championship' : 'Playoffs')}${games.length > 1 ? ' · Doubleheader' : ''}`
+          : `${times ? times + ' · ' : ''}${d.gameType || 'Regular'} Season${games.length > 1 ? ' · Doubleheader' : ''}`;
+
+        const wrapperDiv = blockTier !== 'regular'
+          ? `<div style="background:${blockTheme.wrapperBg};border-radius:14px;padding:3px;">`
+          : `<div style="border-radius:12px;">`;
+
+        html += `
+          ${wrapperDiv}
+          ${blockTier !== 'regular' ? `<div style="background:${blockTheme.badgeBg};border-radius:11px 11px 0 0;padding:5px 16px;text-align:center;"><span style="color:${blockTheme.badgeColor};font-weight:900;font-size:0.72rem;letter-spacing:1.2px;">${blockTheme.badgeText}</span></div>` : ''}
+          <div style="background:${blockTheme.innerBg};border-radius:${blockTier !== 'regular' ? '0 0 11px 11px' : '12px'};padding:14px 16px;border:${blockTier === 'regular' ? '1px solid ' + blockTheme.border : 'none'};">
+            <div style="font-size:0.72rem;color:${blockTheme.metaColor};font-weight:600;margin-bottom:10px;text-align:center;text-transform:uppercase;letter-spacing:0.4px;">
+              ${metaLabel}
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;">
+              <div style="text-align:center;flex:1;">
+                <img src="${d.awayLogoPath || ''}" style="width:64px;height:64px;object-fit:contain;display:block;margin:0 auto 6px;" onerror="this.style.display='none';">
+                <div style="font-weight:800;font-size:0.95rem;color:${blockTheme.teamColor};">${awayTeam}</div>
+                <div style="font-size:0.75rem;color:#718096;">${d.awayRecordText || ''}</div>
+              </div>
+              <div style="text-align:center;flex-shrink:0;">
+                <div style="font-size:1.2rem;font-weight:900;color:${blockTheme.vsColor};">@</div>
+                ${blockTier !== 'regular' ? `<div style="font-size:0.6rem;font-weight:800;color:${blockTheme.vsColor};letter-spacing:0.8px;margin-top:2px;">WIN OR</div><div style="font-size:0.6rem;font-weight:800;color:${blockTheme.vsColor};letter-spacing:0.8px;">GO HOME</div>` : ''}
+              </div>
+              <div style="text-align:center;flex:1;">
+                <img src="${d.homeLogoPath || ''}" style="width:64px;height:64px;object-fit:contain;display:block;margin:0 auto 6px;" onerror="this.style.display='none';">
+                <div style="font-weight:800;font-size:0.95rem;color:${blockTheme.teamColor};">${homeTeam}</div>
+                <div style="font-size:0.75rem;color:#718096;">${d.homeRecordText || ''}</div>
+              </div>
+            </div>
+            ${blockTier === 'finals'
+              ? _buildFinalsRosterHtml(awayTeam, homeTeam, blockTheme)
+              : (awayPlayers.length || homePlayers.length) ? `
+            <div style="display:flex;gap:10px;padding-top:10px;border-top:1px solid ${blockTheme.playerDiv};">
+              <div style="flex:1;text-align:center;">
+                <div style="font-size:0.68rem;font-weight:700;color:${blockTheme.playerLabel};text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">${awayTeam}</div>
+                ${awayPlayers.map(p => `<div style="font-size:0.78rem;color:#2d3748;padding:1px 0;">${p}</div>`).join('')}
+              </div>
+              <div style="flex:1;text-align:center;">
+                <div style="font-size:0.68rem;font-weight:700;color:${blockTheme.playerLabel};text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">${homeTeam}</div>
+                ${homePlayers.map(p => `<div style="font-size:0.78rem;color:#2d3748;padding:1px 0;">${p}</div>`).join('')}
+              </div>
+            </div>` : ''}
+            ${blockTheme.footerText}
+          </div>
+          </div>
+        `;
+      });
+
+      html += `
+          <div style="font-size:0.68rem;color:#a0aec0;text-align:right;padding-top:2px;">Generated ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+        </div>
+      `;
+
+      wrapper.innerHTML = html;
+      document.body.appendChild(wrapper);
+      const canvas = await html2canvas(wrapper, { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false });
+      document.body.removeChild(wrapper);
+
+      const dateSlug = new Date().toISOString().slice(0,10);
+      await shareOrDownloadCanvas(canvas, `aces-tonight-${dateSlug}.png`);
+
+      btn.innerHTML = '✅ Done!';
+      setTimeout(() => { btn.innerHTML = origLabel; btn.disabled = false; }, 2500);
+
+    } catch(err) {
+      console.error('shareTonightGames error:', err);
+      btn.innerHTML = origLabel;
+      btn.disabled = false;
+    }
+  }
+
+  // Shared helper: use native share sheet on mobile iOS/Android, download on desktop
+  // ── Share This Week's Games ───────────────────────────────────────────────
+  async function shareWeekGames() {
+    const btn = document.querySelector('.share-week-btn');
+    if (!btn) return;
+    const origLabel = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Generating…';
+
+    try {
+      if (!window.html2canvas) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      const todayNorm = new Date();
+      todayNorm.setHours(0, 0, 0, 0);
+      const nextWeek = new Date(todayNorm);
+      nextWeek.setDate(todayNorm.getDate() + 7);
+
+      const allCards = Object.values(window._shareCardData || {});
+      const weekCards = allCards.filter(d => {
+        if (!d.rawDate) return false;
+        const parsed = new Date(d.rawDate);
+        if (isNaN(parsed)) return false;
+        const p = new Date(parsed); p.setHours(0, 0, 0, 0);
+        return p >= todayNorm && p <= nextWeek;
+      });
+
+      if (!weekCards.length) {
+        btn.innerHTML = origLabel; btn.disabled = false;
+        alert('No upcoming games found for this week.');
+        return;
+      }
+
+      // Group by date, then canonical matchup within each date
+      const byDate = new Map();
+      weekCards.forEach(d => {
+        const parsed = new Date(d.rawDate);
+        const p = new Date(parsed); p.setHours(0, 0, 0, 0);
+        const dateKey = p.toISOString().slice(0, 10);
+        if (!byDate.has(dateKey)) byDate.set(dateKey, { date: p, matchups: new Map() });
+        const mk = [d.awayTeam, d.homeTeam].map(t => t.toLowerCase()).sort().join('_');
+        const entry = byDate.get(dateKey);
+        if (!entry.matchups.has(mk)) entry.matchups.set(mk, { games: [] });
+        entry.matchups.get(mk).games.push(d);
+      });
+
+      const sortedDates = [...byDate.entries()].sort((a, b) => a[1].date - b[1].date);
+      const firstDate = sortedDates[0][1].date;
+      const lastDate  = sortedDates[sortedDates.length - 1][1].date;
+      const rangeLabel = firstDate.toDateString() === lastDate.toDateString()
+        ? firstDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+        : firstDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          + ' – '
+          + lastDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+      const hasAnyPlayoff = weekCards.some(c => _getGameTier(c) !== 'regular');
+      const headerBg = hasAnyPlayoff
+        ? 'linear-gradient(135deg,#1a237e 0%,#4a148c 100%)'
+        : 'linear-gradient(135deg,#2d5016 0%,#1a6b4a 100%)';
+
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = [
+        'position:fixed','top:-9999px','left:-9999px',
+        'width:460px','background:#ffffff',
+        'border-radius:16px','overflow:hidden',
+        "font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+        'box-shadow:0 4px 24px rgba(0,0,0,0.12)'
+      ].join(';') + ';';
+
+      let html = `
+        <div style="background:${headerBg};padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="color:#fff;font-weight:800;font-size:1rem;">&#x1F4C5; This Week's Games</div>
+          <div style="color:rgba(255,255,255,0.8);font-size:0.75rem;font-weight:600;">acessoftballreference.com</div>
+        </div>
+        <div style="padding:6px 20px 4px;background:#f0fdf4;border-bottom:1px solid #d1fae5;">
+          <div style="font-size:0.78rem;font-weight:700;color:#2d5016;text-transform:uppercase;letter-spacing:0.5px;">${rangeLabel}</div>
+        </div>
+        <div style="padding:12px 20px;display:flex;flex-direction:column;gap:10px;">
+      `;
+
+      sortedDates.forEach(([, { date, matchups }]) => {
+        const dayLabel = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+        html += `<div style="font-size:0.78rem;font-weight:800;color:#2d5016;text-transform:uppercase;letter-spacing:0.6px;padding:6px 0 2px;border-bottom:2px solid #d1fae5;">${dayLabel}</div>`;
+
+        matchups.forEach(({ games }) => {
+          const d = games[0];
+          const blockTier = _getGameTier(d);
+
+          const themes = {
+            finals:  { innerBg:'linear-gradient(180deg,#fffbf0 0%,#fff8e1 100%)', border:'#f6c84b', badgeBg:'linear-gradient(135deg,#f6d365 0%,#fda085 100%)', badgeText:'&#x1F3C6; CHAMPIONSHIP', badgeColor:'#5a3e00', metaColor:'#92650a', vsColor:'#92650a', teamColor:'#2d1a00' },
+            playoff: { innerBg:'linear-gradient(180deg,#f5f3ff 0%,#ede7f6 100%)', border:'#9c6ee8', badgeBg:'linear-gradient(135deg,#6a1b9a 0%,#1a237e 100%)', badgeText:'&#x1F3C6; PLAYOFFS', badgeColor:'#fff', metaColor:'#6a1b9a', vsColor:'#6a1b9a', teamColor:'#1a0533' },
+            regular: { innerBg:'#f8fafc', border:'#e2e8f0', badgeBg:null, badgeText:null, badgeColor:null, metaColor:'#718096', vsColor:'#2d5016', teamColor:'#2d3748' }
+          };
+          const t = themes[blockTier] || themes.regular;
+
+          const times = games.map(g => {
+            const raw = g.gameTime || '';
+            if (!raw) return '';
+            if (/^\d{1,2}:\d{2}$/.test(raw)) {
+              const [h, m] = raw.split(':').map(Number);
+              const pd = h >= 12 ? 'PM' : 'AM';
+              const dh = h === 0 ? 12 : h > 12 ? h - 12 : h;
+              return `${dh}:${String(m).padStart(2,'0')} ${pd}`;
+            }
+            return raw;
+          }).filter(Boolean).join(' & ');
+
+          const metaLabel = `${times ? times + ' &middot; ' : ''}${d.gameType || 'Regular'} Season${games.length > 1 ? ' &middot; DH' : ''}`;
+
+          const teamPlayerMap = new Map();
+          games.forEach(g => {
+            [g.awayTeam, g.homeTeam].forEach(tm => { if (!teamPlayerMap.has(tm)) teamPlayerMap.set(tm, new Set()); });
+            (g.awayTopPlayers || []).forEach(p => teamPlayerMap.get(g.awayTeam).add(p));
+            (g.homeTopPlayers || []).forEach(p => teamPlayerMap.get(g.homeTeam).add(p));
+          });
+          const awayPlayers = [...(teamPlayerMap.get(d.awayTeam) || [])];
+          const homePlayers = [...(teamPlayerMap.get(d.homeTeam) || [])];
+          const hasPlayers  = awayPlayers.length || homePlayers.length;
+
+          const radii = blockTier !== 'regular' ? '0 0 10px 10px' : '10px';
+          const borderStyle = blockTier === 'regular' ? `1px solid ${t.border}` : 'none';
+
+          html += blockTier !== 'regular'
+            ? `<div style="background:${t.badgeBg};border-radius:11px 11px 0 0;padding:4px 12px;text-align:center;"><span style="color:${t.badgeColor};font-weight:900;font-size:0.68rem;letter-spacing:1px;">${t.badgeText}</span></div>`
+            : '';
+
+          html += `
+            <div style="background:${t.innerBg};border-radius:${radii};padding:12px 14px;border:${borderStyle};">
+              <div style="font-size:0.68rem;color:${t.metaColor};font-weight:600;margin-bottom:8px;text-align:center;text-transform:uppercase;letter-spacing:0.4px;">${metaLabel}</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:${hasPlayers ? '10px' : '0'};">
+                <div style="text-align:center;flex:1;">
+                  <img src="${d.awayLogoPath || ''}" style="width:52px;height:52px;object-fit:contain;display:block;margin:0 auto 4px;" onerror="this.style.display='none';">
+                  <div style="font-weight:800;font-size:0.88rem;color:${t.teamColor};">${d.awayTeam}</div>
+                  <div style="font-size:0.7rem;color:#718096;">${d.awayRecordText || ''}</div>
+                </div>
+                <div style="text-align:center;flex-shrink:0;font-size:1.1rem;font-weight:900;color:${t.vsColor};">@</div>
+                <div style="text-align:center;flex:1;">
+                  <img src="${d.homeLogoPath || ''}" style="width:52px;height:52px;object-fit:contain;display:block;margin:0 auto 4px;" onerror="this.style.display='none';">
+                  <div style="font-weight:800;font-size:0.88rem;color:${t.teamColor};">${d.homeTeam}</div>
+                  <div style="font-size:0.7rem;color:#718096;">${d.homeRecordText || ''}</div>
+                </div>
+              </div>
+              ${hasPlayers ? `
+              <div style="display:flex;gap:8px;padding-top:8px;border-top:1px solid ${t.border};">
+                <div style="flex:1;text-align:center;">
+                  <div style="font-size:0.62rem;font-weight:700;color:${t.vsColor};text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px;">${d.awayTeam}</div>
+                  ${awayPlayers.map(p => `<div style="font-size:0.72rem;color:#2d3748;padding:1px 0;">${p}</div>`).join('')}
+                </div>
+                <div style="flex:1;text-align:center;">
+                  <div style="font-size:0.62rem;font-weight:700;color:${t.vsColor};text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px;">${d.homeTeam}</div>
+                  ${homePlayers.map(p => `<div style="font-size:0.72rem;color:#2d3748;padding:1px 0;">${p}</div>`).join('')}
+                </div>
+              </div>` : ''}
+            </div>
+          `;
+        });
+      });
+
+      html += `
+          <div style="font-size:0.65rem;color:#a0aec0;text-align:right;padding-top:2px;">Generated ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+        </div>
+      `;
+
+      wrapper.innerHTML = html;
+      document.body.appendChild(wrapper);
+      const canvas = await html2canvas(wrapper, { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false });
+      document.body.removeChild(wrapper);
+
+      const dateSlug = new Date().toISOString().slice(0,10);
+      await shareOrDownloadCanvas(canvas, `aces-week-${dateSlug}.png`);
+
+      btn.innerHTML = '✅ Done!';
+      setTimeout(() => { btn.innerHTML = origLabel; btn.disabled = false; }, 2500);
+
+    } catch(err) {
+      console.error('shareWeekGames error:', err);
+      btn.innerHTML = origLabel;
+      btn.disabled = false;
+    }
+  }
+
+
+  async function shareOrDownloadCanvas(canvas, filename) {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile && navigator.share && navigator.canShare) {
+      try {
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const file = new File([blob], filename, { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Aces Game Preview' });
+          return;
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') return; // user cancelled — do nothing
+        console.warn('navigator.share failed, falling back to download:', err);
+      }
+    }
+    // Desktop or unsupported: trigger direct download
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+</script>
+</body>
+</html>

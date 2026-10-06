@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>League Awards - Aces Stats</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    line-height: 1.6;
+    color: var(--text-dark);
+  }
+  
+  .page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  /* Loading Spinner */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .softball-spinner::before {
+    content: '⚾';
+    font-size: 80px;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    0%, 100% { 
+      transform: rotate(0deg) scale(1); 
+    }
+    50% { 
+      transform: rotate(180deg) scale(1.1); 
+    }
+  }
+  
+  /* Page Header */
+  .page-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    text-align: center;
+    padding: 4rem 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-header::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .page-header::after {
+    content: '🏅';
+    position: absolute;
+    bottom: -30px;
+    left: -30px;
+    font-size: 200px;
+    opacity: 0.08;
+    transform: rotate(-15deg);
+  }
+  
+  .page-header h1 {
+    margin: 0;
+    font-size: 3rem;
+    font-weight: 800;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 1;
+  }
+  
+  .page-header p {
+    margin: 1rem 0 0 0;
+    font-size: 1.1rem;
+    opacity: 0.95;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Navigation & Filters */
+  .filters-nav {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+  }
+  
+  .nav-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .nav-link {
+    padding: 1rem 1.75rem;
+    border: 2px solid var(--primary-color);
+    background: white;
+    color: var(--primary-color);
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: -1;
+  }
+
+  .nav-link:hover::before {
+    transform: translateX(0);
+  }
+
+  .nav-link:hover {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--secondary-color);
+  }
+  
+  .nav-link.batting {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+  
+  .nav-link.pitching {
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+  }
+  
+  .nav-link.pitching::before {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  }
+  
+  /* Award Filters */
+  .awards-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: center;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border-color);
+  }
+  
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .awards-filters label {
+    font-weight: 700;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+  }
+  
+  .awards-filters select {
+    padding: 0.75rem 1.25rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: white;
+    color: var(--text-dark);
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .awards-filters select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+  }
+
+  .awards-filters select:hover {
+    border-color: var(--secondary-color);
+  }
+  
+  /* Awards Content */
+  .awards-content {
+    margin-top: 2rem;
+  }
+  
+  .awards-section {
+    background: var(--card-bg);
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .awards-section:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .awards-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  }
+  
+  .awards-section h3 {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    margin: 0;
+    padding: 2rem;
+    font-size: 1.8em;
+    font-weight: 800;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+  }
+
+  .awards-section h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--accent-color);
+  }
+  
+  .award-type-section {
+    margin: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .award-type-section::after {
+    content: '🏆';
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    font-size: 120px;
+    opacity: 0;
+    color: var(--primary-color);
+    transition: all 0.4s ease;
+    pointer-events: none;
+  }
+
+  .award-type-section:hover::after {
+    opacity: 0.03;
+    bottom: -10px;
+    right: -10px;
+  }
+  
+  .award-type-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 1.25rem 2rem;
+    border-bottom: 2px solid var(--border-color);
+    font-size: 1.3em;
+    font-weight: 700;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+  }
+
+  .award-type-header::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  }
+  
+  .award-type-icon {
+    width: 28px;
+    height: 28px;
+    margin-right: 8px;
+    object-fit: contain;
+    vertical-align: middle;
+  }
+  
+  .award-type-icon.fallback {
+    display: none;
+  }
+  
+  .award-type-header .fallback-emoji {
+    font-size: 1.3em;
+    margin-right: 8px;
+  }
+  
+  /* Award Table */
+  .award-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+  }
+  
+  .award-table th {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 1.25rem;
+    text-align: center;
+    font-weight: 700;
+    border: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.95rem;
+  }
+  
+  .award-table td {
+    padding: 1.25rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-dark);
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+
+  .award-table tr:nth-child(even) {
+    background-color: #fafbfc;
+  }
+  
+  .award-table tr:hover {
+    background: linear-gradient(135deg, #f0f4f8 0%, #e9f0f7 100%);
+  }
+  
+  .award-table a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+  
+  .award-table a:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+  }
+  
+  /* Empty States */
+  .no-awards {
+    text-align: center;
+    color: var(--text-light);
+    font-style: italic;
+    padding: 3rem 2rem;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 2px dashed var(--border-color);
+    font-size: 1.1rem;
+  }
+  
+  .no-awards::before {
+    content: "🏆";
+    display: block;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+  }
+  
+  .loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+    font-size: 1.1rem;
+  }
+  
+  .loading::before {
+    content: "⚾";
+    display: block;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .page-container {
+      padding: 1rem;
+    }
+    
+    .page-header {
+      padding: 2.5rem 1.5rem;
+    }
+    
+    .page-header h1 {
+      font-size: 2rem;
+    }
+
+    .page-header::after {
+      font-size: 150px;
+      bottom: -20px;
+      left: -20px;
+    }
+    
+    .nav-container {
+      justify-content: center;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .nav-link {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      text-align: center;
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .awards-filters {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .filter-group {
+      flex-direction: column;
+      text-align: center;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    .awards-filters select {
+      width: 100%;
+    }
+    
+    .awards-section h3 {
+      padding: 1.5rem 1rem;
+      font-size: 1.4em;
+    }
+    
+    .award-type-header {
+      padding: 1rem;
+      font-size: 1.1em;
+    }
+    
+    .award-table th,
+    .award-table td {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.9em;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .award-table th,
+    .award-table td {
+      padding: 0.5rem 0.25rem;
+      font-size: 0.85em;
+    }
+    
+    .awards-section h3 {
+      font-size: 1.2em;
+      padding: 1rem;
+    }
+
+    .page-header h1 {
+      font-size: 1.75rem;
+    }
+
+    .award-type-icon {
+      width: 24px;
+      height: 24px;
+    }
+  }
+</style>
+<link rel="stylesheet" href="mobile-enhancements.css">
+</head>
+<body>
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="softball-spinner"></div>
+</div>
+
+  <div class="page-container">
+    <div class="page-header">
+      <h1>League Awards</h1>
+      <p>Browse award winners across all seasons and award categories</p>
+    </div>
+
+    <div class="filters-nav">
+            
+      <div class="awards-filters">
+        <div class="filter-group">
+          <label for="yearFilter">Year:</label>
+          <select id="yearFilter">
+            <option value="All">All Years</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="seasonFilter">Season:</label>
+          <select id="seasonFilter">
+            <option value="All">All Seasons</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="awardTypeFilter">Award Type:</label>
+          <select id="awardTypeFilter">
+            <option value="All">All Awards</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="awards-content" class="awards-content">
+      <div class="loading">Loading awards data...</div>
+    </div>
+  </div>
+
+<script type="module">
+// Hide loading overlay when page loads
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  }, 800);
+});
+
+import { db, collection, getDocs } from './firebase-config.js';
+
+let allAwards = [];
+let allStats = [];
+
+async function loadData() {
+  try {
+    console.log('Loading awards from Firestore...');
+    
+    // Load awards collection
+    const awardsSnapshot = await getDocs(collection(db, 'awards'));
+    allAwards = [];
+    
+    awardsSnapshot.forEach(doc => {
+      const data = doc.data();
+      // Convert Firestore format to match original JSON structure
+      allAwards.push({
+        Award: data.category || data.Award,
+        Player: data.playerName || data.Player,
+        Team: data.team || data.Team,
+        Position: data.position || data.Position,
+        Year: data.year || (data.seasonId ? data.seasonId.split('-')[0] : ''),
+        Season: data.season || (data.seasonId ? data.seasonId.split('-')[1].charAt(0).toUpperCase() + data.seasonId.split('-')[1].slice(1) : ''),
+        seasonId: data.seasonId
+      });
+    });
+    
+    // Filter out any awards without a category/Award
+    allAwards = allAwards.filter(award => award.Award && award.Award.trim() !== "");
+    
+    console.log(`Loaded ${allAwards.length} awards from Firestore`);
+    
+    // Load stats collection (for player verification if needed)
+    const statsSnapshot = await getDocs(collection(db, 'aggregatedPlayerStats'));
+    allStats = [];
+    
+    statsSnapshot.forEach(doc => {
+      allStats.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    console.log(`Loaded ${allStats.length} player stats from Firestore`);
+    
+    populateFilters();
+    renderAwards();
+  } catch (error) {
+    console.error("Error loading data from Firestore:", error);
+    document.getElementById("awards-content").innerHTML = 
+      '<div class="no-awards">Error loading awards data. Please check your connection and try again.</div>';
+  }
+}
+
+function populateFilters() {
+  // Populate year filter
+  const years = [...new Set(allAwards.map(a => a.Year).filter(y => y))].sort((a, b) => b - a);
+  const yearFilter = document.getElementById("yearFilter");
+  years.forEach(year => {
+    const option = document.createElement("option");
+    option.value = year;
+    option.textContent = year;
+    yearFilter.appendChild(option);
+  });
+
+  // Populate season filter
+  const seasons = [...new Set(allAwards.map(a => a.Season).filter(s => s))].sort();
+  const seasonFilter = document.getElementById("seasonFilter");
+  seasons.forEach(season => {
+    const option = document.createElement("option");
+    option.value = season;
+    option.textContent = season;
+    seasonFilter.appendChild(option);
+  });
+
+  // Populate award type filter
+  const awardTypes = [...new Set(allAwards.map(a => a.Award))].sort();
+  const awardTypeFilter = document.getElementById("awardTypeFilter");
+  awardTypes.forEach(award => {
+    const option = document.createElement("option");
+    option.value = award;
+    option.textContent = award;
+    awardTypeFilter.appendChild(option);
+  });
+
+  // Add event listeners
+  yearFilter.addEventListener("change", renderAwards);
+  seasonFilter.addEventListener("change", renderAwards);
+  awardTypeFilter.addEventListener("change", renderAwards);
+}
+
+function renderAwards() {
+  const yearVal = document.getElementById("yearFilter").value;
+  const seasonVal = document.getElementById("seasonFilter").value;
+  const awardTypeVal = document.getElementById("awardTypeFilter").value;
+
+  // Filter awards based on selections
+  let filteredAwards = allAwards.filter(award => {
+    return (yearVal === "All" || award.Year === yearVal) &&
+           (seasonVal === "All" || award.Season === seasonVal) &&
+           (awardTypeVal === "All" || award.Award === awardTypeVal);
+  });
+
+  if (filteredAwards.length === 0) {
+    document.getElementById("awards-content").innerHTML = 
+      '<div class="no-awards">No awards match the current filters.</div>';
+    return;
+  }
+
+  // Group awards by year and season
+  const groupedAwards = {};
+  filteredAwards.forEach(award => {
+    const key = `${award.Year} ${award.Season}`;
+    if (!groupedAwards[key]) {
+      groupedAwards[key] = [];
+    }
+    groupedAwards[key].push(award);
+  });
+
+  // Sort groups by year/season (most recent first)
+  const sortedGroups = Object.entries(groupedAwards).sort((a, b) => {
+    const [yearA, seasonA] = a[0].split(' ');
+    const [yearB, seasonB] = b[0].split(' ');
+    if (yearA !== yearB) return yearB - yearA;
+    const seasonOrder = { 'Fall': 1, 'Summer': 2 };
+    const orderA = seasonOrder[seasonA] || 999;
+    const orderB = seasonOrder[seasonB] || 999;
+    return orderA - orderB;
+  });
+
+  let html = '';
+
+  sortedGroups.forEach(([period, awards]) => {
+    html += `<div class="awards-section">`;
+    html += `<h3>${period} Awards</h3>`;
+    
+    // Group awards by type within each period
+    const awardsByType = {};
+    awards.forEach(award => {
+      if (!awardsByType[award.Award]) {
+        awardsByType[award.Award] = [];
+      }
+      awardsByType[award.Award].push(award);
+    });
+
+    // Order award types logically
+    const awardOrder = [
+      'Team MVP', 'All Aces', 'Gold Glove', 'Team of the Year',
+      'Rookie of the Year', 'Most Improved Ace', 'Comeback Player of the Year',
+      'Slugger of the Year', 'Pitcher of the Year', 'Captain of the Year',
+      'Al Pineda Good Guy Award', 'Iron Man Award', 'Sub of the Year',
+      'Andrew Streaman Boner Award', 'Erik Lund Perservenance Award',
+      'Mr. Streaman Award for Excellence'
+    ];
+
+    // Display awards in order
+    awardOrder.forEach(awardType => {
+      if (awardsByType[awardType]) {
+        html += renderAwardTypeTable(awardType, awardsByType[awardType]);
+        delete awardsByType[awardType];
+      }
+    });
+
+    // Display any remaining award types
+    Object.entries(awardsByType).forEach(([awardType, awardList]) => {
+      html += renderAwardTypeTable(awardType, awardList);
+    });
+
+    html += `</div>`;
+  });
+
+  document.getElementById("awards-content").innerHTML = html;
+}
+
+function getAwardIcon(awardType) {
+  const awardIcons = {
+    'Team MVP': 'team_mvp.png',
+    'All Aces': 'all_aces.png',
+    'Gold Glove': 'gold_glove.png',
+    'Team of the Year': 'team_of_the_year.png',
+    'Rookie of the Year': 'rookie_of_the_year.png',
+    'Most Improved Ace': 'most_improved_ace.png',
+    'Comeback Player of the Year': 'comeback_player.png',
+    'Slugger of the Year': 'slugger_of_the_year.png',
+    'Pitcher of the Year': 'pitcher_of_the_year.png',
+    'Captain of the Year': 'captain_of_the_year.png',
+    'Al Pineda Good Guy Award': 'al_pineda_good_guy_award.png',
+    'Iron Man Award': 'iron_man_award.png',
+    'Sub of the Year': 'sub_of_the_year.png',
+    'Andrew Streaman Boner Award': 'andrew_streaman_boner_award.png',
+    'Erik Lund Perservenance Award': 'erik_lund_perservenance_award.png',
+    'Mr. Streaman Award for Excellence': 'mr_streaman_award_for_excellence.png'
+  };
+
+  const fallbackEmojis = {
+    'Team MVP': '👑',
+    'All Aces': '⭐',
+    'Gold Glove': '🥇',
+    'Team of the Year': '🏆',
+    'Rookie of the Year': '🌟',
+    'Most Improved Ace': '📈',
+    'Comeback Player of the Year': '🔄',
+    'Slugger of the Year': '💪',
+    'Pitcher of the Year': '🥎',
+    'Captain of the Year': '🎖️',
+    'Al Pineda Good Guy Award': '🤝',
+    'Iron Man Award': '💯',
+    'Sub of the Year': '🅾️',
+    'Andrew Streaman Boner Award': '🎪',
+    'Erik Lund Perservenance Award': '⚡',
+    'Mr. Streaman Award for Excellence': '🌟'
+  };
+
+  const iconFile = awardIcons[awardType];
+  const fallbackEmoji = fallbackEmojis[awardType] || '🏆';
+
+  return {
+    iconFile: iconFile,
+    fallbackEmoji: fallbackEmoji
+  };
+}
+
+function renderAwardTypeTable(awardType, awards) {
+  awards.sort((a, b) => {
+    if (a.Position && b.Position && a.Position !== b.Position) {
+      return a.Position.localeCompare(b.Position);
+    }
+    return (a.Player || '').localeCompare(b.Player || '');
+  });
+
+  const awardIcon = getAwardIcon(awardType);
+
+  let html = `
+    <div class="award-type-section">
+      <div class="award-type-header">
+        ${awardIcon.iconFile ? 
+          `<img src="awards/${awardIcon.iconFile}" alt="${awardType}" class="award-type-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><span class="fallback-emoji" style="display: none;">${awardIcon.fallbackEmoji}</span>` :
+          `<span class="fallback-emoji">${awardIcon.fallbackEmoji}</span>`
+        }
+        ${awardType}
+      </div>
+      <table class="award-table">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Team</th>
+            ${awards.some(a => a.Position) ? '<th>Position</th>' : ''}
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  awards.forEach(award => {
+    const playerLink = award.Player ? 
+      `<a href="player.html?name=${encodeURIComponent(award.Player)}">${award.Player}</a>` : 
+      'Team Award';
+    const teamLink = award.Team ? 
+      `<a href="team.html?team=${encodeURIComponent(award.Team)}">${award.Team}</a>` : 
+      '';
+
+    html += `
+      <tr>
+        <td>${playerLink}</td>
+        <td>${teamLink}</td>
+        ${awards.some(a => a.Position) ? `<td>${award.Position || ''}</td>` : ''}
+      </tr>
+    `;
+  });
+
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  return html;
+}
+
+// Load data when page loads
+loadData();
+</script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="team-colors.js"></script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

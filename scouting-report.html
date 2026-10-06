@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="/manifest.json">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scouting Report - Mountainside Aces</title>
+  <meta name="theme-color" content="#2d5016">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="mobile-enhancements.css">
+  <link rel="stylesheet" href="nav-styles.css">
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --primary-light: #4a7c2e;
+      --accent-color: #e8f5e0;
+      --gold: #d4a017;
+      --silver: #9e9e9e;
+      --bronze: #a0522d;
+      --text-main: #1a202c;
+      --text-light: #718096;
+      --border: #e2e8f0;
+      --card-bg: #ffffff;
+      --page-bg: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      --radius: 12px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--page-bg);
+      min-height: 100vh;
+      color: var(--text-main);
+    }
+
+    /* ── Loading overlay ──────────────────────────── */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 1;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+      visibility: visible;
+    }
+    .loading-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .softball-spinner { text-align: center; }
+    .softball-spinner::before {
+      content: '⚾';
+      font-size: 80px;
+      display: block;
+      animation: spin 1.5s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+    .softball-spinner::after {
+      content: 'Loading scouting report...';
+      display: block;
+      font-size: 1.1rem;
+      color: #4a5568;
+      font-weight: 600;
+    }
+    @keyframes spin {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50%       { transform: rotate(180deg) scale(1.1); }
+    }
+
+    /* ── Hero banner ──────────────────────────────── */
+    .header {
+      background: linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%);
+      color: white;
+      text-align: center;
+      padding: 4rem 2rem;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.16);
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%; right: -10%;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .header::after {
+      content: '🔍';
+      position: absolute;
+      bottom: -30px; left: 5%;
+      font-size: 140px;
+      opacity: 0.1;
+      pointer-events: none;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 3rem;
+      font-weight: 800;
+      text-shadow: 2px 4px 8px rgba(0,0,0,0.2);
+      letter-spacing: -0.5px;
+      position: relative;
+      z-index: 1;
+    }
+    .header p {
+      margin: 0.75rem 0 0;
+      font-size: 1.15rem;
+      opacity: 0.9;
+      font-weight: 300;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Page container ──────────────────────────── */
+    .page-container {
+      max-width: 1100px;
+      margin: 2.5rem auto;
+      padding: 0 2rem;
+    }
+
+    /* ── Filter Bar ───────────────────────────────── */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px 18px;
+    }
+
+    .filter-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .filter-select {
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: white;
+      color: var(--text-main);
+      cursor: pointer;
+      min-width: 180px;
+      transition: border-color 0.15s;
+    }
+    .filter-select:focus { outline: none; border-color: var(--primary-color); }
+    .filter-select:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── Loading / Empty State ────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-light);
+    }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+    .empty-state h2 { margin: 0 0 8px; font-size: 1.3rem; color: var(--text-main); }
+    .empty-state p { margin: 0; font-size: 0.95rem; }
+
+    .hidden { display: none !important; }
+
+    /* ── Report Layout ────────────────────────────── */
+    #scoutingReport { }
+
+    .report-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+
+    .report-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-light);
+      margin: 0 0 14px;
+    }
+
+    /* ── Player Header Card ───────────────────────── */
+    .player-header-card {
+      background: var(--primary-color);
+      color: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px 28px;
+      margin-bottom: 20px;
+    }
+
+    .player-header-top {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .player-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .player-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .player-header-info { flex: 1; }
+    .player-header-name {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin: 0 0 4px;
+      line-height: 1.2;
+    }
+    .player-header-meta {
+      font-size: 0.88rem;
+      opacity: 0.8;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .player-header-meta span { display: flex; align-items: center; gap: 4px; }
+
+    /* Opponent mode banner */
+    .vs-banner {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .vs-banner.active { display: block; }
+
+    /* Quick stats row */
+    .quick-stats-row {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+    }
+
+    .quick-stat {
+      text-align: center;
+      background: rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 10px 4px;
+    }
+    .quick-stat-value {
+      font-size: 1.15rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .quick-stat-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.75;
+    }
+
+    /* ── Charts ───────────────────────────────────── */
+    .chart-container {
+      width: 100%;
+      overflow: hidden;
+    }
+    .chart-container svg {
+      width: 100%;
+      height: auto;
+      max-width: 420px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* ── Splits Table ─────────────────────────────── */
+    .splits-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .splits-table th {
+      text-align: left;
+      padding: 6px 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-light);
+      border-bottom: 2px solid var(--border);
+    }
+    .splits-table th:first-child { width: 40%; }
+    .splits-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #f0f4f8;
+    }
+    .splits-table tr:last-child td { border-bottom: none; }
+    .splits-table td:first-child { font-weight: 600; }
+    .stat-avg { color: var(--primary-color); font-weight: 700; }
+    .no-data-note {
+      color: var(--text-light);
+      font-size: 0.85rem;
+      font-style: italic;
+      text-align: center;
+      padding: 14px 0;
+    }
+
+    /* ── Season History Table ─────────────────────── */
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .history-table th {
+      text-align: left;
+      padding: 6px 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-light);
+      border-bottom: 2px solid var(--border);
+    }
+    .history-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #f0f4f8;
+    }
+    .history-table tr:last-child td { border-bottom: none; }
+    .history-table tr.career-row td {
+      font-weight: 700;
+      background: #f7faf3;
+      border-top: 2px solid var(--border);
+    }
+    .history-table .team-link {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .history-table .team-link:hover { text-decoration: underline; }
+    .sub-tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      background: #e8f5e0;
+      color: var(--primary-color);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .table-scroll { overflow-x: auto; }
+
+    /* ── Badges ───────────────────────────────────── */
+    .badges-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 12px;
+    }
+    .badge-item {
+      text-align: center;
+      padding: 12px 8px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      cursor: default;
+      transition: transform 0.15s;
+    }
+    .badge-item:hover { transform: translateY(-2px); }
+    .badge-item.gold { border-color: #ffd700; background: linear-gradient(135deg, #fffef0, #fff); }
+    .badge-item.silver { border-color: #c0c0c0; background: linear-gradient(135deg, #fafafa, #fff); }
+    .badge-item.bronze { border-color: #cd7f32; background: linear-gradient(135deg, #fdf8f3, #fff); }
+    .badge-icon { font-size: 1.8rem; margin-bottom: 6px; }
+    .badge-name { font-size: 0.72rem; font-weight: 600; color: var(--text-main); line-height: 1.2; }
+    .badge-tier-label {
+      font-size: 0.65rem;
+      margin-top: 3px;
+      font-weight: 700;
+      text-transform: capitalize;
+    }
+    .badge-category-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 14px 0 8px;
+      grid-column: 1 / -1;
+    }
+    .badge-category-label:first-child { margin-top: 0; }
+
+    /* ── Spinner ──────────────────────────────────── */
+    .spinner-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      gap: 12px;
+      color: var(--text-light);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 3px solid #e2e8f0;
+      border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Mobile ───────────────────────────────────── */
+    @media (max-width: 640px) {
+      .header h1 { font-size: 2rem; }
+      .header p  { font-size: 1rem; }
+      .page-container { padding: 0 1rem; margin-top: 1.5rem; }
+      .report-row { grid-template-columns: 1fr; }
+      .quick-stats-row { grid-template-columns: repeat(4, 1fr); }
+      .player-header-name { font-size: 1.3rem; }
+      .filter-bar { gap: 8px; padding: 12px; }
+      .filter-select { min-width: 140px; font-size: 0.85rem; }
+      .badges-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<!-- Desktop nav injection point -->
+<div class="filters-nav"></div>
+
+<!-- Hero banner -->
+<header class="header">
+  <h1>🔍 Scouting Report</h1>
+  <p>Career stats, splits, and performance breakdowns</p>
+</header>
+
+<div class="page-container">
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+  <span class="filter-label">Player</span>
+  <select id="playerSelect" class="filter-select">
+    <option value="">— Select a player —</option>
+  </select>
+  <span class="filter-label" style="margin-left:8px;">vs Team</span>
+  <select id="opponentSelect" class="filter-select" disabled>
+    <option value="">All Opponents</option>
+  </select>
+  <span class="filter-label" style="margin-left:8px;">vs Pitcher</span>
+  <select id="pitcherSelect" class="filter-select" disabled>
+    <option value="">All Pitchers</option>
+  </select>
+</div>
+
+<!-- Empty / Loading state -->
+<div id="emptyState" class="empty-state">
+  <div class="empty-icon">⚾</div>
+  <h2>Scouting Report</h2>
+  <p>Select a player above to generate their report.</p>
+</div>
+
+<div id="loadingState" class="hidden">
+  <div class="spinner-wrap"><div class="spinner"></div> Loading report…</div>
+</div>
+
+<!-- ── Report ─────────────────────────────────────── -->
+<div id="scoutingReport" class="hidden">
+
+  <!-- Player Header -->
+  <div class="player-header-card">
+    <div class="player-header-top">
+      <div class="player-avatar" id="playerAvatar">🧢</div>
+      <div class="player-header-info">
+        <div class="player-header-name" id="playerNameDisplay">—</div>
+        <div class="player-header-meta" id="playerMeta"></div>
+      </div>
+    </div>
+    <div class="vs-banner" id="vsBanner"></div>
+    <div class="quick-stats-row" id="quickStatsRow"></div>
+  </div>
+
+  <!-- Radial Charts -->
+  <div class="report-row">
+    <div class="report-card">
+      <div class="card-title">Career Radial</div>
+      <div class="chart-container" id="careerRadialContainer"></div>
+    </div>
+    <div class="report-card">
+      <div class="card-title" id="seasonRadialTitle">Season Radial</div>
+      <div class="chart-container" id="seasonRadialContainer"></div>
+    </div>
+  </div>
+
+  <!-- Splits -->
+  <div class="report-row" id="splitsRow">
+    <div class="report-card">
+      <div class="card-title">Home vs Away</div>
+      <table class="splits-table">
+        <thead>
+          <tr><th>Split</th><th>G</th><th>AB</th><th>H</th><th>R</th><th>BB</th><th>AVG</th><th>OBP</th></tr>
+        </thead>
+        <tbody id="homeAwaySplitBody"></tbody>
+      </table>
+    </div>
+    <div class="report-card">
+      <div class="card-title">Regular Season vs Playoffs</div>
+      <table class="splits-table">
+        <thead>
+          <tr><th>Split</th><th>G</th><th>AB</th><th>H</th><th>R</th><th>BB</th><th>AVG</th><th>OBP</th></tr>
+        </thead>
+        <tbody id="regularPlayoffSplitBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Season History -->
+  <div class="report-card">
+    <div class="card-title">Season History</div>
+    <div class="table-scroll">
+      <table class="history-table" id="historyTable">
+        <thead>
+          <tr>
+            <th>Year</th><th>Season</th><th>Team</th>
+            <th>G</th><th>AB</th><th>H</th><th>R</th><th>BB</th>
+            <th>AVG</th><th>OBP</th><th>BPI</th>
+          </tr>
+        </thead>
+        <tbody id="historyTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Badges -->
+  <div class="report-card" id="badgesCard">
+    <div class="card-title" id="badgesCardTitle">Badges</div>
+    <div class="badges-grid" id="badgesGrid"></div>
+  </div>
+
+  <!-- Spray Chart -->
+  <div class="report-card" id="sprayChartCard" style="display:none">
+    <div class="card-title">Spray Chart <span id="sprayChartSeason" style="font-weight:400;opacity:0.65;font-size:0.85em;"></span></div>
+    <div style="display:flex;gap:1rem;align-items:center;justify-content:center;flex-wrap:wrap;padding:0.5rem 0 0.75rem;">
+      <span style="display:flex;align-items:center;gap:5px;font-size:0.8rem;"><svg width="12" height="12"><circle cx="6" cy="6" r="6" fill="#22c55e"/></svg> Hit</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:0.8rem;"><svg width="12" height="12"><circle cx="6" cy="6" r="6" fill="#ef4444"/></svg> Out</span>
+    </div>
+    <div style="display:flex;justify-content:center;">
+      <svg id="sprayChartSvg" viewBox="0 0 300 270" width="300" height="270" style="max-width:100%;"></svg>
+    </div>
+    <div id="sprayChartEmpty" style="text-align:center;color:#718096;font-size:0.85rem;padding:0.5rem 0;display:none;">No tracked at-bats with location data yet.</div>
+    <div id="sprayChartTotal" style="text-align:center;font-size:0.8rem;color:#718096;padding:0.4rem 0;"></div>
+  </div>
+
+</div><!-- /scoutingReport -->
+
+</div><!-- end .page-container -->
+
+<script src="team-charts.js"></script>
+
+<script type="module">
+  import {
+    getAllPlayerStatsOptimized,
+    getPlayerStatsOptimized,
+    getCurrentSeason,
+    seasonsObjectToArray,
+    db
+  } from './firebase-data.js';
+
+  import {
+    doc,
+    getDoc,
+    collection,
+    getDocs
+  } from './firebase-config.js';
+
+  import { auth } from './firebase-auth.js';
+  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+  // ── State ────────────────────────────────────────────
+  const SPLITS_2025_COLLECTION = 'aggregatedPlayerStats2025Splits';
+  const SPLITS_2025_SEASONS    = ['2025-summer', '2025-fall'];
+
+  let allPlayers         = [];
+  let currentPlayer      = null;
+  let currentStats       = [];   // processed season rows (no subs), sorted newest first
+  let splits2025Data     = null;
+  let splitsMainData     = null;
+  let gameDocs           = [];   // raw game-level docs for home/away vs opponent
+  let gameDocIdMap       = {};   // gameDocId → batter game doc (for fast pitcher lookup)
+  let currentSeason      = null;
+  let currentOpponent    = '';
+  let currentPitcher     = '';   // pitcher player ID
+  let currentPitcherName = '';
+  let pitcherGameDocIds  = new Set(); // gameDocIds where this pitcher appeared
+
+  // ── DOM refs ─────────────────────────────────────────
+  const playerSelect   = document.getElementById('playerSelect');
+  const opponentSelect = document.getElementById('opponentSelect');
+  const pitcherSelect  = document.getElementById('pitcherSelect');
+  const emptyState     = document.getElementById('emptyState');
+  const loadingState   = document.getElementById('loadingState');
+  const scoutingReport = document.getElementById('scoutingReport');
+
+  // ── Helpers ──────────────────────────────────────────
+  const fmtAvg = (v) => typeof v === 'number' && !isNaN(v)
+    ? (v >= 1 ? v.toFixed(3) : '.' + Math.round(v * 1000).toString().padStart(3,'0'))
+    : '---';
+
+  function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+  function toLegacyId(name) {
+    return (name || '').toLowerCase().replace(/\./g, '').replace(/\s+/g, '_');
+  }
+
+  // Parse a seasonId like "2025-fall-silver" into { year, season, team }
+  function parseSeasonId(seasonId) {
+    const parts = (seasonId || '').split('-');
+    return {
+      year:   parts[0] || '',
+      season: cap(parts[1] || ''),
+      team:   parts.slice(2).map(cap).join(' ')
+    };
+  }
+
+  // ── vsOpponent career totals ──────────────────────────
+  function buildVsOpponentCareer() {
+    const career = {};
+    const addOpp = (opp, s) => {
+      if (!career[opp]) career[opp] = { games:0, atBats:0, hits:0, runs:0, walks:0 };
+      career[opp].games  += s.games  || 0;
+      career[opp].atBats += s.atBats || 0;
+      career[opp].hits   += s.hits   || 0;
+      career[opp].runs   += s.runs   || 0;
+      career[opp].walks  += s.walks  || 0;
+    };
+    if (splits2025Data?.careerSplits?.vsOpponent)
+      Object.entries(splits2025Data.careerSplits.vsOpponent).forEach(([o, s]) => addOpp(o, s));
+    if (splitsMainData?.seasons)
+      Object.values(splitsMainData.seasons).forEach(season =>
+        season.vsOpponent && Object.entries(season.vsOpponent).forEach(([o, s]) => addOpp(o, s)));
+    Object.values(career).forEach(o => {
+      o.battingAverage   = o.atBats > 0 ? o.hits / o.atBats : 0;
+      o.onBasePercentage = (o.atBats + o.walks) > 0 ? (o.hits + o.walks) / (o.atBats + o.walks) : 0;
+    });
+    return career;
+  }
+
+  // ── Career splits (home/away/regular/playoff) ─────────
+  function getMergedCareerSplits() {
+    const blank = () => ({ games:0, atBats:0, hits:0, runs:0, walks:0 });
+    const merged = { home: blank(), away: blank(), regular: blank(), playoff: blank() };
+    const add = (src) => {
+      ['home','away','regular','playoff'].forEach(k => {
+        if (!src?.[k]) return;
+        const t = merged[k], s = src[k];
+        t.games  += s.games  || 0; t.atBats += s.atBats || 0;
+        t.hits   += s.hits   || 0; t.runs   += s.runs   || 0;
+        t.walks  += s.walks  || 0;
+      });
+    };
+    if (splits2025Data?.careerSplits?.splits) add(splits2025Data.careerSplits.splits);
+    if (splitsMainData?.seasons) Object.values(splitsMainData.seasons).forEach(s => add(s.splits));
+    ['home','away','regular','playoff'].forEach(k => {
+      const s = merged[k];
+      s.battingAverage   = s.atBats > 0 ? s.hits / s.atBats : 0;
+      s.onBasePercentage = (s.atBats + s.walks) > 0 ? (s.hits + s.walks) / (s.atBats + s.walks) : 0;
+    });
+    return merged;
+  }
+
+  // ── Build home/away + regular/playoff splits vs one opponent from game docs ──
+  function buildSplitsVsOpponent(opp) {
+    const blank = () => ({ games:0, atBats:0, hits:0, runs:0, walks:0 });
+    const result = { home: blank(), away: blank(), regular: blank(), playoff: blank() };
+    const add = (bucket, g) => {
+      bucket.games++;
+      bucket.atBats += g.atBats || 0;
+      bucket.hits   += g.hits   || 0;
+      bucket.runs   += g.runs   || 0;
+      bucket.walks  += g.walks  || 0;
+    };
+    gameDocs
+      .filter(g => (g.opponent || '').toLowerCase() === opp.toLowerCase())
+      .forEach(g => {
+        add(g.isHome === true ? result.home : result.away, g);
+        add(g.isPlayoff === true || g.gameType === 'playoff' ? result.playoff : result.regular, g);
+      });
+    ['home','away','regular','playoff'].forEach(k => {
+      const s = result[k];
+      s.battingAverage   = s.atBats > 0 ? s.hits / s.atBats : 0;
+      s.onBasePercentage = (s.atBats + s.walks) > 0 ? (s.hits + s.walks) / (s.atBats + s.walks) : 0;
+    });
+    return result;
+  }
+
+  // ── Quick-stat row ────────────────────────────────────
+  function renderQuickStats(g, ab, h, r, bb, avg, obp, bpi) {
+    const items = [
+      { label:'G',   value: g   ?? '—' },
+      { label:'AB',  value: ab  ?? '—' },
+      { label:'H',   value: h   ?? '—' },
+      { label:'R',   value: r   ?? '—' },
+      { label:'BB',  value: bb  ?? '—' },
+      { label:'AVG', value: typeof avg === 'number' ? fmtAvg(avg) : (avg ?? '—') },
+      { label:'OBP', value: typeof obp === 'number' ? fmtAvg(obp) : (obp ?? '—') },
+      { label:'BPI', value: typeof bpi === 'number' ? bpi.toFixed(1) : (bpi ?? '—') }
+    ];
+    document.getElementById('quickStatsRow').innerHTML = items.map(i =>
+      `<div class="quick-stat">
+        <div class="quick-stat-value">${i.value}</div>
+        <div class="quick-stat-label">${i.label}</div>
+      </div>`
+    ).join('');
+  }
+
+  // ── Splits table rendering ────────────────────────────
+  function splitRow(label, s) {
+    if (!s || !s.games) return `<tr><td>${label}</td><td colspan="7" style="color:#999;font-style:italic;font-size:0.82rem;">No data</td></tr>`;
+    return `<tr>
+      <td>${label}</td><td>${s.games}</td><td>${s.atBats ?? '—'}</td>
+      <td>${s.hits ?? '—'}</td><td>${s.runs ?? '—'}</td><td>${s.walks ?? '—'}</td>
+      <td class="stat-avg">${fmtAvg(s.battingAverage)}</td>
+      <td class="stat-avg">${fmtAvg(s.onBasePercentage)}</td>
+    </tr>`;
+  }
+
+  function renderSplits(splits) {
+    document.getElementById('homeAwaySplitBody').innerHTML =
+      splitRow('🏠 Home', splits?.home) + splitRow('✈️ Away', splits?.away);
+    document.getElementById('regularPlayoffSplitBody').innerHTML =
+      splitRow('⚾ Regular', splits?.regular) + splitRow('🏆 Playoffs', splits?.playoff);
+  }
+
+  // ── Season history ────────────────────────────────────
+  function renderSeasonHistory() {
+    const body = document.getElementById('historyTableBody');
+    if (!currentStats.length) {
+      body.innerHTML = `<tr><td colspan="11" class="no-data-note">No season data available</td></tr>`;
+      return;
+    }
+
+    let html = currentStats.map(s => `
+      <tr>
+        <td>${s.year}</td>
+        <td>${s.season}</td>
+        <td><a href="team.html?team=${encodeURIComponent(s.team)}" class="team-link">${s.team}</a></td>
+        <td>${s.games}</td><td>${s.atBats}</td><td>${s.hits}</td>
+        <td>${s.runs}</td><td>${s.walks}</td>
+        <td class="stat-avg">${fmtAvg(s.BA)}</td>
+        <td class="stat-avg">${fmtAvg(s.OBP)}</td>
+        <td>${typeof s.BPI === 'number' ? s.BPI.toFixed(2) : '—'}</td>
+      </tr>`).join('');
+
+    // Career totals row
+    const tot = currentStats.reduce((acc, s) => {
+      acc.games  += s.games  || 0; acc.atBats += s.atBats || 0;
+      acc.hits   += s.hits   || 0; acc.runs   += s.runs   || 0;
+      acc.walks  += s.walks  || 0; return acc;
+    }, { games:0, atBats:0, hits:0, runs:0, walks:0 });
+    tot.BA  = tot.atBats > 0 ? tot.hits / tot.atBats : 0;
+    tot.OBP = (tot.atBats + tot.walks) > 0 ? (tot.hits + tot.walks) / (tot.atBats + tot.walks) : 0;
+
+    html += `<tr class="career-row">
+      <td colspan="3">Career</td>
+      <td>${tot.games}</td><td>${tot.atBats}</td><td>${tot.hits}</td>
+      <td>${tot.runs}</td><td>${tot.walks}</td>
+      <td class="stat-avg">${fmtAvg(tot.BA)}</td>
+      <td class="stat-avg">${fmtAvg(tot.OBP)}</td>
+      <td>—</td>
+    </tr>`;
+
+    body.innerHTML = html;
+  }
+
+  // ── Radial chart ──────────────────────────────────────
+  function renderRadial(containerId, statsObj, playerName, subtitle) {
+    const container = document.getElementById(containerId);
+    if (!statsObj || !statsObj.games) {
+      container.innerHTML = '<div class="no-data-note">No data available</div>';
+      return;
+    }
+    const innerId = containerId + '_inner';
+    container.innerHTML = `<div id="${innerId}"></div>`;
+    const charts = new TeamCharts(innerId, { width: 420, height: 360 });
+    const player = {
+      battingAvg: statsObj.battingAverage ?? 0,
+      obp:        statsObj.onBasePercentage ?? 0,
+      runs:       statsObj.runs ?? 0,
+      acesBPI:    statsObj.acesBPI ?? statsObj.BPI ?? 0,
+      games:      statsObj.games ?? 0
+    };
+    charts.createPlayerRadialChart(player, playerName, 'career', { width: 420, height: 360 });
+    const svg = container.querySelector('svg');
+    if (svg) {
+      svg.querySelectorAll('text').forEach(t => {
+        if (t.getAttribute('y') === '30') t.textContent = playerName;
+        if (t.getAttribute('y') === '50') t.textContent = subtitle || '';
+      });
+    }
+  }
+
+  // ── Badges ────────────────────────────────────────────
+  function renderBadges(badges) {
+    const grid  = document.getElementById('badgesGrid');
+    const title = document.getElementById('badgesCardTitle');
+    if (!badges?.earned || !Object.keys(badges.earned).length) {
+      grid.innerHTML = '<div class="no-data-note">No badges earned yet this season.</div>';
+      title.textContent = 'Badges';
+      return;
+    }
+    title.textContent = `Badges — ${badges.seasonDisplay || ''}`;
+    const categories = {
+      hitting:   { name: '⚾ Hitting',    badges: [] },
+      milestone: { name: '🏆 Milestones', badges: [] },
+      hidden:    { name: '🔮 Hidden',     badges: [] }
+    };
+    Object.entries(badges.earned).forEach(([id, b]) => {
+      const cat = b.category || 'hitting';
+      (categories[cat] || categories.hitting).badges.push({ id, ...b });
+    });
+    const tierOrder = { gold:0, silver:1, bronze:2 };
+    const tierColor = { gold:'#b8860b', silver:'#666', bronze:'#8b4513' };
+    let html = '';
+    Object.values(categories).forEach(cat => {
+      if (!cat.badges.length) return;
+      cat.badges.sort((a, b) => (tierOrder[a.tier]??3)-(tierOrder[b.tier]??3)||(a.name||'').localeCompare(b.name||''));
+      html += `<div class="badge-category-label">${cat.name}</div>`;
+      cat.badges.forEach(b => {
+        const tc = tierColor[b.tier] || '#2d5016';
+        html += `<div class="badge-item ${b.tier||''}">
+          <div class="badge-icon">${b.icon||'🎖️'}</div>
+          <div class="badge-name">${b.name||b.id}</div>
+          ${b.tier ? `<div class="badge-tier-label" style="color:${tc}">${b.tier}</div>` : ''}
+        </div>`;
+      });
+    });
+    grid.innerHTML = html;
+  }
+
+  // ── Main render ───────────────────────────────────────
+  function renderReport() {
+    const p = currentPlayer;
+    if (!p) return;
+
+    const name = p.name || p.displayName || p.id;
+
+    // Header
+    document.getElementById('playerNameDisplay').textContent = name;
+    const latestTeam = currentStats[0]?.team || '';
+    document.getElementById('playerMeta').innerHTML = [
+      latestTeam ? `<span>🏟️ ${latestTeam}</span>` : '',
+      currentStats.length ? `<span>📅 ${currentStats.length} season${currentStats.length !== 1 ? 's' : ''}</span>` : ''
+    ].filter(Boolean).join('');
+
+    // Avatar
+    const avatarEl = document.getElementById('playerAvatar');
+    const photoUrl  = p.photoURL || p.profilePhoto;
+    avatarEl.innerHTML = photoUrl
+      ? `<img src="${photoUrl}" alt="${name}" onerror="this.parentElement.innerHTML='🧢'">`
+      : '🧢';
+
+    // Populate opponent dropdown
+    const vsOpponentMap = buildVsOpponentCareer();
+    const oppNames = Object.keys(vsOpponentMap).sort();
+    opponentSelect.innerHTML = '<option value="">All Opponents</option>';
+    oppNames.forEach(opp => {
+      const opt = document.createElement('option');
+      opt.value = opp; opt.textContent = opp;
+      if (opp === currentOpponent) opt.selected = true;
+      opponentSelect.appendChild(opt);
+    });
+    opponentSelect.disabled = !oppNames.length;
+
+    if (currentPitcher && pitcherGameDocIds.size > 0) {
+      renderVsPitcherView(currentPitcherName);
+    } else if (currentOpponent && vsOpponentMap[currentOpponent]) {
+      renderVsOpponentView(currentOpponent, vsOpponentMap[currentOpponent], name);
+    } else {
+      renderFullView(p, name);
+    }
+  }
+
+  function renderFullView(p, name) {
+    const career = p.career || {};
+    document.getElementById('vsBanner').classList.remove('active');
+    document.getElementById('vsBanner').textContent = '';
+
+    renderQuickStats(career.games, career.atBats, career.hits, career.runs, career.walks,
+      career.battingAverage, career.onBasePercentage, career.acesBPI);
+
+    // Career radial
+    renderRadial('careerRadialContainer', {
+      battingAverage: career.battingAverage, onBasePercentage: career.onBasePercentage,
+      runs: career.runs, acesBPI: career.acesBPI, games: career.games
+    }, name, 'Career');
+
+    // Season radial — prefer current season, fall back to most recent
+    const csId = currentSeason?.id;
+    const seasonForRadial = csId
+      ? currentStats.find(s => s.seasonId?.startsWith(csId)) ?? currentStats[0]
+      : currentStats[0];
+
+    if (seasonForRadial) {
+      document.getElementById('seasonRadialTitle').textContent =
+        `${seasonForRadial.year} ${seasonForRadial.season} — ${seasonForRadial.team}`;
+      renderRadial('seasonRadialContainer', {
+        battingAverage: seasonForRadial.BA, onBasePercentage: seasonForRadial.OBP,
+        runs: seasonForRadial.runs, acesBPI: seasonForRadial.BPI, games: seasonForRadial.games
+      }, name, `${seasonForRadial.year} ${seasonForRadial.season}`);
+    } else {
+      document.getElementById('seasonRadialTitle').textContent = 'Season Radial';
+      document.getElementById('seasonRadialContainer').innerHTML =
+        '<div class="no-data-note">No season data available</div>';
+    }
+
+    renderSplits(getMergedCareerSplits());
+    renderSeasonHistory();
+  }
+
+  function renderVsOpponentView(opp, oppData, name) {
+    const banner = document.getElementById('vsBanner');
+    banner.textContent = `📊 vs ${opp}  ·  ${oppData.games} G, ${oppData.hits}-for-${oppData.atBats} (${fmtAvg(oppData.battingAverage)})`;
+    banner.classList.add('active');
+
+    renderQuickStats(oppData.games, oppData.atBats, oppData.hits, oppData.runs, oppData.walks,
+      oppData.battingAverage, oppData.onBasePercentage, null);
+
+    const vsStats = {
+      battingAverage: oppData.battingAverage, onBasePercentage: oppData.onBasePercentage,
+      runs: oppData.runs, acesBPI: 0, games: oppData.games
+    };
+    renderRadial('careerRadialContainer', vsStats, name, `Career vs ${opp}`);
+
+    document.getElementById('seasonRadialTitle').textContent = `vs ${opp} — All Games`;
+    renderRadial('seasonRadialContainer', vsStats, name, `All seasons vs ${opp}`);
+
+    // Home/Away + Regular/Playoff from game-level docs
+    renderSplits(buildSplitsVsOpponent(opp));
+
+    renderSeasonHistory();
+  }
+
+  // ── Render: vs Pitcher ───────────────────────────────
+  function renderVsPitcherView(pitcherName) {
+    const name = currentPlayer.name || currentPlayer.displayName;
+    const banner = document.getElementById('vsBanner');
+
+    const matchingGames = gameDocs.filter(g => pitcherGameDocIds.has(g.gameDocId));
+
+    if (!matchingGames.length) {
+      banner.textContent = `⚾ vs ${pitcherName} — No matchup data found`;
+      banner.classList.add('active');
+      renderQuickStats('—','—','—','—','—','---','---', null);
+      document.getElementById('homeAwaySplitBody').innerHTML =
+        `<tr><td colspan="8" class="no-data-note">No games on record vs ${pitcherName}</td></tr>`;
+      document.getElementById('regularPlayoffSplitBody').innerHTML = '';
+      renderSeasonHistory();
+      return;
+    }
+
+    // Aggregate totals
+    const tot = { games: matchingGames.length, atBats:0, hits:0, runs:0, walks:0 };
+    matchingGames.forEach(g => {
+      tot.atBats += g.atBats || 0;
+      tot.hits   += g.hits   || 0;
+      tot.runs   += g.runs   || 0;
+      tot.walks  += g.walks  || 0;
+    });
+    tot.battingAverage   = tot.atBats > 0 ? tot.hits / tot.atBats : 0;
+    tot.onBasePercentage = (tot.atBats + tot.walks) > 0
+      ? (tot.hits + tot.walks) / (tot.atBats + tot.walks) : 0;
+
+    banner.textContent = `⚾ vs ${pitcherName}  ·  ${tot.games} G, ${tot.hits}-for-${tot.atBats} (${fmtAvg(tot.battingAverage)})`;
+    banner.classList.add('active');
+
+    renderQuickStats(tot.games, tot.atBats, tot.hits, tot.runs, tot.walks,
+      tot.battingAverage, tot.onBasePercentage, null);
+
+    const vsStats = {
+      battingAverage: tot.battingAverage, onBasePercentage: tot.onBasePercentage,
+      runs: tot.runs, acesBPI: 0, games: tot.games
+    };
+    renderRadial('careerRadialContainer', vsStats, name, `vs ${pitcherName}`);
+    document.getElementById('seasonRadialTitle').textContent = `vs ${pitcherName}`;
+    renderRadial('seasonRadialContainer', vsStats, name, `vs ${pitcherName}`);
+
+    // Home/Away + Regular/Playoff splits from matching game docs
+    const blank = () => ({ games:0, atBats:0, hits:0, runs:0, walks:0 });
+    const splits = { home: blank(), away: blank(), regular: blank(), playoff: blank() };
+    matchingGames.forEach(g => {
+      const ha = g.isHome === true ? splits.home : splits.away;
+      const rp = (g.isPlayoff === true || g.gameType === 'playoff') ? splits.playoff : splits.regular;
+      [ha, rp].forEach(b => {
+        b.games++; b.atBats += g.atBats||0; b.hits += g.hits||0;
+        b.runs += g.runs||0; b.walks += g.walks||0;
+      });
+    });
+    ['home','away','regular','playoff'].forEach(k => {
+      const s = splits[k];
+      s.battingAverage   = s.atBats > 0 ? s.hits / s.atBats : 0;
+      s.onBasePercentage = (s.atBats + s.walks) > 0 ? (s.hits + s.walks) / (s.atBats + s.walks) : 0;
+    });
+    renderSplits(splits);
+    renderSeasonHistory();
+  }
+
+  // ── Load pitcher matchup data ─────────────────────────
+  async function loadPitcherMatchup(pitcherLegacyId) {
+    pitcherGameDocIds = new Set();
+    try {
+      const snap = await getDocs(collection(db, 'pitchingStats', pitcherLegacyId, 'games'));
+      snap.docs.forEach(d => {
+        const id = d.data().gameDocId || d.id;
+        if (id) pitcherGameDocIds.add(id);
+      });
+    } catch(e) { console.warn('Pitcher game docs unavailable:', e); }
+  }
+
+  // ── Load player ───────────────────────────────────────
+  async function loadPlayer(playerId) {
+    splits2025Data = null; splitsMainData = null;
+    currentPlayer = null; currentStats = []; gameDocs = []; gameDocIdMap = {};
+    currentPitcher = ''; currentPitcherName = ''; pitcherGameDocIds = new Set();
+
+    emptyState.classList.add('hidden');
+    scoutingReport.classList.add('hidden');
+    loadingState.classList.remove('hidden');
+
+    try {
+      const player = await getPlayerStatsOptimized(playerId);
+      if (!player) throw new Error('Player not found');
+      currentPlayer = player;
+
+      const name     = player.name || player.displayName || playerId;
+      const legacyId = toLegacyId(name);
+
+      // Process seasons — no subs, parse year/season/team from seasonId
+      currentStats = seasonsObjectToArray(player)
+        .filter(s => !(s.sub === 'Yes' || s.sub === 'yes' || s.sub === true))
+        .map(s => {
+          const { year, season, team } = parseSeasonId(s.seasonId);
+          return {
+            ...s,
+            year,
+            season,
+            team:   s.team ? cap(s.team) : team,
+            BA:     typeof s.battingAverage  === 'number' ? s.battingAverage  : 0,
+            OBP:    typeof s.onBasePercentage=== 'number' ? s.onBasePercentage: 0,
+            BPI:    typeof s.acesBPI         === 'number' ? s.acesBPI         : null
+          };
+        })
+        .sort((a, b) => b.seasonId.localeCompare(a.seasonId));
+
+      // 2025 splits
+      const splitsSnap = await getDoc(doc(db, SPLITS_2025_COLLECTION, legacyId));
+      if (splitsSnap.exists()) splits2025Data = splitsSnap.data();
+
+      // 2026+ splits embedded in seasons
+      if (player.seasons) {
+        const mainSeasons = {};
+        Object.entries(player.seasons).forEach(([sid, data]) => {
+          if (!SPLITS_2025_SEASONS.some(s => sid.startsWith(s)) && data.splits) mainSeasons[sid] = data;
+        });
+        if (Object.keys(mainSeasons).length) splitsMainData = { seasons: mainSeasons };
+      }
+
+      // Fetch game-level docs for vsOpponent home/away splits + vs-pitcher matching
+      try {
+        const gSnap = await getDocs(collection(db, 'playerStats', legacyId, 'games'));
+        gameDocs = gSnap.docs.map(d => d.data());
+        gameDocs.forEach(g => { if (g.gameDocId) gameDocIdMap[g.gameDocId] = g; });
+      } catch(e) { console.warn('Game docs unavailable:', e); }
+      pitcherSelect.disabled = false;
+      pitcherSelect.value = '';
+
+      // Badges
+      let badges = {};
+      try {
+        if (!currentSeason) currentSeason = await getCurrentSeason();
+        // Prefer player's actual Firestore ID (e.g. joe_patanella) over name-derived key
+        const badgeLegacyId = currentPlayer.id || legacyId;
+        const badgeId   = `${currentSeason?.id || '2026-summer'}_${badgeLegacyId}`;
+        let badgeSnap = await getDoc(doc(db, 'playerBadges', badgeId));
+        // Fallback to name-derived ID if actual ID finds nothing
+        if (!badgeSnap.exists() && badgeLegacyId !== legacyId) {
+          const fallbackId = `${currentSeason?.id || '2026-summer'}_${legacyId}`;
+          badgeSnap = await getDoc(doc(db, 'playerBadges', fallbackId));
+        }
+        if (badgeSnap.exists()) badges = { ...badgeSnap.data(), seasonDisplay: currentSeason?.displayName };
+      } catch(e) { console.warn('Badge fetch failed:', e); }
+
+      loadingState.classList.add('hidden');
+      scoutingReport.classList.remove('hidden');
+      renderReport();
+      renderBadges(badges);
+      loadSprayChart(currentPlayer.name, currentSeason, currentPlayer.id || null);
+
+    } catch(err) {
+      console.error('Failed to load player:', err);
+      loadingState.classList.add('hidden');
+      emptyState.querySelector('h2').textContent = 'Could not load player';
+      emptyState.querySelector('p').textContent = err.message;
+      emptyState.classList.remove('hidden');
+    }
+  }
+
+  // ── Init ─────────────────────────────────────────────
+  onAuthStateChanged(auth, async () => {
+    try {
+      const players = await getAllPlayerStatsOptimized();
+      allPlayers = players
+        .filter(p => p.name || p.displayName)
+        .sort((a, b) => (a.name||a.displayName||'').localeCompare(b.name||b.displayName||''));
+
+      allPlayers.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name || p.displayName;
+        playerSelect.appendChild(opt);
+      });
+
+      // Populate pitcher dropdown — only players with pitching seasons
+      const pitchers = allPlayers.filter(p =>
+        p.pitchingSeasons && Object.keys(p.pitchingSeasons).length > 0
+      );
+      pitchers.forEach(p => {
+        const pName = p.name || p.displayName;
+        const legId  = toLegacyId(pName);
+        // Show their most recent team for context
+        const seasonVals = Object.entries(p.pitchingSeasons || {})
+          .sort((a, b) => b[0].localeCompare(a[0]));
+        const latestTeam = seasonVals[0]?.[1]?.team ? ` (${cap(seasonVals[0][1].team)})` : '';
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = `${pName}${latestTeam}`;
+        opt.dataset.legacyId = legId;
+        opt.dataset.name     = pName;
+        pitcherSelect.appendChild(opt);
+      });
+
+    } catch(e) { console.error('Failed to load player list:', e); }
+    finally {
+      // Hide loading overlay once player list is ready (auth resolved + data fetched)
+      document.getElementById('loadingOverlay')?.classList.add('hidden');
+    }
+  });
+
+  playerSelect.addEventListener('change', () => {
+    currentOpponent = '';
+    currentPitcher = ''; currentPitcherName = ''; pitcherGameDocIds = new Set();
+    opponentSelect.value = '';
+    pitcherSelect.value  = '';
+    pitcherSelect.disabled = true;
+    if (playerSelect.value) loadPlayer(playerSelect.value);
+    else {
+      scoutingReport.classList.add('hidden');
+      loadingState.classList.add('hidden');
+      emptyState.classList.remove('hidden');
+    }
+  });
+
+  opponentSelect.addEventListener('change', () => {
+    currentOpponent = opponentSelect.value;
+    if (currentOpponent) {
+      // Clear pitcher when opponent is selected
+      currentPitcher = ''; currentPitcherName = ''; pitcherGameDocIds = new Set();
+      pitcherSelect.value = '';
+    }
+    if (currentPlayer) renderReport();
+  });
+
+  pitcherSelect.addEventListener('change', async () => {
+    const sel = pitcherSelect.options[pitcherSelect.selectedIndex];
+    currentPitcher     = pitcherSelect.value;
+    currentPitcherName = sel?.dataset?.name || '';
+    const legacyId     = sel?.dataset?.legacyId || '';
+
+    if (currentPitcher) {
+      // Clear opponent when pitcher is selected
+      currentOpponent = '';
+      opponentSelect.value = '';
+      await loadPitcherMatchup(legacyId);
+    } else {
+      pitcherGameDocIds = new Set();
+    }
+    if (currentPlayer) renderReport();
+  });
+
+  // ── Spray Chart ──────────────────────────────────────
+  // Field geometry: home plate at (150, 248), outfield radius 210px, foul lines at ±45° from vertical
+  // Left foul tip:  (150 - 210·sin45°, 248 - 210·cos45°) ≈ (2,  100)
+  // Right foul tip: (150 + 210·sin45°, 248 - 210·cos45°) ≈ (298, 100)
+  // Infield arc radius 105px
+  // Base distance 88px along 45° lines from home
+  //   2B: (150, 248-88)=(150,160)  1B: (150+62,248-62)=(212,186)  3B: (88,186)
+
+  const SPRAY_HOME = { x: 150, y: 248 };
+  const SPRAY_OF_R = 210;   // outfield radius
+  const SPRAY_IF_R = 105;   // infield arc radius
+  // Foul line endpoints (±45° from vertical, at outfield radius)
+  const SPRAY_FL_L = { x: SPRAY_HOME.x - SPRAY_OF_R * Math.sin(Math.PI/4), y: SPRAY_HOME.y - SPRAY_OF_R * Math.cos(Math.PI/4) };
+  const SPRAY_FL_R = { x: SPRAY_HOME.x + SPRAY_OF_R * Math.sin(Math.PI/4), y: SPRAY_HOME.y - SPRAY_OF_R * Math.cos(Math.PI/4) };
+  // Infield arc endpoints (same angles, infield radius)
+  const SPRAY_IF_L = { x: SPRAY_HOME.x - SPRAY_IF_R * Math.sin(Math.PI/4), y: SPRAY_HOME.y - SPRAY_IF_R * Math.cos(Math.PI/4) };
+  const SPRAY_IF_R2= { x: SPRAY_HOME.x + SPRAY_IF_R * Math.sin(Math.PI/4), y: SPRAY_HOME.y - SPRAY_IF_R * Math.cos(Math.PI/4) };
+  // Bases — infield is a square rotated 45°. With side length BD, each base is
+  // BD/√2 horizontally and BD/√2 vertically from the adjacent bases.
+  // 2B is straight up from home at BD*√2 (the diagonal of the square).
+  const BD = 88;
+  const SPRAY_1B = { x: SPRAY_HOME.x + BD * Math.sin(Math.PI/4), y: SPRAY_HOME.y - BD * Math.cos(Math.PI/4) };
+  const SPRAY_3B = { x: SPRAY_HOME.x - BD * Math.sin(Math.PI/4), y: SPRAY_HOME.y - BD * Math.cos(Math.PI/4) };
+  const SPRAY_2B = { x: SPRAY_HOME.x, y: SPRAY_HOME.y - BD * Math.SQRT2 };
+
+  // Zone dot-placement centers (adjusted to new geometry)
+  const SPRAY_ZONES = {
+    LF:  { x: 48,  y: 88  },
+    LCF: { x: 98,  y: 58  },
+    CF:  { x: 150, y: 42  },
+    RCF: { x: 202, y: 58  },
+    RF:  { x: 252, y: 88  },
+    '3B':{ x: Math.round(SPRAY_3B.x), y: Math.round(SPRAY_3B.y) },
+    SS:  { x: 112, y: 158 },
+    '2B':{ x: 188, y: 158 },
+    '1B':{ x: Math.round(SPRAY_1B.x), y: Math.round(SPRAY_1B.y) },
+    P:   { x: 150, y: 208 },
+    C:   { x: 150, y: 236 },
+  };
+
+  // Scale: SVG outfield arc radius (210 units) ≈ 200 ft at this field
+  const SPRAY_FIELD_SCALE = 1.05;
+
+  // Convert precise angle + distance to SVG coordinates on this field
+  function sprayToSvg(angle_deg, distance_ft) {
+    const rad = angle_deg * Math.PI / 180;
+    return {
+      x: SPRAY_HOME.x + distance_ft * Math.sin(rad) * SPRAY_FIELD_SCALE,
+      y: SPRAY_HOME.y - distance_ft * Math.cos(rad) * SPRAY_FIELD_SCALE,
+    };
+  }
+
+  async function loadSprayChart(playerName, season, playerId) {
+    const card  = document.getElementById('sprayChartCard');
+    const svg   = document.getElementById('sprayChartSvg');
+    const empty = document.getElementById('sprayChartEmpty');
+    const total = document.getElementById('sprayChartTotal');
+    const seasonLabel = document.getElementById('sprayChartSeason');
+
+    card.style.display = 'none';
+    svg.innerHTML = '';
+    empty.style.display = 'none';
+    total.textContent = '';
+
+    if (!playerName) return;
+
+    const HIT_TYPES = new Set(['single','double','triple','homerun']);
+    const OUT_TYPES = new Set(['groundout','flyout','popup','sacfly','doubleplay','strikeout']);
+
+    // Deterministic spiral jitter — for zone-based dots only
+    function jitterX(cx, spread, idx) {
+      return cx + spread * Math.cos((idx * 137.5) * Math.PI / 180);
+    }
+    function jitterY(cy, spread, idx) {
+      return cy + spread * Math.sin((idx * 137.5) * Math.PI / 180);
+    }
+
+    // Draw a single circle on the SVG
+    function addDot(svgEl, cx, cy, isHit, label, precise) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const circle = document.createElementNS(ns, 'circle');
+      circle.setAttribute('cx', cx.toFixed(1));
+      circle.setAttribute('cy', cy.toFixed(1));
+      circle.setAttribute('r',  precise ? '5.5' : '7');
+      circle.setAttribute('fill', isHit ? '#22c55e' : '#ef4444');
+      circle.setAttribute('fill-opacity', precise ? '0.75' : '0.85');
+      circle.setAttribute('stroke', 'white');
+      circle.setAttribute('stroke-width', precise ? '1' : '1.5');
+      const tt = document.createElementNS(ns, 'title');
+      tt.textContent = label;
+      circle.appendChild(tt);
+      svgEl.appendChild(circle);
+    }
+
+    try {
+      // ── Try sprayChartData first (precise CSV + game-tracker zones) ──────────
+      let precisePlays = [];   // [{result, angle_deg, distance_ft, zone, source}]
+      let zonePlays    = [];   // [{result, zone, playType, source}]
+      let usedSprayDoc = false;
+
+      if (playerId) {
+        const spraySnap = await getDoc(doc(db, 'sprayChartData', playerId));
+        if (spraySnap.exists()) {
+          usedSprayDoc = true;
+          const data = spraySnap.data();
+
+          // CSV precise plays
+          (data.csvPlays || []).forEach(p => {
+            if (p.angle_deg != null && p.distance_ft != null) {
+              precisePlays.push(p);
+            }
+          });
+
+          // Game-tracker zone plays (keyed by gameDocId)
+          const gp = data.gamePlays || {};
+          Object.values(gp).forEach(arr => {
+            (arr || []).forEach(p => { if (p.zone && SPRAY_ZONES[p.zone]) zonePlays.push(p); });
+          });
+        }
+      }
+
+      // ── Fallback: scan gameResults (original behavior, no sprayChartData doc) ──
+      if (!usedSprayDoc) {
+        function nameKey(name) {
+          if (!name) return '';
+          const parts = name.trim().split(/\s+/);
+          if (parts.length < 2) return name.toLowerCase().replace(/\s+/g, '');
+          return (parts[0][0] + parts[parts.length - 1]).toLowerCase();
+        }
+        const playerKey = nameKey(playerName);
+
+        const snap = await getDocs(collection(db, 'gameResults'));
+        snap.forEach(docSnap => {
+          const data = docSnap.data();
+          (data.playByPlay || []).forEach(play => {
+            if (
+              nameKey(play.batter) === playerKey &&
+              play.isYourTeam === true &&
+              play.location &&
+              SPRAY_ZONES[play.location] &&
+              (HIT_TYPES.has(play.playType) || OUT_TYPES.has(play.playType))
+            ) {
+              zonePlays.push({
+                result:   HIT_TYPES.has(play.playType) ? 'Hit' : 'Out',
+                zone:     play.location,
+                playType: play.playType,
+                source:   'game-tracker',
+              });
+            }
+          });
+        });
+      }
+
+      const totalPlays = precisePlays.length + zonePlays.length;
+      card.style.display = '';
+      seasonLabel.textContent = season ? `— ${season.displayName || season.id}` : '';
+      drawFieldBackground(svg);
+
+      if (totalPlays === 0) {
+        empty.style.display = '';
+        return;
+      }
+
+      // ── Render precise CSV dots ───────────────────────────────────────────────
+      precisePlays.forEach(p => {
+        const pos = sprayToSvg(p.angle_deg, p.distance_ft);
+        // keep dots inside the field arc with a small clamp
+        const dist = Math.hypot(pos.x - SPRAY_HOME.x, pos.y - SPRAY_HOME.y);
+        if (dist > SPRAY_OF_R + 10) return; // way out of bounds — skip
+        addDot(svg, pos.x, pos.y, p.result === 'Hit',
+          `${p.zone || ''} — ${p.result} (${Math.round(p.distance_ft)} ft)`, true);
+      });
+
+      // ── Render zone-based dots (with jitter) ─────────────────────────────────
+      const zoneCount = {};
+      zonePlays.forEach(p => { zoneCount[p.zone] = (zoneCount[p.zone] || 0) + 1; });
+      const zoneIdx = {};
+      zonePlays.forEach(p => {
+        const z      = SPRAY_ZONES[p.zone];
+        const idx    = zoneIdx[p.zone] = (zoneIdx[p.zone] || 0) + 1;
+        const spread = Math.min(14, 3 + zoneCount[p.zone] * 2);
+        const cx     = zoneCount[p.zone] > 1 ? jitterX(z.x, spread, idx) : z.x;
+        const cy     = zoneCount[p.zone] > 1 ? jitterY(z.y, spread, idx) : z.y;
+        addDot(svg, cx, cy, p.result === 'Hit',
+          `${p.zone} — ${p.playType || p.result}`, false);
+      });
+
+      const hits = precisePlays.filter(p => p.result === 'Hit').length
+                 + zonePlays.filter(p => p.result === 'Hit').length;
+      const outs = totalPlays - hits;
+      const srcNote = precisePlays.length > 0 ? ' (precise spray data)' : '';
+      total.textContent = `${totalPlays} tracked AB${totalPlays !== 1 ? 's' : ''} — ${hits} hit${hits !== 1 ? 's' : ''}, ${outs} out${outs !== 1 ? 's' : ''}${srcNote}`;
+
+    } catch(e) {
+      console.warn('Spray chart load failed:', e);
+    }
+  }
+
+  function drawFieldBackground(svgEl) {
+    const ns = 'http://www.w3.org/2000/svg';
+    const add = (tag, attrs, parent) => {
+      const node = document.createElementNS(ns, tag);
+      Object.entries(attrs).forEach(([k, v]) => node.setAttribute(k, v));
+      (parent || svgEl).appendChild(node);
+      return node;
+    };
+
+    const H  = SPRAY_HOME;
+    const R  = SPRAY_OF_R;
+    const Ri = SPRAY_IF_R;
+    const fl = SPRAY_FL_L, fr = SPRAY_FL_R;
+    const il = SPRAY_IF_L, ir = SPRAY_IF_R2;
+    const b1 = SPRAY_1B, b2 = SPRAY_2B, b3 = SPRAY_3B;
+
+    // ── Outfield grass (full fan) ─────────────────────────────────
+    add('path', {
+      d: `M ${fl.x.toFixed(1)} ${fl.y.toFixed(1)} A ${R} ${R} 0 0 1 ${fr.x.toFixed(1)} ${fr.y.toFixed(1)} L ${H.x} ${H.y} Z`,
+      fill: '#e8f4f0', stroke: '#b2d8cc', 'stroke-width': '1.5', 'stroke-linejoin': 'round'
+    });
+
+    // ── Infield arc (dirt/grass boundary) ─────────────────────────
+    add('path', {
+      d: `M ${il.x.toFixed(1)} ${il.y.toFixed(1)} A ${Ri} ${Ri} 0 0 1 ${ir.x.toFixed(1)} ${ir.y.toFixed(1)} L ${H.x} ${H.y} Z`,
+      fill: '#f0e6d6', stroke: '#d4b896', 'stroke-width': '1'
+    });
+
+    // ── Base paths (white lines on dirt) ──────────────────────────
+    add('polyline', {
+      points: `${H.x},${H.y} ${b1.x.toFixed(1)},${b1.y.toFixed(1)} ${b2.x},${b2.y} ${b3.x.toFixed(1)},${b3.y.toFixed(1)} ${H.x},${H.y}`,
+      fill: 'none', stroke: '#c4a882', 'stroke-width': '1.2'
+    });
+
+    // ── Foul lines ─────────────────────────────────────────────────
+    add('line', { x1:H.x, y1:H.y, x2:fl.x.toFixed(1), y2:fl.y.toFixed(1), stroke:'#b2d8cc', 'stroke-width':'1.2' });
+    add('line', { x1:H.x, y1:H.y, x2:fr.x.toFixed(1), y2:fr.y.toFixed(1), stroke:'#b2d8cc', 'stroke-width':'1.2' });
+
+    // ── Pitcher's mound ────────────────────────────────────────────
+    add('circle', { cx: H.x, cy: H.y - 48, r: 7, fill: '#e8d9c4', stroke: '#c4a882', 'stroke-width': '1' });
+
+    // ── Bases (small rotated squares) ─────────────────────────────
+    [b1, b2, b3].forEach(b => {
+      add('rect', {
+        x: (b.x - 5).toFixed(1), y: (b.y - 5).toFixed(1),
+        width: 10, height: 10,
+        fill: 'white', stroke: '#94a3b8', 'stroke-width': '1.2',
+        transform: `rotate(45,${b.x.toFixed(1)},${b.y.toFixed(1)})`
+      });
+    });
+
+    // ── Home plate (pentagon) — flat edge toward field (top), point toward catcher (bottom)
+    add('polygon', {
+      points: `${H.x-7},${H.y-5} ${H.x+7},${H.y-5} ${H.x+7},${H.y+1} ${H.x},${H.y+7} ${H.x-7},${H.y+1}`,
+      fill: 'white', stroke: '#94a3b8', 'stroke-width': '1.2'
+    });
+
+    // ── Catcher's arc (semicircle below home) ─────────────────────
+    add('path', {
+      d: `M ${H.x-22},${H.y+6} A 22 22 0 0 0 ${H.x+22},${H.y+6}`,
+      fill: 'none', stroke: '#b2c4d4', 'stroke-width': '1', 'stroke-dasharray': '3,2'
+    });
+  }
+
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

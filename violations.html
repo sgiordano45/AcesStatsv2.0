@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wall of Shame - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --shame-red: #c53030;
+  --shame-red-light: #fff5f5;
+  --shame-orange: #dd6b20;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #7b1a1a 0%, #c53030 50%, #9b2335 100%);
+  color: white;
+  text-align: center;
+  padding: 3rem 1.5rem 2rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; left: -60px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(255,200,0,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.header-emoji {
+  font-size: 3.5rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
+  position: relative; z-index: 1;
+}
+
+.header h1 {
+  font-size: 2.4rem;
+  font-weight: 900;
+  text-shadow: 2px 3px 6px rgba(0,0,0,0.4);
+  letter-spacing: -0.5px;
+  position: relative; z-index: 1;
+}
+
+.header .subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+  font-style: italic;
+  position: relative; z-index: 1;
+}
+
+.header-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  position: relative; z-index: 1;
+}
+
+.header-stat {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  text-align: center;
+}
+
+.header-stat .num {
+  font-size: 1.6rem;
+  font-weight: 800;
+  display: block;
+}
+
+.header-stat .lbl {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* LOADING */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.3s ease;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.loading-spinner { font-size: 4rem; animation: spin 1.5s ease-in-out infinite; }
+@keyframes spin {
+  0%,100% { transform: rotate(-15deg) scale(1); }
+  50% { transform: rotate(15deg) scale(1.1); }
+}
+
+/* ACCESS DENIED */
+.access-denied {
+  max-width: 500px; margin: 3rem auto; padding: 2rem;
+  background: white; border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  text-align: center; display: none;
+}
+.access-denied .icon { font-size: 3rem; margin-bottom: 1rem; }
+.access-denied h2 { color: var(--shame-red); margin-bottom: 0.5rem; }
+.access-denied p { color: var(--text-light); }
+
+/* MAIN CONTAINER */
+.main-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  display: none;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 1rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.tab-btn.active {
+  background: var(--shame-red);
+  color: white;
+}
+
+.tab-btn:not(.active):hover {
+  background: var(--shame-red-light);
+  color: var(--shame-red);
+}
+
+/* SUBMIT FORM */
+.submit-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.submit-card-header {
+  background: linear-gradient(135deg, #7b1a1a, #c53030);
+  color: white;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.submit-card-header h2 { font-size: 1.1rem; font-weight: 700; }
+
+.submit-form {
+  padding: 1.5rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.form-row { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+@media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-control {
+  padding: 0.7rem 0.9rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  background: white;
+  color: var(--text-dark);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--shame-red);
+  box-shadow: 0 0 0 3px rgba(197,48,48,0.1);
+}
+
+textarea.form-control { min-height: 100px; resize: vertical; }
+
+.severity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+@media (max-width: 500px) { .severity-grid { grid-template-columns: 1fr 1fr; } }
+
+.severity-option { display: none; }
+
+.severity-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.7rem 0.5rem;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.severity-label .sev-emoji { font-size: 1.4rem; }
+
+.severity-option:checked + .severity-label {
+  border-color: currentColor;
+  background: rgba(0,0,0,0.04);
+  color: var(--text-dark);
+}
+
+.severity-option[value="1"]:checked + .severity-label { color: #38a169; border-color: #38a169; background: #f0fff4; }
+.severity-option[value="2"]:checked + .severity-label { color: #d69e2e; border-color: #d69e2e; background: #fffff0; }
+.severity-option[value="3"]:checked + .severity-label { color: #dd6b20; border-color: #dd6b20; background: #fffaf0; }
+.severity-option[value="4"]:checked + .severity-label { color: #e53e3e; border-color: #e53e3e; background: #fff5f5; }
+.severity-option[value="5"]:checked + .severity-label { color: #742a2a; border-color: #742a2a; background: #fff5f5; }
+
+.anonymous-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 42px; height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+.toggle-slider {
+  position: absolute; inset: 0;
+  background: #cbd5e0;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 18px; width: 18px;
+  left: 3px; bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+input:checked + .toggle-slider { background: var(--shame-red); }
+input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+.toggle-text { font-size: 0.85rem; color: var(--text-dark); }
+.toggle-text strong { display: block; font-weight: 600; }
+.toggle-text span { color: var(--text-light); font-size: 0.78rem; }
+
+.submit-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #c53030, #9b2335);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(197,48,48,0.3);
+}
+
+.submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(197,48,48,0.4); }
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* VIOLATIONS LIST */
+.violations-feed { display: flex; flex-direction: column; gap: 1rem; }
+
+.violation-card {
+  background: white;
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  border-left: 5px solid #c53030;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.violation-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.violation-card.sev-1 { border-left-color: #38a169; }
+.violation-card.sev-2 { border-left-color: #d69e2e; }
+.violation-card.sev-3 { border-left-color: #dd6b20; }
+.violation-card.sev-4 { border-left-color: #e53e3e; }
+.violation-card.sev-5 { border-left-color: #742a2a; }
+
+.violation-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem 0.75rem;
+}
+
+.violation-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c53030, #9b2335);
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.violation-meta { flex: 1; min-width: 0; }
+
+.violation-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.violation-team-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  margin-top: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.violation-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.severity-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sev-badge-1 { background: #f0fff4; color: #276749; }
+.sev-badge-2 { background: #fffff0; color: #975a16; }
+.sev-badge-3 { background: #fffaf0; color: #c05621; }
+.sev-badge-4 { background: #fff5f5; color: #c53030; }
+.sev-badge-5 { background: #fff5f5; color: #742a2a; }
+
+.violation-date {
+  font-size: 0.72rem;
+  color: var(--text-light);
+}
+
+.violation-rule-tag {
+  margin: 0 1.25rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--shame-red);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.violation-desc {
+  margin: 0 1.25rem 0.75rem;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.violation-footer {
+  background: #f7fafc;
+  padding: 0.6rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.violation-reporter {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.violation-reactions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.reaction-btn {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.reaction-btn:hover { background: #fff5f5; border-color: var(--shame-red); }
+.reaction-btn.reacted { background: #fff5f5; border-color: var(--shame-red); color: var(--shame-red); font-weight: 700; }
+
+/* Admin controls on cards */
+.admin-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.admin-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: background 0.15s;
+  color: var(--text-light);
+}
+.admin-btn:hover { background: #e2e8f0; }
+.admin-btn.delete:hover { background: #fff5f5; color: var(--shame-red); }
+.admin-btn.edit:hover { background: #ebf8ff; color: #2b6cb0; }
+
+/* EDIT MODAL */
+.edit-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 1rem;
+}
+.edit-modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+.edit-modal-inner {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 640px;
+  margin: 2rem auto;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.edit-modal-header {
+  background: linear-gradient(135deg, #2b4a8a 0%, #2b6cb0 100%);
+  color: white;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.edit-modal-header h2 { font-size: 1.1rem; font-weight: 700; }
+.edit-modal-close {
+  background: none; border: none; color: white; font-size: 1.4rem;
+  cursor: pointer; line-height: 1; padding: 0 0.25rem;
+}
+.edit-modal-body { padding: 1.25rem; }
+
+/* LEADERBOARD / SHAME BOARD */
+.shame-board {
+  background: white;
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.shame-board-header {
+  background: linear-gradient(135deg, #7b1a1a, #c53030);
+  color: white;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.shame-board-header h2 { font-size: 1rem; font-weight: 700; }
+
+.shame-entry {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.15s;
+}
+.shame-entry:last-child { border-bottom: none; }
+.shame-entry:hover { background: #fef5f5; }
+
+.shame-rank {
+  font-size: 1.4rem;
+  font-weight: 900;
+  width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.rank-1 { color: #c53030; }
+.rank-2 { color: #dd6b20; }
+.rank-3 { color: #d69e2e; }
+
+.shame-player { flex: 1; min-width: 0; }
+.shame-player-name { font-weight: 700; font-size: 0.95rem; }
+.shame-player-team { font-size: 0.75rem; color: var(--text-light); }
+
+.shame-count {
+  text-align: right;
+  flex-shrink: 0;
+}
+.shame-count .count { font-size: 1.2rem; font-weight: 800; color: var(--shame-red); }
+.shame-count .label { font-size: 0.7rem; color: var(--text-light); }
+
+/* FILTERS */
+.filter-bar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.filter-select, .filter-input {
+  padding: 0.6rem 0.9rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: white;
+  color: var(--text-dark);
+  cursor: pointer;
+  flex: 1;
+  min-width: 140px;
+}
+
+.filter-select:focus, .filter-input:focus {
+  outline: none;
+  border-color: var(--shame-red);
+}
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--text-light);
+}
+.empty-state .empty-emoji { font-size: 3rem; display: block; margin-bottom: 1rem; }
+.empty-state h3 { color: var(--text-dark); margin-bottom: 0.5rem; }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #1a202c;
+  color: white;
+  padding: 0.85rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  z-index: 10000;
+  transition: transform 0.3s ease;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { background: #276749; }
+.toast.error { background: #c53030; }
+
+/* SECTION LABEL */
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-light);
+  margin-bottom: 0.75rem;
+}
+
+/* PHOTO GALLERY */
+.gallery-section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 0;
+}
+.gallery-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+.gallery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.gallery-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.gallery-upload-btn {
+  background: var(--shame-red);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+}
+.gallery-upload-btn:hover { background: #9b2335; transform: translateY(-1px); }
+.gallery-upload-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.gallery-strip {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+  min-height: 240px;
+  align-items: flex-start;
+}
+.gallery-strip::-webkit-scrollbar { height: 4px; }
+.gallery-strip::-webkit-scrollbar-track { background: transparent; }
+.gallery-strip::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
+.gallery-photo-wrap {
+  flex-shrink: 0;
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.2s;
+  max-width: 320px;
+}
+.gallery-photo-wrap:hover { transform: scale(1.03); }
+.gallery-photo-wrap img {
+  display: block;
+  height: 240px;
+  width: auto;
+  max-width: 320px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.gallery-photo-caption {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.72));
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 1rem 0.6rem 0.5rem;
+  border-radius: 0 0 10px 10px;
+}
+.gallery-delete-btn {
+  position: absolute;
+  top: 5px; right: 5px;
+  background: rgba(0,0,0,0.55);
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 24px; height: 24px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.gallery-photo-wrap:hover .gallery-delete-btn { opacity: 1; }
+.gallery-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  color: var(--text-light);
+  font-size: 0.88rem;
+  gap: 0.4rem;
+  padding: 1rem 0;
+}
+.gallery-empty span { font-size: 2rem; }
+/* Upload panel */
+.gallery-upload-panel {
+  display: none;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border-color);
+  background: #fafafa;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.gallery-upload-panel.open { display: flex; }
+.gallery-file-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  background: white;
+  transition: border-color 0.2s;
+  flex: 1; min-width: 160px;
+}
+.gallery-file-label:hover { border-color: var(--shame-red); color: var(--shame-red); }
+.gallery-file-label.has-file { border-color: #38a169; color: #276749; }
+.gallery-caption-input {
+  flex: 2; min-width: 180px;
+  padding: 0.55rem 0.85rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  background: white;
+}
+.gallery-caption-input:focus { outline: none; border-color: var(--shame-red); }
+.gallery-submit-upload {
+  padding: 0.55rem 1.1rem;
+  background: var(--shame-red);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.gallery-submit-upload:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Lightbox */
+.lightbox-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.88);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.lightbox-overlay.open { display: flex; }
+.lightbox-overlay img {
+  max-width: 92vw;
+  max-height: 88vh;
+  border-radius: 10px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  object-fit: contain;
+}
+.lightbox-caption {
+  position: fixed;
+  bottom: 1.5rem; left: 0; right: 0;
+  text-align: center;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+}
+.lightbox-close {
+  position: fixed;
+  top: 1rem; right: 1.25rem;
+  background: rgba(255,255,255,0.15);
+  border: none; color: white;
+  font-size: 1.5rem; cursor: pointer;
+  border-radius: 50%; width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* DESKTOP NAV (injected by nav-component.js into .filters-nav) */
+.filters-nav {
+  background: white;
+  border-bottom: 2px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  padding: 0 1rem;
+}
+
+@media (max-width: 768px) {
+  .filters-nav {
+    display: none;
+  }
+}
+
+/* SEASON SELECTOR */
+.season-selector-bar {
+  background: rgba(0,0,0,0.2);
+  border-top: 1px solid rgba(255,255,255,0.15);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.season-selector-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.season-btn {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.season-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.season-btn.active {
+  background: white;
+  color: var(--shame-red);
+  border-color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* TEAM COLOR UTILITIES */
+.team-green { background: #276749; color: white; }
+.team-gold { background: #975a16; color: white; }
+.team-white { background: #e2e8f0; color: #2d3748; }
+.team-blue { background: #2b6cb0; color: white; }
+.team-black { background: #1a202c; color: white; }
+.team-red { background: #c53030; color: white; }
+.team-silver { background: #a0aec0; color: #1a202c; }
+.team-orange { background: #c05621; color: white; }
+.team-purple { background: #553c9a; color: white; }
+.team-army { background: #4a5568; color: white; }
+.team-carolina { background: #2c7a7b; color: white; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner">🚨</div>
+</div>
+
+<div class="page-container">
+
+<div class="filters-nav">
+  <!-- Desktop nav injected here by nav-component.js -->
+</div>
+
+<div class="header">
+  <span class="header-emoji">🏛️</span>
+  <h1>Wall of Shame</h1>
+  <p class="subtitle">Where rule-breakers get the recognition they truly deserve</p>
+  <div class="season-selector-bar" id="seasonSelectorBar">
+    <span class="season-selector-label">📅 Season:</span>
+    <div id="seasonButtons" style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
+      <span style="opacity:0.7;font-size:0.8rem;">Loading seasons...</span>
+    </div>
+  </div>
+
+  <div class="header-stats">
+    <div class="header-stat">
+      <span class="num" id="statTotal">—</span>
+      <span class="lbl">Total Violations</span>
+    </div>
+    <div class="header-stat">
+      <span class="num" id="statRepeat">—</span>
+      <span class="lbl">Repeat Offenders</span>
+    </div>
+    <div class="header-stat">
+      <span class="num" id="statTeam">—</span>
+      <span class="lbl">Teams Represented</span>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTO GALLERY -->
+<div class="gallery-section" id="gallerySection">
+  <div class="gallery-card">
+    <div class="gallery-header">
+      <h3>📸 Hall of Shame Gallery</h3>
+      <button class="gallery-upload-btn" id="galleryUploadToggle" style="display:none" onclick="toggleUploadPanel()">
+        + Add Photo
+      </button>
+    </div>
+    <div class="gallery-strip" id="galleryStrip">
+      <div class="gallery-empty">
+        <span>🖼️</span>
+        <p>No photos yet — the wall is bare</p>
+      </div>
+    </div>
+    <div class="gallery-upload-panel" id="galleryUploadPanel">
+      <input type="file" id="galleryFileInput" accept="image/*" style="display:none" onchange="handleFileSelect(this)">
+      <label class="gallery-file-label" id="galleryFileLabel" for="galleryFileInput">
+        <span id="galleryFileLabelText">&#x1F4C1; Choose photo</span>
+      </label>
+      <input type="text" class="gallery-caption-input" id="galleryCaptionInput" placeholder="Caption (optional)..." maxlength="100">
+      <button class="gallery-submit-upload" id="gallerySubmitBtn" onclick="uploadGalleryPhoto()">Upload</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
+<div class="access-denied" id="accessDenied">
+  <div class="icon">🔒</div>
+  <h2>Captains Only</h2>
+  <p>You need to be signed in as a team captain, league staff, or admin to submit violations. Anyone can view the Wall of Shame though!</p>
+</div>
+
+<div class="main-container" id="mainContent">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" id="tabFeed" onclick="switchTab('feed')">📋 Violation Log</button>
+    <button class="tab-btn" id="tabShame" onclick="switchTab('shame')">🏆 Shame Board</button>
+    <button class="tab-btn" id="tabSubmit" onclick="switchTab('submit')" id="tabSubmitBtn" style="display:none">⚠️ Report Violation</button>
+  </div>
+
+  <!-- FEED TAB -->
+  <div id="feedPanel">
+    <div class="filter-bar">
+      <select class="filter-select" id="filterTeam" onchange="applyFilters()">
+        <option value="">All Teams</option>
+        <option value="Green">Green</option>
+        <option value="Gold">Gold</option>
+        <option value="White">White</option>
+        <option value="Blue">Blue</option>
+        <option value="Black">Black</option>
+        <option value="Red">Red</option>
+        <option value="Silver">Silver</option>
+        <option value="Orange">Orange</option>
+        <option value="Purple">Purple</option>
+        <option value="Army">Army</option>
+        <option value="Carolina">Carolina</option>
+      </select>
+      <select class="filter-select" id="filterSeverity" onchange="applyFilters()">
+        <option value="">All Severity</option>
+        <option value="1">😇 Minor Slip</option>
+        <option value="2">🙄 Classic Move</option>
+        <option value="3">😤 That's a Foul</option>
+        <option value="4">😱 Egregious</option>
+        <option value="5">💀 Hall of Shame</option>
+      </select>
+      <input type="text" class="filter-input" id="filterSearch" placeholder="🔍 Search violations..." oninput="applyFilters()">
+    </div>
+
+    <div class="violations-feed" id="violationsFeed">
+      <div class="empty-state">
+        <span class="empty-emoji">🎉</span>
+        <h3>Everyone's Been Behaving!</h3>
+        <p>No violations on record yet. Give it a game or two...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHAME BOARD TAB -->
+  <div id="shamePanel" style="display:none">
+    <div class="shame-board">
+      <div class="shame-board-header">
+        <span>🏆</span>
+        <h2>Most Wanted — Season Shame Leaderboard</h2>
+      </div>
+      <div id="shameList">
+        <div class="empty-state">
+          <span class="empty-emoji">😇</span>
+          <h3>No Repeat Offenders Yet</h3>
+          <p>Check back after the first few games...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMIT TAB -->
+  <div id="submitPanel" style="display:none">
+    <div class="submit-card">
+      <div class="submit-card-header">
+        <span>⚠️</span>
+        <h2>Report a Rule Violation</h2>
+      </div>
+      <form class="submit-form" id="violationForm" onsubmit="handleSubmit(event)">
+
+        <div class="form-group">
+          <label class="form-label" for="violationSeason">Season *</label>
+          <select class="form-control" id="violationSeason" required>
+            <option value="">Select season...</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="offenderName">Player Name *</label>
+            <input type="text" class="form-control" id="offenderName" placeholder="First Last" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="offenderTeam">Player's Team *</label>
+            <select class="form-control" id="offenderTeam" required>
+              <option value="">Loading teams...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="ruleViolated">Rule Violated *</label>
+          <select class="form-control" id="ruleViolated" required>
+            <option value="">Select the offense...</option>
+            <optgroup label="Conduct">
+              <option>Arguing with an umpire</option>
+              <option>Unsportsmanlike conduct</option>
+              <option>Excessive trash talk</option>
+              <option>Celebrating an out like it was a World Series win</option>
+              <option>Leaving before the lineup is set</option>
+            </optgroup>
+            <optgroup label="Equipment & Uniform">
+              <option>Wrong jersey / no jersey</option>
+              <option>Wearing sunglasses at night</option>
+              <option>Bringing the wrong color helmet</option>
+              <option>Using an illegal bat</option>
+            </optgroup>
+            <optgroup label="Game Play">
+              <option>Batting out of order</option>
+              <option>Slow play / delay of game</option>
+              <option>Running through a stop sign</option>
+              <option>Forgetting the lineup card</option>
+              <option>Missing mandatory games without notice</option>
+              <option>Dropped a routine fly ball (weather: clear)</option>
+            </optgroup>
+            <optgroup label="Social & Legendary">
+              <option>Arriving late to the game</option>
+              <option>Leaving without helping with equipment</option>
+              <option>Celebrating a foul ball</option>
+              <option>Claiming a ball was fair when it was clearly foul</option>
+              <option>Forgetting to RSVP (again)</option>
+              <option>Other (see description)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Severity Level *</label>
+          <div class="severity-grid">
+            <div class="sev-1">
+              <input type="radio" name="severity" id="sev1" value="1" class="severity-option">
+              <label class="severity-label" for="sev1"><span class="sev-emoji">😇</span>Minor Slip</label>
+            </div>
+            <div class="sev-2">
+              <input type="radio" name="severity" id="sev2" value="2" class="severity-option">
+              <label class="severity-label" for="sev2"><span class="sev-emoji">🙄</span>Classic Move</label>
+            </div>
+            <div class="sev-3">
+              <input type="radio" name="severity" id="sev3" value="3" class="severity-option">
+              <label class="severity-label" for="sev3"><span class="sev-emoji">😤</span>That's a Foul</label>
+            </div>
+            <div class="sev-4">
+              <input type="radio" name="severity" id="sev4" value="4" class="severity-option">
+              <label class="severity-label" for="sev4"><span class="sev-emoji">😱</span>Egregious</label>
+            </div>
+            <div class="sev-5">
+              <input type="radio" name="severity" id="sev5" value="5" class="severity-option">
+              <label class="severity-label" for="sev5"><span class="sev-emoji">💀</span>Hall of Shame</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="description">Tell Us What Happened *</label>
+          <textarea class="form-control" id="description" placeholder="Give us the full story. Don't hold back. The league needs to know." required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="gameDate">Date of Incident</label>
+            <input type="date" class="form-control" id="gameDate">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="gameOpponent">Game / Opponent</label>
+            <input type="text" class="form-control" id="gameOpponent" placeholder="e.g. vs. Blue, 6/12">
+          </div>
+        </div>
+
+        <label class="anonymous-toggle">
+          <div class="toggle-switch">
+            <input type="checkbox" id="anonymousToggle">
+            <span class="toggle-slider"></span>
+          </div>
+          <div class="toggle-text">
+            <strong>Submit Anonymously</strong>
+            <span>Your name won't appear on the violation. (We'll still know it was you.)</span>
+          </div>
+        </label>
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+          🚨 Add to the Wall of Shame
+        </button>
+      </form>
+
+      <!-- WhatsApp Share Banner (shown after successful submit) -->
+      <div id="whatsappShareBanner" style="display:none; margin-top:1rem; background:#dcfce7; border:2px solid #16a34a; border-radius:12px; padding:1rem 1.25rem; align-items:center; gap:1rem; flex-wrap:wrap;">
+        <span style="font-size:1.5rem;">📲</span>
+        <div style="flex:1; min-width:180px;">
+          <div style="font-weight:700; color:#166534; font-size:0.95rem;">Share to WhatsApp?</div>
+          <div style="color:#15803d; font-size:0.82rem;">Let the group know about this violation!</div>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button id="whatsappShareBtn"
+             style="background:#25d366; color:white; font-weight:700; font-size:0.9rem; padding:0.5rem 1rem; border-radius:8px; border:none; cursor:pointer; display:flex; align-items:center; gap:0.4rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Share
+          </button>
+          <button onclick="document.getElementById('whatsappShareBanner').style.display='none'; switchTab('feed')"
+                  style="background:none; border:1px solid #16a34a; color:#166534; font-size:0.85rem; padding:0.5rem 0.75rem; border-radius:8px; cursor:pointer;">
+            Dismiss
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- EDIT MODAL -->
+<div class="edit-modal-overlay" id="editModalOverlay">
+  <div class="edit-modal-inner">
+    <div class="edit-modal-header">
+      <h2>✏️ Edit Violation</h2>
+      <button class="edit-modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="edit-modal-body" id="editModalBody">
+      <!-- form cloned here dynamically -->
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import {
+  collection, addDoc, getDocs, doc, updateDoc, deleteDoc,
+  query, orderBy, serverTimestamp, getDoc
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+import { app, db } from './firebase-data.js';
+import { storage } from './firebase-config.js';
+import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import {
+  getUserProfile,
+  USER_ROLES,
+  isUserCaptain,
+  hasLeagueRole,
+  hasSpecialRole
+} from './firebase-auth.js';
+
+import { getAllSeasons } from './firebase-data.js';
+const auth = getAuth(app);
+
+// ── State ──────────────────────────────────────────────────
+let currentUser = null;
+let userProfile = null;
+let canSubmit = false;
+let allViolations = [];
+let availableSeasons = [];   // [{id, label}] sorted newest first
+let activeSeason = null;     // currently selected season ID (null = All Time)
+let editingId = null;        // violation doc ID currently being edited
+
+// ── Team color map ──────────────────────────────────────────
+// Determine if a hex color is light (needs dark text)
+function isLightColor(hex) {
+  const c = hex.replace('#','');
+  const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+  return (r*299 + g*587 + b*114) / 1000 > 160;
+}
+
+// key: team name, value: hex color string
+let TEAM_COLORS = {};
+
+async function loadTeams() {
+  try {
+    const snap = await getDocs(collection(db, 'teams'));
+    const active = [];
+    snap.forEach(d => {
+      const t = d.data();
+      if (t.active === true) {
+        active.push({ name: t.name, color: t.color || '#1a202c' });
+        TEAM_COLORS[t.name] = t.color || '#1a202c';
+      }
+    });
+    active.sort((a, b) => a.name.localeCompare(b.name));
+
+    const sel = document.getElementById('offenderTeam');
+    sel.innerHTML = '<option value="">Select team...</option>' +
+      active.map(t => `<option value="${escHtml(t.name)}">${escHtml(t.name)}</option>`).join('');
+  } catch (e) {
+    console.error('Error loading teams:', e);
+    document.getElementById('offenderTeam').innerHTML =
+      '<option value="">Error loading teams</option>';
+  }
+}
+const SEV_LABELS = {1:'😇 Minor Slip',2:'🙄 Classic Move',3:'😤 That\'s a Foul',4:'😱 Egregious',5:'💀 Hall of Shame'};
+
+// ── Auth ────────────────────────────────────────────────────
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+
+  if (user) {
+    const res = await getUserProfile(user.uid);
+    if (res.success) {
+      userProfile = res.data;
+      canSubmit = isUserCaptain(userProfile) || hasLeagueRole(userProfile) || hasSpecialRole(userProfile, 'mallCop');
+    }
+  }
+
+  if (canSubmit) {
+    document.getElementById('tabSubmit').style.display = '';
+    document.getElementById('galleryUploadToggle').style.display = '';
+  }
+
+  await loadTeams();
+  await loadSeasons();
+  await Promise.all([loadViolations(), loadGalleryPhotos()]);
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  document.getElementById('mainContent').style.display = 'block';
+});
+
+// ── Load seasons ─────────────────────────────────────────────
+// Minimum season to show in violations — nothing before 2025 Summer
+const MIN_SEASON = { year: 2025, half: 'summer' };
+// Chronological order within a year: summer comes before fall
+const SEASON_HALF_ORDER = { summer: 0, fall: 1, spring: 2 };
+
+function seasonSortKey(id) {
+  const [y, h] = id.split('-');
+  return parseInt(y) * 10 + (SEASON_HALF_ORDER[h] ?? 5);
+}
+
+function isSeasonEligible(id) {
+  return seasonSortKey(id) >= seasonSortKey(`${MIN_SEASON.year}-${MIN_SEASON.half}`);
+}
+
+function formatSeasonLabel(id) {
+  const [year, half] = id.split('-');
+  return `${year} ${half.charAt(0).toUpperCase() + half.slice(1)}`;
+}
+
+async function loadSeasons() {
+  try {
+    const allSeasons = await getAllSeasons();
+
+    // Filter to 2025 Fall and later only
+    const eligible = allSeasons.filter(s => isSeasonEligible(s.id));
+
+    // Sort oldest → newest (left-to-right chronological for buttons)
+    // Within same year: 2026-summer (key 20260) before 2026-fall (key 20261)
+    eligible.sort((a, b) => seasonSortKey(a.id) - seasonSortKey(b.id));
+
+    availableSeasons = eligible.map(s => ({
+      id: s.id,
+      label: formatSeasonLabel(s.id),
+      isActive: s.isActive || false
+    }));
+
+    // If Firestore has no eligible seasons yet, seed with 2025 Summer + Fall placeholders
+    if (!availableSeasons.length) {
+      availableSeasons = [
+        { id: '2025-summer', label: '2025 Summer', isActive: false },
+        { id: '2025-fall', label: '2025 Fall', isActive: false }
+      ];
+    }
+
+    // Default to All Time to show all violations across seasons
+    activeSeason = null;
+
+  } catch (e) {
+    console.error('Error loading seasons:', e);
+    availableSeasons = [
+      { id: '2025-summer', label: '2025 Summer', isActive: false },
+      { id: '2025-fall', label: '2025 Fall', isActive: false }
+    ];
+    activeSeason = null;
+  }
+
+  renderSeasonButtons();
+  populateSeasonFormSelect();
+}
+
+function renderSeasonButtons() {
+  const container = document.getElementById('seasonButtons');
+  if (!availableSeasons.length) {
+    container.innerHTML = '<span style="opacity:0.7;font-size:0.8rem;">No seasons found</span>';
+    return;
+  }
+
+  const allBtn = `<button class="season-btn ${activeSeason === null ? 'active' : ''}" onclick="selectSeason(null)">All Time</button>`;
+  const btns = availableSeasons.map(s =>
+    `<button class="season-btn ${activeSeason === s.id ? 'active' : ''}" onclick="selectSeason('${s.id}')">${s.label}${s.isActive ? ' 🔴' : ''}</button>`
+  ).join('');
+  container.innerHTML = allBtn + btns;
+}
+
+function populateSeasonFormSelect() {
+  const sel = document.getElementById('violationSeason');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Select season...</option>';
+  // Form dropdown: newest first for easy selection
+  const forForm = [...availableSeasons].reverse();
+  forForm.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.label + (s.isActive ? ' (Current)' : '');
+    if (s.id === activeSeason) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+window.selectSeason = function(seasonId) {
+  activeSeason = seasonId;
+  renderSeasonButtons();
+  applyFilters();
+};
+
+// ── Load violations ─────────────────────────────────────────
+async function loadViolations() {
+  try {
+    const q = query(collection(db, 'violations'), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    allViolations = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    console.error('Error loading violations:', e);
+    allViolations = [];
+  }
+  applyFilters();
+}
+
+// ── Stats ───────────────────────────────────────────────────
+function updateStats(violations) {
+  document.getElementById('statTotal').textContent = violations.length;
+
+  const counts = {};
+  violations.forEach(v => { counts[v.offenderName] = (counts[v.offenderName] || 0) + 1; });
+  const repeats = Object.values(counts).filter(c => c > 1).length;
+  document.getElementById('statRepeat').textContent = repeats;
+
+  const teams = new Set(violations.map(v => v.offenderTeam).filter(Boolean));
+  document.getElementById('statTeam').textContent = teams.size;
+}
+
+// ── Render feed ─────────────────────────────────────────────
+function renderFeed(violations) {
+  const feed = document.getElementById('violationsFeed');
+  if (!violations.length) {
+    feed.innerHTML = `<div class="empty-state">
+      <span class="empty-emoji">🎉</span>
+      <h3>Everyone's Been Behaving!</h3>
+      <p>No violations on record yet. Give it a game or two...</p>
+    </div>`;
+    return;
+  }
+
+  feed.innerHTML = violations.map(v => buildCard(v)).join('');
+}
+
+function buildCard(v) {
+  const sev = parseInt(v.severity) || 1;
+  const teamColor = TEAM_COLORS[v.offenderTeam] || '#1a202c';
+  const teamTextColor = isLightColor(teamColor) ? '#2d3748' : 'white';
+  const initials = (v.offenderName || '?').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  const sevLabel = SEV_LABELS[sev] || '';
+  const date = v.createdAt?.toDate ? v.createdAt.toDate().toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}) : 'Unknown date';
+  const isMallCop = v.isMallCop === true;
+  const reporter = v.anonymous
+    ? (isMallCop ? '🕵️ Anonymous Mall Cop' : '🕵️ Anonymous Captain')
+    : (v.reporterName
+        ? (isMallCop ? `🚔 Mall Cop: ${escHtml(v.reporterName)}` : `📋 Reported by ${escHtml(v.reporterName)}`)
+        : '📋 Captain');
+  const laughs = v.reactions?.laugh || 0;
+  const shocked = v.reactions?.shocked || 0;
+  const thumbs = v.reactions?.thumbs || 0;
+
+  const canDelete = canSubmit && hasLeagueRole(userProfile);
+  const isAdmin = hasLeagueRole(userProfile);
+  const isReporter = currentUser && v.reporterUid && currentUser.uid === v.reporterUid;
+  const canEdit = isAdmin || isReporter;
+
+  return `<div class="violation-card sev-${sev}" data-id="${v.id}" data-sev="${sev}" data-team="${v.offenderTeam}">
+    <div class="violation-card-header">
+      <div class="violation-avatar">${initials}</div>
+      <div class="violation-meta">
+        <div class="violation-name">${escHtml(v.offenderName || 'Unknown Player')}</div>
+        <span class="violation-team-badge" style="background:${teamColor};color:${teamTextColor}">${escHtml(v.offenderTeam || '')}</span>
+      </div>
+      <div class="violation-right">
+        <span class="severity-badge sev-badge-${sev}">${sevLabel}</span>
+        <span class="violation-date">${date}</span>
+        ${(canEdit || canDelete) ? `<div class="admin-actions">${canEdit ? `<button class="admin-btn edit" onclick="editViolation('${v.id}')" title="Edit">✏️</button>` : ''}${canDelete ? `<button class="admin-btn delete" onclick="deleteViolation('${v.id}')" title="Delete">🗑️</button>` : ''}</div>` : ''}
+      </div>
+    </div>
+    <div class="violation-rule-tag">📋 ${escHtml(v.ruleViolated || '')}</div>
+    <div class="violation-desc">"${escHtml(v.description || '')}"</div>
+    ${v.gameContext ? `<div style="padding: 0 1.25rem 0.5rem; font-size:0.78rem; color:var(--text-light);">⚾ ${escHtml(v.gameContext)}</div>` : ''}
+    <div class="violation-footer">
+      <div class="violation-reporter">${reporter}</div>
+      <div class="violation-reactions">
+        <button class="reaction-btn" onclick="react('${v.id}','laugh',this)">😂 ${laughs}</button>
+        <button class="reaction-btn" onclick="react('${v.id}','shocked',this)">😱 ${shocked}</button>
+        <button class="reaction-btn" onclick="react('${v.id}','thumbs',this)">👍 ${thumbs}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Shame Board ─────────────────────────────────────────────
+function renderShameBoard(violations) {
+  const counts = {};
+  violations.forEach(v => {
+    const key = v.offenderName;
+    if (!key) return;
+    if (!counts[key]) counts[key] = { name: v.offenderName, team: v.offenderTeam, count: 0, maxSev: 0 };
+    counts[key].count++;
+    if (parseInt(v.severity) > counts[key].maxSev) counts[key].maxSev = parseInt(v.severity);
+  });
+
+  const sorted = Object.values(counts).sort((a, b) => b.count - a.count || b.maxSev - a.maxSev);
+  const list = document.getElementById('shameList');
+
+  if (!sorted.length) {
+    list.innerHTML = `<div class="empty-state"><span class="empty-emoji">😇</span><h3>No Repeat Offenders Yet</h3><p>Check back after the first few games...</p></div>`;
+    return;
+  }
+
+  const medals = ['🥇','🥈','🥉'];
+  list.innerHTML = sorted.slice(0, 20).map((p, i) => {
+    const rank = i < 3 ? medals[i] : `#${i+1}`;
+    const pTeamColor = TEAM_COLORS[p.team] || '#1a202c';
+    const pTeamText = isLightColor(pTeamColor) ? '#2d3748' : 'white';
+    return `<div class="shame-entry">
+      <div class="shame-rank rank-${i+1}">${rank}</div>
+      <div class="shame-player">
+        <div class="shame-player-name">${escHtml(p.name)}</div>
+        <div class="shame-player-team"><span class="violation-team-badge" style="background:${pTeamColor};color:${pTeamText};font-size:0.65rem;padding:0.15rem 0.5rem">${escHtml(p.team||'')}</span></div>
+      </div>
+      <div class="shame-count">
+        <div class="count">${p.count}</div>
+        <div class="label">violation${p.count !== 1 ? 's' : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Filters ─────────────────────────────────────────────────
+window.applyFilters = function() {
+  const team = document.getElementById('filterTeam').value;
+  const sev = document.getElementById('filterSeverity').value;
+  const search = document.getElementById('filterSearch').value.toLowerCase();
+
+  const filtered = allViolations.filter(v => {
+    if (activeSeason && v.seasonId !== activeSeason) return false;
+    if (team && v.offenderTeam !== team) return false;
+    if (sev && String(v.severity) !== sev) return false;
+    if (search && !(
+      (v.offenderName||'').toLowerCase().includes(search) ||
+      (v.description||'').toLowerCase().includes(search) ||
+      (v.ruleViolated||'').toLowerCase().includes(search)
+    )) return false;
+    return true;
+  });
+  renderFeed(filtered);
+  renderShameBoard(filtered);
+  updateStats(filtered);
+};
+
+// ── Tabs ─────────────────────────────────────────────────────
+window.switchTab = function(tab) {
+  document.getElementById('feedPanel').style.display = tab === 'feed' ? '' : 'none';
+  document.getElementById('shamePanel').style.display = tab === 'shame' ? '' : 'none';
+  document.getElementById('submitPanel').style.display = tab === 'submit' ? '' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1))?.classList.add('active');
+};
+
+// ── Submit ───────────────────────────────────────────────────
+// ── Edit Violation ───────────────────────────────────────────
+window.editViolation = function(id) {
+  const v = allViolations.find(x => x.id === id);
+  if (!v) return;
+
+  editingId = id;
+
+  // Clone the submit form into the modal
+  const form = document.getElementById('violationForm');
+  const body = document.getElementById('editModalBody');
+  body.innerHTML = '';
+  const clone = form.cloneNode(true);
+  clone.id = 'editViolationForm';
+  clone.onsubmit = null;
+  clone.setAttribute('onsubmit', 'handleEditSubmit(event)');
+
+  // Remove WhatsApp banner from clone if present
+  const banner = clone.querySelector('#whatsappShareBanner');
+  if (banner) banner.remove();
+
+  body.appendChild(clone);
+
+  // Pre-fill fields
+  const f = document.getElementById('editViolationForm');
+  f.querySelector('#violationSeason').value = v.seasonId || '';
+  f.querySelector('#offenderName').value = v.offenderName || '';
+  f.querySelector('#offenderTeam').value = v.offenderTeam || '';
+  f.querySelector('#ruleViolated').value = v.ruleViolated || '';
+  f.querySelector('#description').value = v.description || '';
+  f.querySelector('#anonymousToggle').checked = v.anonymous || false;
+
+  // Pre-fill gameContext back into date/opponent fields
+  if (v.gameContext) {
+    const parts = v.gameContext.split(' · ');
+    f.querySelector('#gameDate').value = parts[0] || '';
+    f.querySelector('#gameOpponent').value = parts[1] || '';
+  }
+
+  // Pre-select severity radio
+  const sevRadio = f.querySelector(`input[name="severity"][value="${v.severity}"]`);
+  if (sevRadio) sevRadio.checked = true;
+
+  // Update submit button
+  const btn = f.querySelector('#submitBtn');
+  btn.innerHTML = '💾 Save Changes';
+  btn.id = 'editSubmitBtn';
+
+  document.getElementById('editModalOverlay').classList.add('open');
+};
+
+window.closeEditModal = function() {
+  editingId = null;
+  document.getElementById('editModalOverlay').classList.remove('open');
+};
+
+window.handleEditSubmit = async function(e) {
+  e.preventDefault();
+  if (!editingId) return;
+
+  const f = document.getElementById('editViolationForm');
+  const severity = f.querySelector('input[name="severity"]:checked')?.value;
+  if (!severity) { showToast('Please select a severity level.', 'error'); return; }
+
+  const btn = f.querySelector('#editSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = '🔄 Saving...';
+
+  const gameDate = f.querySelector('#gameDate').value;
+  const gameOpponent = f.querySelector('#gameOpponent').value;
+
+  try {
+    const updates = {
+      seasonId: f.querySelector('#violationSeason').value,
+      offenderName: f.querySelector('#offenderName').value.trim(),
+      offenderTeam: f.querySelector('#offenderTeam').value,
+      ruleViolated: f.querySelector('#ruleViolated').value,
+      severity: parseInt(severity),
+      description: f.querySelector('#description').value.trim(),
+      gameContext: [gameDate, gameOpponent].filter(Boolean).join(' · ') || null,
+      anonymous: f.querySelector('#anonymousToggle').checked,
+      editedAt: serverTimestamp()
+    };
+
+    await updateDoc(doc(db, 'violations', editingId), updates);
+    showToast('✅ Violation updated!', 'success');
+    closeEditModal();
+    await loadViolations();
+    renderSeasonButtons();
+  } catch (err) {
+    console.error(err);
+    showToast('Error saving changes. Try again.', 'error');
+    btn.disabled = false;
+    btn.textContent = '💾 Save Changes';
+  }
+};
+
+// Close modal on overlay click
+document.getElementById('editModalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeEditModal();
+});
+
+window.handleSubmit = async function(e) {
+  e.preventDefault();
+  if (!canSubmit) { showToast('You need captain or Mall Cop permissions to submit.', 'error'); return; }
+
+  const severity = document.querySelector('input[name="severity"]:checked')?.value;
+  if (!severity) { showToast('Please select a severity level.', 'error'); return; }
+
+  const anonymous = document.getElementById('anonymousToggle').checked;
+  const gameDate = document.getElementById('gameDate').value;
+  const gameOpponent = document.getElementById('gameOpponent').value;
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '🔄 Submitting...';
+
+  try {
+    const docData = {
+      seasonId: document.getElementById('violationSeason').value,
+      offenderName: document.getElementById('offenderName').value.trim(),
+      isMallCop: !isUserCaptain(userProfile) && !hasLeagueRole(userProfile) && hasSpecialRole(userProfile, 'mallCop'),
+      offenderTeam: document.getElementById('offenderTeam').value,
+      ruleViolated: document.getElementById('ruleViolated').value,
+      severity: parseInt(severity),
+      description: document.getElementById('description').value.trim(),
+      gameContext: [gameDate, gameOpponent].filter(Boolean).join(' · ') || null,
+      anonymous,
+      reporterName: anonymous ? null : (userProfile?.displayName || currentUser?.displayName || 'Captain'),
+      reporterUid: currentUser?.uid || null,
+      reactions: { laugh: 0, shocked: 0, thumbs: 0 },
+      createdAt: serverTimestamp()
+    };
+
+    await addDoc(collection(db, 'violations'), docData);
+    showToast('✅ Violation added to the Wall of Shame!', 'success');
+    activeSeason = docData.seasonId || activeSeason;
+    document.getElementById('violationForm').reset();
+    populateSeasonFormSelect();
+    await loadViolations();
+    renderSeasonButtons();
+    showWhatsAppShare(docData);
+  } catch (err) {
+    console.error(err);
+    showToast('Error submitting. Try again.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🚨 Add to the Wall of Shame';
+  }
+};
+
+// ── WhatsApp Share ────────────────────────────────────────────
+function showWhatsAppShare(docData) {
+  const sevLabel = SEV_LABELS[docData.severity] || `Level ${docData.severity}`;
+  const parts = [
+    `🚨 *Wall of Shame Alert* 🚨`,
+    `*${docData.offenderName}* (${docData.offenderTeam || 'Unknown Team'}) just got reported!`,
+    `📋 Rule: ${docData.ruleViolated}`,
+    `⚠️ Severity: ${sevLabel}`,
+    docData.description ? `💬 "${docData.description.slice(0, 120)}${docData.description.length > 120 ? '…' : ''}"` : null,
+    `\n🔗 acessoftballreference.com/violations.html`
+  ].filter(Boolean).join('\n');
+
+  const btn = document.getElementById('whatsappShareBtn');
+  const banner = document.getElementById('whatsappShareBanner');
+  if (btn) btn.onclick = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: parts });
+      } catch(e) { /* cancelled or unsupported, fall through */ }
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(parts)}`, '_blank');
+    }
+    document.getElementById('whatsappShareBanner').style.display = 'none';
+    switchTab('feed');
+  };
+  if (banner) banner.style.display = 'flex';
+}
+
+
+const reacted = new Set(JSON.parse(localStorage.getItem('aces_reactions') || '[]'));
+
+window.react = async function(id, type, btn) {
+  const key = `${id}_${type}`;
+  if (reacted.has(key)) return;
+
+  const v = allViolations.find(x => x.id === id);
+  if (!v) return;
+
+  const newCount = (v.reactions?.[type] || 0) + 1;
+  try {
+    await updateDoc(doc(db, 'violations', id), { [`reactions.${type}`]: newCount });
+    v.reactions = { ...v.reactions, [type]: newCount };
+    reacted.add(key);
+    localStorage.setItem('aces_reactions', JSON.stringify([...reacted]));
+    btn.classList.add('reacted');
+    const emoji = btn.textContent.match(/\p{Emoji}/u)?.[0] || '';
+    btn.textContent = `${emoji} ${newCount}`;
+  } catch(e) { console.error(e); }
+};
+
+// ── Delete (admin/league staff only) ────────────────────────
+window.deleteViolation = async function(id) {
+  if (!hasLeagueRole(userProfile)) return;
+  if (!confirm('Remove this violation from the Wall of Shame?')) return;
+  try {
+    await deleteDoc(doc(db, 'violations', id));
+    allViolations = allViolations.filter(v => v.id !== id);
+    applyFilters();
+    showToast('Violation removed.', 'success');
+  } catch(e) { showToast('Error deleting.', 'error'); }
+};
+
+// ── Toast ────────────────────────────────────────────────────
+window.showToast = function(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3500);
+};
+
+function escHtml(str) {
+  const d = document.createElement('div');
+  d.appendChild(document.createTextNode(str));
+  return d.innerHTML;
+}
+
+// ── Photo Gallery ─────────────────────────────────────────────
+let galleryPhotos = []; // [{id, url, caption, storagePath, uploadedBy, uploadedAt}]
+
+async function loadGalleryPhotos() {
+  try {
+    const q = query(collection(db, 'violationPhotos'), orderBy('uploadedAt', 'desc'));
+    const snap = await getDocs(q);
+    galleryPhotos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    console.error('Gallery load error:', e);
+    galleryPhotos = [];
+  }
+  renderGallery();
+}
+
+function renderGallery() {
+  const strip = document.getElementById('galleryStrip');
+  const isAdmin = canSubmit && hasLeagueRole(userProfile);
+
+  if (!galleryPhotos.length) {
+    strip.innerHTML = `<div class="gallery-empty"><span>🖼️</span><p>No photos yet — the wall is bare</p></div>`;
+    return;
+  }
+
+  strip.innerHTML = galleryPhotos.map(p => `
+    <div class="gallery-photo-wrap" onclick="openLightbox('${escHtml(p.url)}', '${escHtml(p.caption || '')}')">
+      <img src="${escHtml(p.url)}" alt="${escHtml(p.caption || 'Gallery photo')}" loading="lazy">
+      ${p.caption ? `<div class="gallery-photo-caption">${escHtml(p.caption)}</div>` : ''}
+      ${(canSubmit) ? `<button class="gallery-delete-btn" onclick="event.stopPropagation(); deleteGalleryPhoto('${p.id}','${escHtml(p.storagePath || '')}')">✕</button>` : ''}
+    </div>
+  `).join('');
+}
+
+window.toggleUploadPanel = function() {
+  const panel = document.getElementById('galleryUploadPanel');
+  panel.classList.toggle('open');
+};
+
+window.handleFileSelect = function(input) {
+  const label = document.getElementById('galleryFileLabel');
+  const labelText = document.getElementById('galleryFileLabelText');
+  if (input.files.length) {
+    labelText.textContent = '\u2705 ' + input.files[0].name;
+    label.classList.add('has-file');
+  } else {
+    labelText.innerHTML = '&#x1F4C1; Choose photo';
+    label.classList.remove('has-file');
+  }
+};
+
+window.uploadGalleryPhoto = async function() {
+  const fileInput = document.getElementById('galleryFileInput');
+  const caption = document.getElementById('galleryCaptionInput').value.trim();
+  const btn = document.getElementById('gallerySubmitBtn');
+
+  if (!fileInput.files.length) { showToast('Please choose a photo first.', 'error'); return; }
+  if (!canSubmit) { showToast('You need captain or Mall Cop permissions to upload.', 'error'); return; }
+
+  const file = fileInput.files[0];
+  if (file.size > 10 * 1024 * 1024) { showToast('Photo must be under 10MB.', 'error'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+
+  try {
+    const storagePath = `violation-gallery/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const storageRef = ref(storage, storagePath);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+
+    await addDoc(collection(db, 'violationPhotos'), {
+      url,
+      storagePath,
+      caption: caption || null,
+      uploadedBy: userProfile?.displayName || currentUser?.displayName || 'Unknown',
+      uploadedByUid: currentUser?.uid || null,
+      uploadedAt: serverTimestamp()
+    });
+
+    showToast('📸 Photo added to the gallery!', 'success');
+    fileInput.value = '';
+    document.getElementById('galleryCaptionInput').value = '';
+    document.getElementById('galleryFileLabelText').innerHTML = '&#x1F4C1; Choose photo';
+    document.getElementById('galleryFileLabel').classList.remove('has-file');
+    document.getElementById('galleryUploadPanel').classList.remove('open');
+    await loadGalleryPhotos();
+  } catch (err) {
+    console.error('Upload error:', err);
+    showToast('Upload failed. Try again.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Upload';
+  }
+};
+
+window.deleteGalleryPhoto = async function(docId, storagePath) {
+  if (!canSubmit) return;
+  if (!confirm('Remove this photo from the gallery?')) return;
+  try {
+    await deleteDoc(doc(db, 'violationPhotos', docId));
+    if (storagePath) {
+      try { await deleteObject(ref(storage, storagePath)); } catch(e) { /* ignore storage errors */ }
+    }
+    galleryPhotos = galleryPhotos.filter(p => p.id !== docId);
+    renderGallery();
+    showToast('Photo removed.', 'success');
+  } catch (e) {
+    showToast('Error removing photo.', 'error');
+  }
+};
+
+window.openLightbox = function(url, caption) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightboxCaption').textContent = caption;
+  document.getElementById('lightboxOverlay').classList.add('open');
+};
+
+window.closeLightbox = function() {
+  document.getElementById('lightboxOverlay').classList.remove('open');
+};
+</script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  NavigationComponent.init();
+</script>
+<script src="mobile-enhancements.js"></script>
+</div><!-- end .page-container -->
+</body>
+</html>

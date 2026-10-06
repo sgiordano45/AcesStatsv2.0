@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mountainside Aces - League Rules</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<link rel="stylesheet" href="dark-mode.css">
+    <style>
+        :root {
+            --primary-color: #2d5016;
+            --secondary-color: #1a6b4a;
+            --accent-color: #ffd700;
+            --card-bg: #ffffff;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            min-height: 100vh;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .softball-spinner::before {
+            content: '⚖️';
+            font-size: 80px;
+            animation: spin 1.5s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            padding: 4rem 2rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .header::after {
+            content: '⚖️';
+            position: absolute;
+            bottom: -40px;
+            left: -40px;
+            font-size: 200px;
+            opacity: 0.05;
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header h1 {
+            color: white;
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.3rem;
+            font-weight: 300;
+        }
+
+        .season-badge {
+            display: inline-block;
+            padding: 0.5rem 1.25rem;
+            background: var(--accent-color);
+            color: var(--primary-color);
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+
+/* Desktop-only Back Home button */
+.desktop-home-btn {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    padding: 0.75rem 1.5rem;
+    background: white;
+    color: var(--primary-color);
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 2px solid var(--primary-color);
+}
+
+.desktop-home-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Hide on mobile - show hamburger menu instead */
+@media (max-width: 768px) {
+    .desktop-home-btn {
+        display: none;
+    }
+}
+		
+		
+        /* Search Container */
+        .search-container {
+            background: white;
+            padding: 1.5rem 2rem;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .search-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .search-box {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        #searchInput {
+            width: 100%;
+            padding: 1rem 3.5rem 1rem 1.25rem;
+            font-size: 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        #searchInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.25rem;
+            opacity: 0.5;
+        }
+        
+        #searchResults {
+            margin-top: 0.75rem;
+            font-size: 14px;
+            color: var(--text-light);
+            text-align: center;
+        }
+        
+        /* Quick Nav */
+        .quick-nav {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 88px;
+            z-index: 99;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .nav-links {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+        
+        .nav-link {
+            padding: 0.5rem 1rem;
+            background: var(--card-bg);
+            color: var(--primary-color);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .nav-link:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Nav toggle - hidden on desktop */
+        .nav-toggle {
+            display: none;
+        }
+
+        /* Documents Section */
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .document-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .document-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .document-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .document-icon {
+            font-size: 2.5rem;
+            flex-shrink: 0;
+        }
+
+        .document-title {
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            line-height: 1.3;
+        }
+
+        .document-category {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+        }
+
+        .document-category.town { background: #dbeafe; color: #1e40af; }
+        .document-category.league { background: #dcfce7; color: #166534; }
+        .document-category.insurance { background: #fef3c7; color: #92400e; }
+        .document-category.field { background: #f3e8ff; color: #7c3aed; }
+
+        .document-description {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            flex-grow: 1;
+            margin-bottom: 1rem;
+        }
+
+        .document-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .document-date {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .document-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .document-link:hover { background: var(--secondary-color); }
+
+        .documents-empty {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 2px dashed var(--border-color);
+        }
+
+        /* Main Content */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 3rem auto;
+            padding: 0 2rem 3rem;
+        }
+        
+        .section {
+            margin-bottom: 4rem;
+            scroll-margin-top: 180px;
+            animation: fadeInUp 0.6s ease backwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section:nth-child(1) { animation-delay: 0.1s; }
+        .section:nth-child(2) { animation-delay: 0.2s; }
+        .section:nth-child(3) { animation-delay: 0.3s; }
+        .section:nth-child(4) { animation-delay: 0.4s; }
+        .section:nth-child(5) { animation-delay: 0.5s; }
+        .section:nth-child(6) { animation-delay: 0.6s; }
+        .section:nth-child(7) { animation-delay: 0.7s; }
+        
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title::before {
+            content: "";
+            width: 8px;
+            height: 36px;
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-radius: 4px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, var(--border-color) 0%, transparent 100%);
+        }
+        
+        .subsection-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 2rem 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .subsection-title::before {
+            content: '▸';
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+        }
+        
+        .rule-item {
+            background: var(--card-bg);
+            padding: 1.25rem 1.5rem;
+            margin: 0.75rem 0;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .rule-item:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .rule-item strong {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .important {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+            border-left-color: var(--accent-color);
+        }
+
+        .important::before {
+            content: '⚠️';
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            opacity: 0.5;
+        }
+        
+        .critical {
+            background: linear-gradient(135deg, #ffe6e6 0%, #fdd 100%);
+            border-left-color: #dc3545;
+        }
+
+        .critical::before {
+            content: '🚨';
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            opacity: 0.5;
+        }
+        
+        ul.rule-list {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 0.5rem;
+        }
+        
+        ul.rule-list li {
+            padding: 0.5rem 0;
+            padding-left: 2rem;
+            position: relative;
+        }
+        
+        ul.rule-list li:before {
+            content: "⚾";
+            position: absolute;
+            left: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            text-align: center;
+            padding: 2.5rem 2rem;
+            margin-top: 4rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        footer p {
+            margin: 0.5rem 0;
+        }
+
+        footer .credits {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 1rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .header-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .section-title {
+                font-size: 1.6rem;
+            }
+
+            .section-title::after {
+                display: none;
+            }
+            
+            .subsection-title {
+                font-size: 1.2rem;
+            }
+
+            .quick-nav {
+                padding: 0;
+                top: 75px;
+            }
+
+            .nav-toggle {
+                display: flex;
+                width: 100%;
+                padding: 1rem 1.5rem;
+                background: white;
+                border: none;
+                color: var(--primary-color);
+                font-size: 1rem;
+                font-weight: 600;
+                cursor: pointer;
+                align-items: center;
+                justify-content: space-between;
+                font-family: inherit;
+            }
+
+            .nav-toggle-text {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .nav-toggle-icon {
+                font-size: 1.25rem;
+                transition: transform 0.3s ease;
+            }
+
+            .quick-nav.expanded .nav-toggle-icon {
+                transform: rotate(180deg);
+            }
+
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                gap: 0;
+                padding: 0;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .quick-nav.expanded .nav-links {
+                display: flex;
+            }
+
+            .nav-link {
+                width: 100%;
+                text-align: left;
+                padding: 1rem 1.5rem;
+                border-radius: 0;
+                border-bottom: 1px solid var(--border-color);
+                margin: 0;
+            }
+
+            .nav-link:last-child {
+                border-bottom: none;
+            }
+
+            .nav-link:hover {
+                transform: none;
+                box-shadow: none;
+            }
+
+            .documents-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .section {
+                scroll-margin-top: 220px;
+            }
+
+            .rule-item {
+                padding: 1rem;
+            }
+
+            .important::before,
+            .critical::before {
+                font-size: 1.2rem;
+                right: 0.75rem;
+                top: 0.75rem;
+            }
+        }
+    /* Dark Mode Overrides */
+    [data-theme="dark"] .search-container {
+      background: var(--bg-secondary);
+      box-shadow: var(--shadow-sm);
+    }
+    [data-theme="dark"] .search-box {
+      background: var(--input-bg);
+      color: var(--text-dark);
+      border-color: var(--input-border);
+    }
+    [data-theme="dark"] .quick-nav {
+      background: var(--bg-secondary);
+      box-shadow: var(--shadow-sm);
+    }
+    [data-theme="dark"] .nav-link {
+      background: var(--bg-secondary);
+      color: var(--text-dark);
+      border-color: var(--border-color);
+    }
+    [data-theme="dark"] .nav-link:hover,
+    [data-theme="dark"] .nav-link.active {
+      background: var(--primary-color);
+      color: #fff;
+    }
+    [data-theme="dark"] .nav-toggle {
+      background: var(--bg-secondary);
+      color: var(--text-dark);
+      border-color: var(--border-color);
+    }
+    /* Document category badges */
+    [data-theme="dark"] .document-category.town     { background: #1e3a5f; color: #93c5fd; }
+    [data-theme="dark"] .document-category.league   { background: #14532d; color: #86efac; }
+    [data-theme="dark"] .document-category.insurance{ background: #451a03; color: #fcd34d; }
+    [data-theme="dark"] .document-category.field    { background: #3b0764; color: #d8b4fe; }
+    /* Rule callout blocks */
+    [data-theme="dark"] .highlight {
+      background-color: #3d3000;
+      color: var(--text-dark);
+    }
+    [data-theme="dark"] .important {
+      background: linear-gradient(135deg, #2d2500 0%, #3d3000 100%);
+      border-left-color: var(--accent-color);
+    }
+    [data-theme="dark"] .critical {
+      background: linear-gradient(135deg, #3d0000 0%, #5c1010 100%);
+      border-left-color: #ef4444;
+    }
+    </style>
+</head>
+<body>
+	<a href="index.html" class="desktop-home-btn">
+    🏠 Back Home
+	</a>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="softball-spinner"></div>
+    </div>
+
+   
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1>⚖️ League Rules</h1>
+            <p class="header-subtitle">Mountainside Aces Official Regulations</p>
+            <div class="season-badge">2026 Summer & Fall Season</div>
+        </div>
+    </header>
+    
+    <!-- Search -->
+    <div class="search-container">
+        <div class="search-wrapper">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search rules... (e.g., 'mercy rule', 'roster', 'courtesy runner')">
+                <span class="search-icon">🔍</span>
+            </div>
+            <div id="searchResults"></div>
+        </div>
+    </div>
+    
+    <!-- Quick Navigation -->
+    <nav class="quick-nav" id="quickNav">
+        <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navLinks">
+            <span class="nav-toggle-text">
+                <span>📑</span>
+                <span>Jump to Section</span>
+            </span>
+            <span class="nav-toggle-icon">▼</span>
+        </button>
+        <div class="nav-links" id="navLinks">
+            <a href="#official-documents" class="nav-link">📄 Documents</a>
+            <a href="#roster-rules" class="nav-link">&#x1F465; Roster Rules</a>
+            <a href="#general-rules" class="nav-link">📋 General Rules</a>
+            <a href="#in-game" class="nav-link">⚾ In-Game Rules</a>
+            <a href="#courtesy-runners" class="nav-link">🏃 Courtesy Runners</a>
+            <a href="#scheduling" class="nav-link">📅 Scheduling</a>
+            <a href="#playoffs" class="nav-link">🏆 Playoffs</a>
+            <a href="#equipment" class="nav-link">🥎 Equipment</a>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="dashboard-container">
+
+        <!-- Official Documents Section -->
+        <section id="official-documents" class="section">
+            <h2 class="section-title">Official Documents</h2>
+            <p style="color: var(--text-light); margin-bottom: 1rem;">
+                Official league documents, permits, and memos from the Recreation Department.
+            </p>
+            <div class="documents-grid" id="documentsGrid">
+                <div class="documents-empty">Loading documents...</div>
+            </div>
+        </section>
+
+        <section id="roster-rules" class="section">
+            <h2 class="section-title">Roster Rules & League Eligibility</h2>
+            
+            <h3 class="subsection-title">Summer League Eligibility</h3>
+            <div class="rule-item important">
+                <strong>Residency Requirement:</strong> Must live or work in Mountainside
+            </div>
+            <div class="rule-item">
+                <strong>Out of Town Players:</strong> Teams may roster a maximum of 3 out-of-town players
+                <ul class="rule-list">
+                    <li>Players who work for Mountainside (Police, DPW, Boro Admin) will be considered residents</li>
+                </ul>
+            </div>
+            <div class="rule-item">
+                <strong>Roster Size:</strong> Capped at 15 players for the summer season
+                <ul class="rule-list">
+                    <li>Additional players may be added only if other teams are full</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">Fall League Eligibility</h3>
+            <div class="rule-item">
+                Must meet ONE of the following criteria:
+                <ul class="rule-list">
+                    <li>Live or work in Mountainside AND be over 30 years old</li>
+                    <li>Have played in a previous Fall season ('22, '23, '24)</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">Free Agency Draft Pool (Summer and Fall)</h3>
+            <div class="rule-item">
+                Players will no longer be permitted to freely switch teams. At the end of every season, returning players may either:
+                <ul class="rule-list">
+                    <li>Remain on their current team, OR</li>
+                    <li>Enter the free agency draft pool, which is conducted in order of last season's reverse standings (regular season + playoff records)</li>
+                </ul>
+            </div>
+            <div class="rule-item important">
+                <strong>Exemptions from the Free Agency Pool:</strong>
+                <ul class="rule-list">
+                    <li>Immediate family members (defined as father, son, or brother)</li>
+                    <li>Out-of-town players</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">Competitive Rebalancing</h3>
+            <div class="rule-item">
+                <ul class="rule-list">
+                    <li>Rosters may be combined/adjusted season to season to improve balance</li>
+                    <li>Mandatory minimum number of players on each roster will be enforced</li>
+                    <li>Final roster numbers dictated by registration totals and number of teams</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="general-rules" class="section">
+            <h2 class="section-title">General Rules</h2>
+            
+            <h3 class="subsection-title">Regular Season</h3>
+            <div class="rule-item">
+                <strong>Summer:</strong> 23 games per team, followed by double elimination playoffs
+            </div>
+            <div class="rule-item">
+                <strong>Fall:</strong> 12 games per team, followed by double elimination playoffs
+            </div>
+            
+            <h3 class="subsection-title">Minimum Players to Start</h3>
+            <div class="rule-item important">
+                <strong>Summer:</strong> A team must have 8 rostered players to start a game
+                <ul class="rule-list">
+                    <li>Fewer than 8 = automatic forfeit (opposing team wins 7-0)</li>
+                    <li>If neither team has 8 players, the game is recorded as a Tie</li>
+                </ul>
+            </div>
+            <div class="rule-item important">
+                <strong>Fall:</strong> A team must have 7 rostered players to start a game
+                <ul class="rule-list">
+                    <li>Fewer than 7 = automatic forfeit (opposing team wins 7-0)</li>
+                    <li>If neither team has 7 players, the game is recorded as a Tie</li>
+                </ul>
+            </div>
+            
+            <div class="rule-item">
+                <strong>Time Limit:</strong> No new inning starts after 60 minutes of game play
+                <ul class="rule-list">
+                    <li>Game 1 clock begins at scheduled time (no exceptions)</li>
+                    <li>Taking the field late = lost time</li>
+                    <li>No time limit in playoffs</li>
+                </ul>
+            </div>
+            
+            <div class="rule-item">
+                <strong>Official Game:</strong> 5 full innings (or 4½ if home team is leading) must be completed
+                <ul class="rule-list">
+                    <li>If incomplete, game restarts on makeup date</li>
+                </ul>
+            </div>
+            
+            <div class="rule-item">
+                <strong>Adding Players Mid-Game:</strong> Rostered players can be added before the start of the 4th inning
+                <ul class="rule-list">
+                    <li>New players bat at the bottom of the order</li>
+                    <li>No players may join after the first pitch of the 4th inning</li>
+                </ul>
+            </div>
+            
+            <div class="rule-item important">
+                <strong>8-Player Game Special Rule:</strong> If you have only 8 rostered players, the opposing team must provide a catcher
+                <ul class="rule-list">
+                    <li>This catcher cannot make any plays in the field</li>
+                    <li>Other position players cover home plate</li>
+                </ul>
+            </div>
+            
+            <div class="rule-item important">
+                <strong>9-Player Rule:</strong> If you have 9 players, one MUST play catcher (no courtesy catcher provided - 0 exceptions)
+            </div>
+            
+            <div class="rule-item critical">
+                <strong>Ejections:</strong>
+                <ul class="rule-list">
+                    <li>1st ejection: Miss remainder of game + 1 game suspension</li>
+                    <li>2nd ejection: 3-game suspension</li>
+                    <li>3rd ejection: Suspended for remainder of season</li>
+                </ul>
+            </div>
+            
+            <div class="rule-item critical">
+                <strong>Fighting:</strong> Any player striking another or involved in a fight will be thrown out of the League indefinitely
+            </div>
+            
+            <div class="rule-item">
+                <strong>Equipment:</strong> No metal spikes allowed
+            </div>
+            
+            <div class="rule-item critical">
+                <strong>Substitutes (Summer):</strong> There will be NO substitutes in the Summer season (0 exceptions)
+            </div>
+            
+            <h3 class="subsection-title">Fall Substitutes</h3>
+            <div class="rule-item important">
+                <strong>When a Sub Is Allowed:</strong> A team may use a sub only if it has 7 of its own players available
+                <ul class="rule-list">
+                    <li>The sub brings the team to 8 players, allowing the game to be played</li>
+                    <li>The other team provides a courtesy catcher</li>
+                </ul>
+            </div>
+            <div class="rule-item">
+                <strong>Lineup &amp; Position:</strong> The sub must bat last in the lineup and play Right Field
+            </div>
+            <div class="rule-item critical">
+                <strong>One Sub Per Player:</strong> A player may sub only one time for the entire season
+                <ul class="rule-list">
+                    <li>Once a player has subbed, they are no longer eligible to sub again for anyone</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="in-game" class="section">
+            <h2 class="section-title">In-Game Rules</h2>
+             <h3 class="subsection-title">Line-Up/Defense</h3>
+            <div class="rule-item">
+                <strong>Batting</strong> Each player that shows up must be in the batting line-up for that game
+            </div>
+			   <div class="rule-item">
+                <strong>Defense</strong> Players are not required to play the field. Defense is left entirely up the coach/team's decision
+            </div>
+
+            <h3 class="subsection-title">Pitching</h3>
+            <div class="rule-item">
+                <strong>Pitch Height:</strong> Slow pitch rule 6' to 12' (no lower, no higher)
+            </div>
+            <div class="rule-item">
+                <strong>Pitcher Position:</strong> Must have one foot on the rubber while throwing
+                <ul class="rule-list">
+                    <li>If pitching behind the rubber, must have one foot in-line with the rubber</li>
+                </ul>
+            </div>
+            <div class="rule-item">
+                <strong>Pitcher Equipment:</strong> Pitchers cannot wear anything on their throwing hand
+            </div>
+            <h3 class="subsection-title">Strike Zone</h3>
+            <div class="rule-item">
+                <strong>Strike Extension:</strong> A rubber plate extension is used for calling strikes
+                <ul class="rule-list">
+                    <li>If pitch lands on home plate OR the extension = strike</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">Base Running</h3>
+            <div class="rule-item important">
+                <strong>Leaving the Base:</strong> Runner must wait until contact is made
+                <ul class="rule-list">
+                    <li>Leaving early may result in being called out by the umpire</li>
+                </ul>
+            </div>
+            
+            <div class="rule-item">
+                <strong>Scoring:</strong> Runner can touch either home plate OR the extension when scoring
+            </div>
+            
+            <div class="rule-item critical">
+                <strong>Non-Contact League:</strong> Must slide or avoid contact ("give yourself up") at all times
+                <ul class="rule-list">
+                    <li>Applies to attempted double plays</li>
+                    <li>Hard take-out slides and baseline interference = automatic double play</li>
+                </ul>
+            </div>
+            
+            <div class="rule-item critical">
+                <strong>Phantom Tags:</strong> Not tolerated - penalty at umpire's discretion
+            </div>
+            
+            <h3 class="subsection-title">Batting</h3>
+            <div class="rule-item important">
+                <strong>Count:</strong> Each batter starts with a 1-1 count
+                <ul class="rule-list">
+                    <li>Foul ball with 2 strikes = strikeout</li>
+                    <li>No courtesy foul</li>
+                </ul>
+            </div>
+             <div class="rule-item">
+                <strong>Player Leaving Early</strong> Should a player need to leave early for any reason
+                <ul class="rule-list">
+                    <li>The batting order will just skip the player's prior spot. There is no automatic out applied.</li>
+                </ul>
+            </div>
+			
+			
+			
+            <div class="rule-item">
+                <strong>Batter's Box:</strong> A defined batter's box will be used. At least one foot must remain in the box at all times through contact
+                <ul class="rule-list">
+                    <li>If a batter steps out with both feet, it is an automatic out</li>
+                </ul>
+            </div>
+
+            <div class="rule-item important">
+                <strong>No Distractions:</strong> No yelling, shouting, or noises are permitted from the time a pitch is delivered through a batter's swing
+                <ul class="rule-list">
+                    <li>If a player yells during a pitch, it is an automatic ball — even if the batted ball resulted in an out</li>
+                    <li>If the result was a hit, the hit stands</li>
+                    <li>The offending player receives a warning. A second warning results in ejection</li>
+                </ul>
+            </div>
+
+            <h3 class="subsection-title">Mercy Rule</h3>
+            <div class="rule-item">
+                <strong>Game-Ending Mercy Rules:</strong>
+                <ul class="rule-list">
+                    <li>15 runs after 4 innings</li>
+                    <li>12 runs after 5 innings</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">Field Boundaries</h3>
+            <div class="rule-item">
+                <strong>Light Poles/Boxes:</strong>
+                <ul class="rule-list">
+                    <li>Above fence line = home run</li>
+                    <li>Below fence line = live ball</li>
+                </ul>
+            </div>
+
+            <div class="rule-item important">
+                <strong>Deerfield Ground Rule:</strong> A ball that passes through the center field gap will be ruled a ground-rule triple
+            </div>
+            
+            <h3 class="subsection-title">Catch and Carry Rule</h3>
+            <div class="rule-item">
+                If a ball is caught in-play and the player's momentum carries them out of play:
+                <ul class="rule-list">
+                    <li>Ball remains live</li>
+                    <li>Runners are NOT awarded a base</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">Ball Thrown Out of Play</h3>
+            <div class="rule-item">
+                If a ball is thrown out of play, the play is blown dead and:
+                <ul class="rule-list">
+                    <li>If the ball is thrown from the infield, runners are awarded 1 base</li>
+                    <li>If the ball is thrown from the outfield, runners are awarded 2 bases</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">Rules Controversy</h3>
+            <div class="rule-item">
+                If a situation arises not covered by these rules or a dispute occurs:
+                <ul class="rule-list">
+                    <li>Only captains may discuss rules interpretations or raise issues with the umpire</li>
+                    <li>Judgment calls will not be argued by anybody</li>
+                    <li>If no agreement is reached, the umpire makes the final decision</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="courtesy-runners" class="section">
+            <h2 class="section-title">Courtesy Runners</h2>
+            
+            <div class="rule-item">
+                <strong>Pre-Game Declaration:</strong> Before each game, a team can declare up to 2 players who will get a courtesy runner for the entire game
+            </div>
+            
+            <div class="rule-item">
+                <strong>Injury During Game:</strong> Additional courtesy runners can be used for players injured during the game
+                <ul class="rule-list">
+                    <li>Once an injured player takes a courtesy runner, they must use one from that point forward</li>
+                    <li>No limit on courtesy runners per inning due to injury</li>
+                </ul>
+            </div>
+            
+            <div class="rule-item important">
+                <strong>Who Runs:</strong> Courtesy runners are the last batted out
+                <ul class="rule-list">
+                    <li>No outs in current inning → last batted out from previous inning</li>
+                    <li>Need for 2nd runner before another out → revert to 2nd-to-last batted out</li>
+                    <li>No recorded outs in first inning → last person in batting order</li>
+                    <li>Same runner cannot run twice consecutively</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="scheduling" class="section">
+            <h2 class="section-title">Scheduling</h2>
+            
+            <div class="rule-item">
+                <strong>Schedule Lock:</strong> Entire regular season and playoff schedule set and locked before season start
+            </div>
+            
+            <div class="rule-item">
+                <strong>Weather Rescheduling:</strong> Games only rescheduled due to weather
+                <ul class="rule-list">
+                    <li>Rainout dates built into schedule</li>
+                    <li>Added to days where games are already being played</li>
+                </ul>
+            </div>
+            
+            <div class="rule-item">
+                <strong>Team Cannot Field 8 Players:</strong> Opposing captain can either:
+                <ul class="rule-list">
+                    <li>Take a forfeit win, OR</li>
+                    <li>Choose to reschedule with the other captain</li>
+                </ul>
+            </div>
+            
+            <div class="rule-item">
+                <strong>Both Teams Cannot Field 8 Players:</strong> Game recorded as a Tie or rescheduled by mutual agreement
+            </div>
+            
+            <div class="rule-item important">
+                <strong>Post Season Start Date:</strong> Hard start date for playoffs
+                <ul class="rule-list">
+                    <li><strong>Summer:</strong> If teams haven't completed 23 regular season games, standings determined by winning percentage</li>
+                    <li><strong>Fall:</strong> If teams haven't completed 12 regular season games, standings determined by winning percentage</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="playoffs" class="section">
+            <h2 class="section-title">Playoff Rules</h2>
+            
+            <div class="rule-item critical">
+                <strong>Minimum Games Required:</strong> To be eligible for playoffs:
+				                <ul class="rule-list">
+                    <li><strong>Summer:</strong> You must play in at least 8 of your team's regular season games</li>
+                    <li><strong>Fall:</strong> You must play in at least 4 of your team's regular season games</li>
+                </ul>
+            </div>
+			            <div class="rule-item critical">
+                <strong>Playoff Tiebreakers</strong> 
+				                <ul class="rule-list">
+                    <li><strong>2 Teams Tied:</strong> 1. Head to Head 2. Runs Allowed 3. Run Differential </li>
+                    <li><strong>3+ Teams Tied:</strong> 1. Runs Allowed 2. Run Differential </li>
+                </ul>
+            </div>
+
+
+        </section>
+        
+        <section id="equipment" class="section">
+            <h2 class="section-title">Equipment</h2>
+            
+            <div class="rule-item">
+                <strong>Eligible Bats:</strong>
+                <ul class="rule-list">
+                    <li>Only wooden bats are allowed</li>
+                </ul>
+            </div>
+            
+            <div class="rule-item">
+                <strong>Softballs Used:</strong>
+                <ul class="rule-list">
+                    <li>Clinchers supplied by the League</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+    
+    <footer>
+        <p>&copy; 2026 Mountainside Aces | All Rights Reserved</p>
+    </footer>
+    
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { collection, query, where, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        async function loadDocuments() {
+            const grid = document.getElementById('documentsGrid');
+            
+            try {
+                const q = query(
+                    collection(db, 'leagueDocuments'),
+                    where('active', '==', true),
+                    orderBy('order', 'asc')
+                );
+                
+                const snapshot = await getDocs(q);
+                
+                if (snapshot.empty) {
+                    grid.innerHTML = '<div class="documents-empty">No documents available at this time.</div>';
+                    return;
+                }
+                
+                const categoryIcons = { 'town': '🏛️', 'league': '⚾', 'insurance': '📋', 'field': '🏟️' };
+                
+                grid.innerHTML = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const icon = categoryIcons[data.category] || '📄';
+                    const uploadDate = data.uploadedAt?.toDate?.() 
+                        ? data.uploadedAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : '';
+                    
+                    return `
+                        <div class="document-card">
+                            <div class="document-header">
+                                <span class="document-icon">${icon}</span>
+                                <div>
+                                    <div class="document-title">${data.title}</div>
+                                    <span class="document-category ${data.category}">${data.category}</span>
+                                </div>
+                            </div>
+                            <div class="document-description">${data.description || ''}</div>
+                            <div class="document-meta">
+                                <span class="document-date">${uploadDate ? 'Updated ' + uploadDate : ''}</span>
+                                <a href="${data.url}" target="_blank" class="document-link">📥 View PDF</a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error loading documents:', error);
+                grid.innerHTML = '<div class="documents-empty">Unable to load documents. Please try again later.</div>';
+            }
+        }
+
+        loadDocuments();
+    </script>
+
+    <script>
+        // Loading overlay
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }, 800);
+        });
+
+        // Mobile nav toggle
+        const navToggle = document.getElementById('navToggle');
+        const quickNav = document.getElementById('quickNav');
+        const navLinksContainer = document.getElementById('navLinks');
+
+        navToggle.addEventListener('click', function() {
+            const isExpanded = quickNav.classList.toggle('expanded');
+            navToggle.setAttribute('aria-expanded', isExpanded);
+        });
+
+        // Close nav when a link is clicked (mobile)
+        navLinksContainer.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    quickNav.classList.remove('expanded');
+                    navToggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+        });
+
+        // Store original HTML content
+        const originalContent = new Map();
+        const allRuleItems = document.querySelectorAll('.rule-item, .section-title, .subsection-title');
+        allRuleItems.forEach(item => {
+            originalContent.set(item, item.innerHTML);
+        });
+
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        
+        function highlightText(element, searchTerm) {
+            const walker = document.createTreeWalker(
+                element,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            
+            const nodesToReplace = [];
+            let node;
+            
+            while (node = walker.nextNode()) {
+                if (node.textContent.toLowerCase().includes(searchTerm)) {
+                    nodesToReplace.push(node);
+                }
+            }
+            
+            nodesToReplace.forEach(node => {
+                const text = node.textContent;
+                const regex = new RegExp(`(${searchTerm})`, 'gi');
+                const parts = text.split(regex);
+                
+                const fragment = document.createDocumentFragment();
+                parts.forEach(part => {
+                    if (part.toLowerCase() === searchTerm.toLowerCase()) {
+                        const span = document.createElement('span');
+                        span.className = 'highlight';
+                        span.textContent = part;
+                        fragment.appendChild(span);
+                    } else if (part) {
+                        fragment.appendChild(document.createTextNode(part));
+                    }
+                });
+                
+                node.parentNode.replaceChild(fragment, node);
+            });
+        }
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            if (searchTerm === '') {
+                allRuleItems.forEach(item => {
+                    item.innerHTML = originalContent.get(item);
+                    item.style.display = '';
+                });
+                searchResults.textContent = '';
+                return;
+            }
+            
+            let matchCount = 0;
+            
+            allRuleItems.forEach(item => {
+                item.innerHTML = originalContent.get(item);
+                
+                const lowerText = item.textContent.toLowerCase();
+                
+                if (lowerText.includes(searchTerm)) {
+                    matchCount++;
+                    highlightText(item, searchTerm);
+                    item.style.display = '';
+                } else {
+                    if (item.classList.contains('rule-item')) {
+                        item.style.display = 'none';
+                    }
+                }
+            });
+            
+            if (matchCount > 0) {
+                searchResults.textContent = `Found ${matchCount} matching rule${matchCount !== 1 ? 's' : ''}`;
+                searchResults.style.color = 'var(--secondary-color)';
+            } else {
+                searchResults.textContent = 'No matching rules found';
+                searchResults.style.color = '#dc3545';
+            }
+        });
+        
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+	<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+    <script src="mobile-enhancements.js"></script>
+    <script src="theme-toggle.js"></script>
+</body>
+</html>
+

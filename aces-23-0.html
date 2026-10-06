@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>23-0 | Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<link rel="stylesheet" href="dark-mode.css">
+<style>
+:root {
+  --primary: #2d5016;
+  --secondary: #1a6b4a;
+  --gold: #ffd700;
+  --gold-dark: #b8860b;
+  --card-bg: #ffffff;
+  --text-dark: #1a202c;
+  --text-mid: #4a5568;
+  --text-light: #718096;
+  --border: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.20);
+  --danger: #e53e3e;
+  --success: #38a169;
+  --warn: #d69e2e;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0f1923 0%, #1a2d1a 50%, #0f1923 100%);
+  min-height: 100vh;
+  color: #f0f4f8;
+}
+
+/* Loading */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15,25,35,0.97);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease;
+}
+.loading-overlay.hidden { opacity:0; pointer-events:none; }
+.loading-ball {
+  font-size: 60px;
+  animation: spin 1.4s ease-in-out infinite;
+  margin-bottom: 1rem;
+}
+@keyframes spin {
+  0%,100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+.loading-text { color: var(--gold); font-size:1.1rem; font-weight:600; letter-spacing:2px; }
+.loading-sub { color: #888; font-size:0.85rem; margin-top:0.5rem; }
+
+/* Header */
+.page-header {
+  background: linear-gradient(135deg, #0a1a0a 0%, #1a3a1a 100%);
+  padding: 3rem 2rem 2rem;
+  text-align: center;
+  border-bottom: 2px solid var(--gold);
+  position: relative;
+  overflow: hidden;
+}
+.page-header::before {
+  content: '⚾';
+  position: absolute; top:-40px; left:-40px;
+  font-size: 200px; opacity: 0.04;
+  pointer-events: none;
+}
+.page-header::after {
+  content: '⚾';
+  position: absolute; bottom:-60px; right:-40px;
+  font-size: 250px; opacity: 0.03;
+  pointer-events: none;
+}
+.game-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+.page-header h1 {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 900;
+  letter-spacing: -1px;
+  color: var(--gold);
+  text-shadow: 0 0 30px rgba(255,215,0,0.4);
+  line-height: 1;
+}
+.page-header p {
+  color: #a0aec0;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+}
+
+/* Mode Toggle */
+.mode-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.5rem auto 0;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50px;
+  padding: 6px;
+  width: fit-content;
+  border: 1px solid rgba(255,255,255,0.1);
+  position: relative;
+  z-index: 1;
+}
+.mode-btn {
+  padding: 8px 20px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  background: transparent;
+  color: #888;
+  touch-action: manipulation; /* eliminates 300ms tap delay on iOS */
+  -webkit-tap-highlight-color: transparent;
+}
+.mode-btn.active {
+  background: var(--gold);
+  color: #000;
+  box-shadow: 0 2px 8px rgba(255,215,0,0.3);
+}
+
+/* Main Layout */
+main { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+/* Game Screen States */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* Start Screen */
+.start-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 2.5rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.start-card h2 {
+  font-size: 1.5rem;
+  color: var(--gold);
+  margin-bottom: 1rem;
+}
+.start-card p {
+  color: #a0aec0;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+  text-align: left;
+}
+.rule-item {
+  background: rgba(255,215,0,0.06);
+  border: 1px solid rgba(255,215,0,0.15);
+  border-radius: 12px;
+  padding: 1rem;
+}
+.rule-item .rule-icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
+.rule-item h3 { font-size: 0.85rem; color: var(--gold); font-weight: 700; margin-bottom: 0.3rem; }
+.rule-item p { font-size: 0.8rem; color: #a0aec0; }
+
+.btn-start {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border: none;
+  padding: 1rem 3rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(45,80,22,0.4);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(45,80,22,0.5); }
+.btn-start:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Round Picker */
+.round-label {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.round-label .round-num {
+  display: inline-block;
+  background: var(--gold);
+  color: #000;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.round-label h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f0f4f8;
+}
+.round-label p { color: #a0aec0; font-size: 0.9rem; margin-top: 0.25rem; }
+
+/* Slot Machine */
+.slot-machine {
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,215,0,0.2);
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.slot-display {
+  font-size: clamp(1.1rem, 3vw, 1.4rem);
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: 2px;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+}
+.slot-display.spinning {
+  animation: flicker 0.1s ease-in-out infinite;
+}
+@keyframes flicker {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.slot-sub {
+  color: #a0aec0;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  min-height: 1.2rem;
+}
+.slot-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+.btn-spin {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: #000;
+  border: none;
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+  font-weight: 800;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 1px;
+}
+.btn-spin:hover { transform: translateY(-2px); }
+.btn-spin:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-skip {
+  background: rgba(255,255,255,0.06);
+  color: #a0aec0;
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 0.8rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-skip:hover { background: rgba(255,255,255,0.1); }
+.btn-skip:disabled { opacity: 0.3; cursor: not-allowed; }
+.skip-info { font-size: 0.75rem; color: #666; margin-top: 0.5rem; }
+
+/* Player Pool */
+.pool-header {
+  color: #a0aec0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.75rem;
+}
+.player-pool {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.player-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+.player-card:hover {
+  background: rgba(255,215,0,0.1);
+  border-color: rgba(255,215,0,0.3);
+  transform: translateY(-1px);
+}
+.player-card.selected {
+  background: rgba(255,215,0,0.15);
+  border-color: var(--gold);
+}
+.player-card .player-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f0f4f8;
+  margin-bottom: 0.25rem;
+}
+.player-card .player-stats {
+  font-size: 0.75rem;
+  color: #888;
+}
+.player-card .player-strength {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--gold);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+/* IQ mode: hide stats */
+.iq-mode .player-card .player-stats { color: transparent; user-select: none; }
+.iq-mode .player-card .player-strength { display: none; }
+
+.btn-lock-pick {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  max-width: 280px;
+  display: block;
+  margin: 0 auto;
+}
+.btn-lock-pick:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-lock-pick:not(:disabled):hover { transform: translateY(-1px); }
+
+/* Roster (right panel) */
+.roster-panel {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+.roster-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--gold);
+  margin-bottom: 1rem;
+}
+.roster-slot {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+.roster-slot.filled {
+  background: rgba(255,215,0,0.06);
+  border-color: rgba(255,215,0,0.2);
+}
+.roster-slot.empty {
+  background: rgba(255,255,255,0.02);
+  border-color: rgba(255,255,255,0.06);
+}
+.roster-slot.current {
+  border-color: var(--gold);
+  background: rgba(255,215,0,0.08);
+  box-shadow: 0 0 0 1px rgba(255,215,0,0.2);
+}
+.slot-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #666;
+  flex-shrink: 0;
+}
+.roster-slot.filled .slot-num { background: var(--gold); color: #000; }
+.slot-info { flex:1; min-width:0; }
+.slot-player-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f0f4f8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.slot-detail {
+  font-size: 0.72rem;
+  color: #888;
+}
+.slot-type {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #555;
+  flex-shrink: 0;
+}
+.roster-slot.filled .slot-type { color: var(--gold); opacity: 0.7; }
+
+/* Strength meter */
+.strength-bar-wrap {
+  margin-top: 0.5rem;
+}
+.strength-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #888;
+  margin-bottom: 0.3rem;
+}
+.strength-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+.strength-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--gold));
+  transition: width 0.6s ease;
+}
+
+/* Simulate Screen */
+.simulate-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.final-roster {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+  text-align: left;
+}
+.final-player-card {
+  background: rgba(255,215,0,0.06);
+  border: 1px solid rgba(255,215,0,0.2);
+  border-radius: 12px;
+  padding: 0.9rem;
+}
+.final-player-card.pitcher-card {
+  background: rgba(56,161,105,0.08);
+  border-color: rgba(56,161,105,0.3);
+}
+.fpc-type {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gold);
+  margin-bottom: 0.25rem;
+}
+.pitcher-card .fpc-type { color: #68d391; }
+.fpc-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #f0f4f8;
+  margin-bottom: 0.15rem;
+}
+.fpc-season {
+  font-size: 0.72rem;
+  color: #888;
+  margin-bottom: 0.3rem;
+}
+.fpc-stats { font-size: 0.72rem; color: #a0aec0; }
+.fpc-strength {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--gold);
+  margin-top: 0.25rem;
+}
+
+/* Team Rating */
+.team-rating-display {
+  background: rgba(255,215,0,0.05);
+  border: 2px solid rgba(255,215,0,0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+.rating-big {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--gold);
+  line-height: 1;
+}
+.rating-label { color: #888; font-size: 0.85rem; margin-top: 0.25rem; }
+
+/* Win Simulation */
+.win-track {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+.win-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #555;
+  transition: all 0.3s ease;
+  position: relative;
+}
+.win-dot.won {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-color: var(--success);
+  color: white;
+}
+.win-dot.lost {
+  background: rgba(229,62,62,0.2);
+  border-color: var(--danger);
+  color: #fc8181;
+}
+.win-dot.current {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(255,215,0,0.2);
+}
+
+/* Simulation Progress */
+.sim-progress-wrap {
+  margin: 1rem 0;
+}
+.sim-log {
+  background: rgba(0,0,0,0.3);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #68d391;
+  height: 100px;
+  overflow-y: auto;
+  margin: 0.75rem 0;
+}
+
+/* Result */
+.result-banner {
+  background: linear-gradient(135deg, rgba(45,80,22,0.4), rgba(26,107,74,0.4));
+  border: 2px solid var(--gold);
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+.result-banner.loss {
+  background: linear-gradient(135deg, rgba(229,62,62,0.2), rgba(120,40,40,0.2));
+  border-color: var(--danger);
+}
+.result-banner h2 { font-size: 2rem; font-weight: 900; color: var(--gold); }
+.result-banner.loss h2 { color: #fc8181; }
+.result-banner p { color: #a0aec0; margin-top: 0.5rem; }
+.result-record {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: white;
+  margin: 0.75rem 0;
+}
+
+/* Buttons */
+.btn-row {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-primary:hover { transform: translateY(-1px); }
+.btn-secondary {
+  background: rgba(255,255,255,0.06);
+  color: #a0aec0;
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 0.8rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+/* Simulate button */
+.btn-simulate {
+  background: linear-gradient(135deg, #6b21a8, #9333ea);
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 800;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 20px rgba(147,51,234,0.3);
+}
+.btn-simulate:hover { transform: translateY(-2px); }
+.btn-simulate:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* No pool warning */
+.no-pool-msg {
+  background: rgba(214,158,46,0.1);
+  border: 1px solid rgba(214,158,46,0.3);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  color: #f6e05e;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+/* confetti canvas */
+#confettiCanvas {
+  position: fixed; inset:0; pointer-events:none; z-index:9000;
+}
+
+/* Nav area */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #888;
+  font-size: 0.85rem;
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: color 0.2s;
+}
+.back-link:hover { color: var(--gold); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-ball">⚾</div>
+  <div class="loading-text">23-0</div>
+  <div class="loading-sub" id="loadingStatus">Loading player data…</div>
+</div>
+
+<canvas id="confettiCanvas"></canvas>
+
+<div id="navContainer"></div>
+
+<header class="page-header">
+  <div class="game-badge">Aces Fantasy Game</div>
+  <h1>23-0</h1>
+  <p>Draft your dream team. Go undefeated.</p>
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="btnClassic">Classic</button>
+    <button class="mode-btn" id="btnIQ">AcesIQ 🧠</button>
+  </div>
+</header>
+
+<main>
+  <!-- START SCREEN -->
+  <div class="screen active" id="screenStart">
+    <div class="start-card">
+      <h2>How to Play</h2>
+      <div class="rules-grid">
+        <div class="rule-item">
+          <div class="rule-icon">🎰</div>
+          <h3>5 Rounds</h3>
+          <p>Spin the slot machine. A season + team combo lands. Pick your best player from that pool.</p>
+        </div>
+        <div class="rule-item">
+          <div class="rule-icon">⚾</div>
+          <h3>4 Hitters + 1 Pitcher</h3>
+          <p>Rounds 1–4 are hitters. Round 5 is your pitcher — from 2024 or later only.</p>
+        </div>
+        <div class="rule-item">
+          <div class="rule-icon">📅</div>
+          <h3>One Season Per Round</h3>
+          <p>No duplicate seasons across your 5 picks. Spreads your team across history.</p>
+        </div>
+        <div class="rule-item">
+          <div class="rule-icon">🏆</div>
+          <h3>Go 23-0</h3>
+          <p>Simulate the season. Build the highest-rated team to go undefeated.</p>
+        </div>
+        <div class="rule-item">
+          <div class="rule-icon">⏭️</div>
+          <h3>Skips</h3>
+          <p>1 season skip + 1 team skip per game. Use them wisely.</p>
+        </div>
+        <div class="rule-item">
+          <div class="rule-icon">🧠</div>
+          <h3>AcesIQ Mode</h3>
+          <p>Stats are hidden. Draft from memory alone. True Aces knowledge test.</p>
+        </div>
+      </div>
+      <button class="btn-start" id="btnStartGame" onclick="startGame()">Start Game</button>
+      <p style="margin-top:1rem; font-size:0.8rem; color:#555;" id="dataStatus">Preparing player data…</p>
+    </div>
+  </div>
+
+  <!-- PICK SCREEN -->
+  <div class="screen" id="screenPick">
+    <div class="round-label">
+      <div class="round-num" id="roundLabel">Round 1 of 5</div>
+      <h2 id="roundTitle">Pick a Hitter</h2>
+      <p id="roundDesc">Spin to reveal your season + team combo</p>
+    </div>
+
+    <div class="slot-machine">
+      <div class="slot-display" id="slotDisplay">— — —</div>
+      <div class="slot-sub" id="slotSub">Press SPIN to begin</div>
+      <div class="slot-actions">
+        <button class="btn-spin" id="btnSpin" onclick="spin()">🎰 SPIN</button>
+        <button class="btn-skip" id="btnSeasonSkip" onclick="skipSeason()" disabled>⏭️ Skip Season <span id="seasonSkipCount">(1)</span></button>
+        <button class="btn-skip" id="btnTeamSkip" onclick="skipTeam()" disabled>🔄 Skip Team <span id="teamSkipCount">(1)</span></button>
+      </div>
+      <div class="skip-info" id="skipInfo"></div>
+    </div>
+
+    <div id="poolSection" style="display:none;">
+      <div class="pool-header" id="poolHeader">Choose a player</div>
+      <div class="player-pool" id="playerPool"></div>
+      <div class="no-pool-msg" id="noPoolMsg" style="display:none;">No eligible players found for this combo. Auto-skipping…</div>
+      <button class="btn-lock-pick" id="btnLock" onclick="lockPick()" disabled>Lock In Pick ✓</button>
+    </div>
+
+    <div class="roster-panel">
+      <div class="roster-title">Your Roster</div>
+      <div id="rosterSlots"></div>
+      <div class="strength-bar-wrap" id="strengthBarWrap" style="display:none;">
+        <div class="strength-label">
+          <span>Team Strength</span>
+          <span id="strengthVal">0</span>
+        </div>
+        <div class="strength-bar">
+          <div class="strength-fill" id="strengthFill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIMULATE SCREEN -->
+  <div class="screen" id="screenSimulate">
+    <div class="simulate-card">
+      <h2 style="color:var(--gold); font-size:1.5rem; margin-bottom:0.5rem;">Your Dream Team</h2>
+      <p style="color:#888; font-size:0.85rem;">Review your roster, then simulate the season</p>
+
+      <div class="final-roster" id="finalRoster"></div>
+
+      <div class="team-rating-display">
+        <div class="rating-big" id="teamRatingDisplay">—</div>
+        <div class="rating-label">Team Power Rating</div>
+      </div>
+
+      <button class="btn-simulate" id="btnSimulate" onclick="simulateSeason()">⚡ Simulate Season</button>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="screen" id="screenResult">
+    <div id="resultBanner" class="result-banner">
+      <h2 id="resultTitle">23-0!</h2>
+      <div class="result-record" id="resultRecord">—</div>
+      <p id="resultMsg"></p>
+    </div>
+
+    <div class="simulate-card">
+      <div class="win-track" id="winTrack"></div>
+      <div class="sim-log" id="simLog"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-primary" onclick="resetGame()">🔄 Play Again</button>
+      <button class="btn-secondary" onclick="showScreen('screenSimulate')">← Back to Roster</button>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { db } from './firebase-config.js';
+import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { NavigationComponent } from './nav-component.js';
+
+// ——— Constants ———
+const PITCHER_MIN_SEASON = '2024-summer'; // Pitching data starts 2024-summer
+// Accept any season that matches year-word format (e.g. 2022-fall, 2025-spring)
+const SEASON_PATTERN = /^\d{4}-[a-z]+$/;
+
+function isValidSeason(seasonId) {
+  return SEASON_PATTERN.test(seasonId) && parseInt(seasonId) >= 2022;
+}
+function isPitcherEligibleSeason(seasonId) {
+  // Must be 2024-summer or later, compare lexicographically (works because year-season format)
+  return isValidSeason(seasonId) && seasonId >= PITCHER_MIN_SEASON;
+}
+
+// Round config: 4 hitters, then 1 pitcher
+const ROUND_CONFIG = [
+  { type: 'hitter', label: 'Hitter', num: 1 },
+  { type: 'hitter', label: 'Hitter', num: 2 },
+  { type: 'hitter', label: 'Hitter', num: 3 },
+  { type: 'hitter', label: 'Hitter', num: 4 },
+  { type: 'pitcher', label: 'Pitcher', num: 5 },
+];
+
+// ——— State ———
+let allPlayers = [];         // raw from Firestore
+let hitterPool = {};         // { '2022-summer-green': [playerObj,...] }
+let pitcherPool = {};        // same, pitcher-side
+let gameMode = 'classic';    // 'classic' | 'iq'
+
+let currentRound = 0;
+let roster = [];             // [{name, season, team, type, stats, strength}]
+let usedSeasons = new Set(); // prevents duplicate seasons across picks
+
+let seasonSkipsLeft = 1;
+let teamSkipsLeft = 1;
+let currentCombo = null;     // { season, team, key }
+let selectedPlayer = null;   // player obj user clicked
+let isSpinning = false;
+
+// ——— Nav ———
+NavigationComponent.init('navContainer', 'aces-23-0');
+
+// ——— Helpers ———
+function fmtSeason(s) {
+  const [year, half] = s.split('-');
+  return `${year} ${half.charAt(0).toUpperCase() + half.slice(1)}`;
+}
+
+function capitalize(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
+}
+
+function formatName(raw) {
+  if (!raw) return '';
+  return raw.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+}
+
+function hitterStrength(p) {
+  const bpi = (typeof p.acesBPI === 'number') ? p.acesBPI : 50;
+  // BPI actual range: 35 (worst) to 74 (all-time best), normed at 50.
+  // Normalize against real min/max so the full spread is used.
+  // Output range: 5 (BPI 33) to 45 (BPI 74)
+  const BPI_MIN = 33, BPI_MAX = 74;
+  const norm = Math.max(0, Math.min(1, (bpi - BPI_MIN) / (BPI_MAX - BPI_MIN)));
+  return 5 + norm * 40;
+}
+
+function pitcherStrength(p) {
+  const ip = parseFloat(p.ip) || 0;
+  if (ip === 0) return 0;
+  // Rate-based: runs allowed per 7 innings (7-inning games).
+  // R7 ~1 (elite) → ~28, R7 ~4 (avg) → ~24, R7 ~8 (bad) → ~18, R7 ~15+ → ~12
+  const r7 = (p.ra / ip) * 7;
+  return Math.max(5, 30 - r7);
+}
+
+function comboKey(season, team) {
+  return `${season}-${team.toLowerCase()}`;
+}
+
+function teamColor(team) {
+  const colors = {
+    green:'#38a169', blue:'#3182ce', red:'#e53e3e', black:'#2d3748',
+    gold:'#d69e2e', orange:'#dd6b20', purple:'#805ad5', silver:'#718096',
+    teal:'#2c7a7b', navy:'#1a365d', army:'#4a5020', maroon:'#822727',
+    pink:'#d53f8c', white:'#a0aec0', kings:'#4a1a7a', brown:'#744210'
+  };
+  return colors[team.toLowerCase()] || '#888';
+}
+
+// ——— Data Loading ———
+async function loadData() {
+  try {
+    document.getElementById('loadingStatus').textContent = 'Fetching players…';
+    const snap = await getDocs(collection(db, 'aggregatedPlayerStats'));
+    const players = [];
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      if (d.migrated === true) return;
+      players.push({ id: docSnap.id, ...d });
+    });
+    allPlayers = players;
+    document.getElementById('loadingStatus').textContent = `Building pools from ${players.length} players…`;
+    buildPools();
+    document.getElementById('loadingStatus').textContent = 'Ready!';
+    document.getElementById('btnStartGame').disabled = false;
+    document.getElementById('dataStatus').textContent =
+      `${players.length} players loaded · ${Object.keys(hitterPool).length} hitter combos · ${Object.keys(pitcherPool).length} pitcher combos`;
+    setTimeout(() => {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }, 500);
+  } catch(e) {
+    console.error(e);
+    document.getElementById('loadingStatus').textContent = 'Error loading data: ' + e.message;
+  }
+}
+
+// Parse a full season key like "2022-fall-orange" or "2025-spring-green"
+// Returns { seasonId: '2022-fall', team: 'orange' } or null if invalid
+function parseSeasonKey(fullKey) {
+  // Keys are like YYYY-term-team, where term is a single word (summer/fall/spring)
+  // and team could theoretically be multi-word (e.g. "red-sox") but in practice is one word
+  const match = fullKey.match(/^(\d{4}-[a-z]+)-(.+)$/);
+  if (!match) return null;
+  const seasonId = match[1];
+  const team = match[2].toLowerCase();
+  return { seasonId, team };
+}
+
+function buildPools() {
+  hitterPool = {};
+  pitcherPool = {};
+
+  allPlayers.forEach(player => {
+    const displayName = formatName(player.name || player.displayName || player.userId || '');
+    if (!displayName) return;
+
+    // Hitting seasons — keys are "YYYY-term-team" e.g. "2022-fall-orange"
+    if (player.seasons && typeof player.seasons === 'object') {
+      Object.entries(player.seasons).forEach(([fullKey, sData]) => {
+        const parsed = parseSeasonKey(fullKey);
+        if (!parsed) return;
+        const { seasonId, team } = parsed;
+        if (!isValidSeason(seasonId)) return;
+        if (!team) return;
+        const sub = (sData.sub || 'No').toString().toLowerCase();
+        if (sub === 'yes') return; // exclude subs
+        const atBats = Number(sData.atBats) || 0;
+        if (atBats < 3) return; // minimal plate appearances
+        const key = comboKey(seasonId, team);
+        if (!hitterPool[key]) hitterPool[key] = [];
+        hitterPool[key].push({
+          id: player.id,
+          name: displayName,
+          season: seasonId,
+          team: team,
+          type: 'hitter',
+          hits: Number(sData.hits) || 0,
+          runs: Number(sData.runs) || 0,
+          atBats,
+          walks: Number(sData.walks) || 0,
+          acesBPI: typeof sData.acesBPI === 'number' ? sData.acesBPI : Number(sData.acesBPI) || 0,
+          ba: Number(sData.battingAverage) || 0,
+          games: Number(sData.games) || 0,
+          hasBB: seasonId >= '2025-summer',
+        });
+      });
+    }
+
+    // Pitching seasons — same key format "YYYY-term-team", 2024-summer+
+    if (player.pitchingSeasons && typeof player.pitchingSeasons === 'object') {
+      Object.entries(player.pitchingSeasons).forEach(([fullKey, sData]) => {
+        const parsed = parseSeasonKey(fullKey);
+        if (!parsed) return;
+        const { seasonId, team } = parsed;
+        if (!isPitcherEligibleSeason(seasonId)) return;
+        if (!team) return;
+        const sub = (sData.sub || 'No').toString().toLowerCase();
+        if (sub === 'yes') return;
+        const ipRaw = sData.inningsPitched;
+        const ip = parseFloat(typeof ipRaw === 'string' ? ipRaw : (ipRaw || 0)) || 0;
+        if (ip < 1) return;
+        const key = comboKey(seasonId, team);
+        if (!pitcherPool[key]) pitcherPool[key] = [];
+        pitcherPool[key].push({
+          id: player.id,
+          name: displayName,
+          season: seasonId,
+          team: team,
+          type: 'pitcher',
+          ip,
+          ra: Number(sData.runsAllowed) || 0,
+          games: Number(sData.games) || 0,
+        });
+      });
+    }
+  });
+
+  // Sort each pool by strength desc
+  Object.values(hitterPool).forEach(arr => arr.sort((a,b) => hitterStrength(b) - hitterStrength(a)));
+  Object.values(pitcherPool).forEach(arr => arr.sort((a,b) => pitcherStrength(b) - pitcherStrength(a)));
+  console.log(`✅ 23-0 pools built: ${Object.keys(hitterPool).length} hitter combos, ${Object.keys(pitcherPool).length} pitcher combos`);
+  console.log('Sample hitter keys:', Object.keys(hitterPool).slice(0, 5));
+}
+
+// ——— Mode ———
+window.setMode = function(mode) {
+  gameMode = mode;
+  document.getElementById('btnClassic').classList.toggle('active', mode === 'classic');
+  document.getElementById('btnIQ').classList.toggle('active', mode === 'iq');
+  // Re-render the current pool so shuffle applies/unapplies immediately
+  if (currentCombo) {
+    const cfg = ROUND_CONFIG[currentRound];
+    const pool = cfg.type === 'pitcher' ? pitcherPool : hitterPool;
+    const players = pool[currentCombo.key] || [];
+    if (players.length > 0) renderPool(players);
+  } else {
+    document.getElementById('playerPool').classList.toggle('iq-mode', mode === 'iq');
+  }
+};
+
+// ——— Game Flow ———
+window.startGame = function() {
+  currentRound = 0;
+  roster = [];
+  usedSeasons = new Set();
+  seasonSkipsLeft = 1;
+  teamSkipsLeft = 1;
+  selectedPlayer = null;
+  currentCombo = null;
+  isSpinning = false;
+
+  renderRosterPanel();
+  showScreen('screenPick');
+  startRound();
+};
+
+function startRound() {
+  const cfg = ROUND_CONFIG[currentRound];
+  document.getElementById('roundLabel').textContent = `Round ${currentRound + 1} of 5`;
+  document.getElementById('roundTitle').textContent = `Pick a ${cfg.label}`;
+  document.getElementById('roundDesc').textContent =
+    cfg.type === 'pitcher'
+      ? 'Pitcher must be from 2024-Summer or later'
+      : 'Spin to reveal your season + team combo';
+
+  // Reset slot
+  document.getElementById('slotDisplay').textContent = '— — —';
+  document.getElementById('slotDisplay').classList.remove('spinning');
+  document.getElementById('slotSub').textContent = 'Press SPIN to begin';
+  document.getElementById('poolSection').style.display = 'none';
+  document.getElementById('btnSpin').disabled = false;
+  document.getElementById('btnSeasonSkip').disabled = true;
+  document.getElementById('btnTeamSkip').disabled = true;
+  document.getElementById('seasonSkipCount').textContent = `(${seasonSkipsLeft})`;
+  document.getElementById('teamSkipCount').textContent = `(${teamSkipsLeft})`;
+  document.getElementById('skipInfo').textContent = '';
+  selectedPlayer = null;
+  currentCombo = null;
+  isSpinning = false; // safety reset between rounds
+
+  document.getElementById('playerPool').classList.toggle('iq-mode', gameMode === 'iq');
+}
+
+function eligiblePool() {
+  const cfg = ROUND_CONFIG[currentRound];
+  const pool = cfg.type === 'pitcher' ? pitcherPool : hitterPool;
+
+  // Filter keys where season not already used
+  let unused = Object.keys(pool).filter(key => {
+    const [year, half] = key.split('-');
+    const seasonId = `${year}-${half}`;
+    return !usedSeasons.has(seasonId);
+  });
+
+  // For hitter rounds: always reserve at least 1 pitcher-eligible season for the pitcher round
+  if (cfg.type === 'hitter') {
+    const pitcherEligibleUnused = [...new Set(
+      Object.keys(pitcherPool)
+        .map(key => { const [year, half] = key.split('-'); return `${year}-${half}`; })
+        .filter(seasonId => !usedSeasons.has(seasonId))
+    )];
+    if (pitcherEligibleUnused.length === 1) {
+      const lastSeason = pitcherEligibleUnused[0];
+      const withoutLast = unused.filter(key => {
+        const [year, half] = key.split('-');
+        return `${year}-${half}` !== lastSeason;
+      });
+      // Only restrict if there are alternatives — otherwise let it through
+      if (withoutLast.length > 0) unused = withoutLast;
+    }
+  }
+
+  return unused;
+}
+
+window.spin = function() {
+  if (isSpinning) return;
+  isSpinning = true;
+
+  const eligible = eligiblePool();
+  if (eligible.length === 0) {
+    document.getElementById('slotSub').textContent = 'No more eligible combos!';
+    isSpinning = false;
+    return;
+  }
+
+  // Animate slot machine
+  const slotDisplay = document.getElementById('slotDisplay');
+  const pool = ROUND_CONFIG[currentRound].type === 'pitcher' ? pitcherPool : hitterPool;
+
+  slotDisplay.classList.add('spinning');
+  document.getElementById('btnSpin').disabled = true;
+  document.getElementById('poolSection').style.display = 'none';
+
+  let ticks = 0;
+  const maxTicks = 20 + Math.floor(Math.random() * 15);
+  const interval = setInterval(() => {
+    const randomKey = eligible[Math.floor(Math.random() * eligible.length)];
+    const [year, half, ...teamParts] = randomKey.split('-');
+    const seasonId = `${year}-${half}`;
+    const team = teamParts.join('-');
+    slotDisplay.textContent = `${fmtSeason(seasonId)} · ${capitalize(team)}`;
+    ticks++;
+    if (ticks >= maxTicks) {
+      clearInterval(interval);
+      // Land on a final combo
+      const finalKey = eligible[Math.floor(Math.random() * eligible.length)];
+      const [y2, h2, ...tp2] = finalKey.split('-');
+      const finalSeason = `${y2}-${h2}`;
+      const finalTeam = tp2.join('-');
+      slotDisplay.textContent = `${fmtSeason(finalSeason)} · ${capitalize(finalTeam)}`;
+      slotDisplay.classList.remove('spinning');
+      currentCombo = { season: finalSeason, team: finalTeam, key: finalKey };
+      isSpinning = false;
+
+      const playersInCombo = pool[finalKey] || [];
+      document.getElementById('slotSub').textContent = `${playersInCombo.length} player${playersInCombo.length !== 1 ? 's' : ''} available`;
+
+      // Enable skips
+      document.getElementById('btnSeasonSkip').disabled = seasonSkipsLeft <= 0;
+      document.getElementById('btnTeamSkip').disabled = teamSkipsLeft <= 0;
+      document.getElementById('skipInfo').textContent =
+        `${seasonSkipsLeft} season skip · ${teamSkipsLeft} team skip remaining`;
+
+      renderPool(playersInCombo);
+    }
+  }, 80);
+};
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function renderPool(players) {
+  const container = document.getElementById('playerPool');
+  const poolSection = document.getElementById('poolSection');
+  const noPool = document.getElementById('noPoolMsg');
+  const lockBtn = document.getElementById('btnLock');
+
+  container.innerHTML = '';
+  selectedPlayer = null;
+  lockBtn.disabled = true;
+
+  // In AcesIQ mode, shuffle order so BPI ranking isn't obvious
+  const displayPlayers = gameMode === 'iq' ? shuffleArray(players) : players;
+
+  if (players.length === 0) {
+    noPool.style.display = 'block';
+    poolSection.style.display = 'block';
+    // Auto-skip to another combo after 1.5s
+    setTimeout(() => {
+      noPool.style.display = 'none';
+      spin();
+    }, 1500);
+    return;
+  }
+
+  noPool.style.display = 'none';
+  poolSection.style.display = 'block';
+  document.getElementById('poolHeader').textContent =
+    `Choose from ${players.length} player${players.length !== 1 ? 's' : ''}`;
+
+  container.classList.toggle('iq-mode', gameMode === 'iq');
+
+  displayPlayers.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'player-card';
+    card.dataset.idx = i;
+
+    const str = p.type === 'pitcher' ? pitcherStrength(p) : hitterStrength(p);
+
+    if (p.type === 'pitcher') {
+      card.innerHTML = `
+        <div class="player-name">${p.name}</div>
+        <div class="player-stats">${p.ip.toFixed(1)} IP · ${p.ra} RA</div>
+        <div class="player-strength">${str.toFixed(1)}</div>
+      `;
+    } else {
+      const bbStr = p.hasBB ? ` · ${p.walks} BB` : '';
+      const avgStr = p.ba > 0 ? ` · .${Math.round(p.ba*1000).toString().padStart(3,'0')}` : '';
+      card.innerHTML = `
+        <div class="player-name">${p.name}</div>
+        <div class="player-stats">${p.hits}H ${p.runs}R${bbStr}${avgStr}<br>BPI: ${p.acesBPI.toFixed(2)}</div>
+        <div class="player-strength">${str.toFixed(1)}</div>
+      `;
+    }
+
+    card.addEventListener('click', () => {
+      container.querySelectorAll('.player-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedPlayer = p;
+      lockBtn.disabled = false;
+    });
+
+    container.appendChild(card);
+  });
+}
+
+window.skipSeason = function() {
+  if (seasonSkipsLeft <= 0 || !currentCombo) return;
+  seasonSkipsLeft--;
+  document.getElementById('seasonSkipCount').textContent = `(${seasonSkipsLeft})`;
+  document.getElementById('btnSeasonSkip').disabled = true; // used
+  // Block the current season from this round's spin only — but don't add to usedSeasons
+  // Instead, just re-spin excluding current season temporarily
+  const blockedSeason = currentCombo.season;
+  document.getElementById('slotSub').textContent = `Skipped ${fmtSeason(blockedSeason)} — spinning again…`;
+  document.getElementById('poolSection').style.display = 'none';
+  document.getElementById('btnTeamSkip').disabled = true;
+  setTimeout(() => spinExcluding(blockedSeason, null), 500);
+};
+
+window.skipTeam = function() {
+  if (teamSkipsLeft <= 0 || !currentCombo) return;
+  teamSkipsLeft--;
+  document.getElementById('teamSkipCount').textContent = `(${teamSkipsLeft})`;
+  document.getElementById('btnTeamSkip').disabled = true;
+  const blockedTeam = currentCombo.team;
+  document.getElementById('slotSub').textContent = `Skipped ${capitalize(blockedTeam)} — spinning again…`;
+  document.getElementById('poolSection').style.display = 'none';
+  document.getElementById('btnSeasonSkip').disabled = true;
+  setTimeout(() => spinExcluding(null, blockedTeam), 500);
+};
+
+function spinExcluding(blockedSeason, blockedTeam) {
+  isSpinning = true;
+  const cfg = ROUND_CONFIG[currentRound];
+  const pool = cfg.type === 'pitcher' ? pitcherPool : hitterPool;
+
+  let eligible = eligiblePool().filter(key => {
+    const [y, h, ...tp] = key.split('-');
+    const s = `${y}-${h}`;
+    const t = tp.join('-');
+    if (blockedSeason && s === blockedSeason) return false;
+    if (blockedTeam && t === blockedTeam) return false;
+    return true;
+  });
+
+  if (eligible.length === 0) {
+    // Refund the skip and restore the original pool so the player isn't stuck
+    if (blockedSeason !== null) {
+      seasonSkipsLeft++;
+      document.getElementById('seasonSkipCount').textContent = `(${seasonSkipsLeft})`;
+      document.getElementById('btnSeasonSkip').disabled = false;
+    }
+    if (blockedTeam !== null) {
+      teamSkipsLeft++;
+      document.getElementById('teamSkipCount').textContent = `(${teamSkipsLeft})`;
+      document.getElementById('btnTeamSkip').disabled = false;
+    }
+    document.getElementById('slotSub').textContent = 'No other combos available — pick from this one';
+    const origPlayers = pool[currentCombo.key] || [];
+    renderPool(origPlayers);
+    isSpinning = false;
+    return;
+  }
+
+  const slotDisplay = document.getElementById('slotDisplay');
+  slotDisplay.classList.add('spinning');
+  document.getElementById('btnSpin').disabled = true;
+
+  let ticks = 0;
+  const maxTicks = 15 + Math.floor(Math.random() * 10);
+  const interval = setInterval(() => {
+    const rk = eligible[Math.floor(Math.random() * eligible.length)];
+    const [y,h,...tp] = rk.split('-');
+    slotDisplay.textContent = `${fmtSeason(`${y}-${h}`)} · ${capitalize(tp.join('-'))}`;
+    ticks++;
+    if (ticks >= maxTicks) {
+      clearInterval(interval);
+      const finalKey = eligible[Math.floor(Math.random() * eligible.length)];
+      const [y2,h2,...tp2] = finalKey.split('-');
+      const finalSeason = `${y2}-${h2}`;
+      const finalTeam = tp2.join('-');
+      slotDisplay.textContent = `${fmtSeason(finalSeason)} · ${capitalize(finalTeam)}`;
+      slotDisplay.classList.remove('spinning');
+      currentCombo = { season: finalSeason, team: finalTeam, key: finalKey };
+      isSpinning = false;
+      const playersInCombo = pool[finalKey] || [];
+      document.getElementById('slotSub').textContent = `${playersInCombo.length} player${playersInCombo.length !== 1 ? 's' : ''} available`;
+      document.getElementById('skipInfo').textContent =
+        `${seasonSkipsLeft} season skip · ${teamSkipsLeft} team skip remaining`;
+      renderPool(playersInCombo);
+    }
+  }, 80);
+}
+
+window.lockPick = function() {
+  if (!selectedPlayer || !currentCombo) return;
+
+  // Mark this season as used
+  usedSeasons.add(currentCombo.season);
+
+  roster.push({
+    ...selectedPlayer,
+    slotNum: currentRound + 1,
+    strength: selectedPlayer.type === 'pitcher'
+      ? pitcherStrength(selectedPlayer)
+      : hitterStrength(selectedPlayer),
+  });
+
+  renderRosterPanel();
+  currentRound++;
+
+  if (currentRound >= ROUND_CONFIG.length) {
+    // All 5 picks done — go to simulate
+    showScreen('screenSimulate');
+    buildSimulateScreen();
+  } else {
+    startRound();
+  }
+};
+
+// ——— Roster Panel ———
+function renderRosterPanel() {
+  const container = document.getElementById('rosterSlots');
+  container.innerHTML = '';
+
+  ROUND_CONFIG.forEach((cfg, i) => {
+    const slot = document.createElement('div');
+    const pick = roster[i];
+    const isCurrent = i === currentRound;
+
+    slot.className = `roster-slot ${pick ? 'filled' : (isCurrent ? 'current' : 'empty')}`;
+
+    if (pick) {
+      const statsStr = pick.type === 'pitcher'
+        ? `${pick.ip.toFixed(1)} IP · ${pick.ra} RA`
+        : `${pick.hits}H ${pick.runs}R · BPI ${pick.acesBPI.toFixed(2)}`;
+      slot.innerHTML = `
+        <div class="slot-num">${i+1}</div>
+        <div class="slot-info">
+          <div class="slot-player-name">${pick.name}</div>
+          <div class="slot-detail">${fmtSeason(pick.season)} · ${capitalize(pick.team)} · ${statsStr}</div>
+        </div>
+        <div class="slot-type">${cfg.label.toUpperCase()}</div>
+      `;
+    } else {
+      slot.innerHTML = `
+        <div class="slot-num">${i+1}</div>
+        <div class="slot-info">
+          <div class="slot-player-name" style="color:#444;">${isCurrent ? '← Current Pick' : `${cfg.label} ${i+1}`}</div>
+          <div class="slot-detail" style="color:#333;">—</div>
+        </div>
+        <div class="slot-type" style="color:#333;">${cfg.label.toUpperCase()}</div>
+      `;
+    }
+
+    container.appendChild(slot);
+  });
+
+  // Strength bar
+  if (roster.length > 0) {
+    document.getElementById('strengthBarWrap').style.display = 'block';
+    const total = roster.reduce((s,p) => s + p.strength, 0);
+    const max = 200; // calibrated max
+    const pct = Math.min(100, (total / max) * 100);
+    document.getElementById('strengthFill').style.width = pct + '%';
+    document.getElementById('strengthVal').textContent = total.toFixed(1);
+  }
+}
+
+// ——— Simulate Screen ———
+function buildSimulateScreen() {
+  const container = document.getElementById('finalRoster');
+  container.innerHTML = '';
+
+  let totalStrength = 0;
+
+  roster.forEach(p => {
+    totalStrength += p.strength;
+    const card = document.createElement('div');
+    card.className = `final-player-card ${p.type === 'pitcher' ? 'pitcher-card' : ''}`;
+
+    if (p.type === 'pitcher') {
+      card.innerHTML = `
+        <div class="fpc-type">⚾ Pitcher</div>
+        <div class="fpc-name">${p.name}</div>
+        <div class="fpc-season">${fmtSeason(p.season)} · ${capitalize(p.team)}</div>
+        <div class="fpc-stats">${p.ip.toFixed(1)} IP · ${p.ra} RA</div>
+        <div class="fpc-strength">⚡ ${p.strength.toFixed(1)}</div>
+      `;
+    } else {
+      const bbStr = p.hasBB ? ` · ${p.walks} BB` : '';
+      card.innerHTML = `
+        <div class="fpc-type">🏏 Hitter</div>
+        <div class="fpc-name">${p.name}</div>
+        <div class="fpc-season">${fmtSeason(p.season)} · ${capitalize(p.team)}</div>
+        <div class="fpc-stats">${p.hits}H ${p.runs}R${bbStr}<br>BPI ${p.acesBPI.toFixed(2)}</div>
+        <div class="fpc-strength">⚡ ${p.strength.toFixed(1)}</div>
+      `;
+    }
+
+    container.appendChild(card);
+  });
+
+  // Normalize to 0-100 rating
+  const rating = computeRating(totalStrength);
+  document.getElementById('teamRatingDisplay').textContent = rating.toFixed(1);
+  document.getElementById('btnSimulate').disabled = false;
+}
+
+function computeRating(totalStrength) {
+  // BPI is 0-100 normed at 50. Calibrated ranges:
+  // 4 below-avg hitters (BPI~35, ~15ea) + bad pitcher (~18)   = ~78  → rating ~39 → ~0% shot
+  // 4 avg hitters (BPI~50, ~22ea) + avg pitcher (~24)         = ~112 → rating ~56 → ~0% shot
+  // 4 good hitters (BPI~68, ~30ea) + good pitcher (~26)       = ~146 → rating ~73 → ~0.5% shot
+  // 4 elite hitters (BPI~82, ~36ea) + elite pitcher (~28)     = ~172 → rating ~86 → ~10% shot
+  // Perfect team (BPI~95, ~41ea) + perfect pitcher(~29)       = ~193 → capped at 95 → ~38% shot
+  // BPI 35–74 normalized. Ranges:
+  // Worst team (BPI 35 × 4 + bad pitcher)  → str ~40  → rating ~20 → 0% shot
+  // Avg team (BPI 50 × 4 + avg pitcher)    → str ~107 → rating ~53 → 0% shot
+  // Your 66-ish team + ok pitcher          → str ~159 → rating ~80 → 3% shot
+  // All-time best (BPI 74 × 4 + ace)       → str ~208 → capped 95  → 33% shot
+  const maxRaw = 200;
+  return Math.min(95, Math.max(1, (totalStrength / maxRaw) * 100));
+}
+
+// ——— Season Simulation ———
+window.simulateSeason = function() {
+  document.getElementById('btnSimulate').disabled = true;
+
+  const totalStrength = roster.reduce((s,p) => s + p.strength, 0);
+  const rating = computeRating(totalStrength);
+
+  // Win probability per game — calibrated so 23-0 is genuinely rare:
+  // rating 40  → ~40% (weak, essentially impossible to go 23-0)
+  // rating 63  → ~58% (above avg BPIs ~63-66, ~0% shot)
+  // rating 70  → ~71% (good, ~0.04% shot)
+  // rating 80  → ~87% (very good, ~4% shot)
+  // rating 88  → ~93% (elite, ~18% shot)
+  // rating 95  → ~95% (best possible, ~33% shot)
+  function gameWinProb(rating) {
+    const k = 0.13;
+    const mid = 68;
+    return 0.38 + 0.59 * (1 / (1 + Math.exp(-k * (rating - mid))));
+  }
+
+  const winProb = gameWinProb(rating);
+  const TOTAL_GAMES = 23;
+
+  showScreen('screenResult');
+
+  // Build win track
+  const trackEl = document.getElementById('winTrack');
+  trackEl.innerHTML = '';
+  const dots = [];
+  for (let i = 0; i < TOTAL_GAMES; i++) {
+    const d = document.createElement('div');
+    d.className = 'win-dot';
+    d.textContent = i + 1;
+    trackEl.appendChild(d);
+    dots.push(d);
+  }
+
+  const logEl = document.getElementById('simLog');
+  logEl.textContent = '';
+
+  let wins = 0;
+  let losses = 0;
+  let gameIdx = 0;
+  let lost = false;
+
+  const opponents = [
+    'Green','Blue','Red','Black','Gold','Orange','Purple','Silver',
+    'Teal','Navy','Army','Maroon','Pink','Brown','White',
+    'Green','Blue','Red','Black','Gold','Orange','Purple','Teal'
+  ];
+
+  function appendLog(msg) {
+    logEl.textContent += msg + '\n';
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function nextGame() {
+    if (gameIdx >= TOTAL_GAMES || lost) {
+      finishSim(wins, losses, lost);
+      return;
+    }
+
+    const dot = dots[gameIdx];
+    dot.classList.add('current');
+
+    const opp = opponents[gameIdx % opponents.length];
+    const roll = Math.random();
+    const win = roll < winProb;
+
+    if (win) {
+      wins++;
+      dot.classList.remove('current');
+      dot.classList.add('won');
+      appendLog(`Game ${gameIdx + 1}: ✅ W vs ${opp}`);
+    } else {
+      losses++;
+      lost = true;
+      dot.classList.remove('current');
+      dot.classList.add('lost');
+      appendLog(`Game ${gameIdx + 1}: ❌ L vs ${opp} — season ends at ${wins}-${losses}`);
+    }
+
+    gameIdx++;
+    setTimeout(nextGame, 120);
+  }
+
+  appendLog(`Rating: ${rating.toFixed(1)} | Win% per game: ${(winProb*100).toFixed(1)}%`);
+  appendLog('--- Season begins ---');
+  setTimeout(nextGame, 400);
+};
+
+function finishSim(wins, losses, lost) {
+  const won23 = wins === 23 && losses === 0;
+  const banner = document.getElementById('resultBanner');
+  const title = document.getElementById('resultTitle');
+  const record = document.getElementById('resultRecord');
+  const msg = document.getElementById('resultMsg');
+
+  if (won23) {
+    banner.className = 'result-banner';
+    title.textContent = '23-0! 🏆';
+    record.textContent = '23 - 0';
+    msg.textContent = 'Perfection. Your Aces squad went undefeated. Legendary.';
+    triggerConfetti();
+  } else if (wins >= 18) {
+    banner.className = 'result-banner';
+    banner.style.borderColor = '#f6e05e';
+    title.textContent = 'So Close! ⚡';
+    record.textContent = `${wins} - ${losses}`;
+    msg.textContent = `${wins} wins isn't 23-0, but it's one of the best seasons in Aces history. Try again!`;
+  } else {
+    banner.className = 'result-banner loss';
+    title.textContent = 'Season Over';
+    record.textContent = `${wins} - ${losses}`;
+    msg.textContent = wins < 10
+      ? 'Rough one. Might need a better roster next time.'
+      : 'A solid run, but not 23-0 territory. Try again!';
+  }
+}
+
+// ——— Reset ———
+window.resetGame = function() {
+  roster = [];
+  currentRound = 0;
+  usedSeasons = new Set();
+  seasonSkipsLeft = 1;
+  teamSkipsLeft = 1;
+  selectedPlayer = null;
+  currentCombo = null;
+  isSpinning = false;
+  showScreen('screenStart');
+};
+
+// ——— Screen Nav ———
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+window.showScreen = showScreen;
+
+// ——— Confetti ———
+function triggerConfetti() {
+  const canvas = document.getElementById('confettiCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const particles = Array.from({length: 120}, () => ({
+    x: Math.random() * canvas.width,
+    y: -20,
+    size: 6 + Math.random() * 8,
+    color: ['#ffd700','#ffffff','#2d5016','#ffd700','#c0c0c0'][Math.floor(Math.random()*5)],
+    vx: (Math.random() - 0.5) * 4,
+    vy: 2 + Math.random() * 4,
+    rot: Math.random() * 360,
+    rotV: (Math.random() - 0.5) * 8,
+    shape: Math.random() > 0.5 ? 'rect' : 'circle',
+  }));
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.rot += p.rotV;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      if (p.shape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size/2, 0, Math.PI*2);
+        ctx.fill();
+      } else {
+        ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+      }
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 200) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+
+// ——— Init ———
+// Wire mode toggle buttons via addEventListener (more reliable on mobile than onclick)
+document.getElementById('btnClassic').addEventListener('click', () => setMode('classic'));
+document.getElementById('btnIQ').addEventListener('click', () => setMode('iq'));
+
+loadData();
+</script>
+</body>
+</html>

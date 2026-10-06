@@ -1,0 +1,2563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mountainside Aces">
+<title>Playoff Seeding Scenarios - Mountainside Aces</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    --clinched-green: #10b981;
+    --danger-red: #ef4444;
+    --warning-yellow: #f59e0b;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+
+  /* Share Button & Modal */
+  .share-seed-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .share-seed-btn:hover { background: rgba(255,255,255,0.35); }
+
+  .share-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .share-modal {
+    background: white;
+    border-radius: 16px;
+    padding: 1.75rem;
+    width: 100%;
+    max-width: 380px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .share-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #718096;
+    line-height: 1;
+  }
+  .share-modal h3 { margin: 0 0 0.4rem 0; font-size: 1.2rem; color: var(--primary-color); font-weight: 700; }
+  .share-modal p  { margin: 0 0 1.25rem 0; font-size: 0.88rem; color: #718096; }
+  .share-option-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #2d3748;
+    margin-bottom: 0.75rem;
+    text-align: left;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+  }
+  .share-option-btn:last-child { margin-bottom: 0; }
+  .share-option-btn:hover { border-color: var(--primary-color); background: #f0f6ea; color: var(--primary-color); }
+  .share-option-btn.success { border-color: #16a34a; background: #f0fdf4; color: #16a34a; }
+  .share-option-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .share-option-text { flex: 1; }
+  .share-option-title { font-weight: 700; font-size: 0.95rem; }
+  .share-option-desc { font-size: 0.8rem; font-weight: 400; color: #718096; margin-top: 1px; }
+  .share-option-btn:hover .share-option-desc,
+  .share-option-btn.success .share-option-desc { color: inherit; opacity: 0.75; }
+
+  /* Loading Spinner */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .softball-spinner {
+    width: 80px;
+    height: 80px;
+    position: relative;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+
+  .softball-spinner::before {
+    content: '🔒';
+    font-size: 80px;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  @keyframes spin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+  }
+
+  /* Header - Pumpkin theme for playoff scenarios */
+  .header {
+    background: linear-gradient(135deg, #ff6347 0%, #ff8c42 100%);
+    color: white;
+    text-align: center;
+    padding: 4rem 2rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .header::after {
+    content: '🔒';
+    position: absolute;
+    bottom: -30px;
+    left: 10%;
+    font-size: 120px;
+    opacity: 0.15;
+    transform: rotate(-15deg);
+  }
+  
+  .header h1 {
+    margin: 0;
+    font-size: 3.5rem;
+    font-weight: 800;
+    text-shadow: 2px 4px 8px rgba(0,0,0,0.2);
+    letter-spacing: -0.5px;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .header p {
+    margin: 1rem 0 0 0;
+    font-size: 1.3rem;
+    opacity: 0.95;
+    font-weight: 300;
+    position: relative;
+    z-index: 1;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 3rem auto;
+    padding: 0 2rem;
+  }
+
+  /* Modern Section Styling */
+  .section {
+    background: var(--card-bg);
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .section:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .section-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    position: relative;
+  }
+
+  .section-header::after {
+    content: '⚾';
+    position: absolute;
+    right: 2rem;
+    font-size: 2rem;
+    opacity: 0.2;
+  }
+
+  .section-content {
+    padding: 2rem;
+  }
+
+  /* Summary Cards */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .summary-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    border-left: 4px solid var(--primary-color);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .summary-card.clinched {
+    border-left-color: var(--clinched-green);
+  }
+
+  .summary-card.danger {
+    border-left-color: var(--danger-red);
+  }
+
+  .summary-card.warning {
+    border-left-color: var(--warning-yellow);
+  }
+
+  .summary-card::before {
+    content: '⚾';
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    font-size: 60px;
+    opacity: 0.05;
+  }
+
+  .summary-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .summary-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .summary-label {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    font-weight: 500;
+  }
+
+  /* Clinching Table */
+  .clinching-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .clinching-table th,
+  .clinching-table td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .clinching-table th {
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    font-weight: 600;
+    color: var(--text-dark);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .clinching-table tbody tr {
+    transition: background-color 0.2s ease;
+  }
+
+  .clinching-table tbody tr:hover {
+    background-color: #f8fafc;
+  }
+
+  .team-name {
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .status-clinched {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+
+  .status-eliminated {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+
+  .status-safe {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
+
+  .status-danger {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+
+  .status-contention {
+    background-color: #e0e7ff;
+    color: #3730a3;
+  }
+
+  .magic-number {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+  }
+
+  .magic-number.low {
+    color: var(--clinched-green);
+  }
+
+  .magic-number.high {
+    color: var(--danger-red);
+  }
+
+  .scenario-text {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    white-space: normal;
+    text-align: left;
+    max-width: 700px;
+    padding: 8px 0;
+  }
+  
+  .scenario-text strong {
+    color: var(--text-dark);
+    font-weight: 600;
+  }
+  
+  .scenario-text div {
+    margin-bottom: 8px;
+  }
+  
+  .scenario-text strong:first-child {
+    margin-top: 0;
+  }
+
+  .no-data {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+  }
+
+  .no-data h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-dark);
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 1rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header h1 {
+      font-size: 2.5rem;
+    }
+
+    .header p {
+      font-size: 1.1rem;
+    }
+
+    .summary-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .clinching-table {
+      font-size: 0.8rem;
+    }
+
+    .clinching-table th,
+    .clinching-table td {
+      padding: 8px 6px;
+    }
+  }
+</style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="softball-spinner"></div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🔒 Playoff Seeding Scenarios</h1>
+    <p>All 11 teams make playoffs - Fight for your seed!</p>
+  </div>
+
+<!-- ADD THIS: Navigation container for desktop -->
+<div class="filters-nav"></div>
+
+
+  <!-- Main Content -->
+  <div class="container">
+    <!-- Summary Section -->
+    <div class="section">
+      <div class="section-header">📊 Playoff Seeding Summary</div>
+      <div class="section-content">
+        <div class="summary-grid" id="summaryGrid">
+          <div class="summary-card clinched">
+            <div class="summary-number" id="clinched">-</div>
+            <div class="summary-label">Seeds Locked</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-number" id="byeSeeds">-</div>
+            <div class="summary-label">Direct to Round 1</div>
+          </div>
+          <div class="summary-card warning">
+            <div class="summary-number" id="playInTeams">-</div>
+            <div class="summary-label">Play-In Games</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-number" id="gamesRemaining">-</div>
+            <div class="summary-label">Total Games Remaining</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seeding Scenarios -->
+    <div class="section">
+      <div class="section-header">🏆 Team-by-Team Seeding Scenarios</div>
+      <div class="section-content">
+
+        <!-- Quick Seed Summary Table -->
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem; flex-wrap:wrap; gap:8px;">
+          <div style="font-weight:700; font-size:0.95rem; color:var(--text-dark);">📋 Seed Summary</div>
+          <button class="share-seed-btn" onclick="openSeedShareModal()" style="background:var(--primary-color); border-color:var(--primary-color);">📤 Share</button>
+        </div>
+        <div id="seedSummaryWrap" style="overflow-x: auto; margin-bottom: 1.5rem;">
+          <table class="clinching-table" id="seedSummaryTable">
+            <thead>
+              <tr>
+                <th>Seed</th>
+                <th>Team</th>
+                <th>Record</th>
+                <th>Seed Status</th>
+              </tr>
+            </thead>
+            <tbody id="seedSummaryBody">
+              <tr><td colspan="4" class="loading">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="clinching-table">
+            <thead>
+              <tr>
+                <th>Seed</th>
+                <th>Team</th>
+                <th>Record</th>
+                <th>Win%</th>
+                <th>Status</th>
+                <th>Seed Range</th>
+                <th>Games Left</th>
+                <th>Seeding Scenario</th>
+              </tr>
+            </thead>
+            <tbody id="clinchingTableBody">
+              <tr>
+                <td colspan="8" class="loading">Loading seeding scenarios...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+          <div class="legend-item">
+            <span class="status-badge status-safe">Direct</span>
+            <span>Seeds 1-5 (direct to Round 1)</span>
+          </div>
+          <div class="legend-item">
+            <span class="status-badge status-danger">Play-In</span>
+            <span>Seeds 6-11 (must win play-in game)</span>
+          </div>
+        </div>
+        <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; font-size: 0.85rem; color: #666;">
+          <strong>Seed Range:</strong> Shows possible final seeds based on all remaining games. 
+          <strong>#3</strong> = locked into that seed | 
+          <strong>#2-4</strong> = can finish anywhere in that range
+        </div>
+      </div>
+    </div>
+
+    <!-- Seed Summary Share Modal -->
+    <div id="seedShareModal" class="share-modal-overlay" onclick="if(event.target===this) closeSeedShareModal()">
+      <div class="share-modal">
+        <button class="share-modal-close" onclick="closeSeedShareModal()">&times;</button>
+        <h3>🔗 Share Seed Summary</h3>
+        <p>Choose how you'd like to share the seeding snapshot:</p>
+        <button class="share-option-btn" id="seedShareImageBtn" onclick="shareSeedImage()">
+          <span class="share-option-icon">📷</span>
+          <span class="share-option-text">
+            <div class="share-option-title">Save as Image</div>
+            <div class="share-option-desc">Download a clean PNG — perfect for group chats</div>
+          </span>
+        </button>
+        <button class="share-option-btn" id="seedShareTextBtn" onclick="shareSeedText()">
+          <span class="share-option-icon">📋</span>
+          <span class="share-option-text">
+            <div class="share-option-title">Copy as Text</div>
+            <div class="share-option-desc">Copy a formatted seed table to clipboard</div>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Key Matchups -->
+    <div class="section">
+      <div class="section-header">⚔️ Key Remaining Matchups</div>
+      <div class="section-content">
+        <div id="keyMatchupsContent" class="loading">Loading key matchups...</div>
+      </div>
+    </div>
+
+
+  <script type="module">
+    import { db, getDocs, collection, query, where } from './firebase-config.js';
+
+    // Wait for page load
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        document.getElementById('loadingOverlay').classList.add('hidden');
+      }, 800);
+    });
+
+    const TOTAL_TEAMS = 11; // All 11 teams make playoffs
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    /**
+     * Parse game date - dates are already transformed to strings in loadData
+     * @param {string} dateValue - Date as string "M/D/YYYY"
+     * @returns {Date} JavaScript Date object
+     */
+    function parseGameDate(dateValue) {
+      return new Date(dateValue);
+    }
+
+    /**
+     * Get the current active season
+     * @returns {Promise<Object>} Active season object
+     */
+    async function getCurrentSeason() {
+      try {
+        const q = query(
+          collection(db, 'seasons'),
+          where('isActive', '==', true)
+        );
+        const seasonsSnapshot = await getDocs(q);
+        
+        if (seasonsSnapshot.empty) {
+          return null;
+        }
+        
+        const seasonDoc = seasonsSnapshot.docs[0];
+        return {
+          id: seasonDoc.id,
+          ...seasonDoc.data()
+        };
+      } catch (error) {
+        console.error('Error fetching current season:', error);
+        return null;
+      }
+    }
+
+    /**
+     * Get all games for a season
+     * @param {string} seasonId - Season ID (e.g., "2025-fall")
+     * @returns {Promise<Array>} Array of game objects
+     */
+    async function getSeasonGames(seasonId) {
+      try {
+        const gamesSnapshot = await getDocs(
+          collection(db, 'seasons', seasonId, 'games')
+        );
+        return gamesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+      } catch (error) {
+        console.error('Error fetching season games:', error);
+        return [];
+      }
+    }
+
+    function calculateStandings(games) {
+      const teamStats = {};
+      
+      games.forEach(game => {
+        const homeTeam = game['home team'];
+        const awayTeam = game['away team'];
+        const winner = game.winner;
+        const homeScore = parseInt(game['home score']) || 0;
+        const awayScore = parseInt(game['away score']) || 0;
+        
+        if (!teamStats[homeTeam]) {
+          teamStats[homeTeam] = { 
+            name: homeTeam, 
+            wins: 0, 
+            losses: 0, 
+            ties: 0, 
+            gamesPlayed: 0, 
+            runsFor: 0, 
+            runsAgainst: 0,
+            h2h: {} // Head-to-head records
+          };
+        }
+        if (!teamStats[awayTeam]) {
+          teamStats[awayTeam] = { 
+            name: awayTeam, 
+            wins: 0, 
+            losses: 0, 
+            ties: 0, 
+            gamesPlayed: 0, 
+            runsFor: 0, 
+            runsAgainst: 0,
+            h2h: {}
+          };
+        }
+        
+        teamStats[homeTeam].gamesPlayed++;
+        teamStats[awayTeam].gamesPlayed++;
+        teamStats[homeTeam].runsFor += homeScore;
+        teamStats[homeTeam].runsAgainst += awayScore;
+        teamStats[awayTeam].runsFor += awayScore;
+        teamStats[awayTeam].runsAgainst += homeScore;
+        
+        // Initialize h2h records
+        if (!teamStats[homeTeam].h2h[awayTeam]) {
+          teamStats[homeTeam].h2h[awayTeam] = { wins: 0, losses: 0, ties: 0 };
+        }
+        if (!teamStats[awayTeam].h2h[homeTeam]) {
+          teamStats[awayTeam].h2h[homeTeam] = { wins: 0, losses: 0, ties: 0 };
+        }
+        
+        if (winner === "Tie") {
+          teamStats[homeTeam].ties++;
+          teamStats[awayTeam].ties++;
+          teamStats[homeTeam].h2h[awayTeam].ties++;
+          teamStats[awayTeam].h2h[homeTeam].ties++;
+        } else if (winner === homeTeam) {
+          teamStats[homeTeam].wins++;
+          teamStats[awayTeam].losses++;
+          teamStats[homeTeam].h2h[awayTeam].wins++;
+          teamStats[awayTeam].h2h[homeTeam].losses++;
+        } else if (winner === awayTeam) {
+          teamStats[awayTeam].wins++;
+          teamStats[homeTeam].losses++;
+          teamStats[awayTeam].h2h[homeTeam].wins++;
+          teamStats[homeTeam].h2h[awayTeam].losses++;
+        }
+      });
+      
+      const standings = Object.values(teamStats).map(team => {
+        const totalGames = team.wins + team.losses + team.ties;
+        return {
+          ...team,
+          winPct: totalGames > 0 ? (team.wins + team.ties * 0.5) / totalGames : 0,
+          runDifferential: team.runsFor - team.runsAgainst
+        };
+      });
+      
+      // Sort with proper tiebreakers that handle 3+ team ties correctly
+      return sortWithTiebreakers(standings);
+    }
+    
+    function compareHeadToHead(teamA, teamB) {
+      const aVsB = teamA.h2h[teamB.name];
+      const bVsA = teamB.h2h[teamA.name];
+      
+      // No head-to-head data or 3+ team tie (can't use h2h)
+      if (!aVsB || !bVsA) return 0;
+      
+      const aH2HWinPct = (aVsB.wins + aVsB.losses) > 0 ? aVsB.wins / (aVsB.wins + aVsB.losses) : 0;
+      const bH2HWinPct = (bVsA.wins + bVsA.losses) > 0 ? bVsA.wins / (bVsA.wins + bVsA.losses) : 0;
+      
+      // Only return if there's a clear winner in h2h
+      if (aH2HWinPct !== bH2HWinPct) {
+        return bH2HWinPct - aH2HWinPct;
+      }
+      
+      return 0; // H2H is tied, move to next tiebreaker
+    }
+
+    function calculateRemainingGames(games, teamName) {
+      return games.filter(g => {
+        const isFuture = parseGameDate(g.date) >= today;
+        const noWinner = !g.winner || g.winner.trim() === "";
+        const isRegularSeason = g.game_type === 'Regular';
+        const involvesTeam = g['home team'] === teamName || g['away team'] === teamName;
+        return isFuture && noWinner && isRegularSeason && involvesTeam;
+      }).length;
+    }
+
+    /**
+     * Check if two teams play each other in remaining games
+     */
+    function teamsPlayEachOther(team1, team2, games) {
+      return games.some(g => {
+        const isFuture = parseGameDate(g.date) >= today;
+        const noWinner = !g.winner || g.winner.trim() === "";
+        const isRegularSeason = g.game_type === 'Regular';
+        const hasTeam1 = g['home team'] === team1 || g['away team'] === team1;
+        const hasTeam2 = g['home team'] === team2 || g['away team'] === team2;
+        return isFuture && noWinner && isRegularSeason && hasTeam1 && hasTeam2;
+      });
+    }
+
+    /**
+     * Check if a team truly clinches a seed (accounting for tiebreaker scenarios)
+     * Returns true only if the seed is guaranteed regardless of game margins/tiebreakers
+     */
+    function trulyClinches(team, targetSeed, standings, gamesLeft) {
+      if (gamesLeft === 0) return false;
+      
+      // Get teams that could threaten this seed
+      const threateningTeams = standings.filter((t, idx) => {
+        if (t.name === team.name) return false;
+        const seed = idx + 1;
+        return seed >= targetSeed;
+      });
+      
+      if (threateningTeams.length === 0) return true;
+      
+      // Check if we can get enough wins to be ahead of ALL threats
+      const maxPossibleWins = team.wins + gamesLeft;
+      
+      // Find if any team could tie us even in our best case
+      let couldTie = false;
+      threateningTeams.forEach(threat => {
+        const threatGamesLeft = calculateRemainingGames(allGames, threat.name);
+        const threatMaxWins = threat.wins + threatGamesLeft;
+        
+        // If they could match our max wins, we could tie
+        if (threatMaxWins >= maxPossibleWins) {
+          couldTie = true;
+        }
+      });
+      
+      // If no one can tie us, we truly clinch
+      if (!couldTie) return true;
+      
+      // If someone could tie us, check if we have H2H advantage
+      // But be conservative - if there's any tiebreaker uncertainty, don't claim clinch
+      for (const threat of threateningTeams) {
+        const threatGamesLeft = calculateRemainingGames(allGames, threat.name);
+        const threatMaxWins = threat.wins + threatGamesLeft;
+        
+        // They could match our wins
+        if (threatMaxWins >= maxPossibleWins) {
+          // Check if we play them (H2H could be split)
+          if (teamsPlayEachOther(team.name, threat.name, allGames)) {
+            return false; // Could split H2H, goes to runs allowed = uncertain
+          }
+          
+          // Check if we already have decisive H2H
+          const h2h = team.h2h[threat.name];
+          if (!h2h) return false; // No H2H data, uncertain
+          
+          const totalH2H = h2h.wins + h2h.losses;
+          if (totalH2H === 0) return false; // No H2H games yet, uncertain
+          
+          // If H2H is tied or they're ahead, uncertain
+          if (h2h.wins <= h2h.losses) return false;
+          
+          // Could be 3+ team tie, which skips H2H
+          if (threateningTeams.length > 1) return false;
+        }
+      }
+      
+      return true;
+    }
+
+    /**
+     * Calculate best and worst possible seeds for a team by simulating outcomes
+     */
+    function calculateSeedRange(team, standings, upcomingGames) {
+      const teamName = team.name;
+      const currentWins = team.wins;
+      const gamesLeft = calculateRemainingGames(allGames, teamName);
+      
+      // Best case: team wins all remaining games (or current record if done)
+      const bestWins = currentWins + gamesLeft;
+      const bestLosses = team.losses;
+      
+      // Worst case: team loses all remaining games (or current record if done)
+      const worstWins = currentWins;
+      const worstLosses = team.losses + gamesLeft;
+      
+      // Simulate best case scenario (other teams lose)
+      let bestSeed = simulateFinalStandings(teamName, bestWins, bestLosses, standings, true);
+      
+      // Simulate worst case scenario (other teams win)
+      let worstSeed = simulateFinalStandings(teamName, worstWins, worstLosses, standings, false);
+      
+      return { bestSeed, worstSeed, bestWins, worstWins, gamesLeft };
+    }
+    
+    /**
+     * Sort teams with proper tiebreaker handling for 3+ team ties
+     * Tiebreaker order:
+     * 1. Win Percentage
+     * 2. Head-to-Head (2-team ties ONLY)
+     * 3. Runs Allowed (fewer is better)
+     * 4. Run Differential (higher is better)
+     */
+    function sortWithTiebreakers(teams) {
+      // First sort by win percentage
+      const sorted = [...teams].sort((a, b) => b.winPct - a.winPct);
+      
+      // Find groups of teams with identical win percentages
+      const winPctGroups = [];
+      let currentGroup = [sorted[0]];
+      
+      for (let i = 1; i < sorted.length; i++) {
+        if (Math.abs(sorted[i].winPct - sorted[i-1].winPct) < 0.0001) {
+          // Same win percentage (accounting for floating point)
+          currentGroup.push(sorted[i]);
+        } else {
+          // Different win percentage - save current group and start new one
+          winPctGroups.push(currentGroup);
+          currentGroup = [sorted[i]];
+        }
+      }
+      winPctGroups.push(currentGroup); // Don't forget the last group
+      
+      // Apply appropriate tiebreakers to each group
+      const brokenTies = winPctGroups.map(group => {
+        if (group.length === 1) {
+          // No tie to break
+          return group;
+        } else if (group.length === 2) {
+          // 2-team tie: Use Head-to-Head
+          const [a, b] = group;
+          const h2hComp = compareHeadToHead(a, b);
+          
+          if (h2hComp !== 0) {
+            return h2hComp > 0 ? [b, a] : [a, b];
+          } else {
+            // H2H tied, use Runs Allowed
+            return breakTieByRunsAllowed(group);
+          }
+        } else {
+          // 3+ team tie: Skip H2H, use Runs Allowed directly
+          return breakTieByRunsAllowed(group);
+        }
+      });
+      
+      // Flatten the groups back into a single array
+      return brokenTies.flat();
+    }
+    
+    /**
+     * Break ties using Runs Allowed (fewer is better), then Run Differential
+     */
+    function breakTieByRunsAllowed(teams) {
+      return [...teams].sort((a, b) => {
+        // Runs Allowed (fewer is better)
+        if (a.runsAgainst !== b.runsAgainst) {
+          return a.runsAgainst - b.runsAgainst;
+        }
+        // Run Differential (higher is better)
+        return b.runDifferential - a.runDifferential;
+      });
+    }
+    
+    /**
+     * Simulate final standings with team at specified record
+     * favorableForTeam: true = assume favorable outcomes for other games, false = unfavorable
+     * 
+     * CRITICAL: We cannot predict game margins (runs allowed changes), so we use CONSERVATIVE sorting:
+     * - If teams would be tied in wins AND the tiebreaker involves Runs Allowed (unknown margins),
+     *   we treat them as potentially able to swap positions
+     */
+    function simulateFinalStandings(targetTeam, targetWins, targetLosses, currentStandings, favorableForTeam) {
+      // Build hypothetical final standings
+      const hypotheticalStandings = currentStandings.map(team => {
+        if (team.name === targetTeam) {
+          // Use the target team's hypothetical record
+          const totalDecided = targetWins + targetLosses;
+          // Track simulated games so conservative tiebreaker knows RA may have changed
+          const simulatedGamesAdded = (targetWins + targetLosses) - (team.wins + team.losses);
+          const totalGamesWithTies = totalDecided + team.ties;
+          return {
+            ...team,
+            wins: targetWins,
+            losses: targetLosses,
+            gamesPlayed: totalGamesWithTies,
+            winPct: totalGamesWithTies > 0 ? (targetWins + team.ties * 0.5) / totalGamesWithTies : 0,
+            gamesRemaining: simulatedGamesAdded
+          };
+        } else {
+          // For other teams, calculate their potential final record
+          const otherGamesLeft = calculateRemainingGames(allGames, team.name);
+          
+          let finalWins, finalLosses;
+          
+          // Check if target team has games remaining
+          const targetGamesLeft = calculateRemainingGames(allGames, targetTeam);
+          
+          if (targetGamesLeft > 0) {
+            // Target team still playing - standard logic
+            if (favorableForTeam) {
+              // Favorable: others lose their remaining games (easier for target to pass them)
+              finalWins = team.wins;
+              finalLosses = team.losses + otherGamesLeft;
+            } else {
+              // Unfavorable: others win their remaining games (harder for target to pass them)
+              finalWins = team.wins + otherGamesLeft;
+              finalLosses = team.losses;
+            }
+          } else {
+            // Target team is DONE - decide whether ties help or hurt target
+            const targetTeamObj = currentStandings.find(t => t.name === targetTeam);
+            const couldTieWithTarget = (team.wins + otherGamesLeft >= targetWins) && (team.wins <= targetWins);
+
+            // Does target win H2H vs this team in a 2-way tie?
+            const h2hVsOther = targetTeamObj?.h2h?.[team.name];
+            const targetWinsH2H = h2hVsOther &&
+              (h2hVsOther.wins + h2hVsOther.losses) > 0 &&
+              h2hVsOther.wins > h2hVsOther.losses;
+
+            if (favorableForTeam) {
+              if (couldTieWithTarget) {
+                if (targetWinsH2H) {
+                  // Tie benefits target via H2H → CREATE the tie (have them lose to tie record)
+                  // Find the exact loss count that creates the tie
+                  const winsNeededForTie = targetWins - team.wins;
+                  const lossesNeededForTie = otherGamesLeft - winsNeededForTie;
+                  if (winsNeededForTie >= 0 && lossesNeededForTie >= 0) {
+                    finalWins = team.wins + winsNeededForTie;
+                    finalLosses = team.losses + lossesNeededForTie;
+                  } else {
+                    // Can't construct exact tie — avoid
+                    finalWins = team.wins + otherGamesLeft;
+                    finalLosses = team.losses;
+                  }
+                } else {
+                  // Tie hurts target → have them LOSE out (stay below target's win count)
+                  finalWins = team.wins;
+                  finalLosses = team.losses + otherGamesLeft;
+                }
+              } else if (team.wins > targetWins) {
+                // Already ahead — keep them winning (can't help)
+                finalWins = team.wins + otherGamesLeft;
+                finalLosses = team.losses;
+              } else {
+                // Behind and can't catch up — have them lose out
+                finalWins = team.wins;
+                finalLosses = team.losses + otherGamesLeft;
+              }
+            } else {
+              // Unfavorable: worst case for target
+              if (couldTieWithTarget) {
+                if (targetWinsH2H) {
+                  // Tie would help target — so worst case is they DON'T tie (they win)
+                  finalWins = team.wins + otherGamesLeft;
+                  finalLosses = team.losses;
+                } else {
+                  // Tie hurts target — CREATE the tie (worst case)
+                  const winsNeededForTie = targetWins - team.wins;
+                  const lossesNeededForTie = otherGamesLeft - winsNeededForTie;
+                  if (winsNeededForTie >= 0 && lossesNeededForTie >= 0) {
+                    finalWins = team.wins + winsNeededForTie;
+                    finalLosses = team.losses + lossesNeededForTie;
+                  } else {
+                    finalWins = team.wins;
+                    finalLosses = team.losses + otherGamesLeft;
+                  }
+                }
+              } else if (team.wins > targetWins) {
+                // Already ahead — win out to stay ahead
+                finalWins = team.wins + otherGamesLeft;
+                finalLosses = team.losses;
+              } else {
+                // Behind — win out to try to catch/pass target
+                finalWins = team.wins + otherGamesLeft;
+                finalLosses = team.losses;
+              }
+            }
+          }
+          
+          const totalDecided = finalWins + finalLosses;
+          // Track simulated games so conservative tiebreaker knows RA may have changed
+          const simulatedGamesAdded = (finalWins + finalLosses) - (team.wins + team.losses);
+          const totalGamesWithTies = finalWins + finalLosses + team.ties;
+          return {
+            ...team,
+            wins: finalWins,
+            losses: finalLosses,
+            gamesPlayed: totalGamesWithTies,
+            winPct: totalGamesWithTies > 0 ? (finalWins + team.ties * 0.5) / totalGamesWithTies : 0,
+            gamesRemaining: simulatedGamesAdded
+          };
+        }
+      });
+      
+      // Sort conservatively - if tiebreaker depends on runs allowed and games remain, 
+      // assume worst case for target team
+      const sortedStandings = sortWithTiebreakersConservative(hypotheticalStandings, targetTeam, favorableForTeam);
+      
+      // Find the target team's seed
+      const seed = sortedStandings.findIndex(t => t.name === targetTeam) + 1;
+      return seed;
+    }
+    
+    /**
+     * Conservative sorting that accounts for unknown game margins
+     * When runs allowed tiebreaker would apply AND teams have games remaining,
+     * we assume the worst case for the target team
+     */
+    function sortWithTiebreakersConservative(teams, targetTeam, favorableForTarget) {
+      // First sort by win percentage
+      const sorted = [...teams].sort((a, b) => b.winPct - a.winPct);
+      
+      // Find groups of teams with identical win percentages
+      const winPctGroups = [];
+      let currentGroup = [sorted[0]];
+      
+      for (let i = 1; i < sorted.length; i++) {
+        if (Math.abs(sorted[i].winPct - sorted[i-1].winPct) < 0.0001) {
+          currentGroup.push(sorted[i]);
+        } else {
+          winPctGroups.push(currentGroup);
+          currentGroup = [sorted[i]];
+        }
+      }
+      winPctGroups.push(currentGroup);
+      
+      // Apply appropriate tiebreakers to each group
+      const brokenTies = winPctGroups.map(group => {
+        if (group.length === 1) {
+          return group;
+        } else if (group.length === 2) {
+          // 2-team tie: Check if H2H is decisive
+          return breakTwoWayTieConservative(group, targetTeam, favorableForTarget);
+        } else {
+          // 3+ team tie: Uses Runs Allowed - be conservative
+          return breakMultiWayTieConservative(group, targetTeam, favorableForTarget);
+        }
+      });
+      
+      return brokenTies.flat();
+    }
+    
+    /**
+     * Break 2-way tie conservatively
+     */
+    function breakTwoWayTieConservative(group, targetTeam, favorableForTarget) {
+      const [a, b] = group;
+      const hasTarget = a.name === targetTeam || b.name === targetTeam;
+      
+      // Check H2H
+      const h2hComp = compareHeadToHead(a, b);
+      
+      if (h2hComp !== 0) {
+        // H2H is decisive
+        return h2hComp > 0 ? [b, a] : [a, b];
+      }
+      
+      // H2H is tied or N/A - would use Runs Allowed
+      // If either team has games remaining, RA could change — but only upward (RA can never decrease).
+      // So if the team with games remaining already has MORE RA than the other, they can't catch up.
+      const anyGamesRemaining = a.gamesRemaining > 0 || b.gamesRemaining > 0;
+
+      if (anyGamesRemaining && hasTarget) {
+        // Check if RA is actually deterministic despite remaining games:
+        // A team with remaining games can only INCREASE their RA (allow more runs, never fewer).
+        // So if the team with games left already trails on RA, RA is locked — use current values.
+        const teamWithGames = a.gamesRemaining > 0 ? a : b;
+        const teamDone = a.gamesRemaining > 0 ? b : a;
+        // Only one team has games remaining — check if the done team already leads on RA
+        if (b.gamesRemaining === 0 || a.gamesRemaining === 0) {
+          // teamWithGames already allows MORE runs than teamDone → can't improve → RA is decided
+          if (teamWithGames.runsAgainst >= teamDone.runsAgainst) {
+            return breakTieByRunsAllowed(group);
+          }
+        }
+        // RA is genuinely uncertain — be conservative: assume worst case for target team
+        if (favorableForTarget) {
+          // This is best-case scenario - target should be higher
+          return a.name === targetTeam ? [a, b] : [b, a];
+        } else {
+          // This is worst-case scenario - target should be lower
+          return a.name === targetTeam ? [b, a] : [a, b];
+        }
+      }
+
+      // No games remaining or no target in tie - use current runs allowed
+      return breakTieByRunsAllowed(group);
+    }
+    
+    /**
+     * Break multi-way tie conservatively
+     */
+    function breakMultiWayTieConservative(group, targetTeam, favorableForTarget) {
+      const hasTarget = group.some(t => t.name === targetTeam);
+      const anyGamesRemaining = group.some(t => t.gamesRemaining > 0);
+      
+      if (anyGamesRemaining && hasTarget) {
+        // Runs allowed will change - be conservative
+        if (favorableForTarget) {
+          // Best case - put target at top of this group
+          return group.sort((a, b) => {
+            if (a.name === targetTeam) return -1;
+            if (b.name === targetTeam) return 1;
+            return breakTieByRunsAllowed([a, b])[0].name === a.name ? -1 : 1;
+          });
+        } else {
+          // Worst case - put target at bottom of this group
+          return group.sort((a, b) => {
+            if (a.name === targetTeam) return 1;
+            if (b.name === targetTeam) return -1;
+            return breakTieByRunsAllowed([a, b])[0].name === a.name ? -1 : 1;
+          });
+        }
+      }
+      
+      // No games remaining or no target - use current runs allowed
+      return breakTieByRunsAllowed(group);
+    }
+
+    /**
+     * Calculate magic number to clinch a specific seed
+     */
+    function calculateMagicNumberForSeed(team, targetSeed, standings) {
+      const teamName = team.name;
+      const gamesLeft = calculateRemainingGames(allGames, teamName);
+      
+      if (gamesLeft === 0) return 0; // No games left
+      
+      // Find the team that could prevent us from getting targetSeed
+      // That's the team at position targetSeed (if we want #1, it's current #2, etc.)
+      let threateningTeams = standings.filter((t, idx) => {
+        if (t.name === teamName) return false;
+        const seed = idx + 1;
+        return seed >= targetSeed; // Teams at or below our target seed
+      });
+      
+      if (threateningTeams.length === 0) return 0;
+      
+      // Find the highest win total any threatening team could achieve
+      let highestThreat = 0;
+      threateningTeams.forEach(otherTeam => {
+        const otherGamesLeft = calculateRemainingGames(allGames, otherTeam.name);
+        const maxWins = otherTeam.wins + otherGamesLeft;
+        highestThreat = Math.max(highestThreat, maxWins);
+      });
+      
+      // Magic number = wins needed to guarantee we're ahead of highest threat
+      const magicNumber = Math.max(0, highestThreat - team.wins + 1);
+      
+      // If impossible, return -1
+      if (magicNumber > gamesLeft) return -1;
+      
+      return magicNumber;
+    }
+
+    /**
+     * Generate comprehensive detailed seeding scenario text with tiebreaker math
+     */
+    function generateSeedingScenario(team, seed, standings) {
+      const range = calculateSeedRange(team, standings, allGames);
+      const teamName = team.name;
+      const gamesLeft = range.gamesLeft;
+      
+      // If this team has no games left but seed is locked (best = worst)
+      if (gamesLeft === 0 && range.bestSeed === range.worstSeed) {
+        return `Season complete. Locked into #${range.bestSeed} seed`;
+      }
+      
+      // If this team has no games left but seed can still change based on other results
+      if (gamesLeft === 0) {
+        return generateDetailedScenariosForCompletedTeam(team, seed, standings, range);
+      }
+      
+      // Generate detailed scenarios for teams with games remaining
+      return generateDetailedScenariosForActiveTeam(team, seed, standings, range);
+    }
+
+    /**
+     * Generate detailed scenarios for teams that are done playing
+     */
+    function generateDetailedScenariosForCompletedTeam(team, seed, standings, range) {
+      let scenarios = [];
+      const teamName = team.name;
+      
+      // Generate header
+      scenarios.push(`<div style="font-weight: bold; margin-bottom: 8px;">Season complete. Can finish #${range.bestSeed} to #${range.worstSeed}</div>`);
+      
+      // Generate scenarios for best seed
+      const bestSeedDetails = generateCompletedTeamSeedPath(team, range.bestSeed, standings, 'best');
+      if (bestSeedDetails) {
+        scenarios.push(`<div style="margin-bottom: 12px;"><strong>Finish #${range.bestSeed} Seed if:</strong><br>${bestSeedDetails}</div>`);
+      }
+      
+      // Generate scenarios for middle seeds if applicable
+      if (range.worstSeed - range.bestSeed > 1) {
+        for (let s = range.bestSeed + 1; s < range.worstSeed; s++) {
+          const midDetails = generateCompletedTeamSeedPath(team, s, standings, 'mid');
+          if (midDetails) {
+            scenarios.push(`<div style="margin-bottom: 12px;"><strong>Finish #${s} Seed if:</strong><br>${midDetails}</div>`);
+          }
+        }
+      }
+      
+      // Generate scenarios for worst seed
+      if (range.worstSeed > range.bestSeed) {
+        const worstSeedDetails = generateCompletedTeamSeedPath(team, range.worstSeed, standings, 'worst');
+        if (worstSeedDetails) {
+          scenarios.push(`<div style="margin-bottom: 12px;"><strong>Fall to #${range.worstSeed} Seed if:</strong><br>${worstSeedDetails}</div>`);
+        }
+      }
+      
+      return scenarios.join('');
+    }
+    
+    /**
+     * Generate path to a specific seed for teams with completed seasons
+     */
+    function generateCompletedTeamSeedPath(team, targetSeed, standings, pathType) {
+      const teamName = team.name;
+      const details = [];
+      const currentSeed = standings.findIndex(t => t.name === teamName) + 1 || 1;
+      
+      // Find all teams that could affect this team's final position
+      const relevantTeams = standings.filter(other => {
+        if (other.name === teamName) return false;
+        const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+        if (otherGamesLeft === 0) return false; // Skip other completed teams
+        
+        const otherMaxWins = other.wins + otherGamesLeft;
+        const otherMinWins = other.wins;
+        
+        // Could they end up tied with us or pass us?
+        return otherMaxWins >= team.wins || otherMinWins <= team.wins;
+      });
+      
+      if (relevantTeams.length === 0) {
+        details.push(`• All other teams have completed their seasons - seed is locked`);
+        return details.join('<br>');
+      }
+      
+      // Simulate what needs to happen for this team to reach target seed
+      let foundScenario = false;
+      let teamsToMention = [];
+      
+      // For best seed, check what needs to happen for us to get this seed
+      if (pathType === 'best') {
+        const testSeed = simulateFinalStandings(teamName, team.wins, team.losses, standings, true);
+        if (testSeed === targetSeed) {
+          foundScenario = true;
+          
+          // Only look at teams that could realistically impact this seed
+          // Filter to teams that could finish at or near our record
+          const competitiveTeams = relevantTeams.filter(other => {
+            const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+            const otherMaxWins = other.wins + otherGamesLeft;
+            const otherMinWins = other.wins;
+            
+            // Only include teams that could finish within 2 wins of us (for better seed detection)
+            return otherMaxWins >= team.wins - 2 && otherMinWins <= team.wins + 2;
+          });
+          
+          // Find which teams specifically need to lose for us to get this seed
+          const teamsNeedToLose = competitiveTeams.filter(other => {
+            // Test: if this team wins out, do we lose the target seed?
+            const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+            const hypotheticalStandings = standings.map(t => {
+              if (t.name === other.name) {
+                const finalWins = other.wins + otherGamesLeft;
+                const finalLosses = other.losses;
+                const totalDecided = finalWins + finalLosses;
+                return {
+                  ...t,
+                  wins: finalWins,
+                  losses: finalLosses,
+                  gamesPlayed: finalWins + finalLosses + t.ties,
+                  winPct: (finalWins + finalLosses + t.ties) > 0 ? (finalWins + t.ties * 0.5) / (finalWins + finalLosses + t.ties) : 0
+                };
+              }
+              return t;
+            });
+            const sorted = sortWithTiebreakers(hypotheticalStandings);
+            const ourSeedIfTheyWin = sorted.findIndex(t => t.name === teamName) + 1;
+            return ourSeedIfTheyWin > targetSeed;
+          });
+          
+          // Also find teams that need to WIN to help us get this seed
+          const teamsNeedToWin = standings.filter(other => {
+            if (other.name === teamName) return false;
+            const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+            if (otherGamesLeft === 0) return false;
+            
+            // Test: if this team wins out, do we get a BETTER seed (reach target)?
+            const hypotheticalStandings = standings.map(t => {
+              if (t.name === other.name) {
+                const finalWins = other.wins + otherGamesLeft;
+                const finalLosses = other.losses;
+                const totalDecided = finalWins + finalLosses;
+                return {
+                  ...t,
+                  wins: finalWins,
+                  losses: finalLosses,
+                  gamesPlayed: finalWins + finalLosses + t.ties,
+                  winPct: (finalWins + finalLosses + t.ties) > 0 ? (finalWins + t.ties * 0.5) / (finalWins + finalLosses + t.ties) : 0
+                };
+              }
+              return t;
+            });
+            const sorted = sortWithTiebreakers(hypotheticalStandings);
+            const ourSeedIfTheyWin = sorted.findIndex(t => t.name === teamName) + 1;
+            
+            // They need to win if: them winning would get us to the target seed (or better)
+            return ourSeedIfTheyWin <= targetSeed && ourSeedIfTheyWin < currentSeed;
+          });
+          
+          teamsToMention = [...teamsNeedToLose, ...teamsNeedToWin];
+          
+          if (teamsNeedToLose.length > 0) {
+            details.push(`• These teams lose their remaining games:`);
+            teamsNeedToLose.forEach(other => {
+              const gamesLeft = calculateRemainingGames(allGames, other.name);
+              details.push(`  - ${other.name} (${gamesLeft} game${gamesLeft > 1 ? 's' : ''} left)`);
+            });
+            
+            // Check ALL teams that would be tied at this record (not just teamsNeedToLose)
+            // Include teams that are already at the same wins and done playing
+            const allTiableTeams = standings.filter(other => {
+              if (other.name === teamName) return false;
+              const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+              
+              // Teams already at same wins with no games left
+              if (other.wins === team.wins && otherGamesLeft === 0) {
+                return true;
+              }
+              
+              // Teams that would end at same wins if they lose out
+              if (teamsNeedToLose.includes(other) && other.wins === team.wins) {
+                return true;
+              }
+              
+              return false;
+            });
+            
+            if (allTiableTeams.length > 0) {
+              details.push(``);
+              if (allTiableTeams.length === 1) {
+                const other = allTiableTeams[0];
+                const h2h = team.h2h[other.name];
+                if (h2h && (h2h.wins > h2h.losses)) {
+                  details.push(`• <strong>Tiebreaker:</strong> Win H2H vs ${other.name} (${h2h.wins}-${h2h.losses})`);
+                } else if (h2h && (h2h.wins < h2h.losses)) {
+                  details.push(`• <strong>Tiebreaker:</strong> Lose H2H vs ${other.name} (${h2h.wins}-${h2h.losses}) → get lower seed unless other results help`);
+                } else {
+                  const raDiff = other.runsAgainst - team.runsAgainst;
+                  details.push(`• <strong>Tiebreaker:</strong> H2H tied → Runs Allowed (${raDiff > 0 ? 'currently lead' : 'currently trail'} by ${Math.abs(raDiff)})`);
+                }
+              } else {
+                const allInTie = [team, ...allTiableTeams].sort((a, b) => a.runsAgainst - b.runsAgainst);
+                details.push(`• <strong>Tiebreaker:</strong> Runs Allowed among tied teams (currently ${allInTie.findIndex(t => t.name === teamName) + 1}${getOrdinalSuffix(allInTie.findIndex(t => t.name === teamName) + 1)} of ${allInTie.length + 1})`);
+              }
+            }
+          }
+          
+          if (teamsNeedToWin.length > 0) {
+            if (teamsNeedToLose.length > 0) {
+              details.push(``); // Add spacing if there were also teams that need to lose
+            }
+            details.push(`• These teams win their remaining games:`);
+            teamsNeedToWin.forEach(other => {
+              const gamesLeft = calculateRemainingGames(allGames, other.name);
+              details.push(`  - ${other.name} (${gamesLeft} game${gamesLeft > 1 ? 's' : ''} left)`);
+            });
+          }
+          
+          if (teamsNeedToLose.length === 0 && teamsNeedToWin.length === 0) {
+            details.push(`• Locked into this seed or better`);
+          }
+        }
+      }
+      
+      // For worst seed, check if all relevant teams winning gives us this seed
+      if (pathType === 'worst') {
+        const testSeed = simulateFinalStandings(teamName, team.wins, team.losses, standings, false);
+        if (testSeed === targetSeed) {
+          foundScenario = true;
+          
+          // Only look at teams that could realistically impact this seed
+          const competitiveTeams = relevantTeams.filter(other => {
+            const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+            const otherMaxWins = other.wins + otherGamesLeft;
+            const otherMinWins = other.wins;
+            
+            // Only include teams that could finish within 1 win of us
+            return otherMaxWins >= team.wins - 1 && otherMinWins <= team.wins + 1;
+          });
+          
+          // Find which teams specifically need to win for us to fall to this seed
+          teamsToMention = competitiveTeams.filter(other => {
+            // Test: if this team WINS OUT, does our seed fall to targetSeed (or worse)?
+            const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+            const hypotheticalStandings = standings.map(t => {
+              if (t.name === other.name) {
+                const finalWins = other.wins + otherGamesLeft;
+                const finalLosses = other.losses;
+                const totalDecided = finalWins + finalLosses;
+                return {
+                  ...t,
+                  wins: finalWins,
+                  losses: finalLosses,
+                  gamesPlayed: finalWins + finalLosses + t.ties,
+                  winPct: (finalWins + finalLosses + t.ties) > 0 ? (finalWins + t.ties * 0.5) / (finalWins + finalLosses + t.ties) : 0
+                };
+              }
+              return t;
+            });
+            const sorted = sortWithTiebreakers(hypotheticalStandings);
+            const ourSeedIfTheyWin = sorted.findIndex(t => t.name === teamName) + 1;
+            return ourSeedIfTheyWin >= targetSeed;
+          });
+          
+          if (teamsToMention.length > 0) {
+            details.push(`• These teams win their remaining games:`);
+            teamsToMention.forEach(other => {
+              const gamesLeft = calculateRemainingGames(allGames, other.name);
+              details.push(`  - ${other.name} (${gamesLeft} game${gamesLeft > 1 ? 's' : ''} left)`);
+            });
+            
+            // Check ALL teams that would be tied at this record
+            const allTiableTeams = standings.filter(other => {
+              if (other.name === teamName) return false;
+              const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+              
+              // Teams already at same wins with no games left
+              if (other.wins === team.wins && otherGamesLeft === 0) {
+                return true;
+              }
+              
+              // Teams that would end at same wins if they win out
+              const otherMaxWins = other.wins + otherGamesLeft;
+              if (teamsToMention.includes(other) && otherMaxWins === team.wins) {
+                return true;
+              }
+              
+              return false;
+            });
+            
+            if (allTiableTeams.length > 0) {
+              details.push(``);
+              if (allTiableTeams.length === 1) {
+                const other = allTiableTeams[0];
+                const h2h = team.h2h[other.name];
+                if (h2h && (h2h.wins < h2h.losses)) {
+                  details.push(`• <strong>Tiebreaker:</strong> Lose H2H vs ${other.name} (${h2h.wins}-${h2h.losses})`);
+                } else if (h2h && (h2h.wins > h2h.losses)) {
+                  details.push(`• <strong>Tiebreaker:</strong> Win H2H vs ${other.name} (${h2h.wins}-${h2h.losses}) - not achievable via this path`);
+                  return null; // Can't fall to worst seed if we win H2H
+                } else {
+                  const raDiff = other.runsAgainst - team.runsAgainst;
+                  details.push(`• <strong>Tiebreaker:</strong> H2H tied → Runs Allowed (${raDiff > 0 ? 'currently lead' : 'currently trail'} by ${Math.abs(raDiff)})`);
+                }
+              } else {
+                const allInTie = [team, ...allTiableTeams].sort((a, b) => a.runsAgainst - b.runsAgainst);
+                const currentRank = allInTie.findIndex(t => t.name === teamName) + 1;
+                details.push(`• <strong>Tiebreaker:</strong> Runs Allowed among tied teams (currently ${currentRank}${getOrdinalSuffix(currentRank)} of ${allInTie.length + 1})`);
+              }
+            }
+          } else {
+            details.push(`• Locked into this seed or worse`);
+          }
+        }
+      }
+      
+      // For middle seeds, find specific combinations
+      if (pathType === 'mid') {
+        // Try to find a scenario where this team ends up at target seed
+        const testSeed = simulateFinalStandings(teamName, team.wins, team.losses, standings, true);
+        if (testSeed <= targetSeed) {
+          const worstSeed = simulateFinalStandings(teamName, team.wins, team.losses, standings, false);
+          if (worstSeed >= targetSeed) {
+            foundScenario = true;
+            
+            // Only look at competitive teams
+            const competitiveTeams = relevantTeams.filter(other => {
+              const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+              const otherMaxWins = other.wins + otherGamesLeft;
+              const otherMinWins = other.wins;
+              
+              // Only include teams that could finish within 1 win of us
+              return otherMaxWins >= team.wins - 1 && otherMinWins <= team.wins + 1;
+            });
+            
+            // Find teams that could tie with us at our record
+            const tiableTeams = competitiveTeams.filter(other => {
+              const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+              const otherMaxWins = other.wins + otherGamesLeft;
+              return otherMaxWins === team.wins;
+            });
+            
+            if (tiableTeams.length > 0) {
+              details.push(`• These teams finish with same record (${team.wins}-${team.losses}):`);
+              tiableTeams.forEach(other => {
+                const gamesLeft = calculateRemainingGames(allGames, other.name);
+                const winsNeeded = team.wins - other.wins;
+                details.push(`  - ${other.name} (win ${winsNeeded} of ${gamesLeft} remaining)`);
+              });
+              
+              // Calculate what RA ranking corresponds to this seed
+              // This team's best possible seed among the tied group
+              const baseSeed = testSeed;
+              const raRankNeeded = targetSeed - baseSeed + 1;
+              
+              // Show RA tiebreaker requirement
+              details.push(``);
+              if (tiableTeams.length === 1) {
+                // 2-way tie
+                const other = tiableTeams[0];
+                const h2h = team.h2h[other.name];
+                if (h2h && (h2h.wins > h2h.losses)) {
+                  details.push(`• <strong>Tiebreaker:</strong> Win H2H tiebreaker vs ${other.name} (currently ${h2h.wins}-${h2h.losses})`);
+                } else if (h2h && (h2h.wins < h2h.losses)) {
+                  details.push(`• <strong>Tiebreaker:</strong> Lose H2H tiebreaker vs ${other.name} (currently ${h2h.wins}-${h2h.losses})`);
+                  if (raRankNeeded === 1) {
+                    // Can't be #1 in tie if we lose H2H
+                    return null;
+                  }
+                } else {
+                  const raDiff = other.runsAgainst - team.runsAgainst;
+                  if (raRankNeeded === 1) {
+                    details.push(`• <strong>Tiebreaker:</strong> H2H tied → need better Runs Allowed (currently ${raDiff > 0 ? 'lead' : 'trail'} by ${Math.abs(raDiff)})`);
+                  } else {
+                    details.push(`• <strong>Tiebreaker:</strong> H2H tied → would have worse Runs Allowed`);
+                  }
+                }
+              } else {
+                // 3+ way tie
+                const allInTie = [team, ...tiableTeams].sort((a, b) => a.runsAgainst - b.runsAgainst);
+                details.push(`• <strong>Tiebreaker:</strong> 3+ way tie → need to finish ${raRankNeeded}${getOrdinalSuffix(raRankNeeded)} in Runs Allowed`);
+                details.push(`  Current RA rankings:`);
+                allInTie.forEach((t, idx) => {
+                  const marker = t.name === teamName ? '→ ' : '   ';
+                  details.push(`  ${marker}${idx + 1}. ${t.name}: ${t.runsAgainst} RA`);
+                });
+                
+                const currentRank = allInTie.findIndex(t => t.name === teamName) + 1;
+                if (raRankNeeded === 1) {
+                  const secondBest = allInTie[1];
+                  const cushion = secondBest.runsAgainst - team.runsAgainst;
+                  details.push(`  Need best RA - currently ${currentRank === 1 ? 'have it' : `trail by ${team.runsAgainst - allInTie[0].runsAgainst}`}`);
+                } else if (raRankNeeded === allInTie.length) {
+                  details.push(`  Need worst RA - currently ${currentRank === allInTie.length ? 'have it' : `${allInTie.length - currentRank} teams behind`}`);
+                } else {
+                  const targetTeamInRanking = allInTie[raRankNeeded - 1];
+                  details.push(`  Need ${raRankNeeded}${getOrdinalSuffix(raRankNeeded)} - ${targetTeamInRanking.name} needs to allow ${Math.abs(team.runsAgainst - targetTeamInRanking.runsAgainst)} more/fewer runs`);
+                }
+              }
+            } else {
+              details.push(`• Other teams finish with different records`);
+              details.push(`• Specific combination of results determines final position`);
+            }
+            
+            teamsToMention = competitiveTeams;
+          }
+        }
+      }
+      
+      if (!foundScenario) {
+        return null; // This seed is not achievable
+      }
+      
+      return details.length > 0 ? details.join('<br>') : null;
+    }
+    
+    /**
+     * Simulate standings with a specific team at a specific record
+     */
+    function simulateOtherTeamRecord(targetTeam, currentStandings, finalWins, finalLosses) {
+      const hypotheticalStandings = currentStandings.map(team => {
+        if (team.name === targetTeam.name) {
+          const totalGamesWithTies = finalWins + finalLosses + team.ties;
+          return {
+            ...team,
+            wins: finalWins,
+            losses: finalLosses,
+            gamesPlayed: totalGamesWithTies,
+            winPct: totalGamesWithTies > 0 ? (finalWins + team.ties * 0.5) / totalGamesWithTies : 0
+          };
+        }
+        return team;
+      });
+
+      return sortWithTiebreakers(hypotheticalStandings);
+    }
+
+    /**
+     * Generate detailed scenarios for teams with games remaining
+     */
+    function generateDetailedScenariosForActiveTeam(team, seed, standings, range) {
+      let scenarios = [];
+      const teamName = team.name;
+      const gamesLeft = range.gamesLeft;
+      
+      // Check if already clinched
+      if (range.bestSeed === 1 && range.worstSeed === 1) {
+        return `🏆 Clinched #1 seed!`;
+      }
+      
+      if (range.bestSeed === range.worstSeed) {
+        return `Locked into #${range.bestSeed} seed`;
+      }
+      
+      // Generate header
+      scenarios.push(`<div style="font-weight: bold; margin-bottom: 8px;">Can finish #${range.bestSeed} to #${range.worstSeed}</div>`);
+      
+      // Generate scenarios for best seed (usually involves winning out or winning most)
+      const bestSeedDetails = generateComprehensiveSeedPath(team, range.bestSeed, standings, gamesLeft, 'best');
+      if (bestSeedDetails) {
+        scenarios.push(`<div style="margin-bottom: 12px;"><strong>Path to #${range.bestSeed} Seed:</strong><br>${bestSeedDetails}</div>`);
+      }
+      
+      // Generate scenarios for middle seeds if applicable
+      if (range.worstSeed - range.bestSeed > 1) {
+        for (let s = range.bestSeed + 1; s < range.worstSeed; s++) {
+          const midDetails = generateComprehensiveSeedPath(team, s, standings, gamesLeft, 'mid');
+          if (midDetails) {
+            scenarios.push(`<div style="margin-bottom: 12px;"><strong>Path to #${s} Seed:</strong><br>${midDetails}</div>`);
+          }
+        }
+      }
+      
+      // Generate scenarios for worst seed
+      if (range.worstSeed > range.bestSeed) {
+        const worstSeedDetails = generateComprehensiveSeedPath(team, range.worstSeed, standings, gamesLeft, 'worst');
+        if (worstSeedDetails) {
+          scenarios.push(`<div style="margin-bottom: 12px;"><strong>Falls to #${range.worstSeed} Seed if:</strong><br>${worstSeedDetails}</div>`);
+        }
+      }
+      
+      return scenarios.join('');
+    }
+
+    /**
+     * Generate comprehensive path to a specific seed with all win/loss combinations
+     */
+    function generateComprehensiveSeedPath(team, targetSeed, standings, gamesLeft, pathType) {
+      const teamName = team.name;
+      const details = [];
+      
+      // Determine which win/loss combinations to explore
+      let combinationsToCheck = [];
+      if (pathType === 'best') {
+        // For best seed, start with winning out
+        combinationsToCheck = [
+          {wins: gamesLeft, losses: 0, label: `Win ${gamesLeft === 1 ? 'remaining game' : 'all ' + gamesLeft + ' games'}`}
+        ];
+        if (gamesLeft >= 2) {
+          combinationsToCheck.push({wins: gamesLeft - 1, losses: 1, label: `Win ${gamesLeft - 1}, lose 1`});
+        }
+      } else if (pathType === 'worst') {
+        // For worst seed, start with losing out
+        combinationsToCheck = [
+          {wins: 0, losses: gamesLeft, label: `Lose ${gamesLeft === 1 ? 'remaining game' : 'all ' + gamesLeft + ' games'}`}
+        ];
+        if (gamesLeft >= 2) {
+          combinationsToCheck.push({wins: 1, losses: gamesLeft - 1, label: `Win 1, lose ${gamesLeft - 1}`});
+        }
+      } else {
+        // For middle seeds, check multiple combinations that could lead to this seed
+        // Start from most wins and work down
+        for (let w = gamesLeft; w >= 0; w--) {
+          const l = gamesLeft - w;
+          combinationsToCheck.push({
+            wins: w, 
+            losses: l, 
+            label: w === gamesLeft ? `Win all ${gamesLeft} games` :
+                   w === 0 ? `Lose all ${gamesLeft} games` :
+                   `Win ${w}, lose ${l}`
+          });
+        }
+      }
+      
+      // Analyze each combination
+      for (const combo of combinationsToCheck) {
+        const projectedWins = team.wins + combo.wins;
+        const projectedLosses = team.losses + combo.losses;
+        // Include existing ties in displayed record
+        const projectedRecord = team.ties > 0
+          ? `${projectedWins}-${projectedLosses}-${team.ties}`
+          : `${projectedWins}-${projectedLosses}`;
+
+        // First, verify if this combination actually leads to the target seed
+        const bestCaseSeed = simulateFinalStandings(teamName, projectedWins, projectedLosses, standings, true);
+        const worstCaseSeed = simulateFinalStandings(teamName, projectedWins, projectedLosses, standings, false);
+
+        // Skip this combination if it doesn't lead to the target seed in any scenario
+        if (targetSeed < bestCaseSeed || targetSeed > worstCaseSeed) {
+          continue;
+        }
+
+        details.push(`• <strong>${combo.label}</strong> (finish ${projectedRecord}):`);
+
+        // Find teams we'd be tied with at this win pct (pass projectedLosses for pct comparison)
+        const tiedTeams = findPotentialTies(team, projectedWins, projectedLosses, standings);
+        
+        // Determine if this guarantees the target seed
+        const guaranteesSeed = (bestCaseSeed === worstCaseSeed && bestCaseSeed === targetSeed);
+        
+        if (tiedTeams.length === 0) {
+          // No ties - check if it guarantees this specific seed
+          if (guaranteesSeed) {
+            details.push(`  Would secure #${targetSeed} seed outright with this record`);
+          } else {
+            details.push(`  Could finish #${bestCaseSeed} to #${worstCaseSeed} depending on other results`);
+          }
+        } else if (tiedTeams.length === 1) {
+          // 2-way tie - H2H applies
+          const other = tiedTeams[0];
+          const tieDetails = generate2WayTieDetails(team, other, projectedWins, projectedLosses, combo.wins, combo.losses);
+          // Show the OTHER team's actual matching record, not just Orange's record
+          const otherMatchRecord = findMatchingRecordForTie(team, projectedWins, projectedLosses, other);
+          const otherRecordStr = otherMatchRecord
+            ? (otherMatchRecord.finalTies > 0
+                ? `${otherMatchRecord.finalWins}-${otherMatchRecord.finalLosses}-${otherMatchRecord.finalTies}`
+                : `${otherMatchRecord.finalWins}-${otherMatchRecord.finalLosses}`)
+            : projectedRecord;
+          const tieRecordStr = (otherRecordStr !== projectedRecord)
+            ? `${other.name} at ${otherRecordStr} (same win%)`
+            : `${other.name} at ${projectedRecord}`;
+          details.push(`  Tied with ${tieRecordStr}:`);
+          details.push(`  ${tieDetails}`);
+        } else {
+          // 3+ way tie - Runs Allowed applies
+          const tieDetails = generate3PlusWayTieDetails(team, tiedTeams, projectedWins, combo.wins, combo.losses, targetSeed, standings);
+          details.push(`  Tied with ${tiedTeams.length} teams at ${projectedRecord}:`);
+          details.push(`  ${tieDetails}`);
+        }
+        
+        // Add spacing between combinations
+        if (combo !== combinationsToCheck[combinationsToCheck.length - 1]) {
+          details.push('');
+        }
+      }
+      
+      return details.length > 0 ? details.join('<br>') : null;
+    }
+
+    /**
+     * Find teams that could end up tied at a specific win total
+     */
+    function findPotentialTies(team, projectedWins, projectedLosses, standings) {
+      const teamName = team.name;
+      const tiedTeams = [];
+
+      // Target team's projected win pct (include their existing ties)
+      const targetTotal = projectedWins + projectedLosses + team.ties;
+      const targetWinPct = targetTotal > 0 ? (projectedWins + team.ties * 0.5) / targetTotal : 0;
+
+      for (const other of standings) {
+        if (other.name === teamName) continue;
+
+        const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+
+        // Check every possible W/T/L distribution for the other team's remaining games.
+        // A tie in win pct (not just win count) is what creates a standings tie.
+        let canMatchWinPct = false;
+        outer: for (let w = 0; w <= otherGamesLeft; w++) {
+          for (let t = 0; t <= otherGamesLeft - w; t++) {
+            const l = otherGamesLeft - w - t;
+            const fw = other.wins + w;
+            const fl = other.losses + l;
+            const ft = other.ties + t;
+            const total = fw + fl + ft;
+            const winPct = total > 0 ? (fw + ft * 0.5) / total : 0;
+            if (Math.abs(winPct - targetWinPct) < 0.0001) {
+              canMatchWinPct = true;
+              break outer;
+            }
+          }
+        }
+
+        if (canMatchWinPct) {
+          tiedTeams.push(other);
+        }
+      }
+
+      return tiedTeams;
+    }
+
+    /**
+     * Given a target team's projected W-L and another team's current record,
+     * find the W/T/L additions the other team needs to match the target's win pct.
+     * Returns { winsToAdd, lossesToAdd, tiesToAdd, finalWins, finalLosses, finalTies } or null.
+     */
+    function findMatchingRecordForTie(targetTeam, targetProjWins, targetProjLosses, other) {
+      const targetTotal = targetProjWins + targetProjLosses + targetTeam.ties;
+      const targetWinPct = targetTotal > 0 ? (targetProjWins + targetTeam.ties * 0.5) / targetTotal : 0;
+      const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+
+      for (let w = 0; w <= otherGamesLeft; w++) {
+        for (let t = 0; t <= otherGamesLeft - w; t++) {
+          const l = otherGamesLeft - w - t;
+          const fw = other.wins + w;
+          const fl = other.losses + l;
+          const ft = other.ties + t;
+          const total = fw + fl + ft;
+          const winPct = total > 0 ? (fw + ft * 0.5) / total : 0;
+          if (Math.abs(winPct - targetWinPct) < 0.0001) {
+            return { winsToAdd: w, lossesToAdd: l, tiesToAdd: t, finalWins: fw, finalLosses: fl, finalTies: ft };
+          }
+        }
+      }
+      return null;
+    }
+
+    /**
+     * Generate details for 2-way tie (H2H tiebreaker)
+     */
+    function generate2WayTieDetails(team, other, projectedWins, projectedLosses, winsToAdd, lossesToAdd) {
+      const teamName = team.name;
+      const details = [];
+      
+      const h2h = team.h2h[other.name];
+      const playEachOther = teamsPlayEachOther(teamName, other.name, allGames);
+      
+      if (playEachOther) {
+        // They play each other - but we need to determine if the scenario outcome determines the result
+        // Calculate how many games each team has left
+        const teamGamesLeft = calculateRemainingGames(allGames, teamName);
+        const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+        
+        // If the team is adding exactly as many wins as games remaining, they won all remaining games (including vs other)
+        // If the team is adding 0 wins, they lost all remaining games (including vs other)
+        // If somewhere in between, the outcome of the direct matchup is uncertain
+        
+        const teamWinsAll = (winsToAdd === teamGamesLeft);
+        const teamLosesAll = (winsToAdd === 0);
+
+        // Find the other team's actual matching record by win pct (not just win count)
+        const otherMatch = findMatchingRecordForTie(team, projectedWins, projectedLosses, other);
+        const otherWinsToAdd = otherMatch ? otherMatch.winsToAdd : (projectedWins - other.wins);
+        const otherTiesToAdd = otherMatch ? otherMatch.tiesToAdd : 0;
+        const otherWinsAll = (otherWinsToAdd === otherGamesLeft && otherTiesToAdd === 0);
+        const otherLosesAll = (otherWinsToAdd === 0 && otherTiesToAdd === 0);
+        
+        // Determine the outcome of the direct matchup based on scenarios
+        let directMatchupKnown = false;
+        let teamWinsMatchup = false;
+        
+        if (teamWinsAll && otherLosesAll) {
+          // Team wins all, other loses all → team wins the matchup
+          directMatchupKnown = true;
+          teamWinsMatchup = true;
+        } else if (teamLosesAll && otherWinsAll) {
+          // Team loses all, other wins all → other wins the matchup
+          directMatchupKnown = true;
+          teamWinsMatchup = false;
+        } else if (teamGamesLeft === 1 && otherGamesLeft === 1) {
+          // Both teams have only 1 game left, and it's against each other
+          // If team is projected to win that game (winsToAdd = 1), they win matchup
+          // If team is projected to lose that game (winsToAdd = 0), they lose matchup
+          directMatchupKnown = true;
+          teamWinsMatchup = (winsToAdd === 1);
+        }
+        
+        if (directMatchupKnown) {
+          // We know the outcome of the direct matchup from this scenario
+          const currentH2HWins = h2h ? h2h.wins : 0;
+          const currentH2HLosses = h2h ? h2h.losses : 0;
+          const finalH2HWins = currentH2HWins + (teamWinsMatchup ? 1 : 0);
+          const finalH2HLosses = currentH2HLosses + (teamWinsMatchup ? 0 : 1);
+          
+          if (finalH2HWins > finalH2HLosses) {
+            details.push(`✓ Win H2H tiebreaker (${finalH2HWins}-${finalH2HLosses} after remaining matchup) → get higher seed`);
+          } else if (finalH2HWins < finalH2HLosses) {
+            details.push(`✗ Lose H2H tiebreaker (${finalH2HWins}-${finalH2HLosses} after remaining matchup) → get lower seed`);
+          } else {
+            details.push(`H2H tied (${finalH2HWins}-${finalH2HLosses}) → goes to Runs Allowed tiebreaker`);
+            generateRunsAllowedDetails(team, other, winsToAdd, lossesToAdd, details);
+          }
+        } else {
+          // Outcome of direct matchup is uncertain in this scenario
+          if (!h2h || (h2h.wins + h2h.losses === 0)) {
+            details.push(`Winner of remaining H2H matchup gets tiebreaker`);
+          } else if (h2h.wins > h2h.losses) {
+            details.push(`Currently lead H2H ${h2h.wins}-${h2h.losses}, but remaining matchup could split it → would go to Runs Allowed`);
+            const raDiff = other.runsAgainst - team.runsAgainst;
+            details.push(`Currently ${raDiff > 0 ? 'lead' : 'trail'} by ${Math.abs(raDiff)} runs allowed`);
+          } else if (h2h.wins < h2h.losses) {
+            details.push(`Currently trail H2H ${h2h.wins}-${h2h.losses}, but remaining matchup could tie it → would go to Runs Allowed`);
+            const raDiff = other.runsAgainst - team.runsAgainst;
+            details.push(`Currently ${raDiff > 0 ? 'lead' : 'trail'} by ${Math.abs(raDiff)} runs allowed`);
+          } else {
+            details.push(`H2H tied ${h2h.wins}-${h2h.losses}, remaining matchup breaks tie or goes to Runs Allowed if split`);
+            const raDiff = other.runsAgainst - team.runsAgainst;
+            details.push(`Currently ${raDiff > 0 ? 'lead' : 'trail'} by ${Math.abs(raDiff)} runs allowed`);
+          }
+        }
+      } else {
+        // H2H is final
+        if (!h2h || (h2h.wins + h2h.losses === 0)) {
+          details.push(`No H2H games → goes to Runs Allowed tiebreaker`);
+          generateRunsAllowedDetails(team, other, winsToAdd, lossesToAdd, details);
+        } else if (h2h.wins > h2h.losses) {
+          details.push(`✓ Win H2H tiebreaker (${h2h.wins}-${h2h.losses}) → get higher seed`);
+        } else if (h2h.wins < h2h.losses) {
+          details.push(`✗ Lose H2H tiebreaker (${h2h.wins}-${h2h.losses}) → get lower seed`);
+        } else {
+          details.push(`H2H tied (${h2h.wins}-${h2h.losses}) → goes to Runs Allowed tiebreaker`);
+          generateRunsAllowedDetails(team, other, winsToAdd, lossesToAdd, details);
+        }
+      }
+      
+      return details.join('<br>  ');
+    }
+
+    /**
+     * Generate details for 3+ way tie (Runs Allowed tiebreaker)
+     */
+    function generate3PlusWayTieDetails(team, tiedTeams, projectedWins, winsToAdd, lossesToAdd, targetSeed, standings) {
+      const teamName = team.name;
+      const details = [];
+      
+      details.push(`3+ way tie → H2H skipped, uses Runs Allowed tiebreaker`);
+      details.push(`Current Runs Allowed rankings:`);
+      
+      // Sort all tied teams by runs allowed
+      const allInTie = [team, ...tiedTeams].sort((a, b) => a.runsAgainst - b.runsAgainst);
+      allInTie.forEach((t, idx) => {
+        const marker = t.name === teamName ? '→ ' : '   ';
+        details.push(`${marker}${idx + 1}. ${t.name}: ${t.runsAgainst} RA`);
+      });
+      
+      // Calculate the best possible seed available to this tied group
+      // This is the seed of the highest-ranked team in the tie
+      const baseSeed = Math.min(...allInTie.map(t => {
+        const idx = standings.findIndex(st => st.name === t.name);
+        return idx + 1;
+      }));
+      
+      // Calculate what RA ranking position corresponds to the target seed
+      // If baseSeed is #4 and targetSeed is #5, need to be 2nd in RA (5 - 4 + 1 = 2)
+      const raRankingNeeded = targetSeed - baseSeed + 1;
+      
+      // Get current RA ranking
+      const currentRank = allInTie.findIndex(t => t.name === teamName) + 1;
+      const teamRA = team.runsAgainst;
+      
+      // Explain what's needed for THIS specific seed
+      details.push(``);
+      details.push(`<strong>To finish #${targetSeed} seed:</strong>`);
+      
+      if (raRankingNeeded === 1) {
+        details.push(`Need to have the FEWEST runs allowed among all tied teams`);
+        if (currentRank === 1) {
+          const secondPlace = allInTie[1];
+          const cushion = secondPlace.runsAgainst - teamRA;
+          details.push(`Currently 1st - maintain by allowing ${cushion}+ fewer runs than ${secondPlace.name}`);
+        } else {
+          const firstPlace = allInTie[0];
+          const deficit = teamRA - firstPlace.runsAgainst;
+          details.push(`Currently ${currentRank}${getOrdinalSuffix(currentRank)} - need to allow ${deficit + 1}+ fewer runs than ${firstPlace.name} over remaining ${winsToAdd + lossesToAdd} game${winsToAdd + lossesToAdd > 1 ? 's' : ''}`);
+        }
+      } else if (raRankingNeeded === allInTie.length) {
+        details.push(`Would finish with the MOST runs allowed among all tied teams`);
+        if (currentRank === allInTie.length) {
+          details.push(`Currently last in RA - would stay at this seed even if allowing more runs`);
+        } else {
+          const lastPlace = allInTie[allInTie.length - 1];
+          const gap = lastPlace.runsAgainst - teamRA;
+          details.push(`Currently ${currentRank}${getOrdinalSuffix(currentRank)} - would drop to this seed if allowing ${gap + 1}+ more runs than ${lastPlace.name}`);
+        }
+      } else {
+        details.push(`Need to finish ${raRankingNeeded}${getOrdinalSuffix(raRankingNeeded)} in runs allowed among tied teams`);
+        
+        if (currentRank === raRankingNeeded) {
+          // Already at the right position
+          const above = allInTie[raRankingNeeded - 2];
+          const below = allInTie[raRankingNeeded];
+          const cushionAbove = teamRA - above.runsAgainst;
+          const cushionBelow = below.runsAgainst - teamRA;
+          details.push(`Currently ${raRankingNeeded}${getOrdinalSuffix(raRankingNeeded)} - maintain position by:`);
+          details.push(`  - Keeping within ${cushionAbove} runs of ${above.name} (${cushionAbove + 1}+ would drop below them)`);
+          details.push(`  - Staying ${cushionBelow}+ runs better than ${below.name}`);
+        } else if (currentRank < raRankingNeeded) {
+          // Currently too high, need to allow more runs to drop to target
+          const targetTeam = allInTie[raRankingNeeded - 1];
+          if (targetTeam) {
+            details.push(`Currently ${currentRank}${getOrdinalSuffix(currentRank)} (too high) - would need to allow more runs than ${targetTeam.name} to drop to ${raRankingNeeded}${getOrdinalSuffix(raRankingNeeded)}`);
+          } else {
+            details.push(`Currently ${currentRank}${getOrdinalSuffix(currentRank)} in runs allowed among tied teams`);
+          }
+        } else {
+          // Currently too low, need to allow fewer runs to climb to target
+          const targetTeam = allInTie[raRankingNeeded - 1];
+          if (targetTeam) {
+            const deficit = teamRA - targetTeam.runsAgainst;
+            details.push(`Currently ${currentRank}${getOrdinalSuffix(currentRank)} - need to allow ${deficit + 1}+ fewer runs than ${targetTeam.name} over remaining ${winsToAdd + lossesToAdd} game${winsToAdd + lossesToAdd > 1 ? 's' : ''} to reach ${raRankingNeeded}${getOrdinalSuffix(raRankingNeeded)}`);
+          } else {
+            details.push(`Currently ${currentRank}${getOrdinalSuffix(currentRank)} - need to improve runs allowed ranking among tied teams`);
+          }
+        }
+      }
+      
+      return details.join('<br>  ');
+    }
+    
+    /**
+     * Get ordinal suffix for a number (1st, 2nd, 3rd, etc.)
+     */
+    function getOrdinalSuffix(num) {
+      const j = num % 10;
+      const k = num % 100;
+      if (j === 1 && k !== 11) return 'st';
+      if (j === 2 && k !== 12) return 'nd';
+      if (j === 3 && k !== 13) return 'rd';
+      return 'th';
+    }
+
+    /**
+     * Generate specific runs allowed differential details
+     */
+    function generateRunsAllowedDetails(team, other, winsToAdd, lossesToAdd, details) {
+      const teamRA = team.runsAgainst;
+      const otherRA = other.runsAgainst;
+      const diff = teamRA - otherRA;
+      const gamesRemaining = winsToAdd + lossesToAdd;
+      const otherGamesLeft = calculateRemainingGames(allGames, other.name);
+      
+      if (diff > 0) {
+        // We've allowed more runs - need to make up ground
+        details.push(`Currently allowed ${diff} more runs than ${other.name}`);
+        details.push(`Need to allow ${diff + 1}+ fewer runs over ${gamesRemaining} game${gamesRemaining > 1 ? 's' : ''}`);
+      } else if (diff < 0) {
+        // We've allowed fewer - have advantage
+        details.push(`Currently allowed ${Math.abs(diff)} fewer runs than ${other.name}`);
+        details.push(`${other.name} would need to allow ${Math.abs(diff) + 1}+ fewer runs over their ${otherGamesLeft} game${otherGamesLeft > 1 ? 's' : ''}`);
+      } else {
+        // Tied
+        details.push(`Currently tied in runs allowed (${teamRA} each)`);
+        details.push(`Whoever allows fewer runs over remaining games gets tiebreaker`);
+        details.push(`If still tied → goes to Run Differential (${team.runDifferential} vs ${other.runDifferential})`);
+      }
+    }
+
+    function getSeedStatus(seed, magicNumber) {
+      // Status based on current seed position, not magic number
+      // Seeds 1-5: direct to Round 1 | Seeds 6-11: must win play-in
+      if (seed <= 5) {
+        return { status: 'safe', badge: 'status-safe', text: 'DIRECT' };
+      } else {
+        return { status: 'danger', badge: 'status-danger', text: 'PLAY-IN' };
+      }
+    }
+
+    let allGames = [];
+    let seasonLabel = 'Playoff Seeding';
+
+    async function loadData() {
+      try {
+        console.log('🔄 Loading playoff seeding data...');
+
+        const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+
+        const season = await getCurrentSeason();
+        console.log('📅 Current season:', season);
+        
+        if (!season) {
+          console.error('❌ No active season found');
+          showError();
+          return;
+        }
+
+        seasonLabel = `${season.year} ${capitalize(season.season || '')} Playoff Seeding`.trim();
+
+        const gamesRaw = await getSeasonGames(season.id);
+        console.log(`📊 Loaded ${gamesRaw.length} total games (raw)`);
+        console.log('Sample raw game:', gamesRaw[0]);
+        
+        // Transform data to match current-season.html format
+        allGames = (gamesRaw || []).map(g => {
+          let dateString = "";
+          if (g.date && g.date.seconds) {
+            const dateObj = new Date(g.date.seconds * 1000);
+            dateString = dateObj.toLocaleDateString('en-US');
+          } else if (g.date) {
+            dateString = g.date;
+          }
+          
+          return {
+            "home team": g.homeTeamName || capitalize(g.homeTeamId) || "",
+            "away team": g.awayTeamName || capitalize(g.awayTeamId) || "",
+            "home score": g.homeScore !== undefined ? g.homeScore : null,
+            "away score": g.awayScore !== undefined ? g.awayScore : null,
+            winner: capitalize(g.winner),
+            game_type: g.gameType === "regular" ? "Regular" :
+                       g.gameType === "playoff" ? "Playoff" :
+                       capitalize(g.gameType) || "Regular",
+            date: dateString,
+            forfeit: g.forfeit ? "Yes" : "No",
+            status: g.status || "",
+            id: g.id || ""
+          };
+        });
+        
+        console.log(`✅ Transformed ${allGames.length} games`);
+        console.log('Sample transformed game:', allGames[0]);
+        
+        const completedGames = allGames.filter(g => {
+          const gameDate = parseGameDate(g.date);
+          const isPast = gameDate < today;
+          const hasWinner = g.winner && g.winner.trim() !== "";
+          const isRegular = g.game_type === 'Regular';
+          return isPast && hasWinner && isRegular;
+        });
+        console.log(`✅ ${completedGames.length} completed regular season games`);
+
+        const upcomingGames = allGames.filter(g => {
+          const gameDate = parseGameDate(g.date);
+          const isFuture = gameDate >= today;
+          const noWinner = !g.winner || g.winner.trim() === "";
+          const isRegularSeason = g.game_type === 'Regular';
+          return isFuture && noWinner && isRegularSeason;
+        });
+        console.log(`⏰ ${upcomingGames.length} upcoming regular season games`);
+
+        const standings = calculateStandings(completedGames);
+        console.log(`🏆 Calculated standings for ${standings.length} teams:`, standings);
+        
+        if (standings.length === 0) {
+          console.warn('⚠️ No standings data - no completed games yet?');
+          document.getElementById('clinchingTableBody').innerHTML = `
+            <tr><td colspan="8" class="no-data">No standings data yet. Games need to be played and completed first.</td></tr>
+          `;
+          return;
+        }
+        
+        updateSummary(standings, upcomingGames);
+        updateSeedingTable(standings, upcomingGames);
+        updateKeyMatchups(standings, upcomingGames);
+ 
+        
+        console.log('✅ All data loaded and displayed successfully!');
+
+      } catch (error) {
+        console.error('❌ Error loading data:', error);
+        console.error('Error stack:', error.stack);
+        showError();
+      }
+    }
+
+    function updateSummary(standings, upcomingGames) {
+      let lockedSeeds = 0;
+      let byeSeeds = 0; // Seeds 1-5 (direct to round 1)
+      let playInTeams = 0; // Seeds 6-11 (must win play-in)
+
+      standings.slice(0, TOTAL_TEAMS).forEach((team, index) => {
+        const seed = index + 1;
+        const range = calculateSeedRange(team, standings, allGames);
+        
+        // Count locked seeds
+        if (range.bestSeed === range.worstSeed) {
+          lockedSeeds++;
+        }
+        
+        // Count current positioning
+        if (seed <= 5) {
+          byeSeeds++;
+        } else {
+          playInTeams++;
+        }
+      });
+
+      document.getElementById('clinched').textContent = lockedSeeds;
+      document.getElementById('byeSeeds').textContent = byeSeeds;
+      document.getElementById('playInTeams').textContent = playInTeams;
+      document.getElementById('gamesRemaining').textContent = upcomingGames.length;
+    }
+
+    function updateSeedingTable(standings, upcomingGames) {
+      const tbody = document.getElementById('clinchingTableBody');
+      tbody.innerHTML = '';
+
+      // --- Quick seed summary table ---
+      const summaryBody = document.getElementById('seedSummaryBody');
+      summaryBody.innerHTML = '';
+      standings.slice(0, TOTAL_TEAMS).forEach((team, index) => {
+        const seed = index + 1;
+        const range = calculateSeedRange(team, standings, allGames);
+        const clinched = range.bestSeed === range.worstSeed;
+        const isPlayIn = seed > 5;
+
+        let seedLabel;
+        if (clinched) {
+          seedLabel = `<strong>Clinched #${range.bestSeed}</strong>`;
+        } else {
+          seedLabel = `#${range.bestSeed} – #${range.worstSeed}`;
+        }
+
+        const rowClass = isPlayIn ? 'status-danger' : 'status-safe';
+        const statusBadge = isPlayIn
+          ? `<span class="status-badge status-danger">Play-In</span>`
+          : `<span class="status-badge status-safe">Direct</span>`;
+
+        const summaryRow = document.createElement('tr');
+        summaryRow.innerHTML = `
+          <td><strong>#${seed}</strong></td>
+          <td class="team-name">${team.name}</td>
+          <td>${team.wins}-${team.losses}${team.ties > 0 ? `-${team.ties}` : ''}</td>
+          <td>${statusBadge} ${seedLabel}</td>
+        `;
+        summaryBody.appendChild(summaryRow);
+      });
+
+      // --- Detailed scenarios table ---
+      // Only show top 11 teams (all make playoffs)
+      standings.slice(0, TOTAL_TEAMS).forEach((team, index) => {
+        const seed = index + 1;
+        const gamesLeft = calculateRemainingGames(allGames, team.name);
+        const range = calculateSeedRange(team, standings, allGames);
+        const statusInfo = getSeedStatus(seed);
+        const scenario = generateSeedingScenario(team, seed, standings);
+
+        // Display seed range in magic # column
+        let magicDisplay;
+        if (range.bestSeed === range.worstSeed) {
+          magicDisplay = `#${range.bestSeed}`;
+        } else {
+          magicDisplay = `#${range.bestSeed}-${range.worstSeed}`;
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>#${seed}</strong></td>
+          <td class="team-name">${team.name}</td>
+          <td>${team.wins}-${team.losses}${team.ties > 0 ? `-${team.ties}` : ''}</td>
+          <td>${(team.winPct * 100).toFixed(1)}%</td>
+          <td><span class="status-badge ${statusInfo.badge}">${statusInfo.text}</span></td>
+          <td><span class="magic-number">${magicDisplay}</span></td>
+          <td>${gamesLeft}</td>
+          <td class="scenario-text">${scenario}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function updateKeyMatchups(standings, upcomingGames) {
+      const container = document.getElementById('keyMatchupsContent');
+      container.classList.remove('loading');
+
+      // Find matchups between teams within 3 seeds of each other
+      const keyGames = upcomingGames.filter(g => {
+        const homeRank = standings.findIndex(t => t.name === g['home team']) + 1;
+        const awayRank = standings.findIndex(t => t.name === g['away team']) + 1;
+        return Math.abs(homeRank - awayRank) <= 3 && homeRank <= 10 && awayRank <= 10;
+      }).slice(0, 10);
+
+      if (keyGames.length === 0) {
+        container.innerHTML = '<div class="no-data">No key seeding matchups remaining.</div>';
+        return;
+      }
+
+      const html = `
+        <table class="clinching-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Matchup</th>
+              <th>Seeding Impact</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${keyGames.map(game => {
+              const homeRank = standings.findIndex(t => t.name === game['home team']) + 1;
+              const awayRank = standings.findIndex(t => t.name === game['away team']) + 1;
+              
+              let impact = '';
+              if (homeRank <= 2 && awayRank <= 2) {
+                impact = '🏆 Top Seed Battle';
+              } else if (homeRank === 6 || awayRank === 6 || homeRank === 7 || awayRank === 7) {
+                impact = '⚠️ Play-In Line';
+              } else if (Math.abs(homeRank - awayRank) === 1) {
+                impact = '🔄 Direct Swap Possible';
+              } else {
+                impact = '📊 Seeding Impact';
+              }
+              
+              return `
+                <tr>
+                  <td>${game.date}</td>
+                  <td>
+                    <strong>#${homeRank} ${game['home team']}</strong> vs <strong>#${awayRank} ${game['away team']}</strong>
+                  </td>
+                  <td>${impact}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+
+      container.innerHTML = html;
+    }
+       
+    function showError() {
+      const errorHtml = '<div class="no-data">Error loading data. Please try again later.</div>';
+      document.getElementById('summaryGrid').innerHTML = errorHtml;
+      document.getElementById('clinchingTableBody').innerHTML = `<tr><td colspan="8">${errorHtml}</td></tr>`;
+      document.getElementById('keyMatchupsContent').innerHTML = errorHtml;
+     
+    }
+
+    document.addEventListener('DOMContentLoaded', loadData);
+
+    // ── Seed Summary Share ──────────────────────────────────────────────
+    window.openSeedShareModal = function openSeedShareModal() {
+      document.getElementById('seedShareModal').style.display = 'flex';
+      ['seedShareImageBtn','seedShareTextBtn'].forEach(id => {
+        document.getElementById(id).classList.remove('success');
+      });
+      document.getElementById('seedShareImageBtn').innerHTML = `<span class="share-option-icon">📷</span><span class="share-option-text"><div class="share-option-title">Save as Image</div><div class="share-option-desc">Download a clean PNG — perfect for group chats</div></span>`;
+      document.getElementById('seedShareTextBtn').innerHTML = `<span class="share-option-icon">📋</span><span class="share-option-text"><div class="share-option-title">Copy as Text</div><div class="share-option-desc">Copy a formatted seed table to clipboard</div></span>`;
+    }
+
+    window.closeSeedShareModal = function closeSeedShareModal() {
+      document.getElementById('seedShareModal').style.display = 'none';
+    }
+
+    window.shareSeedImage = async function shareSeedImage() {
+      const btn = document.getElementById('seedShareImageBtn');
+      btn.innerHTML = `<span class="share-option-icon">⏳</span><span class="share-option-text"><div class="share-option-title">Generating image...</div><div class="share-option-desc">This may take a moment</div></span>`;
+
+      try {
+        if (!window.html2canvas) {
+          await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            s.onload = resolve; s.onerror = reject;
+            document.head.appendChild(s);
+          });
+        }
+
+        const tableEl = document.getElementById('seedSummaryTable');
+        if (!tableEl) { alert('Table not loaded yet.'); return; }
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `
+          position: fixed; top: -9999px; left: -9999px;
+          background: #ffffff; padding: 20px 24px 24px;
+          border-radius: 12px; width: 560px;
+          font-family: 'Inter', -apple-system, sans-serif;
+        `;
+
+        wrapper.innerHTML = `
+          <div style="background: linear-gradient(135deg, #ff6347 0%, #ff8c42 100%); border-radius: 10px 10px 0 0; padding: 14px 20px; margin: -20px -24px 0; display:flex; align-items:center; justify-content:space-between;">
+            <div style="color:white; font-weight:800; font-size:1.1rem;">🔒 ${seasonLabel}</div>
+            <div style="color:rgba(255,255,255,0.85); font-size:0.8rem; font-weight:600;">acessoftballreference.com</div>
+          </div>
+          <div style="margin-top:16px; font-weight:700; font-size:0.95rem; color:#2d5016; margin-bottom:8px;">Current Seed Standings</div>
+        `;
+
+        const tableClone = tableEl.cloneNode(true);
+        tableClone.style.cssText = 'width:100%; border-collapse:collapse; font-size:0.88rem; table-layout:auto;';
+        // Remove sticky positioning from header so html2canvas renders it correctly
+        tableClone.querySelectorAll('thead, thead tr, thead th').forEach(el => {
+          el.style.position = 'static';
+          el.style.top = 'auto';
+        });
+        tableClone.querySelectorAll('th').forEach(th => {
+          th.style.cssText = 'background:#f0f6ea; color:#2d5016; font-weight:700; padding:8px 10px; text-align:left; border-bottom:2px solid #c6ddb8; font-size:0.82rem; position:static;';
+        });
+        tableClone.querySelectorAll('td').forEach(td => {
+          td.style.cssText = 'padding:8px 10px; border-bottom:1px solid #e2e8f0; font-size:0.88rem; color:#2d3748;';
+        });
+        tableClone.querySelectorAll('tbody tr:nth-child(even)').forEach(tr => {
+          tr.style.background = '#fafbfc';
+        });
+        // Strip badge classes — just show text
+        tableClone.querySelectorAll('.status-badge').forEach(badge => {
+          const span = document.createElement('span');
+          span.textContent = badge.textContent + ' ';
+          span.style.fontWeight = '700';
+          badge.replaceWith(span);
+        });
+
+        wrapper.appendChild(tableClone);
+
+        const footer = document.createElement('div');
+        footer.style.cssText = 'margin-top:12px; font-size:0.75rem; color:#718096; text-align:right;';
+        footer.textContent = 'Generated ' + new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        wrapper.appendChild(footer);
+
+        document.body.appendChild(wrapper);
+        const canvas = await html2canvas(wrapper, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
+        document.body.removeChild(wrapper);
+
+        const link = document.createElement('a');
+        link.download = `aces-seeds-${new Date().toISOString().slice(0,10)}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        btn.classList.add('success');
+        btn.innerHTML = `<span class="share-option-icon">✅</span><span class="share-option-text"><div class="share-option-title">Image saved!</div><div class="share-option-desc">Check your downloads folder</div></span>`;
+        setTimeout(() => closeSeedShareModal(), 2000);
+
+      } catch (err) {
+        console.error('Screenshot error:', err);
+        btn.innerHTML = `<span class="share-option-icon">📷</span><span class="share-option-text"><div class="share-option-title">Save as Image</div><div class="share-option-desc">Error — try again</div></span>`;
+        alert('Could not generate image. Try Copy as Text instead.');
+      }
+    }
+
+    window.shareSeedText = function shareSeedText() {
+      const btn = document.getElementById('seedShareTextBtn');
+      const rows = document.querySelectorAll('#seedSummaryBody tr');
+      if (!rows.length) { alert('Table not loaded yet.'); return; }
+
+      const lines = ['🔒 Playoff Seeding Snapshot', ''];
+      lines.push(`${'#'.padEnd(4)}${'Team'.padEnd(12)}${'Record'.padEnd(10)}Seed Status`);
+      lines.push('─'.repeat(44));
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 4) return;
+        const seed   = cells[0].textContent.trim().padEnd(4);
+        const team   = cells[1].textContent.trim().slice(0,11).padEnd(12);
+        const record = cells[2].textContent.trim().padEnd(10);
+        const status = cells[3].textContent.trim();
+        lines.push(`${seed}${team}${record}${status}`);
+      });
+      lines.push('');
+      lines.push('acessoftballreference.com');
+
+      navigator.clipboard.writeText(lines.join('\n')).then(() => {
+        btn.classList.add('success');
+        btn.innerHTML = `<span class="share-option-icon">✅</span><span class="share-option-text"><div class="share-option-title">Copied!</div><div class="share-option-desc">Paste it anywhere</div></span>`;
+        setTimeout(() => closeSeedShareModal(), 2000);
+      }).catch(() => {
+        alert('Could not copy to clipboard.');
+      });
+    }
+  </script>
+  <script src="team-colors.js"></script>
+<!-- Load navigation -->
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

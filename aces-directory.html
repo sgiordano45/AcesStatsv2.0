@@ -1,0 +1,1795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aces Directory</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="nav-styles.css">
+<link rel="stylesheet" href="mobile-enhancements.css">
+
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.3s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.softball-spinner::before {
+  content: '⚾';
+  font-size: 80px;
+  animation: spin 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+
+/* Page Header */
+.page-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  padding: 4rem 2rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+  color: white;
+  text-align: center;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.page-header::after {
+  content: '📇';
+  position: absolute;
+  bottom: -30px;
+  left: -30px;
+  font-size: 200px;
+  opacity: 0.05;
+}
+
+.page-header h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 1;
+  color: white !important;
+}
+
+.page-header p {
+  font-size: 1.3rem;
+  font-weight: 300;
+  opacity: 0.9;
+  position: relative;
+  z-index: 1;
+  color: white !important;
+}
+
+/* Page Container */
+.page-container {
+  max-width: 1400px;
+  margin: 3rem auto;
+  padding: 0 2rem;
+}
+
+/* Filters and Navigation Section */
+.filters-nav {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.filters-nav::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+/* Tab System */
+.tab-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.tab-buttons {
+  display: flex;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 1.25rem 2rem;
+  border: none;
+  background: transparent;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.tab-btn:hover {
+  background: rgba(45, 80, 22, 0.05);
+  color: var(--primary-color);
+}
+
+.tab-btn.active {
+  color: var(--primary-color);
+  background: rgba(45, 80, 22, 0.08);
+  border-bottom: 3px solid var(--primary-color);
+  margin-bottom: -2px;
+}
+
+.tab-content {
+  display: none;
+  padding: 2rem;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Search Section */
+.search-section {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.search-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.search-container {
+  /* Container styling - removed max-width for full width within section */
+}
+
+.search-box {
+  position: relative;
+  max-width: 600px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  font-size: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light);
+  font-size: 1.2rem;
+}
+
+/* Stats Bar */
+.stats-bar {
+  margin: 1.5rem 0 0 0;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat-item strong {
+  color: var(--primary-color);
+}
+
+/* Directory Grid */
+.directory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.member-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.member-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+.member-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.member-photo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--primary-color);
+}
+
+.member-photo-placeholder {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.member-info {
+  flex: 1;
+}
+
+.member-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 0.25rem;
+}
+
+.member-team {
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.member-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.detail-icon {
+  width: 20px;
+  text-align: center;
+  color: var(--primary-color);
+}
+
+.detail-label {
+  font-weight: 600;
+  color: var(--text-light);
+  min-width: 100px;
+}
+
+.detail-value {
+  color: var(--text-dark);
+  flex: 1;
+}
+
+.detail-value a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.detail-value a:hover {
+  text-decoration: underline;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: var(--text-light);
+}
+
+/* Auth Required */
+.auth-required {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-required h2 {
+  color: var(--text-dark);
+  margin-bottom: 1rem;
+}
+
+.auth-required p {
+  color: var(--text-light);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.auth-required button {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.auth-required button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Business Recommendations Tab Styles */
+.recommendations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.recommendations-header h3 {
+  font-size: 1.3rem;
+  color: var(--text-dark);
+}
+
+.submit-rec-btn {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.submit-rec-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Category Filter Pills */
+.category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.category-pill {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 20px;
+  background: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-pill:hover {
+  border-color: var(--primary-color);
+  background: rgba(45, 80, 22, 0.05);
+}
+
+.category-pill.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* Recommendation Cards */
+.recommendation-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  border-left: 4px solid var(--primary-color);
+}
+
+.recommendation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.rec-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.rec-business-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.rec-category-badge {
+  padding: 0.25rem 0.75rem;
+  background: rgba(45, 80, 22, 0.1);
+  color: var(--primary-color);
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.rec-description {
+  color: var(--text-dark);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.rec-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.rec-recommender {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rec-date {
+  font-style: italic;
+}
+
+.rec-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.rec-action-btn {
+  background: none;
+  border: none;
+  padding: 0.4rem;
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.rec-action-btn:hover {
+  opacity: 1;
+  background: rgba(0,0,0,0.05);
+}
+
+.rec-action-btn.edit:hover {
+  color: var(--primary-color);
+}
+
+.rec-action-btn.delete:hover {
+  color: #e53e3e;
+}
+
+/* Delete Confirmation Modal */
+.confirm-modal {
+  text-align: center;
+}
+
+.confirm-modal h3 {
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.confirm-modal p {
+  color: var(--text-light);
+  margin-bottom: 1.5rem;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.btn-delete {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: #e53e3e;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+  background: #c53030;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(-20px);
+  transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+  transform: translateY(0);
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-size: 1.5rem;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-light);
+  padding: 0.5rem;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.modal-close:hover {
+  color: var(--text-dark);
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-group small {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-light);
+  font-size: 0.85rem;
+}
+
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.btn-cancel {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--border-color);
+  background: white;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-dark);
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: var(--border-color);
+}
+
+.btn-submit {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* WhatsApp Share Button */
+.btn-whatsapp:hover {
+  background: #1fb855 !important;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-whatsapp:active {
+  transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page-header h1 {
+    font-size: 2rem;
+  }
+  
+  .page-header p {
+    font-size: 1.1rem;
+  }
+  
+  .filters-nav {
+    padding: 1.5rem;
+  }
+  
+  .search-section {
+    padding: 1.5rem;
+  }
+  
+  .directory-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .tab-btn {
+    padding: 1rem;
+    font-size: 0.95rem;
+  }
+  
+  .tab-content {
+    padding: 1.5rem;
+  }
+  
+  .recommendations-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .submit-rec-btn {
+    justify-content: center;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 1rem;
+  }
+}
+</style>
+</head>
+<body>
+  <!-- Navigation Component (will auto-load) -->
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="softball-spinner"></div>
+  </div>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>📇 Aces Directory</h1>
+    <p>Connect with fellow Aces and leverage their skills</p>
+  </div>
+
+  <div class="page-container">
+    <!-- Filters and Navigation -->
+    <div class="filters-nav">
+      <!-- Navigation buttons will be injected here by nav-component.js -->
+    </div>
+
+    <!-- Auth Required Message (hidden when logged in) -->
+    <div id="authRequired" class="auth-required" style="display: none;">
+      <h2>Sign In Required</h2>
+      <p>The Aces Directory is available to authenticated members only. Please sign in to view member information and business recommendations.</p>
+      <button onclick="window.location.href='signin.html'">Sign In</button>
+    </div>
+
+    <!-- Tab Container (hidden until authenticated) -->
+    <div id="mainContent" class="tab-container" style="display: none;">
+      <!-- Tab Buttons -->
+      <div class="tab-buttons">
+        <button class="tab-btn active" data-tab="members">
+          <span>👥</span> Members
+        </button>
+        <button class="tab-btn" data-tab="recommendations">
+          <span>⭐</span> Business Recommendations
+        </button>
+      </div>
+
+      <!-- Members Tab Content -->
+      <div id="membersTab" class="tab-content active">
+        <!-- Search Section -->
+        <div class="search-container">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input 
+              type="text" 
+              id="searchInput" 
+              placeholder="Search by name, occupation, or skills..."
+              autocomplete="off"
+            >
+          </div>
+          <div class="stats-bar">
+            <div class="stat-item">
+              <span>📋</span>
+              <span>Total Members: <strong id="totalCount">0</strong></span>
+            </div>
+            <div class="stat-item">
+              <span>👀</span>
+              <span>Visible: <strong id="visibleCount">0</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Directory Grid -->
+        <div id="directoryGrid" class="directory-grid"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+          <div class="empty-state-icon">🔭</div>
+          <h3>No Members Found</h3>
+          <p>No members match your search criteria. Try adjusting your search.</p>
+        </div>
+      </div>
+
+      <!-- Business Recommendations Tab Content -->
+      <div id="recommendationsTab" class="tab-content">
+        <div class="recommendations-header">
+          <h3>Business Recommendations from Fellow Aces</h3>
+          <button class="submit-rec-btn" id="submitRecBtn">
+            <span>➕</span> Submit Recommendation
+          </button>
+        </div>
+
+        <!-- Category Filters -->
+        <div class="category-filters">
+          <button class="category-pill active" data-category="all">All</button>
+          <button class="category-pill" data-category="contractor">🔨 Contractor</button>
+          <button class="category-pill" data-category="electrician">⚡ Electrician</button>
+          <button class="category-pill" data-category="plumber">🔧 Plumber</button>
+          <button class="category-pill" data-category="mechanic">🚗 Mechanic</button>
+          <button class="category-pill" data-category="restaurant">🍽️ Restaurant</button>
+          <button class="category-pill" data-category="landscaping">🌳 Landscaping</button>
+          <button class="category-pill" data-category="hvac">❄️ HVAC</button>
+          <button class="category-pill" data-category="other">📦 Other</button>
+        </div>
+
+        <!-- Search Box for Recommendations -->
+        <div class="search-box" style="margin-bottom: 1.5rem;">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            id="recSearchInput" 
+            placeholder="Search recommendations..."
+            autocomplete="off"
+          >
+        </div>
+
+        <!-- Recommendations Grid -->
+        <div id="recommendationsGrid" class="directory-grid"></div>
+
+        <!-- Empty Recommendations State -->
+        <div id="recEmptyState" class="empty-state" style="display: none;">
+          <div class="empty-state-icon">💡</div>
+          <h3>No Recommendations Yet</h3>
+          <p>Be the first to share a business recommendation with fellow Aces!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit/Edit Recommendation Modal -->
+  <div id="recModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">⭐ Submit Recommendation</h2>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="recForm">
+          <div class="form-group">
+            <label for="businessName">Business Name *</label>
+            <input type="text" id="businessName" required placeholder="e.g., Joe's Auto Repair">
+          </div>
+          
+          <div class="form-group">
+            <label for="serviceCategory">Service Category *</label>
+            <select id="serviceCategory" required>
+              <option value="">Select a category...</option>
+              <option value="contractor">🔨 Contractor / Handyman</option>
+              <option value="electrician">⚡ Electrician</option>
+              <option value="plumber">🔧 Plumber</option>
+              <option value="mechanic">🚗 Mechanic / Auto</option>
+              <option value="restaurant">🍽️ Restaurant / Food</option>
+              <option value="landscaping">🌳 Landscaping / Lawn Care</option>
+              <option value="hvac">❄️ HVAC / Heating & Cooling</option>
+              <option value="other">📦 Other</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="recDescription">Why do you recommend them? *</label>
+            <textarea id="recDescription" required placeholder="Share your experience with this business..."></textarea>
+            <small>Briefly describe the work they did and why you'd recommend them.</small>
+          </div>
+          
+          <div class="form-group">
+            <label>Recommended by</label>
+            <input type="text" id="recommenderName" disabled>
+            <small>Your name will be shown as the recommender.</small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn-submit" id="submitBtn" form="recForm">Submit Recommendation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2>🗑️ Delete Recommendation</h2>
+        <button class="modal-close" id="deleteModalClose">&times;</button>
+      </div>
+      <div class="modal-body confirm-modal">
+        <h3>Are you sure?</h3>
+        <p>This will permanently delete your recommendation for "<span id="deleteBusinessName"></span>".</p>
+        <div class="confirm-buttons">
+          <button type="button" class="btn-cancel" id="deleteCancelBtn">Cancel</button>
+          <button type="button" class="btn-delete" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal with WhatsApp Share -->
+  <div id="successModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 450px;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #22c55e, #16a34a); border-color: #16a34a;">
+        <h2 id="successModalTitle">✅ Recommendation Submitted!</h2>
+        <button class="modal-close" id="successModalClose">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align: center; padding: 2rem;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+        <h3 style="margin-bottom: 0.5rem;">Thank You!</h3>
+        <p id="successMessage" style="color: var(--text-light); margin-bottom: 1.5rem;">
+          Your recommendation has been added to the directory.
+        </p>
+        
+        <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem; margin-top: 1rem;">
+          <p style="font-weight: 600; margin-bottom: 1rem;">Share with the league?</p>
+          <button id="shareWhatsAppBtn" class="btn-whatsapp" style="
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            background: #25D366;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          ">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            Share to WhatsApp
+          </button>
+          <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 0.75rem;">
+            Let the group know about this great business!
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: center;">
+        <button type="button" class="btn-cancel" id="successDoneBtn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase & Core Scripts -->
+  <script type="module">
+    import { auth, onAuthStateChanged } from './firebase-auth.js';
+    import { db } from './firebase-config.js';
+    import { 
+      collection, 
+      getDocs, 
+      doc,
+      addDoc,
+      updateDoc,
+      deleteDoc,
+      query, 
+      where, 
+      orderBy,
+      serverTimestamp 
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    let currentUser = null;
+    let currentUserData = null;
+    let isUserStaffOrAdmin = false;
+    let allMembers = [];
+    let filteredMembers = [];
+    let allRecommendations = [];
+    let filteredRecommendations = [];
+    let selectedCategory = 'all';
+    let editingRecId = null; // Track which recommendation is being edited
+    let deletingRec = null;  // Track which recommendation is being deleted
+
+    // ========== AUTH STATE ==========
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      
+      if (user) {
+        console.log('✅ User authenticated:', user.email);
+        document.getElementById('authRequired').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        
+        // Get user data for recommender name
+        await loadCurrentUserData();
+        await loadDirectory();
+        await loadRecommendations();
+      } else {
+        console.log('❌ User not authenticated');
+        document.getElementById('authRequired').style.display = 'block';
+        document.getElementById('mainContent').style.display = 'none';
+      }
+      
+      hideLoading();
+    });
+
+    async function loadCurrentUserData() {
+      try {
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('email', '==', currentUser.email));
+        const snapshot = await getDocs(q);
+        
+        if (!snapshot.empty) {
+          currentUserData = snapshot.docs[0].data();
+          const displayName = currentUserData.displayName || currentUserData.linkedPlayer || currentUser.displayName || 'Anonymous';
+          document.getElementById('recommenderName').value = displayName;
+          
+          // Check if user is staff or admin
+          isUserStaffOrAdmin = 
+            currentUserData.isAdmin === true ||
+            currentUserData.userType === 'league-staff' ||
+            ['admin', 'staff', 'league-staff'].includes(currentUserData.userRole) ||
+            ['admin', 'staff', 'league-staff'].includes(currentUserData.role);
+            
+          console.log('👤 User staff/admin status:', isUserStaffOrAdmin);
+        } else {
+          document.getElementById('recommenderName').value = currentUser.displayName || currentUser.email;
+          isUserStaffOrAdmin = false;
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        document.getElementById('recommenderName').value = currentUser.displayName || currentUser.email;
+        isUserStaffOrAdmin = false;
+      }
+    }
+
+    // ========== DIRECTORY (MEMBERS TAB) ==========
+    async function loadDirectory() {
+      try {
+        console.log('📋 Loading directory...');
+        
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('directoryOptIn', '==', true));
+        const snapshot = await getDocs(q);
+        
+        allMembers = [];
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const member = {
+            id: doc.id,
+            name: data.displayName || data.linkedPlayer || 'Unknown',
+            phone: data.directoryPhone || '',
+            occupation: data.directoryOccupation || '',
+            skills: data.directorySkills || '',
+            photoURL: data.profilePhotoURL || data.photoURL || null,
+            linkedTeam: data.linkedTeam || '',
+            linkedPlayer: data.linkedPlayer || ''
+          };
+          allMembers.push(member);
+        });
+        
+        allMembers.sort((a, b) => a.name.localeCompare(b.name));
+        
+        console.log(`✅ Loaded ${allMembers.length} directory members`);
+        
+        filteredMembers = [...allMembers];
+        renderDirectory();
+        updateStats();
+        
+      } catch (error) {
+        console.error('❌ Error loading directory:', error);
+        document.getElementById('directoryGrid').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <h3>Error Loading Directory</h3>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderDirectory() {
+      const grid = document.getElementById('directoryGrid');
+      const emptyState = document.getElementById('emptyState');
+      
+      if (filteredMembers.length === 0) {
+        grid.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      
+      grid.innerHTML = filteredMembers.map(member => {
+        const initials = member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        
+        const photoHTML = member.photoURL 
+          ? `<img src="${member.photoURL}" alt="${member.name}" class="member-photo">`
+          : `<div class="member-photo-placeholder">${initials}</div>`;
+        
+        return `
+          <div class="member-card">
+            <div class="member-header">
+              ${photoHTML}
+              <div class="member-info">
+                <div class="member-name">${member.name}</div>
+                ${member.linkedTeam ? `<div class="member-team">${member.linkedTeam}</div>` : ''}
+              </div>
+            </div>
+            <div class="member-details">
+              ${member.phone ? `
+                <div class="detail-row">
+                  <span class="detail-icon">📞</span>
+                  <span class="detail-label">Phone:</span>
+                  <span class="detail-value"><a href="tel:${member.phone}">${formatPhoneNumber(member.phone)}</a></span>
+                </div>
+              ` : ''}
+              ${member.occupation ? `
+                <div class="detail-row">
+                  <span class="detail-icon">💼</span>
+                  <span class="detail-label">Occupation:</span>
+                  <span class="detail-value">${member.occupation}</span>
+                </div>
+              ` : ''}
+              ${member.skills ? `
+                <div class="detail-row">
+                  <span class="detail-icon">⭐</span>
+                  <span class="detail-label">Skills:</span>
+                  <span class="detail-value">${member.skills}</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateStats() {
+      document.getElementById('totalCount').textContent = allMembers.length;
+      document.getElementById('visibleCount').textContent = filteredMembers.length;
+    }
+
+    // ========== RECOMMENDATIONS TAB ==========
+    async function loadRecommendations() {
+      try {
+        console.log('⭐ Loading recommendations...');
+        
+        const recsRef = collection(db, 'businessRecommendations');
+        const q = query(recsRef, orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        
+        allRecommendations = [];
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          allRecommendations.push({
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date()
+          });
+        });
+        
+        console.log(`✅ Loaded ${allRecommendations.length} recommendations`);
+        
+        filteredRecommendations = [...allRecommendations];
+        renderRecommendations();
+        
+      } catch (error) {
+        console.error('❌ Error loading recommendations:', error);
+        document.getElementById('recommendationsGrid').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <h3>Error Loading Recommendations</h3>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderRecommendations() {
+      const grid = document.getElementById('recommendationsGrid');
+      const emptyState = document.getElementById('recEmptyState');
+      
+      if (filteredRecommendations.length === 0) {
+        grid.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      
+      const categoryEmojis = {
+        contractor: '🔨',
+        electrician: '⚡',
+        plumber: '🔧',
+        mechanic: '🚗',
+        restaurant: '🍽️',
+        landscaping: '🌳',
+        hvac: '❄️',
+        other: '📦'
+      };
+      
+      const categoryLabels = {
+        contractor: 'Contractor',
+        electrician: 'Electrician',
+        plumber: 'Plumber',
+        mechanic: 'Mechanic',
+        restaurant: 'Restaurant',
+        landscaping: 'Landscaping',
+        hvac: 'HVAC',
+        other: 'Other'
+      };
+      
+      grid.innerHTML = filteredRecommendations.map(rec => {
+        const emoji = categoryEmojis[rec.category] || '📦';
+        const label = categoryLabels[rec.category] || 'Other';
+        const dateStr = rec.createdAt.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        
+        // Check if current user can edit/delete this recommendation
+        const canModify = currentUser && (rec.recommenderUid === currentUser.uid || isUserStaffOrAdmin);
+        
+        const actionsHTML = canModify ? `
+          <div class="rec-actions">
+            <button class="rec-action-btn edit" onclick="editRecommendation('${rec.id}')" title="Edit">✏️</button>
+            <button class="rec-action-btn delete" onclick="deleteRecommendation('${rec.id}')" title="Delete">🗑️</button>
+          </div>
+        ` : '';
+        
+        return `
+          <div class="recommendation-card" data-rec-id="${rec.id}">
+            <div class="rec-header">
+              <div class="rec-business-name">${escapeHtml(rec.businessName)}</div>
+              <span class="rec-category-badge">${emoji} ${label}</span>
+            </div>
+            <div class="rec-description">${escapeHtml(rec.description)}</div>
+            <div class="rec-footer">
+              <div class="rec-recommender">
+                <span>👤</span>
+                <span>Recommended by <strong>${escapeHtml(rec.recommenderName)}</strong></span>
+              </div>
+              ${actionsHTML}
+              <div class="rec-date">${dateStr}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterRecommendations() {
+      const searchTerm = document.getElementById('recSearchInput').value.toLowerCase().trim();
+      
+      filteredRecommendations = allRecommendations.filter(rec => {
+        // Category filter
+        if (selectedCategory !== 'all' && rec.category !== selectedCategory) {
+          return false;
+        }
+        
+        // Search filter
+        if (searchTerm) {
+          const matchBusiness = rec.businessName.toLowerCase().includes(searchTerm);
+          const matchDesc = rec.description.toLowerCase().includes(searchTerm);
+          const matchRecommender = rec.recommenderName.toLowerCase().includes(searchTerm);
+          if (!matchBusiness && !matchDesc && !matchRecommender) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
+      
+      renderRecommendations();
+    }
+
+    // ========== MODAL HANDLING ==========
+    const modal = document.getElementById('recModal');
+    const deleteModal = document.getElementById('deleteModal');
+    const submitRecBtn = document.getElementById('submitRecBtn');
+    const modalClose = document.getElementById('modalClose');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const recForm = document.getElementById('recForm');
+    const deleteModalClose = document.getElementById('deleteModalClose');
+    const deleteCancelBtn = document.getElementById('deleteCancelBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    function openModal(editRec = null) {
+      editingRecId = editRec ? editRec.id : null;
+      
+      if (editRec) {
+        // Edit mode - populate form
+        document.getElementById('modalTitle').textContent = '✏️ Edit Recommendation';
+        document.getElementById('submitBtn').textContent = 'Save Changes';
+        document.getElementById('businessName').value = editRec.businessName;
+        document.getElementById('serviceCategory').value = editRec.category;
+        document.getElementById('recDescription').value = editRec.description;
+        document.getElementById('recommenderName').value = editRec.recommenderName;
+      } else {
+        // Create mode - reset form
+        document.getElementById('modalTitle').textContent = '⭐ Submit Recommendation';
+        document.getElementById('submitBtn').textContent = 'Submit Recommendation';
+        recForm.reset();
+        // Restore recommender name
+        if (currentUserData) {
+          document.getElementById('recommenderName').value = 
+            currentUserData.displayName || currentUserData.linkedPlayer || currentUser.displayName || 'Anonymous';
+        }
+      }
+      
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      document.getElementById('businessName').focus();
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+      editingRecId = null;
+      recForm.reset();
+      // Restore recommender name
+      if (currentUserData) {
+        document.getElementById('recommenderName').value = 
+          currentUserData.displayName || currentUserData.linkedPlayer || currentUser.displayName || 'Anonymous';
+      }
+    }
+
+    function openDeleteModal(rec) {
+      deletingRec = rec;
+      document.getElementById('deleteBusinessName').textContent = rec.businessName;
+      deleteModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDeleteModal() {
+      deleteModal.classList.remove('active');
+      document.body.style.overflow = '';
+      deletingRec = null;
+    }
+
+    submitRecBtn.addEventListener('click', () => openModal());
+    modalClose.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    deleteModalClose.addEventListener('click', closeDeleteModal);
+    deleteCancelBtn.addEventListener('click', closeDeleteModal);
+
+    // Close modals on overlay click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+    deleteModal.addEventListener('click', (e) => {
+      if (e.target === deleteModal) closeDeleteModal();
+    });
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (modal.classList.contains('active')) closeModal();
+        if (deleteModal.classList.contains('active')) closeDeleteModal();
+        if (document.getElementById('successModal').classList.contains('active')) closeSuccessModal();
+      }
+    });
+
+    // Edit recommendation function (called from onclick)
+    window.editRecommendation = function(recId) {
+      const rec = allRecommendations.find(r => r.id === recId);
+      if (rec) {
+        openModal(rec);
+      }
+    };
+
+    // Delete recommendation function (called from onclick)
+    window.deleteRecommendation = function(recId) {
+      const rec = allRecommendations.find(r => r.id === recId);
+      if (rec) {
+        openDeleteModal(rec);
+      }
+    };
+
+    // Confirm delete handler
+    confirmDeleteBtn.addEventListener('click', async () => {
+      if (!deletingRec) return;
+      
+      confirmDeleteBtn.disabled = true;
+      confirmDeleteBtn.textContent = 'Deleting...';
+      
+      try {
+        const recRef = doc(db, 'businessRecommendations', deletingRec.id);
+        await deleteDoc(recRef);
+        
+        console.log('✅ Recommendation deleted successfully');
+        
+        closeDeleteModal();
+        await loadRecommendations();
+        
+      } catch (error) {
+        console.error('❌ Error deleting recommendation:', error);
+        alert('Error deleting recommendation. Please try again.');
+      } finally {
+        confirmDeleteBtn.disabled = false;
+        confirmDeleteBtn.textContent = 'Delete';
+      }
+    });
+
+    // Form submission (create or update)
+    recForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submitBtn');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = editingRecId ? 'Saving...' : 'Submitting...';
+      
+      try {
+        const businessName = document.getElementById('businessName').value.trim();
+        const category = document.getElementById('serviceCategory').value;
+        const description = document.getElementById('recDescription').value.trim();
+        const recommenderName = document.getElementById('recommenderName').value;
+        
+        if (editingRecId) {
+          // Update existing recommendation
+          const recRef = doc(db, 'businessRecommendations', editingRecId);
+          await updateDoc(recRef, {
+            businessName,
+            category,
+            description,
+            updatedAt: serverTimestamp()
+          });
+          
+          console.log('✅ Recommendation updated successfully');
+          closeModal();
+          await loadRecommendations();
+          alert('Your recommendation has been updated.');
+        } else {
+          // Create new recommendation
+          const newRec = {
+            businessName,
+            category,
+            description,
+            recommenderName,
+            recommenderEmail: currentUser.email,
+            recommenderUid: currentUser.uid,
+            createdAt: serverTimestamp()
+          };
+          
+          const recsRef = collection(db, 'businessRecommendations');
+          await addDoc(recsRef, newRec);
+          
+          console.log('✅ Recommendation submitted successfully');
+          closeModal();
+          await loadRecommendations();
+          
+          // Show success modal with WhatsApp share option
+          showSuccessModal({
+            businessName,
+            category,
+            description,
+            recommenderName
+          });
+        }
+        
+      } catch (error) {
+        console.error('❌ Error saving recommendation:', error);
+        alert('Error saving recommendation. Please try again.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+
+    // ========== SUCCESS MODAL WITH WHATSAPP SHARE ==========
+    const successModal = document.getElementById('successModal');
+    const successModalClose = document.getElementById('successModalClose');
+    const successDoneBtn = document.getElementById('successDoneBtn');
+    const shareWhatsAppBtn = document.getElementById('shareWhatsAppBtn');
+    
+    let lastSubmittedRec = null; // Store the last submitted recommendation for sharing
+    
+    function showSuccessModal(recData) {
+      lastSubmittedRec = recData;
+      successModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeSuccessModal() {
+      successModal.classList.remove('active');
+      document.body.style.overflow = '';
+      lastSubmittedRec = null;
+    }
+    
+    // Get category emoji for the share message
+    // Using Unicode escape sequences for Safari/WhatsApp compatibility
+    function getCategoryEmoji(category) {
+      const emojiMap = {
+        'home': '\u{1F3E0}',           // 🏠
+        'auto': '\u{1F697}',           // 🚗
+        'food': '\u{1F355}',           // 🍕
+        'health': '\u{1F4AA}',         // 💪
+        'professional': '\u{1F4BC}',   // 💼
+        'entertainment': '\u{1F3AC}',  // 🎬
+        'retail': '\u{1F6CD}\uFE0F',   // 🛍️
+        'other': '\u2B50'              // ⭐
+      };
+      return emojiMap[category] || '\u2B50';
+    }
+    
+    // Get category display name
+    function getCategoryName(category) {
+      const nameMap = {
+        'home': 'Home Services',
+        'auto': 'Auto Services',
+        'food': 'Food & Dining',
+        'health': 'Health & Fitness',
+        'professional': 'Professional Services',
+        'entertainment': 'Entertainment',
+        'retail': 'Retail & Shopping',
+        'other': 'Other'
+      };
+      return nameMap[category] || category;
+    }
+    
+    // Share to WhatsApp
+    function shareToWhatsApp() {
+      if (!lastSubmittedRec) return;
+      
+      const { businessName, category, description, recommenderName } = lastSubmittedRec;
+      const emoji = getCategoryEmoji(category);
+      const categoryName = getCategoryName(category);
+      
+      // Compose the share message (using Unicode escapes for Safari compatibility)
+      const message = `${emoji} *New Aces Directory Recommendation!*
+
+*${businessName}*
+\u{1F4C1} Category: ${categoryName}
+
+\u{1F4AC} "${description}"
+
+\u{1F464} Recommended by: ${recommenderName}
+
+\u{1F517} See all recommendations: https://mountainsideaces.com/aces-directory.html`;
+      
+      // Create WhatsApp share URL
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      
+      // Open in new window/tab
+      window.open(whatsappUrl, '_blank');
+    }
+    
+    // Event listeners for success modal
+    successModalClose.addEventListener('click', closeSuccessModal);
+    successDoneBtn.addEventListener('click', closeSuccessModal);
+    shareWhatsAppBtn.addEventListener('click', shareToWhatsApp);
+    
+    // Close on overlay click
+    successModal.addEventListener('click', (e) => {
+      if (e.target === successModal) closeSuccessModal();
+    });
+
+    // ========== TAB HANDLING ==========
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabId = btn.dataset.tab;
+        
+        // Update button states
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Update content visibility
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        document.getElementById(`${tabId}Tab`).classList.add('active');
+      });
+    });
+
+    // ========== CATEGORY FILTER HANDLING ==========
+    document.querySelectorAll('.category-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        selectedCategory = pill.dataset.category;
+        filterRecommendations();
+      });
+    });
+
+    // ========== SEARCH HANDLING ==========
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase().trim();
+      
+      if (!searchTerm) {
+        filteredMembers = [...allMembers];
+      } else {
+        filteredMembers = allMembers.filter(member => {
+          const nameMatch = (member.name || '').toLowerCase().includes(searchTerm);
+          const occupationMatch = (member.occupation || '').toLowerCase().includes(searchTerm);
+          const skillsMatch = (member.skills || '').toLowerCase().includes(searchTerm);
+          const phoneMatch = (member.phone || '').includes(searchTerm);
+          return nameMatch || occupationMatch || skillsMatch || phoneMatch;
+        });
+      }
+      
+      renderDirectory();
+      updateStats();
+    });
+
+    document.getElementById('recSearchInput').addEventListener('input', filterRecommendations);
+
+    // ========== UTILITIES ==========
+    function formatPhoneNumber(phone) {
+      if (!phone) return '';
+      
+      // Strip all non-digit characters
+      const digits = phone.replace(/\D/g, '');
+      
+      // Handle 10-digit US numbers
+      if (digits.length === 10) {
+        return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+      }
+      
+      // Handle 11-digit numbers (1 + 10 digits for US with country code)
+      if (digits.length === 11 && digits.startsWith('1')) {
+        return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+      }
+      
+      // Return original if we can't format it (international, incomplete, etc.)
+      return phone;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.remove('hidden');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+
+    // Initialize
+    showLoading();
+  </script>
+
+  <script type="module">
+    import { NavigationComponent } from './nav-component.js';
+    // Navigation auto-initializes on load!
+  </script>
+  <script src="mobile-enhancements.js"></script>
+  <script src="theme-toggle.js"></script>
+</body>
+</html>

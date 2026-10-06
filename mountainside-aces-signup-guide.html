@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="mobile-enhancements.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign-Up Guide - Mountainside Aces</title>
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --secondary-color: #1a6b4a;
+      --accent-color: #ffd700;
+      --card-bg: #ffffff;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      line-height: 1.6;
+      color: var(--text-dark);
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 3px solid var(--primary-color);
+    }
+    
+    .logo {
+      font-size: 60px;
+      margin-bottom: 10px;
+    }
+    
+    h1 {
+      color: var(--primary-color);
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      color: var(--text-light);
+      font-size: 1.1rem;
+    }
+    
+    .section {
+      margin-bottom: 40px;
+    }
+    
+    .section-title {
+      color: var(--primary-color);
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .step-number {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+    
+    .steps {
+      background: #f8fafc;
+      border-left: 4px solid var(--secondary-color);
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    
+    .step {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    
+    .step:last-child {
+      margin-bottom: 0;
+    }
+    
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    
+    .step-icon {
+      font-size: 24px;
+    }
+    
+    .step-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--primary-color);
+    }
+    
+    .step-content {
+      padding-left: 36px;
+      color: var(--text-dark);
+    }
+    
+    .note {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+    }
+    
+    .note-title {
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .note-content {
+      color: #92400e;
+    }
+    
+    .feature-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .feature-list li {
+      padding: 10px 0;
+      padding-left: 30px;
+      position: relative;
+    }
+    
+    .feature-list li:before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--primary-color);
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+    
+    .profile-section {
+      background: #f0fdf4;
+      border: 2px solid #10b981;
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+    }
+    
+    .profile-section-title {
+      color: #065f46;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .setting-item {
+      margin-bottom: 15px;
+      padding: 12px;
+      background: white;
+      border-radius: 8px;
+    }
+    
+    .setting-name {
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 5px;
+    }
+    
+    .setting-description {
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+      }
+      
+      .section-title {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">⚾</div>
+      <h1>Getting Started with Mountainside Aces</h1>
+      <p class="subtitle">Sign-Up & Profile Setup Guide</p>
+    </div>
+
+    <!-- ACCOUNT CREATION SECTION -->
+    <div class="section">
+      <div class="section-title">
+        <span class="step-number">1</span>
+        <span>Create Your Account</span>
+      </div>
+      
+      <div class="steps">
+        <p style="margin-bottom: 20px; color: var(--text-dark);">Choose one of two sign-up options:</p>
+        
+        <div class="step">
+          <div class="step-header">
+            <span class="step-icon">🔵</span>
+            <span class="step-title">Option A: Sign Up with Google</span>
+          </div>
+          <div class="step-content">
+            <p>Click the "Sign Up with Google" button and select your Google account.</p>
+            <p style="margin-top: 8px; font-weight: 600; color: var(--secondary-color);">
+              ✓ Fastest option - Email verification is automatic!
+            </p>
+          </div>
+        </div>
+        
+        <div class="step">
+          <div class="step-header">
+            <span class="step-icon">📧</span>
+            <span class="step-title">Option B: Sign Up with Email</span>
+          </div>
+          <div class="step-content">
+            <p>Fill out the registration form with:</p>
+            <ul style="margin-top: 8px; margin-left: 20px;">
+              <li><strong>Full Name:</strong> Use your real name to help match your player profile</li>
+              <li><strong>Email:</strong> A valid email address</li>
+              <li><strong>Password:</strong> At least 6 characters</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <div class="note-title">💡 Tip</div>
+        <div class="note-content">
+          Use your full name (first and last) when signing up. This helps the system automatically match you to your player profile if you're already in the league database.
+        </div>
+      </div>
+    </div>
+
+    <!-- EMAIL VERIFICATION SECTION -->
+    <div class="section">
+      <div class="section-title">
+        <span class="step-number">2</span>
+        <span>Verify Your Email (Email Sign-Up Only)</span>
+      </div>
+      
+      <div class="steps">
+        <p style="margin-bottom: 15px; color: var(--text-dark);">
+          If you signed up with email/password, you'll need to verify your email:
+        </p>
+        
+        <div class="step">
+          <div class="step-header">
+            <span class="step-icon">📬</span>
+            <span class="step-title">Check Your Inbox</span>
+          </div>
+          <div class="step-content">
+            <p>Look for an email from <strong>noreply@acessoftballreference-84791.firebaseapp.com</strong></p>
+          </div>
+        </div>
+        
+        <div class="step">
+          <div class="step-header">
+            <span class="step-icon">🔍</span>
+            <span class="step-title">Check Spam Folder</span>
+          </div>
+          <div class="step-content">
+            <p><strong>Important:</strong> The verification email is often caught by spam filters. Check your spam/junk folder!</p>
+          </div>
+        </div>
+        
+        <div class="step">
+          <div class="step-header">
+            <span class="step-icon">✅</span>
+            <span class="step-title">Click the Verification Link</span>
+          </div>
+          <div class="step-content">
+            <p>Click the link in the email, then return to the site and click "I've Verified My Email"</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <div class="note-title">⚠️ Important</div>
+        <div class="note-content">
+          Google sign-in users skip this step - your email is automatically verified!
+        </div>
+      </div>
+    </div>
+
+    <!-- LINK PLAYER SECTION -->
+    <div class="section">
+      <div class="section-title">
+        <span class="step-number">3</span>
+        <span>Link Your Player Account. IMPORTANT TO COMPLETE</span>
+      </div>
+      
+      <div class="steps">
+        <p style="margin-bottom: 15px; color: var(--text-dark);">
+          Connect your login account to your player profile in the league database:
+        </p>
+        
+        <div class="step">
+          <div class="step-header">
+            <span class="step-icon">🔎</span>
+            <span class="step-title">Find Your Player Profile</span>
+          </div>
+          <div class="step-content">
+            <p>Browse through teams or use the search box to find your name. If the system found a good match based on your name, it will show a "Suggested" badge.</p>
+          </div>
+        </div>
+        
+        <div class="step">
+          <div class="step-header">
+            <span class="step-icon">👆</span>
+            <span class="step-title">Select Your Profile</span>
+          </div>
+          <div class="step-content">
+            <p>Click on your player profile to select it, then click "Submit Link Request"</p>
+          </div>
+        </div>
+        
+        <div class="step">
+          <div class="step-header">
+            <span class="step-icon">⏳</span>
+            <span class="step-title">Wait for Approval</span>
+          </div>
+          <div class="step-content">
+            <p><strong>High Name Match (90%+):</strong> Automatically approved immediately</p>
+            <p><strong>Good Match (60-89%):</strong> Requires team captain approval</p>
+            <p><strong>Low Match (&lt;60%):</strong> Requires league staff approval</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <div class="note-title">ℹ️ Not a Player?</div>
+        <div class="note-content">
+          You can skip this step if you're a fan or family member. Click "Skip - I'm Not a Player" to access the site as a fan.
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE SETUP SECTION -->
+    <div class="section">
+      <div class="section-title">
+        <span class="step-number">4</span>
+        <span>Complete Your Profile</span>
+      </div>
+      
+      <p style="margin-bottom: 20px; color: var(--text-dark);">
+        Once you're logged in, visit your profile page to customize your experience:
+      </p>
+
+      <!-- Directory Section -->
+      <div class="profile-section">
+        <div class="profile-section-title">
+          📋 Player Information
+        </div>
+        <p style="margin-bottom: 15px; color: #065f46;">
+          Add details about yourself that will be displayed on your player page:
+        </p>
+        <div class="setting-item">
+          <div class="setting-name">Nickname</div>
+          <div class="setting-description">How you prefer to be called on the field</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-name">Jersey Number(s)</div>
+          <div class="setting-description">Your jersey numbers across different teams or seasons</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-name">Batting Side & Throwing Arm</div>
+          <div class="setting-description">Right/Left/Switch hitter and throwing arm preference</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-name">Primary & Secondary Positions</div>
+          <div class="setting-description">The positions you play most often</div>
+        </div>
+      </div>
+
+      <!-- Notification Section -->
+      <div class="profile-section" style="background: #dbeafe; border-color: #3b82f6; margin-top: 25px;">
+        <div class="profile-section-title" style="color: #1e40af;">
+          🔔 Push Notifications
+        </div>
+        <p style="margin-bottom: 15px; color: #1e40af;">
+          Enable notifications to stay updated (all toggleable):
+        </p>
+        <div class="setting-item">
+          <div class="setting-name">Game Reminders</div>
+          <div class="setting-description">Get notified 1 hour before your games start</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-name">RSVP Reminders</div>
+          <div class="setting-description">Daily reminders if you haven't RSVP'd for upcoming games</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-name">Schedule Changes</div>
+          <div class="setting-description">Time, date, or opponent changes for your games</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-name">Lineup Changes</div>
+          <div class="setting-description">Updates to batting order and fielding positions</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-name">League Announcements</div>
+          <div class="setting-description">Important league-wide updates from administrators</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-name">Score Updates</div>
+          <div class="setting-description">Final scores when games finish</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-name">Quiet Hours</div>
+          <div class="setting-description">Pause notifications during specified times (default: 10pm-8am)</div>
+        </div>
+      </div>
+
+      <!-- Aces Directory Section -->
+      <div class="profile-section" style="background: #f0fdf4; border-color: #10b981; margin-top: 25px;">
+        <div class="profile-section-title" style="color: #065f46;">
+          📇 Aces Directory
+        </div>
+        <p style="margin-bottom: 15px; color: #065f46;">
+          The Aces Directory is a member directory that allows you to connect with other Aces and utilize their skills and services when necessary. You can opt-in to share your contact information with other verified members.
+        </p>
+        <div class="setting-item">
+          <div class="setting-name">Include me in the Aces Directory</div>
+          <div class="setting-description">Toggle this checkbox to make your profile visible to other authenticated members</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-name">Phone Number</div>
+          <div class="setting-description">Your preferred contact number (visible to authenticated members)</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-name">Occupation / Job Title</div>
+          <div class="setting-description">Your profession or job title (optional)</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-name">Additional Skills / Interests</div>
+          <div class="setting-description">Share your skills or interests with other members (e.g., Photography, Carpentry, Web Design, Event Planning) - optional, max 200 characters</div>
+        </div>
+        <div class="note" style="margin-top: 15px;">
+          <div class="note-title">ℹ️ How it Works</div>
+          <div class="note-content">
+            When you opt-in to the directory, your information becomes visible to other authenticated league members. This helps the Aces community connect and support each other's skills and services. You can opt-out at any time by unchecking the directory option in your profile preferences.
+          </div>
+        </div>
+      </div>
+
+      <!-- Privacy Section -->
+      <div class="profile-section" style="background: #fef3c7; border-color: #f59e0b; margin-top: 25px;">
+        <div class="profile-section-title" style="color: #92400e;">
+          🔐 Privacy Settings
+        </div>
+        <div class="setting-item">
+          <div class="setting-name">Public Favorites</div>
+          <div class="setting-description">Control whether other users can see which teams and players you're following</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WHAT'S NEXT -->
+    <div class="section">
+      <div class="section-title">
+        <span>🎯</span>
+        <span>What You Can Do Next</span>
+      </div>
+      
+      <ul class="feature-list">
+        <li>View your season and career statistics</li>
+        <li>RSVP for upcoming games</li>
+        <li>Track your favorite teams and players</li>
+        <li>View team rosters and schedules</li>
+        <li>Access league standings and playoff brackets</li>
+        <li>Browse photo galleries from games</li>
+      </ul>
+
+      <div class="note" style="margin-top: 30px;">
+        <div class="note-title">❓ Need Help?</div>
+        <div class="note-content">
+          Contact site admin at <strong>notredamegeo@gmail.com</strong> if you have questions or need assistance with your account.
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="mobile-enhancements.js"></script>
+  <script src="theme-toggle.js"></script>
+</body>
+</html>

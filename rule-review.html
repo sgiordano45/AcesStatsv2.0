@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mountainside Aces - Rule Proposal Review</title>
+    <meta name="theme-color" content="#2d5016">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="mobile-enhancements.css">
+    <link rel="stylesheet" href="nav-styles.css">
+    <style>
+        :root {
+            --primary-color: #2d5016;
+            --secondary-color: #1a6b4a;
+            --accent-color: #ffd700;
+            --card-bg: #ffffff;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+            --harvest-primary: #8b4513;
+            --harvest-secondary: #cd853f;
+            --success-color: #38a169;
+            --error-color: #e53e3e;
+            --warning-color: #d69e2e;
+            --info-color: #3182ce;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            min-height: 100vh;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .softball-spinner::before {
+            content: '⚖️';
+            font-size: 80px;
+            animation: spin 1.5s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--harvest-primary) 0%, var(--harvest-secondary) 100%);
+            padding: 4rem 2rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .header::after {
+            content: '⚖️';
+            position: absolute;
+            bottom: -40px;
+            left: -40px;
+            font-size: 200px;
+            opacity: 0.05;
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header h1 {
+            color: white;
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.3rem;
+            font-weight: 300;
+        }
+
+        .season-badge {
+            display: inline-block;
+            padding: 0.5rem 1.25rem;
+            background: var(--accent-color);
+            color: var(--harvest-primary);
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        /* Desktop-only Back Home button */
+        .desktop-home-btn {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: var(--harvest-primary);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 2px solid var(--harvest-primary);
+        }
+
+        .desktop-home-btn:hover {
+            background: var(--harvest-primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        @media (max-width: 768px) {
+            .desktop-home-btn {
+                display: none;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .header {
+                padding: 3rem 1.5rem;
+            }
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Access Denied */
+        .access-denied {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+        }
+
+        .access-denied-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .access-denied h2 {
+            color: var(--error-color);
+            margin-bottom: 1rem;
+            font-size: 1.75rem;
+        }
+
+        .access-denied p {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-number.pending { color: var(--warning-color); }
+        .stat-number.approved { color: var(--success-color); }
+        .stat-number.rejected { color: var(--error-color); }
+        .stat-number.total { color: var(--harvest-primary); }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--harvest-primary);
+        }
+
+        /* Proposals Section */
+        .proposals-section {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .proposal-count {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        /* Proposal Cards */
+        .proposals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .proposal-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .proposal-card:hover {
+            box-shadow: var(--shadow-sm);
+        }
+
+        .proposal-card.status-pending {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .proposal-card.status-approved {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .proposal-card.status-rejected {
+            border-left: 4px solid var(--error-color);
+        }
+
+        .proposal-card.status-under-review {
+            border-left: 4px solid var(--info-color);
+        }
+
+        .proposal-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .proposal-title {
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 1.2rem;
+            flex: 1;
+        }
+
+        .proposal-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-category {
+            background: linear-gradient(135deg, var(--harvest-primary) 0%, var(--harvest-secondary) 100%);
+            color: white;
+        }
+
+        .badge-status {
+            color: white;
+        }
+
+        .badge-pending {
+            background: var(--warning-color);
+        }
+
+        .badge-approved {
+            background: var(--success-color);
+        }
+
+        .badge-rejected {
+            background: var(--error-color);
+        }
+
+        .badge-under-review {
+            background: var(--info-color);
+        }
+
+        .proposal-description {
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .proposal-rationale {
+            background: linear-gradient(135deg, rgba(45, 80, 22, 0.05) 0%, rgba(26, 107, 74, 0.05) 100%);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .proposal-rationale-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .proposal-rationale-text {
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .proposal-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .proposal-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        /* Committee Notes */
+        .committee-notes {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .committee-notes-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--warning-color);
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .committee-notes-text {
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .committee-notes-meta {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        /* Action Buttons */
+        .proposal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-approve {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-reject {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .btn-review {
+            background: var(--info-color);
+            color: white;
+        }
+
+        .btn-note {
+            background: white;
+            color: var(--text-dark);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-note:hover {
+            border-color: var(--harvest-primary);
+            color: var(--harvest-primary);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text-dark);
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .modal-textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .modal-textarea:focus {
+            outline: none;
+            border-color: var(--harvest-primary);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .modal-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn-cancel {
+            background: white;
+            border: 2px solid var(--border-color);
+            color: var(--text-dark);
+        }
+
+        .modal-btn-cancel:hover {
+            background: var(--border-color);
+        }
+
+        .modal-btn-confirm {
+            border: none;
+            color: white;
+        }
+
+        .modal-btn-confirm.approve {
+            background: var(--success-color);
+        }
+
+        .modal-btn-confirm.reject {
+            background: var(--error-color);
+        }
+
+        .modal-btn-confirm.note {
+            background: var(--harvest-primary);
+        }
+
+        /* Empty State */
+        .no-proposals {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-light);
+        }
+
+        .no-proposals-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .no-proposals h3 {
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 10001;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success-color);
+        }
+
+        .toast.error {
+            background: var(--error-color);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        footer .credits {
+            opacity: 0.8;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                justify-content: space-between;
+            }
+
+            .proposal-top {
+                flex-direction: column;
+            }
+
+            .proposal-actions {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .toast {
+                left: 1rem;
+                right: 1rem;
+                bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="softball-spinner"></div>
+    </div>
+
+    <a href="index.html" class="desktop-home-btn">
+        🏠 Back Home
+    </a>
+    
+    <header class="header">
+        <div class="header-content">
+            <h1>⚖️ Rule Proposal Review</h1>
+            <p class="header-subtitle">Review and manage community rule proposals</p>
+            <span class="season-badge">Rules Committee</span>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Access Denied State -->
+        <div class="access-denied" id="accessDenied" style="display: none;">
+            <div class="access-denied-icon">🚫</div>
+            <h2>Access Restricted</h2>
+            <p>This page is only accessible to team captains, league staff, and administrators.</p>
+            <a href="rule-proposals.html" class="back-btn">
+                📋 Submit a Proposal
+            </a>
+        </div>
+
+        <!-- Main Content -->
+        <div id="mainContent" style="display: none;">
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-number pending" id="pendingCount">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number approved" id="approvedCount">0</div>
+                    <div class="stat-label">Approved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number rejected" id="rejectedCount">0</div>
+                    <div class="stat-label">Rejected</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number total" id="totalCount">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <span class="filter-label">Status:</span>
+                    <select class="filter-select" id="filterStatus">
+                        <option value="all">All Proposals</option>
+                        <option value="pending" selected>Pending Review</option>
+                        <option value="under-review">Under Review</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">Category:</span>
+                    <select class="filter-select" id="filterCategory">
+                        <option value="all">All Categories</option>
+                        <option value="gameplay">⚾ Gameplay</option>
+                        <option value="scoring">📊 Scoring</option>
+                        <option value="eligibility">✅ Eligibility</option>
+                        <option value="playoffs">🏆 Playoffs</option>
+                        <option value="scheduling">📅 Scheduling</option>
+                        <option value="other">💡 Other</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">Sort:</span>
+                    <select class="filter-select" id="filterSort">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Proposals Section -->
+            <div class="proposals-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        📋 Proposals
+                        <span class="proposal-count" id="proposalCount">(0 shown)</span>
+                    </h2>
+                </div>
+                <div class="proposals-list" id="proposalsList">
+                    <div class="no-proposals">
+                        <div class="no-proposals-icon">📭</div>
+                        <h3>Loading proposals...</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Action Modal -->
+    <div class="modal-overlay" id="actionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Add Note</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label class="modal-label" for="modalNotes" id="modalLabel">Committee Notes</label>
+                <textarea class="modal-textarea" id="modalNotes" placeholder="Enter your notes or reason..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" id="modalConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span id="toastIcon">✅</span>
+        <span id="toastMessage">Action completed</span>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 Mountainside Aces | All Rights Reserved</p>
+        <p class="credits">Rules Committee - Shaping the league together</p>
+    </footer>
+    
+    <script type="module">
+        import { doc, getDoc, updateDoc, collection, getDocs, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { db } from './firebase-data.js';
+        import { auth, USER_ROLES } from './firebase-auth.js';
+
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const accessDenied = document.getElementById('accessDenied');
+        const mainContent = document.getElementById('mainContent');
+        const proposalsList = document.getElementById('proposalsList');
+        const proposalCount = document.getElementById('proposalCount');
+        
+        // Stats
+        const pendingCount = document.getElementById('pendingCount');
+        const approvedCount = document.getElementById('approvedCount');
+        const rejectedCount = document.getElementById('rejectedCount');
+        const totalCount = document.getElementById('totalCount');
+        
+        // Filters
+        const filterStatus = document.getElementById('filterStatus');
+        const filterCategory = document.getElementById('filterCategory');
+        const filterSort = document.getElementById('filterSort');
+        
+        // Modal
+        const actionModal = document.getElementById('actionModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalLabel = document.getElementById('modalLabel');
+        const modalNotes = document.getElementById('modalNotes');
+        const modalConfirm = document.getElementById('modalConfirm');
+        const modalCancel = document.getElementById('modalCancel');
+        const modalClose = document.getElementById('modalClose');
+        
+        // Toast
+        const toast = document.getElementById('toast');
+        const toastIcon = document.getElementById('toastIcon');
+        const toastMessage = document.getElementById('toastMessage');
+
+        let currentUser = null;
+        let userProfile = null;
+        let allProposals = [];
+        let currentModalAction = null;
+        let currentProposalId = null;
+
+        // Category icons mapping
+        const categoryIcons = {
+            'gameplay': '⚾',
+            'scoring': '📊',
+            'eligibility': '✅',
+            'playoffs': '🏆',
+            'scheduling': '📅',
+            'other': '💡'
+        };
+
+        // Status labels
+        const statusLabels = {
+            'pending': 'Pending',
+            'under-review': 'Under Review',
+            'approved': 'Approved',
+            'rejected': 'Rejected'
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupFilters();
+            setupModal();
+        });
+
+        // Auth state listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                await checkAccess(user);
+            } else {
+                showAccessDenied();
+                loadingOverlay.classList.add('hidden');
+            }
+        });
+
+        async function checkAccess(user) {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                
+                if (!userDoc.exists()) {
+                    showAccessDenied();
+                    loadingOverlay.classList.add('hidden');
+                    return;
+                }
+
+                userProfile = userDoc.data();
+                
+                // Check if user has permission (captain, league-staff, or admin)
+                const hasAccess = checkReviewPermission(userProfile);
+                
+                if (hasAccess) {
+                    showMainContent();
+                    await loadAllProposals();
+                } else {
+                    showAccessDenied();
+                }
+            } catch (error) {
+                console.error('Error checking access:', error);
+                showAccessDenied();
+            }
+            
+            loadingOverlay.classList.add('hidden');
+        }
+
+        function checkReviewPermission(profile) {
+            if (!profile) return false;
+            
+            // Check userRole
+            const allowedRoles = [USER_ROLES.CAPTAIN, USER_ROLES.LEAGUE_STAFF, USER_ROLES.ADMIN, 'captain', 'league-staff', 'admin'];
+            if (allowedRoles.includes(profile.userRole)) return true;
+            
+            // Check legacy isCaptain flag
+            if (profile.isCaptain === true) return true;
+            
+            // Check teamRoles for captain status
+            if (profile.teamRoles) {
+                for (const teamId in profile.teamRoles) {
+                    const teamRole = profile.teamRoles[teamId];
+                    if (teamRole.role === 'captain' && teamRole.status === 'active') {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+
+        function showAccessDenied() {
+            accessDenied.style.display = 'block';
+            mainContent.style.display = 'none';
+        }
+
+        function showMainContent() {
+            accessDenied.style.display = 'none';
+            mainContent.style.display = 'block';
+        }
+
+        // Load all proposals
+        async function loadAllProposals() {
+            try {
+                const proposalsRef = collection(db, 'rule_proposals');
+                const q = query(proposalsRef, orderBy('createdAt', 'desc'));
+                const snapshot = await getDocs(q);
+
+                allProposals = [];
+                let stats = { pending: 0, approved: 0, rejected: 0, 'under-review': 0 };
+
+                snapshot.forEach(docSnap => {
+                    const data = { id: docSnap.id, ...docSnap.data() };
+                    allProposals.push(data);
+                    
+                    const status = data.status || 'pending';
+                    if (stats.hasOwnProperty(status)) {
+                        stats[status]++;
+                    }
+                });
+
+                // Update stats
+                pendingCount.textContent = stats.pending;
+                approvedCount.textContent = stats.approved;
+                rejectedCount.textContent = stats.rejected;
+                totalCount.textContent = allProposals.length;
+
+                renderProposals();
+
+            } catch (error) {
+                console.error('Error loading proposals:', error);
+                proposalsList.innerHTML = `
+                    <div class="no-proposals">
+                        <div class="no-proposals-icon">⚠️</div>
+                        <h3>Unable to load proposals</h3>
+                        <p>Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render proposals based on filters
+        function renderProposals() {
+            const statusFilter = filterStatus.value;
+            const categoryFilter = filterCategory.value;
+            const sortOrder = filterSort.value;
+
+            let filtered = [...allProposals];
+
+            // Apply status filter
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(p => (p.status || 'pending') === statusFilter);
+            }
+
+            // Apply category filter
+            if (categoryFilter !== 'all') {
+                filtered = filtered.filter(p => p.category === categoryFilter);
+            }
+
+            // Apply sort
+            if (sortOrder === 'oldest') {
+                filtered.reverse();
+            }
+
+            proposalCount.textContent = `(${filtered.length} shown)`;
+
+            if (filtered.length === 0) {
+                proposalsList.innerHTML = `
+                    <div class="no-proposals">
+                        <div class="no-proposals-icon">📭</div>
+                        <h3>No proposals found</h3>
+                        <p>Try adjusting your filters.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(proposal => {
+                html += renderProposalCard(proposal);
+            });
+
+            proposalsList.innerHTML = html;
+
+            // Attach event listeners
+            attachActionListeners();
+        }
+
+        function renderProposalCard(proposal) {
+            const status = proposal.status || 'pending';
+            const icon = categoryIcons[proposal.category] || '📋';
+            const date = proposal.createdAt?.toDate ? 
+                proposal.createdAt.toDate().toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit'
+                }) : 'Unknown';
+
+            const isPending = status === 'pending' || status === 'under-review';
+            
+            let committeeNotesHtml = '';
+            if (proposal.committeeNotes) {
+                const noteDate = proposal.reviewedAt?.toDate ? 
+                    proposal.reviewedAt.toDate().toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric'
+                    }) : '';
+                    
+                committeeNotesHtml = `
+                    <div class="committee-notes">
+                        <div class="committee-notes-label">📝 Committee Notes</div>
+                        <div class="committee-notes-text">${escapeHtml(proposal.committeeNotes)}</div>
+                        ${proposal.reviewedBy ? `<div class="committee-notes-meta">— ${escapeHtml(proposal.reviewedBy.displayName || 'Reviewer')}${noteDate ? `, ${noteDate}` : ''}</div>` : ''}
+                    </div>
+                `;
+            }
+
+            let rationaleHtml = '';
+            if (proposal.rationale) {
+                rationaleHtml = `
+                    <div class="proposal-rationale">
+                        <div class="proposal-rationale-label">💭 Rationale</div>
+                        <div class="proposal-rationale-text">${escapeHtml(proposal.rationale)}</div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="proposal-card status-${status}" data-id="${proposal.id}">
+                    <div class="proposal-top">
+                        <div class="proposal-title">${escapeHtml(proposal.title)}</div>
+                        <div class="proposal-badges">
+                            <span class="badge badge-category">${icon} ${capitalize(proposal.category)}</span>
+                            <span class="badge badge-status badge-${status}">${statusLabels[status] || status}</span>
+                        </div>
+                    </div>
+                    <div class="proposal-description">${escapeHtml(proposal.description)}</div>
+                    ${rationaleHtml}
+                    <div class="proposal-meta">
+                        <span>👤 ${escapeHtml(proposal.submittedBy?.displayName || 'Anonymous')}</span>
+                        <span>📧 ${escapeHtml(proposal.submittedBy?.email || '')}</span>
+                        <span>📅 ${date}</span>
+                    </div>
+                    ${committeeNotesHtml}
+                    <div class="proposal-actions">
+                        ${isPending ? `
+                            <button class="action-btn btn-approve" data-action="approve" data-id="${proposal.id}">
+                                ✅ Approve
+                            </button>
+                            <button class="action-btn btn-reject" data-action="reject" data-id="${proposal.id}">
+                                ❌ Reject
+                            </button>
+                            ${status === 'pending' ? `
+                                <button class="action-btn btn-review" data-action="under-review" data-id="${proposal.id}">
+                                    🔍 Mark Under Review
+                                </button>
+                            ` : ''}
+                        ` : ''}
+                        <button class="action-btn btn-note" data-action="note" data-id="${proposal.id}">
+                            📝 ${proposal.committeeNotes ? 'Edit Note' : 'Add Note'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function attachActionListeners() {
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const action = e.currentTarget.dataset.action;
+                    const id = e.currentTarget.dataset.id;
+                    openModal(action, id);
+                });
+            });
+        }
+
+        // Modal handling
+        function setupModal() {
+            modalCancel.addEventListener('click', closeModal);
+            modalClose.addEventListener('click', closeModal);
+            actionModal.addEventListener('click', (e) => {
+                if (e.target === actionModal) closeModal();
+            });
+            modalConfirm.addEventListener('click', confirmAction);
+        }
+
+        function openModal(action, proposalId) {
+            currentModalAction = action;
+            currentProposalId = proposalId;
+            
+            const proposal = allProposals.find(p => p.id === proposalId);
+            
+            modalConfirm.className = 'modal-btn modal-btn-confirm';
+            
+            switch(action) {
+                case 'approve':
+                    modalTitle.textContent = '✅ Approve Proposal';
+                    modalLabel.textContent = 'Committee notes (optional)';
+                    modalNotes.placeholder = 'Add any notes about this approval...';
+                    modalConfirm.classList.add('approve');
+                    modalConfirm.textContent = 'Approve';
+                    break;
+                case 'reject':
+                    modalTitle.textContent = '❌ Reject Proposal';
+                    modalLabel.textContent = 'Reason for rejection (required)';
+                    modalNotes.placeholder = 'Explain why this proposal is being rejected...';
+                    modalConfirm.classList.add('reject');
+                    modalConfirm.textContent = 'Reject';
+                    break;
+                case 'under-review':
+                    modalTitle.textContent = '🔍 Mark Under Review';
+                    modalLabel.textContent = 'Committee notes (optional)';
+                    modalNotes.placeholder = 'Add any notes about this review...';
+                    modalConfirm.classList.add('note');
+                    modalConfirm.textContent = 'Mark Under Review';
+                    break;
+                case 'note':
+                    modalTitle.textContent = '📝 Committee Notes';
+                    modalLabel.textContent = 'Notes';
+                    modalNotes.placeholder = 'Add notes for the committee...';
+                    modalConfirm.classList.add('note');
+                    modalConfirm.textContent = 'Save Note';
+                    break;
+            }
+            
+            // Pre-fill existing notes if editing
+            modalNotes.value = proposal?.committeeNotes || '';
+            
+            actionModal.classList.add('show');
+            modalNotes.focus();
+        }
+
+        function closeModal() {
+            actionModal.classList.remove('show');
+            modalNotes.value = '';
+            currentModalAction = null;
+            currentProposalId = null;
+        }
+
+        async function confirmAction() {
+            if (!currentProposalId || !currentModalAction) return;
+            
+            const notes = modalNotes.value.trim();
+            
+            // Validate rejection reason
+            if (currentModalAction === 'reject' && !notes) {
+                showToast('Please provide a reason for rejection', 'error');
+                return;
+            }
+            
+            modalConfirm.disabled = true;
+            modalConfirm.textContent = 'Saving...';
+
+            try {
+                const updates = {
+                    updatedAt: serverTimestamp()
+                };
+                
+                if (currentModalAction !== 'note') {
+                    updates.status = currentModalAction === 'under-review' ? 'under-review' : currentModalAction + 'd';
+                    updates.reviewedAt = serverTimestamp();
+                    updates.reviewedBy = {
+                        uid: currentUser.uid,
+                        displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Reviewer',
+                        email: currentUser.email
+                    };
+                }
+                
+                if (notes) {
+                    updates.committeeNotes = notes;
+                }
+
+                await updateDoc(doc(db, 'rule_proposals', currentProposalId), updates);
+                
+                // Update local data
+                const proposal = allProposals.find(p => p.id === currentProposalId);
+                if (proposal) {
+                    Object.assign(proposal, updates);
+                    if (updates.reviewedAt) {
+                        proposal.reviewedAt = { toDate: () => new Date() };
+                    }
+                }
+
+                closeModal();
+                renderProposals();
+                await loadAllProposals(); // Refresh stats
+                
+                const actionText = currentModalAction === 'note' ? 'Note saved' : 
+                                   currentModalAction === 'under-review' ? 'Marked under review' :
+                                   `Proposal ${currentModalAction}d`;
+                showToast(actionText, 'success');
+
+            } catch (error) {
+                console.error('Error updating proposal:', error);
+                showToast('Error updating proposal. Please try again.', 'error');
+            } finally {
+                modalConfirm.disabled = false;
+            }
+        }
+
+        // Filter setup
+        function setupFilters() {
+            filterStatus.addEventListener('change', renderProposals);
+            filterCategory.addEventListener('change', renderProposals);
+            filterSort.addEventListener('change', renderProposals);
+        }
+
+        // Toast notification
+        function showToast(message, type = 'success') {
+            toastIcon.textContent = type === 'success' ? '✅' : '⚠️';
+            toastMessage.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function capitalize(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+    </script>
+    <script type="module">
+        import { NavigationComponent } from './nav-component.js';
+    </script>
+    <script src="mobile-enhancements.js"></script>
+    <script src="theme-toggle.js"></script>
+</body>
+</html>

@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Season Projections - Mountainside Aces</title>
+  <meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      min-height: 100vh;
+      color: #2d3748;
+    }
+
+    /* Page Header */
+    .page-header {
+      background: linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%);
+      color: white;
+      text-align: center;
+      padding: 4rem 2rem;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.16);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative elements */
+    .page-header::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .page-header::after {
+      content: '🎱';
+      position: absolute;
+      bottom: -40px;
+      left: -40px;
+      font-size: 200px;
+      opacity: 0.05;
+      transform: rotate(-15deg);
+    }
+
+    .page-header h1 {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      font-weight: 800;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+      position: relative;
+      z-index: 1;
+    }
+
+    .page-header p {
+      font-size: 1.3rem;
+      opacity: 0.95;
+      position: relative;
+      z-index: 1;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 3rem auto;
+      padding: 0 2rem;
+    }
+
+    /* Navigation */
+    .filters-nav {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 16px;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      border: 1px solid #e2e8f0;
+    }
+
+    .nav-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-link {
+      padding: 0.8rem 1.5rem;
+      border: 2px solid #2d5016;
+      background: white;
+      color: #2d5016;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 700;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: -1;
+    }
+
+    .nav-link:hover {
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    }
+
+    .nav-link:hover::before {
+      transform: translateX(0);
+    }
+
+    .nav-link.active {
+      background: linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(45,80,22,0.3);
+    }
+
+    /* Controls Section */
+    .controls {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      border: 1px solid #e2e8f0;
+    }
+
+    .controls h3 {
+      color: #2d3748;
+      margin-bottom: 2rem;
+      font-size: 1.8em;
+      font-weight: 700;
+      padding-bottom: 1rem;
+      border-bottom: 3px solid #2d5016;
+    }
+
+    .control-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .control-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .control-item label {
+      font-weight: 700;
+      color: #2d3748;
+      font-size: 1.1em;
+    }
+
+    input, select {
+      padding: 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #2d5016;
+      box-shadow: 0 0 0 3px rgba(45,80,22,0.1);
+    }
+
+    /* Method Selector */
+    .method-selector {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .method-btn {
+      padding: 0.8rem 1.5rem;
+      background: white;
+      border: 2px solid #2d5016;
+      color: #2d5016;
+      cursor: pointer;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      font-weight: 700;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .method-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: -1;
+    }
+
+    .method-btn:hover {
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .method-btn:hover::before {
+      transform: translateX(0);
+    }
+
+    .method-btn.active {
+      background: linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%);
+      color: white;
+      border-color: #2d5016;
+    }
+
+    /* Range Input Styling */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(to right, #2d5016 0%, #2d5016 var(--value), #e2e8f0 var(--value), #e2e8f0 100%);
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    #homeAdvantageValue {
+      font-weight: 700;
+      color: #2d5016;
+      font-size: 1.1em;
+    }
+
+    /* Run Button */
+    #runProjections {
+      width: 100%;
+      padding: 1.2rem 2rem;
+      background: linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 1.2em;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 16px rgba(45,80,22,0.3);
+    }
+
+    #runProjections:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(45,80,22,0.4);
+    }
+
+    #runProjections:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Results Grid */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 2rem;
+    }
+
+    .result-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+    }
+
+    .result-card h3 {
+      color: #2d3748;
+      margin-bottom: 1.5rem;
+      font-size: 1.6em;
+      font-weight: 700;
+      border-bottom: 3px solid #2d5016;
+      padding-bottom: 0.8rem;
+    }
+
+    /* Simulation Info Box */
+    .simulation-info {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border: 2px solid #86efac;
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+      color: #166534;
+      font-weight: 600;
+    }
+
+    /* Standings Table */
+    .standings-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      table-layout: fixed;
+      word-wrap: break-word;
+    }
+
+    .standings-table th,
+    .standings-table td {
+      padding: 1rem 0.8rem;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .standings-table th {
+      background: linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%);
+      color: white;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.85em;
+      letter-spacing: 0.5px;
+    }
+
+    .standings-table th:first-child,
+    .standings-table td:first-child {
+      width: 80px;
+    }
+
+    .standings-table th:nth-child(2),
+    .standings-table td:nth-child(2) {
+      width: auto;
+      min-width: 120px;
+    }
+
+    .standings-table th:nth-child(3),
+    .standings-table td:nth-child(3),
+    .standings-table th:nth-child(4),
+    .standings-table td:nth-child(4),
+    .standings-table th:nth-child(5),
+    .standings-table td:nth-child(5) {
+      width: 100px;
+    }
+
+    .standings-table tbody tr {
+      transition: background-color 0.2s ease;
+    }
+
+    .standings-table tbody tr:hover {
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    }
+
+    .team-name {
+      font-weight: 700;
+      color: #2d3748;
+    }
+
+    .win-pct {
+      font-weight: 700;
+      color: #2d5016;
+    }
+
+    .playoff-seed {
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+      color: #333;
+      padding: 0.3rem 0.7rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      margin-left: 0.5rem;
+      border: 2px solid #e6c200;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Bracket Styling */
+    .bracket-section {
+      margin-bottom: 2rem;
+    }
+
+    .bracket-section h4 {
+      margin-bottom: 1rem;
+      color: #2d3748;
+      font-size: 1.3em;
+      font-weight: 700;
+    }
+
+    .bracket-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .bracket-game {
+      padding: 1rem;
+      border-radius: 12px;
+      border-left: 4px solid;
+    }
+
+    .bracket-game.play-in {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-left-color: #fbbf24;
+    }
+
+    .bracket-game.first-round {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border-left-color: #3b82f6;
+    }
+
+    .bracket-game.info {
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      border-left-color: #6b7280;
+    }
+
+    .bracket-game-title {
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      font-size: 1.05em;
+    }
+
+    .bracket-game-matchup {
+      font-size: 0.95em;
+    }
+
+    .bracket-game-note {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 0.5rem;
+    }
+
+    /* Key Scenarios */
+    .scenario-item {
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 12px;
+      border-left: 4px solid #2d5016;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .page-header h1 {
+        font-size: 2.5rem;
+      }
+
+      .page-header p {
+        font-size: 1.1rem;
+      }
+
+      .container {
+        padding: 0 1rem;
+        margin: 2rem auto;
+      }
+
+      .controls {
+        padding: 1.5rem;
+      }
+
+      .control-group {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .method-selector {
+        flex-direction: column;
+      }
+
+      .method-btn {
+        width: 100%;
+      }
+
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .result-card {
+        padding: 1.5rem;
+        overflow-x: auto;
+      }
+
+      .standings-table {
+        min-width: 500px;
+      }
+
+      .bracket-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-container {
+        flex-direction: column;
+      }
+
+      .nav-link {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="mobile-enhancements.css">
+</head>
+<body>
+
+
+  <header class="page-header">
+    <h1>Season Projections</h1>
+    <p>Project final standings and playoff scenarios based on remaining games</p>
+  </header>
+
+<div class="container">
+
+  <div class="filters-nav">
+    <!-- Desktop navigation will be auto-inserted here -->
+  </div>
+
+  <div class="controls">
+      <h3>Projection Settings</h3>
+      
+      <div class="control-group">
+        <div class="control-item">
+          <label>Projection Method</label>
+          <div class="method-selector">
+            <button class="method-btn active" data-method="winPct">Win %</button>
+            <button class="method-btn" data-method="pythagorean">Pythagorean</button>
+            <button class="method-btn" data-method="strength">Strength</button>
+          </div>
+        </div>
+        
+        <div class="control-item">
+          <label>Simulations</label>
+          <select id="simCount">
+            <option value="1000">1,000 simulations</option>
+            <option value="5000">5,000 simulations</option>
+            <option value="10000" selected>10,000 simulations</option>
+          </select>
+        </div>
+        
+        <div class="control-item">
+          <label>Home Field Advantage</label>
+          <input type="range" id="homeAdvantage" min="0" max="0.2" step="0.02" value="0.06">
+          <span id="homeAdvantageValue">6%</span>
+        </div>
+      </div>
+
+      <button id="runProjections" onclick="runProjections()">Run Projections</button>
+    </div>
+
+    <div id="results" class="results-grid" style="display: none;">
+      <div class="result-card">
+        <h3>📊 Projected Final Standings</h3>
+        <div id="projectedStandings"></div>
+      </div>
+
+      <div class="result-card">
+        <h3>🏟️ Projected Playoff Bracket</h3>
+        <div id="projectedBracket"></div>
+      </div>
+
+      <div class="result-card">
+        <h3>📈 Key Scenarios</h3>
+        <div id="keyScenarios"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      getSeasonGames as fetchSeasonGames,
+      getCurrentSeason
+    } from './firebase-data.js';
+
+    let allGames = [];
+    let currentProjectionMethod = 'winPct';
+    const today = new Date();
+    let currentSeasonData = null;
+
+    document.addEventListener('DOMContentLoaded', loadData);
+
+    document.querySelectorAll('.method-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentProjectionMethod = btn.dataset.method;
+      });
+    });
+
+    document.getElementById('homeAdvantage').addEventListener('input', (e) => {
+      document.getElementById('homeAdvantageValue').textContent = `${Math.round(e.target.value * 100)}%`;
+    });
+
+    async function loadData() {
+      try {
+        console.log('📊 Loading season data from Firebase...');
+        
+        const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+        
+        currentSeasonData = await getCurrentSeason();
+        console.log('✅ Current season:', currentSeasonData);
+        
+        const seasonId = currentSeasonData.id;
+        const games = await fetchSeasonGames(seasonId);
+        
+        console.log(`✅ Fetched: ${games?.length || 0} games`);
+        
+        allGames = (games || []).map(g => {
+          let dateString = "";
+          if (g.date && g.date.seconds) {
+            const dateObj = new Date(g.date.seconds * 1000);
+            dateString = dateObj.toLocaleDateString('en-US');
+          } else if (g.date) {
+            dateString = g.date;
+          }
+          
+          return {
+            "home team": g.homeTeamName || capitalize(g.homeTeamId) || "",
+            "away team": g.awayTeamName || capitalize(g.awayTeamId) || "",
+            "home score": g.homeScore !== undefined ? g.homeScore : null,
+            "away score": g.awayScore !== undefined ? g.awayScore : null,
+            winner: capitalize(g.winner || ""),
+            game_type: g.gameType === "regular" ? "Regular" :
+                       g.gameType === "playoff" ? "Playoff" :
+                       capitalize(g.gameType) || "Regular",
+            date: dateString,
+            year: currentSeasonData.year.toString(),
+            season: capitalize(currentSeasonData.season),
+            forfeit: g.forfeit ? "Yes" : "No",
+            status: g.status || "",
+            id: g.id || ""
+          };
+        });
+        
+        console.log('✅ Mapped games:', allGames.length);
+        if (allGames.length > 0) {
+          console.log('📊 Sample game:', allGames[0]);
+        }
+        
+        console.log('🎉 Data loaded successfully');
+        
+      } catch (error) {
+        console.error('❌ Error loading data:', error);
+        console.error('Error details:', error.message);
+      }
+    }
+
+    function parseGameDate(dateStr) {
+      return new Date(dateStr);
+    }
+
+    function getCurrentSeasonGames() {
+      return allGames;
+    }
+
+    function getCompletedGames(games) {
+      return games.filter(g =>
+        parseGameDate(g.date) < today &&
+        g.winner &&
+        g.winner.trim() !== "" &&
+        g.game_type === 'Regular'
+      );
+    }
+
+    function getFutureGames(games) {
+      return games.filter(g =>
+        (parseGameDate(g.date) >= today ||
+        (!g.winner || g.winner.trim() === "")) &&
+        g.game_type === 'Regular'
+      );
+    }
+
+    function calculateCurrentStandings(games) {
+      const teamStats = {};
+      
+      games.forEach(game => {
+        const homeTeam = game["home team"];
+        const awayTeam = game["away team"];
+        const winner = game.winner;
+        const homeScore = parseInt(game["home score"]) || 0;
+        const awayScore = parseInt(game["away score"]) || 0;
+        
+        if (!teamStats[homeTeam]) {
+          teamStats[homeTeam] = {
+            name: homeTeam, wins: 0, losses: 0, ties: 0,
+            runsFor: 0, runsAgainst: 0, games: 0
+          };
+        }
+        if (!teamStats[awayTeam]) {
+          teamStats[awayTeam] = {
+            name: awayTeam, wins: 0, losses: 0, ties: 0,
+            runsFor: 0, runsAgainst: 0, games: 0
+          };
+        }
+        
+        teamStats[homeTeam].games++;
+        teamStats[awayTeam].games++;
+        teamStats[homeTeam].runsFor += homeScore;
+        teamStats[homeTeam].runsAgainst += awayScore;
+        teamStats[awayTeam].runsFor += awayScore;
+        teamStats[awayTeam].runsAgainst += homeScore;
+        
+        if (winner === "Tie") {
+          teamStats[homeTeam].ties++;
+          teamStats[awayTeam].ties++;
+        } else if (winner === homeTeam) {
+          teamStats[homeTeam].wins++;
+          teamStats[awayTeam].losses++;
+        } else if (winner === awayTeam) {
+          teamStats[awayTeam].wins++;
+          teamStats[homeTeam].losses++;
+        }
+      });
+      
+      const standings = Object.values(teamStats).map(team => {
+        const totalDecidedGames = team.wins + team.losses;
+        team.winPct = totalDecidedGames > 0 ? team.wins / totalDecidedGames : 0;
+        team.runDifferential = team.runsFor - team.runsAgainst;
+        
+        const pythagoreanExp = 1.83;
+        if (team.runsFor + team.runsAgainst > 0) {
+          team.pythagoreanWinPct = Math.pow(team.runsFor, pythagoreanExp) /
+            (Math.pow(team.runsFor, pythagoreanExp) + Math.pow(team.runsAgainst, pythagoreanExp));
+        } else {
+          team.pythagoreanWinPct = 0.5;
+        }
+        
+        return team;
+      });
+      
+      standings.sort((a, b) => {
+        if (a.winPct !== b.winPct) return b.winPct - a.winPct;
+        return b.runDifferential - a.runDifferential;
+      });
+      
+      return standings;
+    }
+
+    function calculateTeamStrength(team, allStandings) {
+      let strengthScore = team.winPct;
+      
+      if (team.games > 0) {
+        strengthScore += (team.runDifferential / team.games) * 0.01;
+      }
+      
+      return Math.max(0.1, Math.min(0.9, strengthScore));
+    }
+
+    function simulateGame(homeTeam, awayTeam, standings, method) {
+      const homeAdvantage = parseFloat(document.getElementById('homeAdvantage').value);
+      
+      let homeWinProb = 0.5;
+      
+      switch (method) {
+        case 'winPct':
+          const homeWinPct = homeTeam.winPct || 0.5;
+          const awayWinPct = awayTeam.winPct || 0.5;
+          homeWinProb = homeWinPct / (homeWinPct + awayWinPct) + homeAdvantage;
+          break;
+          
+        case 'pythagorean':
+          const homePyth = homeTeam.pythagoreanWinPct || 0.5;
+          const awayPyth = awayTeam.pythagoreanWinPct || 0.5;
+          homeWinProb = homePyth / (homePyth + awayPyth) + homeAdvantage;
+          break;
+          
+        case 'strength':
+          const homeStrength = calculateTeamStrength(homeTeam, standings);
+          const awayStrength = calculateTeamStrength(awayTeam, standings);
+          homeWinProb = homeStrength / (homeStrength + awayStrength) + homeAdvantage;
+          break;
+      }
+      
+      homeWinProb = Math.max(0.1, Math.min(0.9, homeWinProb));
+      
+      return Math.random() < homeWinProb ? homeTeam.name : awayTeam.name;
+    }
+
+    function simulateRestOfSeason(currentStandings, futureGames, method) {
+      const simStandings = JSON.parse(JSON.stringify(currentStandings));
+      const teamLookup = {};
+      simStandings.forEach(team => teamLookup[team.name] = team);
+      
+      futureGames.forEach(game => {
+        const homeTeam = teamLookup[game["home team"]];
+        const awayTeam = teamLookup[game["away team"]];
+        
+        if (!homeTeam || !awayTeam) return;
+        
+        const winner = simulateGame(homeTeam, awayTeam, simStandings, method);
+        
+        homeTeam.games++;
+        awayTeam.games++;
+        
+        if (winner === homeTeam.name) {
+          homeTeam.wins++;
+          awayTeam.losses++;
+        } else {
+          awayTeam.wins++;
+          homeTeam.losses++;
+        }
+        
+        homeTeam.winPct = homeTeam.wins / (homeTeam.wins + homeTeam.losses);
+        awayTeam.winPct = awayTeam.wins / (awayTeam.wins + awayTeam.losses);
+      });
+      
+      simStandings.sort((a, b) => {
+        if (a.winPct !== b.winPct) return b.winPct - a.winPct;
+        return b.runDifferential - a.runDifferential;
+      });
+      
+      return simStandings;
+    }
+
+    function runProjections() {
+      document.getElementById('runProjections').disabled = true;
+      document.getElementById('runProjections').textContent = 'Running Simulations...';
+      document.getElementById('results').style.display = 'none';
+      
+      const seasonGames = getCurrentSeasonGames();
+      const completedGames = getCompletedGames(seasonGames);
+      const futureGames = getFutureGames(seasonGames);
+      const currentStandings = calculateCurrentStandings(completedGames);
+      
+      const simulations = parseInt(document.getElementById('simCount').value);
+      const playoffCounts = {};
+      const finalStandings = {};
+      
+      currentStandings.forEach(team => {
+        playoffCounts[team.name] = 0;
+        finalStandings[team.name] = {
+          totalWins: 0,
+          totalLosses: 0,
+          positions: new Array(currentStandings.length).fill(0)
+        };
+      });
+      
+      for (let i = 0; i < simulations; i++) {
+        const simResult = simulateRestOfSeason(currentStandings, futureGames, currentProjectionMethod);
+        
+        simResult.slice(0, 10).forEach(team => {
+          playoffCounts[team.name]++;
+        });
+        
+        simResult.forEach((team, position) => {
+          finalStandings[team.name].totalWins += team.wins;
+          finalStandings[team.name].totalLosses += team.losses;
+          finalStandings[team.name].positions[position]++;
+        });
+      }
+      
+      displayResults(currentStandings, playoffCounts, finalStandings, simulations, futureGames.length);
+      
+      document.getElementById('runProjections').disabled = false;
+      document.getElementById('runProjections').textContent = 'Run Projections';
+      document.getElementById('results').style.display = 'grid';
+    }
+
+    function displayResults(currentStandings, playoffCounts, finalStandings, simulations, futureGamesCount) {
+      const projectedTeams = currentStandings.map(team => {
+        const avgWins = finalStandings[team.name].totalWins / simulations;
+        const avgLosses = finalStandings[team.name].totalLosses / simulations;
+        const projectedWinPct = avgWins / (avgWins + avgLosses);
+        
+        return {
+          name: team.name,
+          currentWins: team.wins,
+          currentLosses: team.losses,
+          projectedWins: Math.round(avgWins),
+          projectedLosses: Math.round(avgLosses),
+          projectedWinPct: projectedWinPct,
+          playoffProb: (playoffCounts[team.name] / simulations * 100).toFixed(1)
+        };
+      });
+      
+      projectedTeams.sort((a, b) => b.projectedWinPct - a.projectedWinPct);
+      
+      let standingsHTML = `
+        <div class="simulation-info">
+          Based on ${simulations.toLocaleString()} simulations of ${futureGamesCount} remaining games
+        </div>
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>Rank</th><th>Team</th><th>Current</th><th>Projected</th><th>Playoff %</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      projectedTeams.forEach((team, index) => {
+        const playoffSeed = index < 10 ? `<span class="playoff-seed">#${index + 1}</span>` : '';
+        standingsHTML += `
+          <tr>
+            <td style="text-align: center;">${playoffSeed}</td>
+            <td class="team-name">${team.name}</td>
+            <td>${team.currentWins}-${team.currentLosses}</td>
+            <td>${team.projectedWins}-${team.projectedLosses}</td>
+            <td>${team.playoffProb}%</td>
+          </tr>
+        `;
+      });
+      
+      standingsHTML += '</tbody></table>';
+      document.getElementById('projectedStandings').innerHTML = standingsHTML;
+      
+      const top10 = projectedTeams.slice(0, 10);
+      const bracketHTML = `
+        <div class="simulation-info">
+          Most likely playoff bracket based on projected standings
+        </div>
+        
+        <div class="bracket-section">
+          <h4>Play-in Games</h4>
+          <div class="bracket-grid">
+            <div class="bracket-game play-in">
+              <div class="bracket-game-title">Play-in Game 1</div>
+              <div class="bracket-game-matchup"><strong>#7</strong> ${top10[6]?.name || 'TBD'} vs <strong>#10</strong> ${top10[9]?.name || 'TBD'}</div>
+              <div class="bracket-game-note">Winner advances to face #2</div>
+            </div>
+            <div class="bracket-game play-in">
+              <div class="bracket-game-title">Play-in Game 2</div>
+              <div class="bracket-game-matchup"><strong>#8</strong> ${top10[7]?.name || 'TBD'} vs <strong>#9</strong> ${top10[8]?.name || 'TBD'}</div>
+              <div class="bracket-game-note">Winner advances to face #1</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bracket-section">
+          <h4>First Round</h4>
+          <div class="bracket-grid">
+            <div>
+              <div class="bracket-game first-round">
+                <div class="bracket-game-title">First Round Game 1</div>
+                <div class="bracket-game-matchup"><strong>#1</strong> ${top10[0]?.name || 'TBD'} vs Winner of 8v9</div>
+              </div>
+              <div class="bracket-game first-round" style="margin-top: 1rem;">
+                <div class="bracket-game-title">First Round Game 2</div>
+                <div class="bracket-game-matchup"><strong>#2</strong> ${top10[1]?.name || 'TBD'} vs Winner of 7v10</div>
+              </div>
+              <div class="bracket-game first-round" style="margin-top: 1rem;">
+                <div class="bracket-game-title">First Round Game 3</div>
+                <div class="bracket-game-matchup"><strong>#3</strong> ${top10[2]?.name || 'TBD'} vs <strong>#6</strong> ${top10[5]?.name || 'TBD'}</div>
+              </div>
+            </div>
+            <div>
+              <div class="bracket-game first-round">
+                <div class="bracket-game-title">First Round Game 4</div>
+                <div class="bracket-game-matchup"><strong>#4</strong> ${top10[3]?.name || 'TBD'} vs <strong>#5</strong> ${top10[4]?.name || 'TBD'}</div>
+              </div>
+              <div class="bracket-game info" style="margin-top: 1rem;">
+                <div class="bracket-game-title">Double Elimination Format</div>
+                <div class="bracket-game-note">
+                  • Winners advance to winners bracket<br>
+                  • Losers drop to losers bracket<br>
+                  • Teams eliminated after 2 losses
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('projectedBracket').innerHTML = bracketHTML;
+      
+      const scenarios = [];
+      
+      const bubbleTeams = projectedTeams.filter(t =>
+        parseFloat(t.playoffProb) > 10 && parseFloat(t.playoffProb) < 90
+      ).slice(0, 4);
+      
+      if (bubbleTeams.length > 0) {
+        scenarios.push(`<strong>Bubble Teams:</strong> ${bubbleTeams.map(t => `${t.name} (${t.playoffProb}%)`).join(', ')} are fighting for playoff spots.`);
+      }
+      
+      const locks = projectedTeams.filter(t => parseFloat(t.playoffProb) > 95).length;
+      if (locks > 0) {
+        scenarios.push(`<strong>Playoff Locks:</strong> ${locks} teams have >95% chance of making playoffs.`);
+      }
+      
+      const contenders = projectedTeams.slice(0, 3);
+      scenarios.push(`<strong>Championship Contenders:</strong> ${contenders.map(t => t.name).join(', ')} are the top projected seeds.`);
+      
+      document.getElementById('keyScenarios').innerHTML = scenarios.map(s =>
+        `<div class="scenario-item">${s}</div>`
+      ).join('');
+    }
+
+    window.runProjections = runProjections;
+  </script>
+  <script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+  <script src="team-colors.js"></script>
+  <script src="mobile-enhancements.js"></script>
+  <script src="theme-toggle.js"></script>
+</body>
+</html>

@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Mountainside Aces - Discover All Features</title>
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --secondary-color: #1a6b4a;
+      --accent-color: #ffd700;
+      --card-bg: #ffffff;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    
+    /* Navigation Buttons */
+    .nav-buttons {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 15px 20px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: var(--card-bg);
+      color: var(--primary-color);
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .nav-btn:hover {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      line-height: 1.6;
+      color: var(--text-dark);
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      text-align: center;
+      padding: 60px 30px;
+      border-radius: 20px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero::before {
+      content: "⚾";
+      position: absolute;
+      font-size: 200px;
+      opacity: 0.1;
+      top: -30px;
+      right: -30px;
+    }
+    
+    .hero-logo {
+      font-size: 80px;
+      margin-bottom: 15px;
+      animation: bounce 2s ease-in-out infinite;
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      font-weight: 800;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.2rem;
+      opacity: 0.95;
+      max-width: 600px;
+      margin: 0 auto 25px;
+    }
+    
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .hero-stat {
+      text-align: center;
+    }
+    
+    .hero-stat-number {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--accent-color);
+    }
+    
+    .hero-stat-label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    
+    .cta-button {
+      display: inline-block;
+      background: var(--accent-color);
+      color: var(--primary-color);
+      padding: 16px 40px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-decoration: none;
+      margin-top: 25px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    }
+    
+    .cta-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+    }
+    
+    /* Section Styles */
+    .section {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 35px;
+      margin-bottom: 30px;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 3px solid var(--primary-color);
+    }
+    
+    .section-icon {
+      font-size: 40px;
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      padding: 15px;
+      border-radius: 16px;
+    }
+    
+    .section-title {
+      color: var(--primary-color);
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+    
+    .section-subtitle {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+    
+    /* Feature Cards */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .feature-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-radius: 12px;
+      padding: 25px;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--secondary-color);
+    }
+    
+    .feature-card-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+    }
+    
+    .feature-card-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--primary-color);
+      margin-bottom: 8px;
+    }
+    
+    .feature-card-desc {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    
+    /* Highlight Cards (for important features) */
+    .highlight-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+    
+    .highlight-card {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      border-radius: 16px;
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .highlight-card::after {
+      content: attr(data-emoji);
+      position: absolute;
+      font-size: 100px;
+      opacity: 0.15;
+      bottom: -20px;
+      right: -10px;
+    }
+    
+    .highlight-card-badge {
+      background: var(--accent-color);
+      color: var(--primary-color);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+    
+    .highlight-card-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+    
+    .highlight-card-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    
+    .highlight-card-desc {
+      opacity: 0.95;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    
+    .highlight-card-list {
+      list-style: none;
+      margin-top: 15px;
+    }
+    
+    .highlight-card-list li {
+      padding: 6px 0;
+      padding-left: 25px;
+      position: relative;
+    }
+    
+    .highlight-card-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--accent-color);
+      font-weight: 700;
+    }
+    
+    /* Badge Preview */
+    .badge-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .badge-item {
+      background: white;
+      padding: 10px 16px;
+      border-radius: 25px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      box-shadow: var(--shadow);
+    }
+    
+    .badge-item-icon {
+      font-size: 1.2rem;
+    }
+    
+    .badge-tier {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+    
+    .badge-gold { background: linear-gradient(135deg, #ffd700, #ffed4e); color: #333; }
+    .badge-silver { background: linear-gradient(135deg, #c0c0c0, #e8e8e8); color: #333; }
+    .badge-bronze { background: linear-gradient(135deg, #cd7f32, #daa560); color: white; }
+    
+    /* Screenshot Preview */
+    .screenshot-preview {
+      background: #1a1a2e;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      text-align: center;
+    }
+    
+    .screenshot-preview img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    }
+    
+    .screenshot-caption {
+      color: #a0aec0;
+      font-size: 0.85rem;
+      margin-top: 12px;
+    }
+    
+    /* PWA Section */
+    .pwa-benefits {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .pwa-benefit {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px;
+      background: #f0fdf4;
+      border-radius: 10px;
+      border: 1px solid #bbf7d0;
+    }
+    
+    .pwa-benefit-icon {
+      font-size: 28px;
+    }
+    
+    .pwa-benefit-text {
+      font-weight: 600;
+      color: var(--primary-color);
+      font-size: 0.95rem;
+    }
+    
+    /* Notification Types */
+    .notification-types {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .notification-type {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 18px;
+      background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
+      border-radius: 12px;
+      border: 1px solid #fcd34d;
+    }
+    
+    .notification-type-icon {
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+    
+    .notification-type-title {
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 4px;
+    }
+    
+    .notification-type-desc {
+      font-size: 0.85rem;
+      color: #a16207;
+    }
+    
+    /* Stats Showcase */
+    .stats-showcase {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .stat-item {
+      text-align: center;
+      padding: 20px 15px;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-radius: 12px;
+      border: 1px solid #93c5fd;
+    }
+    
+    .stat-item-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    
+    .stat-item-label {
+      font-weight: 700;
+      color: #1e40af;
+      font-size: 0.9rem;
+    }
+    
+    /* Final CTA */
+    .final-cta {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      text-align: center;
+      padding: 50px 30px;
+      border-radius: 20px;
+      margin-top: 40px;
+    }
+    
+    .final-cta h2 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+    }
+    
+    .final-cta p {
+      font-size: 1.1rem;
+      opacity: 0.95;
+      max-width: 500px;
+      margin: 0 auto 25px;
+    }
+    
+    .final-cta .cta-button {
+      margin-top: 10px;
+    }
+    
+    .cta-secondary {
+      display: inline-block;
+      color: white;
+      padding: 12px 30px;
+      border: 2px solid white;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      margin-left: 15px;
+      transition: all 0.3s ease;
+    }
+    
+    .cta-secondary:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    /* Quick Links */
+    .quick-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .quick-link {
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .quick-link:hover {
+      color: var(--accent-color);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero {
+        padding: 40px 20px;
+      }
+      
+      .hero h1 {
+        font-size: 1.8rem;
+      }
+      
+      .hero-stats {
+        gap: 25px;
+      }
+      
+      .section {
+        padding: 25px;
+      }
+      
+      .section-title {
+        font-size: 1.3rem;
+      }
+      
+      .highlight-card {
+        padding: 25px;
+      }
+      
+      .cta-secondary {
+        display: block;
+        margin: 15px auto 0;
+      }
+      
+      .final-cta h2 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Buttons -->
+  <div class="nav-buttons">
+    <a href="javascript:history.back()" class="nav-btn">← Back</a>
+    <a href="index.html" class="nav-btn">🏠 Home</a>
+    <a href="help.html" class="nav-btn">❓ Help</a>
+  </div>
+  
+  <div class="container">
+    
+    <!-- Hero Section -->
+    <div class="hero">
+      <div class="hero-logo">⚾</div>
+      <h1>Welcome to Mountainside Aces</h1>
+      <p class="hero-subtitle">
+        Your complete softball stats platform. Track your performance, connect with teammates, 
+        and never miss a game. All in one place.
+      </p>
+      
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-number">11</div>
+          <div class="hero-stat-label">Teams</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-number">140+</div>
+          <div class="hero-stat-label">Players</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-number">10+</div>
+          <div class="hero-stat-label">Seasons of Data</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-number">1000+</div>
+          <div class="hero-stat-label">Games Tracked</div>
+        </div>
+      </div>
+      
+      <a href="signup.html" class="cta-button">Create Free Account →</a>
+    </div>
+    
+    <!-- EXCLUSIVE MEMBER FEATURES -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">⭐</div>
+        <div>
+          <div class="section-title">Exclusive Member Features</div>
+          <div class="section-subtitle">Sign up to unlock these member-only perks</div>
+        </div>
+      </div>
+      
+      <div class="highlight-grid">
+        <div class="highlight-card" data-emoji="👤">
+          <div class="highlight-card-badge">YOUR HUB</div>
+          <div class="highlight-card-icon">👤</div>
+          <div class="highlight-card-title">Your Profile</div>
+          <div class="highlight-card-desc">
+            Your personal command center for all things Aces. Customize your experience, 
+            track your achievements, and manage all your preferences in one place.
+          </div>
+          <ul class="highlight-card-list">
+            <li>Custom profile photo & display name</li>
+            <li>Player info: position, jersey #, bats/throws</li>
+            <li>Favorite teams & players quick access</li>
+            <li>Notification & privacy preferences</li>
+            <li>Games hub with badges & streaks</li>
+            <li>Directory listing controls</li>
+          </ul>
+        </div>
+        
+        <div class="highlight-card" data-emoji="📇">
+          <div class="highlight-card-badge">MEMBERS ONLY</div>
+          <div class="highlight-card-icon">📇</div>
+          <div class="highlight-card-title">Aces Directory</div>
+          <div class="highlight-card-desc">
+            Connect with your fellow Aces! Access contact information for all league members. 
+            Network with teammates on and off the field.
+          </div>
+          <ul class="highlight-card-list">
+            <li>Phone numbers & emails</li>
+            <li>Recommend a local business</li>
+            <li>Find an Ace for your next project</li>
+            <li>Privacy-controlled by each member</li>
+          </ul>
+        </div>
+        
+        <div class="highlight-card" data-emoji="🎮">
+          <div class="highlight-card-badge">DAILY FUN</div>
+          <div class="highlight-card-icon">🎮</div>
+          <div class="highlight-card-title">Daily 6-Letter Word Games</div>
+          <div class="highlight-card-desc">
+            Challenge your brain every day with our exclusive word puzzles! 
+            Compete against other Aces and track your streaks.
+          </div>
+          <ul class="highlight-card-list">
+            <li>New puzzle every day</li>
+            <li>Track your win streak</li>
+            <li>Compare scores with teammates</li>
+            <li>Quick 5-minute brain break</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- STAY CONNECTED -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">📱</div>
+        <div>
+          <div class="section-title">Stay Connected</div>
+          <div class="section-subtitle">Never miss a game, update, or team announcement</div>
+        </div>
+      </div>
+      
+      <div class="highlight-grid" style="margin-bottom: 25px;">
+        <div class="highlight-card" data-emoji="📋">
+          <div class="highlight-card-badge">PERSONALIZED</div>
+          <div class="highlight-card-icon">📋</div>
+          <div class="highlight-card-title">My Dashboard</div>
+          <div class="highlight-card-desc">
+            Your personalized home base that knows who you are and what you need. 
+            Everything important at a glance, updated in real-time.
+          </div>
+          <ul class="highlight-card-list">
+            <li>Next game countdown with RSVP status</li>
+            <li>Your current season stats snapshot</li>
+            <li>Action items: RSVPs, scores to submit</li>
+            <li>Real-time notification feed</li>
+            <li>Quick links to your team & favorites</li>
+            <li>Captain tools (for team leaders)</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon">📲</div>
+          <div class="feature-card-title">Install as App</div>
+          <div class="feature-card-desc">
+            Add Mountainside Aces to your home screen for instant access. 
+            Works like a native app – no app store needed!
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">🔔</div>
+          <div class="feature-card-title">Push Notifications</div>
+          <div class="feature-card-desc">
+            Get alerted about game reminders, schedule changes, and important league announcements 
+            right on your phone.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">✉️</div>
+          <div class="feature-card-title">RSVP System</div>
+          <div class="feature-card-desc">
+            Let your captain know if you're playing! One-tap RSVPs for every game. 
+            See who's coming and plan accordingly.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">📅</div>
+          <div class="feature-card-title">Subscribe to Your Schedule</div>
+          <div class="feature-card-desc">
+            Add your team's games directly to your iPhone, Google, or Outlook calendar. 
+            Schedule changes update automatically — no manual syncing needed!
+          </div>
+        </div>
+      </div>
+      
+      <div style="margin-top: 20px; padding: 16px 20px; background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%); border-radius: 12px; border: 1px solid #a5d6a7; display: flex; align-items: flex-start; gap: 14px;">
+        <div style="font-size: 28px; flex-shrink: 0;">💡</div>
+        <div>
+          <div style="font-weight: 700; color: var(--primary-color); margin-bottom: 4px;">Pro Tip: Subscribe, Don't Download</div>
+          <div style="font-size: 0.9rem; color: #388e3c; line-height: 1.5;">
+            When you <strong>subscribe</strong> to the calendar (vs. a one-time download), any rainouts, reschedules, 
+            or new games are pushed to your calendar automatically within an hour. Available on your team's schedule page.
+          </div>
+        </div>
+      </div>
+      
+      <div class="notification-types">
+        <div class="notification-type">
+          <div class="notification-type-icon">⏰</div>
+          <div>
+            <div class="notification-type-title">Game Reminders</div>
+            <div class="notification-type-desc">24 hours and 2 hours before game time</div>
+          </div>
+        </div>
+        <div class="notification-type">
+          <div class="notification-type-icon">📅</div>
+          <div>
+            <div class="notification-type-title">Schedule Changes</div>
+            <div class="notification-type-desc">Instant alerts for rain delays or reschedules</div>
+          </div>
+        </div>
+        <div class="notification-type">
+          <div class="notification-type-icon">🏆</div>
+          <div>
+            <div class="notification-type-title">Milestone Alerts</div>
+            <div class="notification-type-desc">Celebrate when you hit career milestones</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="pwa-benefits">
+        <div class="pwa-benefit">
+          <div class="pwa-benefit-icon">⚡</div>
+          <div class="pwa-benefit-text">Lightning Fast</div>
+        </div>
+        <div class="pwa-benefit">
+          <div class="pwa-benefit-icon">📴</div>
+          <div class="pwa-benefit-text">Works Offline</div>
+        </div>
+        <div class="pwa-benefit">
+          <div class="pwa-benefit-icon">🔄</div>
+          <div class="pwa-benefit-text">Auto Updates</div>
+        </div>
+        <div class="pwa-benefit">
+          <div class="pwa-benefit-icon">💾</div>
+          <div class="pwa-benefit-text">No Storage Used</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- TRACK YOUR SEASON -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">📊</div>
+        <div>
+          <div class="section-title">Track Your Season</div>
+          <div class="section-subtitle">Everything you need to follow the current season</div>
+        </div>
+      </div>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon">🏅</div>
+          <div class="feature-card-title">Live Standings</div>
+          <div class="feature-card-desc">
+            Real-time standings updated after every game. See where your team ranks and 
+            what you need to make the playoffs.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">📅</div>
+          <div class="feature-card-title">Full Schedule</div>
+          <div class="feature-card-desc">
+            Complete season schedule with dates, times, and opponents. 
+            Past results and upcoming games all in one view.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">🔮</div>
+          <div class="feature-card-title">Weekend Preview</div>
+          <div class="feature-card-desc">
+            Get the scoop before game day! Matchup analysis, team records, 
+            key players to watch, and even weather forecasts.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">⚔️</div>
+          <div class="feature-card-title">Game Previews</div>
+          <div class="feature-card-desc">
+            Deep dive into each matchup with head-to-head records, 
+            recent form, and stat comparisons.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">🏆</div>
+          <div class="feature-card-title">Playoff Bracket</div>
+          <div class="feature-card-desc">
+            Interactive playoff bracket. Follow the tournament and see 
+            the path to the championship.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">🔑</div>
+          <div class="feature-card-title">Clinching Scenarios</div>
+          <div class="feature-card-desc">
+            Find out exactly what your team needs to clinch a playoff spot 
+            or secure a specific seed.
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- YOUR STATS STORY -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">📈</div>
+        <div>
+          <div class="section-title">Your Stats Story</div>
+          <div class="section-subtitle">Comprehensive statistics that tell your softball journey</div>
+        </div>
+      </div>
+      
+      <div class="highlight-grid" style="margin-bottom: 25px;">
+        <div class="highlight-card" data-emoji="🃏">
+          <div class="highlight-card-badge">CREATE & SHARE</div>
+          <div class="highlight-card-icon">🃏</div>
+          <div class="highlight-card-title">Your Baseball Card</div>
+          <div class="highlight-card-desc">
+            Create your own custom baseball card! Just like the pros, your card showcases 
+            your photo, stats, and team colors. Download it, share it with friends, or 
+            print it out for your collection.
+          </div>
+          <ul class="highlight-card-list">
+            <li>Auto-generated from your stats</li>
+            <li>Features your profile photo</li>
+            <li>Team colors & league branding</li>
+            <li>Download as high-quality image</li>
+            <li>Share on social media</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon">👤</div>
+          <div class="feature-card-title">Player Profiles</div>
+          <div class="feature-card-desc">
+            Your complete stats page. Season-by-season breakdowns, career totals, 
+            and performance trends all on one page.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">🎯</div>
+          <div class="feature-card-title">AcesBPI Rating</div>
+          <div class="feature-card-desc">
+            Our proprietary performance index that weighs batting average, 
+            on-base percentage, and run production into one easy number.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">🆚</div>
+          <div class="feature-card-title">Player Comparison</div>
+          <div class="feature-card-desc">
+            Compare yourself against any player in the league. 
+            Side-by-side stats, career numbers, and head-to-head records.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">👥</div>
+          <div class="feature-card-title">Team Stats</div>
+          <div class="feature-card-desc">
+            Full team rosters with individual stats. See how your teammates 
+            are performing and track team batting averages.
+          </div>
+        </div>
+      </div>
+      
+      <div class="stats-showcase">
+        <div class="stat-item">
+          <div class="stat-item-icon">⚾</div>
+          <div class="stat-item-label">Batting Avg</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-item-icon">🎯</div>
+          <div class="stat-item-label">On-Base %</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-item-icon">🏃</div>
+          <div class="stat-item-label">Runs</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-item-icon">💥</div>
+          <div class="stat-item-label">Hits</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-item-icon">🚶</div>
+          <div class="stat-item-label">Walks</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-item-icon">🥎</div>
+          <div class="stat-item-label">Pitching Stats</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- BADGES & ACHIEVEMENTS -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">🏅</div>
+        <div>
+          <div class="section-title">Badges & Achievements</div>
+          <div class="section-subtitle">Earn recognition for your on-field accomplishments</div>
+        </div>
+      </div>
+      
+      <p style="color: var(--text-dark); margin-bottom: 20px; font-size: 1.05rem;">
+        Starting in 2026, earn collectible badges for hitting streaks, big games, 
+        pitching performances, and hidden achievements. Badges are displayed on your 
+        player profile for everyone to see!
+      </p>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon">🔥</div>
+          <div class="feature-card-title">Hit Streak Badges</div>
+          <div class="feature-card-desc">
+            Get a hit in 3, 5, or 8+ consecutive games to earn bronze, silver, or gold badges.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">🎱</div>
+          <div class="feature-card-title">Multi-Hit Games</div>
+          <div class="feature-card-desc">
+            Recognized for games with 3, 4, or 5+ hits. Can you earn the "Unstoppable" badge?
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">🔒</div>
+          <div class="feature-card-title">Pitching Badges</div>
+          <div class="feature-card-desc">
+            Scoreless outings, workhorse innings, and shutdown performances all earn recognition.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">🎭</div>
+          <div class="feature-card-title">Hidden Badges</div>
+          <div class="feature-card-desc">
+            Secret achievements waiting to be unlocked. Can you discover them all?
+          </div>
+        </div>
+      </div>
+      
+      <div class="badge-preview">
+        <div class="badge-item">
+          <span class="badge-item-icon">🔥</span>
+          <span>On Fire</span>
+          <span class="badge-tier badge-gold">GOLD</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-item-icon">🎯</span>
+          <span>Locked In</span>
+          <span class="badge-tier badge-silver">SILVER</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-item-icon">🧹</span>
+          <span>Clean Inning</span>
+          <span class="badge-tier badge-bronze">BRONZE</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-item-icon">♠️</span>
+          <span>Ace</span>
+          <span class="badge-tier badge-gold">GOLD</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-item-icon">⛓️</span>
+          <span>Iron Man</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge-item-icon">🔒</span>
+          <span>???</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- LEAGUE HISTORY -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">📜</div>
+        <div>
+          <div class="section-title">League History</div>
+          <div class="section-subtitle">Explore over a decade of Mountainside Aces history</div>
+        </div>
+      </div>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon">📅</div>
+          <div class="feature-card-title">All Seasons Archive</div>
+          <div class="feature-card-desc">
+            Browse every season going back to the beginning. 
+            Full standings, stats, and championship results.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">🏆</div>
+          <div class="feature-card-title">League Awards</div>
+          <div class="feature-card-desc">
+            See every MVP, batting champion, and special award winner 
+            throughout league history.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">👑</div>
+          <div class="feature-card-title">Career Leaders</div>
+          <div class="feature-card-desc">
+            All-time leaderboards for hits, runs, walks, batting average, 
+            and more. Where do you rank?
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">🎯</div>
+          <div class="feature-card-title">Milestones</div>
+          <div class="feature-card-desc">
+            Track career milestones like 100 hits, 50 runs, and more. 
+            See who's closing in on the next milestone.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">#️⃣</div>
+          <div class="feature-card-title">Head-to-Head Records</div>
+          <div class="feature-card-desc">
+            Complete all-time records between every team matchup. 
+            Find your team's biggest rivalry.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">📊</div>
+          <div class="feature-card-title">Performance Charts</div>
+          <div class="feature-card-desc">
+            Visual charts showing trends, comparisons, and 
+            statistical breakdowns.
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- COMMUNITY -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">📷</div>
+        <div>
+          <div class="section-title">Community & Media</div>
+          <div class="section-subtitle">Share memories and stay engaged with the league</div>
+        </div>
+      </div>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon">🖼️</div>
+          <div class="feature-card-title">Photo Gallery</div>
+          <div class="feature-card-desc">
+            Browse and upload photos from games, team events, and celebrations. 
+            Organized by team and event. Videos supported too!
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">📰</div>
+          <div class="feature-card-title">Activity Feed</div>
+          <div class="feature-card-desc">
+            See what's happening across the league. Game results, 
+            milestones, new photos, and standings changes.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">⭐</div>
+          <div class="feature-card-title">Favorites</div>
+          <div class="feature-card-desc">
+            Follow your favorite teams and players. Quick access to 
+            the stats and schedules you care about most.
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">🔎</div>
+          <div class="feature-card-title">Stats Query Tool</div>
+          <div class="feature-card-desc">
+            Custom stat searches. Find specific records, filter by season, 
+            team, or player to answer any stats question.
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- COMING SOON -->
+    <div class="section" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white; border: 2px solid #6366f1;">
+      <div class="section-header" style="border-bottom-color: #6366f1;">
+        <div class="section-icon" style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);">🚀</div>
+        <div>
+          <div class="section-title" style="color: white;">Coming Soon</div>
+          <div class="section-subtitle" style="color: #a5b4fc;">New features in development</div>
+        </div>
+      </div>
+      
+      <div class="feature-card" style="background: linear-gradient(135deg, #312e81 0%, #3730a3 100%); border: 1px solid #4f46e5;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+          <span style="background: #fbbf24; color: #1e1b4b; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">IN DEVELOPMENT</span>
+        </div>
+        <div class="feature-card-icon">📡</div>
+        <div class="feature-card-title" style="color: white;">Live Game Tracker</div>
+        <div class="feature-card-desc" style="color: #c7d2fe;">
+          Can't make it to the field? Follow along from anywhere! Watch the score update in real-time, 
+          see who's batting, and track the game inning-by-inning. It's like being there without being there.
+        </div>
+        <ul style="list-style: none; margin-top: 15px; color: #c7d2fe;">
+          <li style="padding: 6px 0; padding-left: 25px; position: relative;">
+            <span style="position: absolute; left: 0; color: #fbbf24;">✓</span> Real-time score updates
+          </li>
+          <li style="padding: 6px 0; padding-left: 25px; position: relative;">
+            <span style="position: absolute; left: 0; color: #fbbf24;">✓</span> Inning-by-inning breakdown
+          </li>
+          <li style="padding: 6px 0; padding-left: 25px; position: relative;">
+            <span style="position: absolute; left: 0; color: #fbbf24;">✓</span> See who's up to bat
+          </li>
+          <li style="padding: 6px 0; padding-left: 25px; position: relative;">
+            <span style="position: absolute; left: 0; color: #fbbf24;">✓</span> Perfect for fans & family
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- FINAL CTA -->
+    <div class="final-cta">
+      <h2>Ready to Join the Aces?</h2>
+      <p>
+        Create your free account in under a minute. Link your player profile and 
+        unlock all features instantly.
+      </p>
+      <a href="signup.html" class="cta-button">Create Free Account →</a>
+      <a href="mountainside-aces-signup-guide.html" class="cta-secondary">View Setup Guide</a>
+      
+      <p style="margin-top: 25px; opacity: 0.9; font-size: 0.95rem;">
+        Already a member? <a href="profile-setup-guide.html" style="color: var(--accent-color); text-decoration: underline;">Make sure your profile is fully set up →</a>
+      </p>
+      
+      <div class="quick-links">
+        <a href="index.html" class="quick-link">🏠 Browse as Guest</a>
+        <a href="current-season.html" class="quick-link">📊 Current Season</a>
+        <a href="players.html" class="quick-link">👥 All Players</a>
+        <a href="teams.html" class="quick-link">🏆 All Teams</a>
+      </div>
+    </div>
+    
+  </div>
+</body>
+</html>

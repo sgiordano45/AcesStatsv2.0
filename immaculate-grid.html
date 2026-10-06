@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aces Grid - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  --correct-color: #48bb78;
+  --incorrect-color: #f56565;
+  --team-black: #1a1a1a; --team-green: #2d7d32; --team-red: #d32f2f;
+  --team-blue: #1976d2; --team-white: #343a40; --team-orange: #f57c00;
+  --team-silver: #757575; --team-purple: #7b1fa2; --team-gold: #CFB53B;
+  --team-carolina: #4b9cd3; --team-army: #654321;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.softball-spinner::before {
+  content: '⚾';
+  font-size: 80px;
+  animation: spin 1.5s ease-in-out infinite;
+  display: block;
+}
+
+@keyframes spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+
+/* Page Container */
+.page-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* Page Header */
+.page-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.back-link {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(255,255,255,0.15);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.back-link:hover {
+  background: rgba(255,255,255,0.25);
+  color: white;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.page-header::after {
+  content: '⚾';
+  position: absolute;
+  bottom: -40px;
+  left: -40px;
+  font-size: 150px;
+  opacity: 0.05;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.page-header p {
+  margin: 0.75rem 0 0 0;
+  font-size: 1.1rem;
+  opacity: 0.95;
+  position: relative;
+  z-index: 1;
+}
+
+.puzzle-date {
+  font-size: 1rem;
+  opacity: 0.85;
+  margin-top: 0.5rem;
+}
+
+/* Game Stats Bar */
+.game-stats-bar {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  background: var(--card-bg);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Grid Container */
+.grid-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 1.5rem;
+}
+
+/* The Grid */
+.game-grid {
+  display: grid;
+  grid-template-columns: 120px repeat(3, 1fr);
+  grid-template-rows: 80px repeat(3, 1fr);
+  gap: 4px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Header Cells */
+.grid-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: center;
+  border-radius: 8px;
+  color: white;
+}
+
+.grid-header.column-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+.grid-header.row-header {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.grid-header.corner {
+  background: transparent;
+}
+
+.grid-header .team-logo {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 4px;
+}
+
+.grid-header .header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.grid-header .header-text {
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+/* Grid Cells */
+.grid-cell {
+  aspect-ratio: 1;
+  background: #f8fafc;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0.5rem;
+  min-height: 90px;
+}
+
+.grid-cell:hover:not(.filled):not(.game-over) {
+  background: #edf2f7;
+  border-color: var(--primary-color);
+  transform: scale(1.02);
+}
+
+.grid-cell.selected {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.3);
+}
+
+.grid-cell.correct {
+  background: linear-gradient(135deg, #c6f6d5, #9ae6b4);
+  border-color: var(--correct-color);
+}
+
+.grid-cell.incorrect {
+  background: linear-gradient(135deg, #fed7d7, #feb2b2);
+  border-color: var(--incorrect-color);
+}
+
+.grid-cell.filled {
+  cursor: default;
+}
+
+.grid-cell .player-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.grid-cell .rarity-badge {
+  font-size: 0.6rem;
+  background: rgba(0,0,0,0.1);
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-top: 4px;
+}
+
+/* Search Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  padding: 1rem;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 450px;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+  transform: translateY(0);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  padding: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.modal-close {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.modal-body {
+  padding: 1.25rem;
+}
+
+.search-criteria {
+  background: #f7fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.search-criteria .criteria-label {
+  color: var(--text-light);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.search-criteria .criteria-values {
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-top: 0.25rem;
+}
+
+.search-input-container {
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  border-color: var(--primary-color);
+}
+
+.search-results {
+  max-height: 250px;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+}
+
+.search-result-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-result-item:hover {
+  background: #f7fafc;
+}
+
+.search-result-item.selected {
+  background: #e8f5e8;
+}
+
+.result-name {
+  font-weight: 600;
+}
+
+.result-info {
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.guesses-remaining {
+  text-align: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+/* Game Over Modal */
+.game-over-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.game-over-content h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.75rem;
+}
+
+.final-score {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  margin: 1rem 0;
+}
+
+.score-breakdown {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 1.5rem 0;
+}
+
+.breakdown-item {
+  text-align: center;
+}
+
+.breakdown-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.breakdown-label {
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.share-section {
+  margin-top: 1.5rem;
+}
+
+.share-btn {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.share-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.share-preview {
+  background: #f7fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  font-family: monospace;
+  font-size: 0.85rem;
+  white-space: pre-line;
+  text-align: left;
+}
+
+/* How to Play */
+.how-to-play {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.5rem;
+}
+
+.how-to-play h3 {
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.how-to-play-content {
+  display: none;
+}
+
+.how-to-play.expanded .how-to-play-content {
+  display: block;
+}
+
+.how-to-play ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.how-to-play li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+/* Team color badges for headers */
+.team-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.team-badge.black { background: var(--team-black); color: white; }
+.team-badge.blue { background: var(--team-blue); color: white; }
+.team-badge.green { background: var(--team-green); color: white; }
+.team-badge.red { background: var(--team-red); color: white; }
+.team-badge.orange { background: var(--team-orange); color: white; }
+.team-badge.purple { background: var(--team-purple); color: white; }
+.team-badge.gold { background: var(--team-gold); color: white; }
+.team-badge.silver { background: var(--team-silver); color: white; }
+.team-badge.white { background: white; color: var(--team-white); border: 2px solid var(--team-white); }
+
+/* White team data warning */
+.white-warning-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: #f6ad55;
+  color: #7b341e;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 4px;
+  position: relative;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.white-warning-icon::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2d3748;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 400;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  max-width: 220px;
+  white-space: normal;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 100;
+  line-height: 1.4;
+}
+
+.white-warning-icon:hover::after,
+.white-warning-icon.tooltip-visible::after {
+  opacity: 1;
+}
+
+.modal-white-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #fffbeb;
+  border: 1px solid #f6ad55;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #7b341e;
+  line-height: 1.4;
+}
+
+.modal-white-warning .warning-emoji {
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+.team-badge.carolina { background: var(--team-carolina); color: white; }
+.team-badge.army { background: var(--team-army); color: white; }
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.action-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid var(--primary-color);
+  background: white;
+  color: var(--primary-color);
+}
+
+.action-btn:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.action-btn.primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.action-btn.primary:hover {
+  background: var(--secondary-color);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .page-header h1 { font-size: 2rem; }
+  
+  .game-grid {
+    grid-template-columns: 80px repeat(3, 1fr);
+    grid-template-rows: 60px repeat(3, 1fr);
+    gap: 3px;
+  }
+  
+  .grid-header { font-size: 0.7rem; padding: 0.25rem; }
+  .grid-header .team-logo { width: 28px; height: 28px; }
+  .grid-header .header-text { font-size: 0.65rem; }
+  
+  .grid-cell { min-height: 70px; padding: 0.25rem; }
+  .grid-cell .player-name { font-size: 0.6rem; }
+  
+  .game-stats-bar { gap: 1rem; }
+  .stat-value { font-size: 1.4rem; }
+  
+  .score-breakdown { gap: 1rem; }
+}
+
+/* User Stats Section */
+.user-stats-container {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.user-stats-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.user-greeting {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.sign-in-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+.sign-in-prompt a {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.sign-in-prompt a:hover {
+  text-decoration: underline;
+}
+
+.stats-note {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.lifetime-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.lifetime-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 50px;
+}
+
+.lifetime-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.lifetime-label {
+  font-size: 0.7rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+@media (max-width: 600px) {
+  .lifetime-stats {
+    justify-content: space-between;
+  }
+  
+  .lifetime-stat {
+    min-width: 45px;
+  }
+  
+  .lifetime-value {
+    font-size: 1.1rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<!-- Navigation placeholder -->
+<nav id="main-nav"></nav>
+
+<div class="page-container">
+  <div class="page-header">
+    <a href="games.html" class="back-link">← Games</a>
+    <h1>⚾ Aces Grid</h1>
+    <p>Find players who match both criteria</p>
+    <div class="puzzle-date" id="puzzleDate">Puzzle #1</div>
+  </div>
+
+  <div class="game-stats-bar">
+    <div class="stat-item">
+      <div class="stat-value" id="scoreDisplay">0/9</div>
+      <div class="stat-label">Score</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="guessesDisplay">9</div>
+      <div class="stat-label">Guesses Left</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="rarityDisplay">0</div>
+      <div class="stat-label">Rarity Score</div>
+    </div>
+  </div>
+
+  <!-- User Stats Section -->
+  <div class="user-stats-container" id="userStatsContainer">
+    <div class="user-stats-content">
+      <div class="sign-in-prompt">
+        <span>🔒</span>
+        <a href="signin.html">Sign in</a> to track your stats across devices
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-container">
+    <div class="game-grid" id="gameGrid">
+      <!-- Grid will be generated by JavaScript -->
+    </div>
+  </div>
+
+  <div class="how-to-play" id="howToPlay">
+    <h3 onclick="toggleHowToPlay()">📖 How to Play <span id="howToPlayToggle">▼</span></h3>
+    <div class="how-to-play-content">
+      <ul>
+        <li><strong>Select a cell</strong> and guess a player who matches BOTH the row and column criteria.</li>
+        <li><strong>Team criteria:</strong> The player must have played at least one game for that team.</li>
+        <li><strong>Stat criteria:</strong> The player must have achieved that stat in any single season. This includes "over" thresholds (e.g., 15+ Hits) and "under" thresholds (e.g., Under 10 Hits) — minimum game requirements apply.</li>
+        <li>You have <strong>9 guesses</strong> to complete the grid.</li>
+        <li><strong>Rarity score:</strong> The fewer people who could fill a cell, the more points you earn!</li>
+        <li>A new puzzle is available each day at midnight.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="action-buttons">
+    <button class="action-btn" onclick="giveUp()" id="giveUpBtn">🏳️ Give Up</button>
+    <button class="action-btn primary" onclick="viewResults()" id="resultsBtn" style="display:none;">🏆 View Results</button>
+    <button class="action-btn" onclick="shareResults()" id="shareBtn" style="display:none;">📤 Share</button>
+    <button class="action-btn" onclick="showAnswers()" id="answersBtn" style="display:none;">👀 Answers</button>
+  </div>
+</div>
+
+<!-- Search Modal -->
+<div class="modal-overlay" id="searchModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>🔍 Select a Player</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="search-criteria">
+        <div class="criteria-label">Must match both:</div>
+        <div class="criteria-values" id="modalCriteria"></div>
+      </div>
+      <div class="search-input-container">
+        <input type="text" class="search-input" id="playerSearch" placeholder="Type a player name..." autocomplete="off">
+      </div>
+      <div class="search-results" id="searchResults"></div>
+      <div class="guesses-remaining">
+        <span id="modalGuesses">9</span> guesses remaining
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Game Over Modal -->
+<div class="modal-overlay" id="gameOverModal">
+  <div class="modal-content">
+    <div class="game-over-content">
+      <h2 id="gameOverTitle">🎉 Game Complete!</h2>
+      <div class="final-score" id="finalScore">5/9</div>
+      <div class="score-breakdown">
+        <div class="breakdown-item">
+          <div class="breakdown-value correct-count" id="correctCount">5</div>
+          <div class="breakdown-label">Correct</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-value" id="rarityTotal">42</div>
+          <div class="breakdown-label">Rarity</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-value" id="guessesUsed">7</div>
+          <div class="breakdown-label">Guesses</div>
+        </div>
+      </div>
+      <div class="share-section">
+        <button class="share-btn" onclick="shareResults()">📤 Share Results</button>
+        <div class="share-preview" id="sharePreview"></div>
+      </div>
+      <div class="action-buttons" style="margin-top:1rem;">
+        <button class="action-btn" onclick="closeGameOverModal()">Close</button>
+        <button class="action-btn" onclick="showAnswers()">👀 Show All Answers</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Answers Modal -->
+<div class="modal-overlay" id="answersModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>📊 All Valid Answers</h3>
+      <button class="modal-close" onclick="closeAnswersModal()">×</button>
+    </div>
+    <div class="modal-body" id="answersModalBody" style="max-height: 60vh; overflow-y: auto;">
+      <!-- Answers will be inserted here -->
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { 
+  db, 
+  collection, 
+  getDocs,
+  doc,
+  getDoc
+} from './firebase-config.js';
+
+import {
+  setDoc,
+  updateDoc,
+  serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+import { 
+  getAllPlayerStatsOptimized,
+  seasonsObjectToArray
+} from './firebase-data.js';
+
+import {
+  getCurrentUser,
+  onAuthChange,
+  getUserProfile
+} from './firebase-auth.js';
+
+// ============================================
+// ONE-TIME CACHE RESET (for beta testers)
+// ============================================
+// Increment DATA_VERSION to clear old localStorage data
+const DATA_VERSION = 2;
+const VERSION_KEY = 'acesGrid_dataVersion';
+
+(function checkDataVersion() {
+  const storedVersion = localStorage.getItem(VERSION_KEY);
+  if (!storedVersion || parseInt(storedVersion) < DATA_VERSION) {
+    console.log('🔄 Clearing old Aces Grid data (version update)');
+    localStorage.removeItem('acesGrid');
+    localStorage.removeItem('acesGridStats');
+    localStorage.setItem(VERSION_KEY, String(DATA_VERSION));
+  }
+})();
+
+// ============================================
+// CONFIGURATION
+// ============================================
+// Set this to the date you want Puzzle #1 to be
+// Format: 'YYYY-MM-DD' (e.g., '2026-01-12' for January 12, 2026)
+// TODO: Change back to '2026-01-12' before launch!
+const LAUNCH_DATE = '2026-01-06';
+
+// ============================================
+// AUTH STATE
+// ============================================
+let currentUser = null;
+let userStats = null; // Lifetime stats from Firebase
+
+// ============================================
+// GAME STATE
+// ============================================
+let allPlayers = [];
+let playerIndex = {}; // Fast lookup by criteria
+let todaysPuzzle = null;
+let gameState = {
+  guessesRemaining: 9,
+  score: 0,
+  rarityScore: 0,
+  cellStates: Array(9).fill(null), // null, { correct: true/false, player: name, rarity: number }
+  selectedCell: null,
+  gameOver: false,
+  usedPlayers: new Set()
+};
+
+// ============================================
+// CATEGORY DEFINITIONS
+// ============================================
+const TEAM_CATEGORIES = [
+  { id: 'team_black', label: 'Black', type: 'team', team: 'Black' },
+  { id: 'team_blue', label: 'Blue', type: 'team', team: 'Blue' },
+  { id: 'team_green', label: 'Green', type: 'team', team: 'Green' },
+  { id: 'team_red', label: 'Red', type: 'team', team: 'Red' },
+  { id: 'team_orange', label: 'Orange', type: 'team', team: 'Orange' },
+  { id: 'team_purple', label: 'Purple', type: 'team', team: 'Purple' },
+  { id: 'team_gold', label: 'Gold', type: 'team', team: 'Gold' },
+  { id: 'team_silver', label: 'Silver', type: 'team', team: 'Silver' },
+  { id: 'team_white', label: 'White', type: 'team', team: 'White' },
+  { id: 'team_carolina', label: 'Carolina', type: 'team', team: 'Carolina' },
+  { id: 'team_army', label: 'Army', type: 'team', team: 'Army' },
+];
+
+const STAT_CATEGORIES = [
+  // Season stat thresholds - OVER
+  { id: 'hits_15', label: '15+ Hits (Season)', type: 'stat', subtype: 'over', check: (s) => s.hits >= 15 },
+  { id: 'hits_20', label: '20+ Hits (Season)', type: 'stat', subtype: 'over', check: (s) => s.hits >= 20 },
+  { id: 'runs_10', label: '10+ Runs (Season)', type: 'stat', subtype: 'over', check: (s) => s.runs >= 10 },
+  { id: 'runs_15', label: '15+ Runs (Season)', type: 'stat', subtype: 'over', check: (s) => s.runs >= 15 },
+  { id: 'walks_8', label: '8+ Walks (Season)', type: 'stat', subtype: 'over', check: (s) => s.walks >= 8 },
+  { id: 'walks_12', label: '12+ Walks (Season)', type: 'stat', subtype: 'over', check: (s) => s.walks >= 12 },
+  { id: 'games_12', label: '12+ Games (Season)', type: 'stat', subtype: 'over', check: (s) => s.games >= 12 },
+  { id: 'games_18', label: '18+ Games (Season)', type: 'stat', subtype: 'over', check: (s) => s.games >= 18 },
+  { id: 'ba_400', label: '.400+ BA (Season)', type: 'stat', subtype: 'over', check: (s) => s.atBats >= 20 && (s.hits / s.atBats) >= 0.400 },
+  { id: 'ba_450', label: '.450+ BA (Season)', type: 'stat', subtype: 'over', check: (s) => s.atBats >= 20 && (s.hits / s.atBats) >= 0.450 },
+  
+  // Season stat thresholds - UNDER (broadens the player pool!)
+  { id: 'hits_under_10', label: 'Under 10 Hits (Season)', type: 'stat', subtype: 'under', check: (s) => s.games >= 5 && s.hits < 10 },
+  { id: 'hits_under_15', label: 'Under 15 Hits (Season)', type: 'stat', subtype: 'under', check: (s) => s.games >= 8 && s.hits < 15 },
+  { id: 'runs_under_5', label: 'Under 5 Runs (Season)', type: 'stat', subtype: 'under', check: (s) => s.games >= 5 && s.runs < 5 },
+  { id: 'runs_under_8', label: 'Under 8 Runs (Season)', type: 'stat', subtype: 'under', check: (s) => s.games >= 8 && s.runs < 8 },
+  { id: 'walks_under_5', label: 'Under 5 Walks (Season)', type: 'stat', subtype: 'under', check: (s) => s.games >= 5 && s.walks < 5 },
+  { id: 'ba_under_300', label: 'Under .300 BA (Season)', type: 'stat', subtype: 'under', check: (s) => s.atBats >= 20 && (s.hits / s.atBats) < 0.300 },
+  { id: 'ba_under_400', label: 'Under .400 BA (Season)', type: 'stat', subtype: 'under', check: (s) => s.atBats >= 20 && (s.hits / s.atBats) < 0.400 },
+  { id: 'games_under_8', label: 'Under 8 Games (Season)', type: 'stat', subtype: 'under', check: (s) => s.games >= 1 && s.games < 8 },
+  
+  // Career milestones
+  { id: 'seasons_5', label: '5+ Seasons Played', type: 'career', check: (p, nonSubSeasons) => nonSubSeasons.length >= 5 },
+  { id: 'seasons_7', label: '7+ Seasons Played', type: 'career', check: (p, nonSubSeasons) => nonSubSeasons.length >= 7 },
+  { id: 'career_hits_100', label: '100+ Career Hits', type: 'career', check: (p) => (p.career?.hits || 0) >= 100 },
+  { id: 'career_hits_150', label: '150+ Career Hits', type: 'career', check: (p) => (p.career?.hits || 0) >= 150 },
+  { id: 'career_runs_50', label: '50+ Career Runs', type: 'career', check: (p) => (p.career?.runs || 0) >= 50 },
+  { id: 'career_runs_100', label: '100+ Career Runs', type: 'career', check: (p) => (p.career?.runs || 0) >= 100 },
+  { id: 'career_games_50', label: '50+ Career Games', type: 'career', check: (p) => (p.career?.games || 0) >= 50 },
+  
+  // Career milestones - UNDER
+  { id: 'career_hits_under_50', label: 'Under 50 Career Hits', type: 'career', check: (p) => (p.career?.hits || 0) < 50 && (p.career?.games || 0) >= 5 },
+  { id: 'career_games_under_20', label: 'Under 20 Career Games', type: 'career', check: (p) => (p.career?.games || 0) >= 1 && (p.career?.games || 0) < 20 },
+  
+  // Team history
+  { id: 'multi_team', label: 'Played for 3+ Teams', type: 'career', check: (p, nonSubSeasons) => {
+    const teams = new Set();
+    nonSubSeasons.forEach(s => { if (s.team) teams.add(s.team.toLowerCase()); });
+    return teams.size >= 3;
+  }},
+  { id: 'one_team', label: 'Loyal (1 Team, 2+ Seasons)', type: 'career', check: (p, nonSubSeasons) => {
+    const teams = new Set();
+    nonSubSeasons.forEach(s => { if (s.team) teams.add(s.team.toLowerCase()); });
+    return teams.size === 1 && nonSubSeasons.length >= 2;
+  }},
+  
+  // Season-specific
+  { id: 'played_2025', label: 'Played in 2025', type: 'career', check: (p) => Object.keys(p.seasons || {}).some(k => k.includes('2025')) },
+  { id: 'played_2024', label: 'Played in 2024', type: 'career', check: (p) => Object.keys(p.seasons || {}).some(k => k.includes('2024')) },
+  
+  // Fun categories
+  { id: 'rookie', label: 'Rookie (1st Season)', type: 'career', check: (p, nonSubSeasons) => nonSubSeasons.length === 1 },
+  { id: 'veteran_10', label: 'Veteran (10+ Seasons)', type: 'career', check: (p, nonSubSeasons) => nonSubSeasons.length >= 10 },
+  { id: 'two_seasons', label: '2-3 Seasons Only', type: 'career', check: (p, nonSubSeasons) => nonSubSeasons.length >= 2 && nonSubSeasons.length <= 3 },
+];
+
+// ============================================
+// SEEDED RANDOM FOR DAILY PUZZLES
+// ============================================
+function seededRandom(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function getDayNumber() {
+  // Parse date parts to avoid timezone issues (YYYY-MM-DD)
+  const [launchYear, launchMonth, launchDay] = LAUNCH_DATE.split('-').map(Number);
+  const start = new Date(launchYear, launchMonth - 1, launchDay).setHours(0, 0, 0, 0);
+  const now = new Date().setHours(0, 0, 0, 0);
+  const daysSinceLaunch = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  // Puzzle #1 starts on launch date (day 0 = puzzle 1)
+  return Math.max(1, daysSinceLaunch + 1);
+}
+
+function shuffleWithSeed(array, seed) {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    seed++;
+    const j = Math.floor(seededRandom(seed) * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+// ============================================
+// PUZZLE GENERATION (Improved Rotation)
+// ============================================
+function generateDailyPuzzle() {
+  const dayNum = getDayNumber();
+  const seed = dayNum * 12345;
+  const teamCount = TEAM_CATEGORIES.length; // 11 teams
+  
+  // ---- TEAM COLUMN SELECTION (spaced rotation) ----
+  // Stagger through the team list so consecutive days don't overlap much.
+  // Each day picks 3 teams that are well-spaced in the list, then the
+  // starting offset rotates by a prime stride to avoid short cycles.
+  const STRIDE = 4; // prime-ish relative to 11, ensures spread
+  const startIdx = (dayNum * STRIDE) % teamCount;
+  
+  // Space picks ~3-4 apart within the ring of 11 teams
+  const teamSpacing = Math.floor(teamCount / 3); // 3
+  const baseColumns = [
+    TEAM_CATEGORIES[startIdx % teamCount],
+    TEAM_CATEGORIES[(startIdx + teamSpacing) % teamCount],
+    TEAM_CATEGORIES[(startIdx + teamSpacing * 2) % teamCount]
+  ];
+  
+  // ---- ROW SELECTION (balanced category mix) ----
+  // Separate stat categories into pools for variety
+  const overStats = STAT_CATEGORIES.filter(c => c.subtype === 'over');
+  const underStats = STAT_CATEGORIES.filter(c => c.subtype === 'under');
+  const careerStats = STAT_CATEGORIES.filter(c => c.type === 'career');
+  
+  // Each day's rows aim for a mix: at least 1 different subtype when possible
+  // Use day number to rotate through each pool independently
+  const shuffledOver = shuffleWithSeed(overStats, seed + 500);
+  const shuffledUnder = shuffleWithSeed(underStats, seed + 600);
+  const shuffledCareer = shuffleWithSeed(careerStats, seed + 700);
+  
+  // Build a diverse row candidate list based on day rotation
+  // Pattern cycles: [over, under, career], [under, career, over], [career, over, under], etc.
+  const rowPatterns = [
+    [shuffledOver, shuffledUnder, shuffledCareer],
+    [shuffledUnder, shuffledCareer, shuffledOver],
+    [shuffledCareer, shuffledOver, shuffledUnder],
+    [shuffledOver, shuffledCareer, shuffledUnder],
+    [shuffledUnder, shuffledOver, shuffledCareer],
+    [shuffledCareer, shuffledUnder, shuffledOver],
+  ];
+  const patternIdx = dayNum % rowPatterns.length;
+  const todayPattern = rowPatterns[patternIdx];
+  
+  // Pick one category from each pool in the pattern, cycling through each pool
+  const rowCandidates = todayPattern.map((pool, i) => {
+    const poolOffset = Math.floor(dayNum / rowPatterns.length + i) % pool.length;
+    return pool[poolOffset];
+  });
+  
+  // Also build remaining teams (not used in columns) for possible row usage
+  const usedTeamIds = new Set(baseColumns.map(c => c.id));
+  const remainingTeams = TEAM_CATEGORIES.filter(t => !usedTeamIds.has(t.id));
+  const shuffledRemainingTeams = shuffleWithSeed(remainingTeams, seed + 800);
+  
+  // ---- VALIDATION LOOP ----
+  // Try the primary picks first, then fall back with modifications
+  for (let attempt = 0; attempt < 15; attempt++) {
+    let columns, rows;
+    
+    if (attempt < 3) {
+      // Primary: use the spaced team columns + diverse row pattern
+      columns = [...baseColumns];
+      rows = [...rowCandidates];
+      
+      // On retries, swap one row category for a different pick from same pool
+      if (attempt > 0) {
+        const swapSlot = attempt - 1;
+        const pool = todayPattern[swapSlot];
+        const altOffset = (Math.floor(dayNum / rowPatterns.length) + attempt + swapSlot) % pool.length;
+        rows[swapSlot] = pool[altOffset];
+      }
+    } else if (attempt < 8) {
+      // Secondary: shift team start by 1 and re-pick rows with different offsets
+      const shiftedStart = (startIdx + attempt - 2) % teamCount;
+      columns = [
+        TEAM_CATEGORIES[shiftedStart % teamCount],
+        TEAM_CATEGORIES[(shiftedStart + teamSpacing) % teamCount],
+        TEAM_CATEGORIES[(shiftedStart + teamSpacing * 2) % teamCount]
+      ];
+      
+      // Shuffle all stat categories together and pick 3
+      const allStats = shuffleWithSeed(STAT_CATEGORIES, seed + attempt * 100);
+      rows = allStats.slice(0, 3);
+    } else {
+      // Tertiary: allow a remaining team as a row + 2 stat categories
+      const shiftedStart = (startIdx + attempt) % teamCount;
+      columns = [
+        TEAM_CATEGORIES[shiftedStart % teamCount],
+        TEAM_CATEGORIES[(shiftedStart + teamSpacing) % teamCount],
+        TEAM_CATEGORIES[(shiftedStart + teamSpacing * 2) % teamCount]
+      ];
+      
+      const colIds = new Set(columns.map(c => c.id));
+      const availTeams = TEAM_CATEGORIES.filter(t => !colIds.has(t.id));
+      const shuffledAvail = shuffleWithSeed(availTeams, seed + attempt * 200);
+      const allStats = shuffleWithSeed(STAT_CATEGORIES, seed + attempt * 300);
+      
+      rows = [
+        allStats[0],
+        allStats[1],
+        shuffledAvail[0] // team as a row
+      ];
+    }
+    
+    // Ensure no duplicate categories in rows
+    const rowIds = new Set(rows.map(r => r.id));
+    if (rowIds.size < 3) continue;
+    
+    // Ensure no row team overlaps with column teams
+    const colTeamIds = new Set(columns.filter(c => c.type === 'team').map(c => c.id));
+    const hasOverlap = rows.some(r => r.type === 'team' && colTeamIds.has(r.id));
+    if (hasOverlap) continue;
+    
+    // Validate every cell has at least 1 valid answer
+    const puzzle = { columns, rows, dayNum };
+    let valid = true;
+    
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        const validPlayers = findValidPlayers(columns[col], rows[row]);
+        if (validPlayers.length === 0) {
+          valid = false;
+          console.log(`Invalid cell [${col},${row}]: ${columns[col].label} + ${rows[row].label} (attempt ${attempt + 1})`);
+          break;
+        }
+      }
+      if (!valid) break;
+    }
+    
+    if (valid) {
+      console.log(`✅ Valid puzzle found on attempt ${attempt + 1}`);
+      console.log('Columns:', columns.map(c => c.label).join(', '));
+      console.log('Rows:', rows.map(r => r.label).join(', '));
+      return puzzle;
+    }
+  }
+  
+  // Final fallback: guaranteed safe combination
+  console.warn('⚠️ Using fallback puzzle after 15 attempts');
+  const fallbackTeamOffset = dayNum % teamCount;
+  const fallbackStatOffset = dayNum % 5;
+  
+  return {
+    columns: [
+      TEAM_CATEGORIES[fallbackTeamOffset % teamCount],
+      TEAM_CATEGORIES[(fallbackTeamOffset + teamSpacing) % teamCount],
+      TEAM_CATEGORIES[(fallbackTeamOffset + teamSpacing * 2) % teamCount]
+    ],
+    rows: [
+      STAT_CATEGORIES[fallbackStatOffset % STAT_CATEGORIES.length],
+      STAT_CATEGORIES[(fallbackStatOffset + 5) % STAT_CATEGORIES.length],
+      STAT_CATEGORIES[(fallbackStatOffset + 10) % STAT_CATEGORIES.length]
+    ],
+    dayNum
+  };
+}
+
+function findValidPlayers(colCategory, rowCategory) {
+  return allPlayers.filter(player => {
+    return matchesCategory(player, colCategory) && matchesCategory(player, rowCategory);
+  });
+}
+
+// Helper to check if a season is a substitute season
+function isSubstituteSeason(season) {
+  return season.sub === 'Yes' || season.sub === 'yes' || season.sub === true;
+}
+
+// Get only non-substitute seasons for a player
+function getNonSubSeasons(player) {
+  return Object.values(player.seasons || {}).filter(s => !isSubstituteSeason(s));
+}
+
+function matchesCategory(player, category) {
+  if (category.type === 'team') {
+    // Check if player ever played for this team (non-sub seasons only)
+    const seasons = getNonSubSeasons(player);
+    return seasons.some(s => s.team && s.team.toLowerCase() === category.team.toLowerCase());
+  } else if (category.type === 'stat') {
+    // Check if player achieved this stat in any non-sub season
+    const seasons = getNonSubSeasons(player);
+    return seasons.some(s => category.check(s));
+  } else if (category.type === 'career') {
+    // Check career stat (pass non-sub seasons for season-counting checks)
+    return category.check(player, getNonSubSeasons(player));
+  }
+  return false;
+}
+
+// ============================================
+// UI RENDERING
+// ============================================
+function renderGrid() {
+  const grid = document.getElementById('gameGrid');
+  grid.innerHTML = '';
+  
+  // Corner cell
+  const corner = document.createElement('div');
+  corner.className = 'grid-header corner';
+  grid.appendChild(corner);
+  
+  // Column headers
+  todaysPuzzle.columns.forEach(col => {
+    const header = document.createElement('div');
+    header.className = 'grid-header column-header';
+    const isWhiteCol = col.type === 'team' && col.team === 'White';
+    header.innerHTML = `
+      <div class="header-content">
+        ${col.type === 'team' ? `<img src="logos/${col.team.toLowerCase()}.png" class="team-logo" onerror="this.style.display='none'">` : ''}
+        <span class="header-text">${col.label}</span>
+        ${isWhiteCol ? `<span class="white-warning-icon" data-tooltip="⚠️ Note: 2022 Summer season data is missing for White team." onclick="this.classList.toggle('tooltip-visible')">!</span>` : ''}
+      </div>
+    `;
+    grid.appendChild(header);
+  });
+  
+  // Rows
+  todaysPuzzle.rows.forEach((row, rowIdx) => {
+    // Row header
+    const rowHeader = document.createElement('div');
+    rowHeader.className = 'grid-header row-header';
+    const isWhiteRow = row.type === 'team' && row.team === 'White';
+    rowHeader.innerHTML = `
+      <div class="header-content">
+        ${row.type === 'team' ? `<img src="logos/${row.team.toLowerCase()}.png" class="team-logo" onerror="this.style.display='none'">` : ''}
+        <span class="header-text">${row.label}</span>
+        ${isWhiteRow ? `<span class="white-warning-icon" data-tooltip="⚠️ Note: 2022 Summer season data is missing for White team." onclick="this.classList.toggle('tooltip-visible')">!</span>` : ''}
+      </div>
+    `;
+    grid.appendChild(rowHeader);
+    
+    // Cells
+    todaysPuzzle.columns.forEach((col, colIdx) => {
+      const cellIdx = rowIdx * 3 + colIdx;
+      const cell = document.createElement('div');
+      cell.className = 'grid-cell';
+      cell.dataset.cellIndex = cellIdx;
+      cell.dataset.row = rowIdx;
+      cell.dataset.col = colIdx;
+      
+      const state = gameState.cellStates[cellIdx];
+      if (state) {
+        cell.classList.add('filled');
+        cell.classList.add(state.correct ? 'correct' : 'incorrect');
+        cell.innerHTML = `
+          <div>
+            <div class="player-name">${state.player}</div>
+            ${state.correct ? `<div class="rarity-badge">${state.rarity}pts</div>` : ''}
+          </div>
+        `;
+      } else if (!gameState.gameOver) {
+        cell.onclick = () => selectCell(cellIdx);
+      }
+      
+      if (gameState.gameOver) {
+        cell.classList.add('game-over');
+      }
+      
+      grid.appendChild(cell);
+    });
+  });
+}
+
+function updateStats() {
+  const correct = gameState.cellStates.filter(s => s && s.correct).length;
+  document.getElementById('scoreDisplay').textContent = `${correct}/9`;
+  document.getElementById('guessesDisplay').textContent = gameState.guessesRemaining;
+  document.getElementById('rarityDisplay').textContent = gameState.rarityScore;
+  document.getElementById('modalGuesses').textContent = gameState.guessesRemaining;
+}
+
+function selectCell(cellIdx) {
+  if (gameState.gameOver || gameState.cellStates[cellIdx]) return;
+  
+  gameState.selectedCell = cellIdx;
+  
+  const row = Math.floor(cellIdx / 3);
+  const col = cellIdx % 3;
+  
+  const rowCat = todaysPuzzle.rows[row];
+  const colCat = todaysPuzzle.columns[col];
+  
+  const isWhiteCell = (colCat.team === 'White') || (rowCat.team === 'White');
+
+  document.getElementById('modalCriteria').innerHTML = `
+    <span class="team-badge ${colCat.team ? colCat.team.toLowerCase() : ''}">${colCat.label}</span>
+    <span style="margin: 0 0.5rem;">+</span>
+    <span class="team-badge ${rowCat.team ? rowCat.team.toLowerCase() : ''}" style="background: #667eea;">${rowCat.label}</span>
+    ${isWhiteCell ? `<div class="modal-white-warning"><span class="warning-emoji">⚠️</span><span>White team is missing 2022 Summer season data — some valid players may not appear.</span></div>` : ''}
+  `;
+  
+  document.getElementById('playerSearch').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+  document.getElementById('searchModal').classList.add('active');
+  
+  setTimeout(() => document.getElementById('playerSearch').focus(), 100);
+  
+  renderGrid();
+}
+
+window.closeModal = function() {
+  document.getElementById('searchModal').classList.remove('active');
+  gameState.selectedCell = null;
+  renderGrid();
+}
+
+window.closeGameOverModal = function() {
+  document.getElementById('gameOverModal').classList.remove('active');
+}
+
+// ============================================
+// PLAYER SEARCH
+// ============================================
+function setupSearch() {
+  const input = document.getElementById('playerSearch');
+  input.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    renderSearchResults(query);
+  });
+  
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const firstResult = document.querySelector('.search-result-item');
+      if (firstResult) {
+        firstResult.click();
+      }
+    }
+    if (e.key === 'Escape') {
+      closeModal();
+    }
+  });
+}
+
+function renderSearchResults(query) {
+  const resultsContainer = document.getElementById('searchResults');
+  
+  if (query.length < 2) {
+    resultsContainer.innerHTML = '<div style="color: var(--text-light); padding: 1rem; text-align: center;">Type at least 2 characters...</div>';
+    return;
+  }
+  
+  const matches = allPlayers.filter(p => {
+    const name = (p.name || p.displayName || '').toLowerCase();
+    return name.includes(query) && !gameState.usedPlayers.has(name);
+  }).slice(0, 10);
+  
+  if (matches.length === 0) {
+    resultsContainer.innerHTML = '<div style="color: var(--text-light); padding: 1rem; text-align: center;">No players found</div>';
+    return;
+  }
+  
+  resultsContainer.innerHTML = matches.map(player => {
+    const name = player.name || player.displayName;
+    
+    return `
+      <div class="search-result-item" onclick="window.submitGuess('${name.replace(/'/g, "\\'")}')">
+        <div>
+          <div class="result-name">${name}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============================================
+// GAME LOGIC
+// ============================================
+window.submitGuess = function(playerName) {
+  if (gameState.selectedCell === null || gameState.gameOver) return;
+  
+  const cellIdx = gameState.selectedCell;
+  const row = Math.floor(cellIdx / 3);
+  const col = cellIdx % 3;
+  
+  const rowCat = todaysPuzzle.rows[row];
+  const colCat = todaysPuzzle.columns[col];
+  
+  // Find player
+  const player = allPlayers.find(p => 
+    (p.name || p.displayName || '').toLowerCase() === playerName.toLowerCase()
+  );
+  
+  if (!player) {
+    alert('Player not found');
+    return;
+  }
+  
+  // Check if correct
+  const matchesRow = matchesCategory(player, rowCat);
+  const matchesCol = matchesCategory(player, colCat);
+  const isCorrect = matchesRow && matchesCol;
+  
+  // Calculate rarity
+  let rarity = 0;
+  if (isCorrect) {
+    const validCount = findValidPlayers(colCat, rowCat).length;
+    rarity = Math.max(1, Math.round(100 / validCount));
+    gameState.rarityScore += rarity;
+    gameState.score++;
+  }
+  
+  // Update state
+  gameState.cellStates[cellIdx] = {
+    correct: isCorrect,
+    player: player.name || player.displayName,
+    rarity: rarity
+  };
+  
+  gameState.usedPlayers.add(playerName.toLowerCase());
+  gameState.guessesRemaining--;
+  
+  closeModal();
+  renderGrid();
+  updateStats();
+  saveGameState();
+  
+  // Check game over
+  checkGameOver();
+};
+
+function checkGameOver() {
+  const allFilled = gameState.cellStates.every(s => s !== null);
+  const noGuesses = gameState.guessesRemaining <= 0;
+  
+  if (allFilled || noGuesses) {
+    gameState.gameOver = true;
+    saveGameState(); // Save gameOver = true to Firebase
+    showGameOver();
+  }
+}
+
+function showGameOver() {
+  const correct = gameState.cellStates.filter(s => s && s.correct).length;
+  const guessesUsed = 9 - gameState.guessesRemaining;
+  
+  document.getElementById('finalScore').textContent = `${correct}/9`;
+  document.getElementById('correctCount').textContent = correct;
+  document.getElementById('rarityTotal').textContent = gameState.rarityScore;
+  document.getElementById('guessesUsed').textContent = guessesUsed;
+  
+  if (correct === 9) {
+    document.getElementById('gameOverTitle').textContent = '🎉 Perfect Score!';
+  } else if (correct >= 7) {
+    document.getElementById('gameOverTitle').textContent = '⭐ Great Job!';
+  } else if (correct >= 5) {
+    document.getElementById('gameOverTitle').textContent = '👍 Nice Try!';
+  } else {
+    document.getElementById('gameOverTitle').textContent = '💪 Keep Practicing!';
+  }
+  
+  updateSharePreview();
+  
+  document.getElementById('gameOverModal').classList.add('active');
+  document.getElementById('giveUpBtn').style.display = 'none';
+  document.getElementById('resultsBtn').style.display = 'inline-block';
+  document.getElementById('shareBtn').style.display = 'inline-block';
+  document.getElementById('answersBtn').style.display = 'inline-block';
+  
+  renderGrid();
+}
+
+// ============================================
+// VIEW RESULTS
+// ============================================
+window.viewResults = function() {
+  // Re-populate the game over modal with current stats
+  const correct = gameState.cellStates.filter(s => s && s.correct).length;
+  const guessesUsed = 9 - gameState.guessesRemaining;
+  
+  document.getElementById('finalScore').textContent = `${correct}/9`;
+  document.getElementById('correctCount').textContent = correct;
+  document.getElementById('rarityTotal').textContent = gameState.rarityScore;
+  document.getElementById('guessesUsed').textContent = guessesUsed;
+  
+  if (correct === 9) {
+    document.getElementById('gameOverTitle').textContent = '🎉 Perfect Score!';
+  } else if (correct >= 7) {
+    document.getElementById('gameOverTitle').textContent = '⭐ Great Job!';
+  } else if (correct >= 5) {
+    document.getElementById('gameOverTitle').textContent = '👍 Nice Try!';
+  } else {
+    document.getElementById('gameOverTitle').textContent = '💪 Keep Practicing!';
+  }
+  
+  updateSharePreview();
+  document.getElementById('gameOverModal').classList.add('active');
+};
+
+// ============================================
+// GIVE UP
+// ============================================
+window.giveUp = function() {
+  if (gameState.gameOver) return;
+  
+  if (!confirm('Are you sure you want to give up? This will end the game and show all answers.')) {
+    return;
+  }
+  
+  gameState.gameOver = true;
+  saveGameState();
+  showGameOver();
+};
+
+// ============================================
+// SHARING
+// ============================================
+function updateSharePreview() {
+  const correct = gameState.cellStates.filter(s => s && s.correct).length;
+  const grid = gameState.cellStates.map(s => {
+    if (!s) return '⬜';
+    return s.correct ? '🟩' : '🟥';
+  });
+  
+  const gridStr = `${grid[0]}${grid[1]}${grid[2]}\n${grid[3]}${grid[4]}${grid[5]}\n${grid[6]}${grid[7]}${grid[8]}`;
+  
+  const shareText = `⚾ Aces Grid #${todaysPuzzle.dayNum}\n${correct}/9 • Rarity: ${gameState.rarityScore}\n\n${gridStr}\n\nacessoftballreference.com/immaculate-grid.html`;
+  
+  document.getElementById('sharePreview').textContent = shareText;
+}
+
+window.shareResults = function() {
+  const shareText = document.getElementById('sharePreview').textContent;
+  
+  if (navigator.share) {
+    navigator.share({
+      text: shareText
+    }).catch(() => {
+      copyToClipboard(shareText);
+    });
+  } else {
+    copyToClipboard(shareText);
+  }
+};
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Results copied to clipboard!');
+  }).catch(() => {
+    // Fallback
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    alert('Results copied to clipboard!');
+  });
+}
+
+// ============================================
+// SHOW ANSWERS
+// ============================================
+window.showAnswers = function() {
+  closeGameOverModal();
+  
+  let answerHtml = '<div style="padding: 0.5rem;">';
+  
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      const rowCat = todaysPuzzle.rows[row];
+      const colCat = todaysPuzzle.columns[col];
+      const validPlayers = findValidPlayers(colCat, rowCat);
+      
+      // Check if user got this cell correct
+      const cellIdx = row * 3 + col;
+      const cellState = gameState.cellStates[cellIdx];
+      const gotIt = cellState && cellState.correct;
+      
+      answerHtml += `
+        <div style="margin-bottom: 0.75rem; padding: 0.75rem; background: ${gotIt ? '#e8f5e8' : '#f7fafc'}; border-radius: 8px; border-left: 4px solid ${gotIt ? 'var(--correct-color)' : 'var(--border-color)'};">
+          <strong>${colCat.label} + ${rowCat.label}</strong>
+          ${gotIt ? '<span style="color: var(--correct-color); margin-left: 0.5rem;">✓</span>' : ''}
+          <br>
+          <span style="font-size: 0.85rem; color: var(--text-light);">
+            ${validPlayers.slice(0, 8).map(p => p.name).join(', ')}
+            ${validPlayers.length > 8 ? `<br><em>+${validPlayers.length - 8} more</em>` : ''}
+          </span>
+          <div style="font-size: 0.75rem; color: var(--text-light); margin-top: 0.25rem;">
+            ${validPlayers.length} valid answer${validPlayers.length !== 1 ? 's' : ''}
+          </div>
+        </div>
+      `;
+    }
+  }
+  
+  answerHtml += '</div>';
+  
+  // Show in dedicated answers modal
+  document.getElementById('answersModalBody').innerHTML = answerHtml;
+  document.getElementById('answersModal').classList.add('active');
+};
+
+window.closeAnswersModal = function() {
+  document.getElementById('answersModal').classList.remove('active');
+};
+
+// ============================================
+// PERSISTENCE - LOCAL STORAGE (fallback for non-auth users)
+// ============================================
+function saveGameStateLocal() {
+  const saveData = {
+    dayNum: todaysPuzzle.dayNum,
+    guessesRemaining: gameState.guessesRemaining,
+    score: gameState.score,
+    rarityScore: gameState.rarityScore,
+    cellStates: gameState.cellStates,
+    gameOver: gameState.gameOver,
+    usedPlayers: Array.from(gameState.usedPlayers)
+  };
+  localStorage.setItem('acesGrid', JSON.stringify(saveData));
+  console.log('💾 Game state saved to localStorage');
+}
+
+function loadGameStateLocal() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('acesGrid'));
+    
+    if (saved && saved.dayNum === todaysPuzzle.dayNum) {
+      applyLoadedGameState(saved);
+      console.log('✅ Game state restored from localStorage');
+      return true;
+    }
+  } catch (e) {
+    console.log('No local saved state:', e);
+  }
+  return false;
+}
+
+// ============================================
+// PERSISTENCE - FIREBASE (for authenticated users)
+// ============================================
+async function saveGameStateFirebase() {
+  if (!currentUser) return;
+  
+  try {
+    const puzzleDocId = `puzzle_${todaysPuzzle.dayNum}`;
+    const puzzleRef = doc(db, 'acesGridGames', currentUser.uid, 'puzzles', puzzleDocId);
+    
+    await setDoc(puzzleRef, {
+      puzzleNum: todaysPuzzle.dayNum,
+      guessesRemaining: gameState.guessesRemaining,
+      score: gameState.score,
+      rarityScore: gameState.rarityScore,
+      cellStates: gameState.cellStates,
+      gameOver: gameState.gameOver,
+      usedPlayers: Array.from(gameState.usedPlayers),
+      lastUpdated: serverTimestamp()
+    }, { merge: true });
+    
+    console.log('☁️ Game state saved to Firebase');
+    
+    // If game is over, update lifetime stats
+    if (gameState.gameOver) {
+      await updateLifetimeStats();
+    }
+  } catch (error) {
+    console.error('❌ Error saving to Firebase:', error);
+  }
+}
+
+async function loadGameStateFirebase() {
+  if (!currentUser) return false;
+  
+  try {
+    const puzzleDocId = `puzzle_${todaysPuzzle.dayNum}`;
+    const puzzleRef = doc(db, 'acesGridGames', currentUser.uid, 'puzzles', puzzleDocId);
+    const puzzleDoc = await getDoc(puzzleRef);
+    
+    if (puzzleDoc.exists()) {
+      const saved = puzzleDoc.data();
+      applyLoadedGameState(saved);
+      console.log('☁️ Game state restored from Firebase');
+      return true;
+    }
+  } catch (error) {
+    console.error('❌ Error loading from Firebase:', error);
+  }
+  return false;
+}
+
+async function updateLifetimeStats() {
+  if (!currentUser) return;
+  
+  try {
+    const statsRef = doc(db, 'acesGridGames', currentUser.uid);
+    const statsDoc = await getDoc(statsRef);
+    
+    const correct = gameState.cellStates.filter(s => s && s.correct).length;
+    const isPerfect = correct === 9;
+    const guessesUsed = 9 - gameState.guessesRemaining;
+    
+    let stats = statsDoc.exists() ? statsDoc.data() : {
+      gamesPlayed: 0,
+      perfectGames: 0,
+      totalCorrect: 0,
+      totalRarity: 0,
+      highestRarity: 0,
+      highestScore: 0,
+      totalGuessesUsed: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+      lastPlayedPuzzle: 0
+    };
+    
+    // Check if we already recorded this puzzle
+    if (stats.lastPlayedPuzzle === todaysPuzzle.dayNum) {
+      console.log('ℹ️ Stats already recorded for this puzzle');
+      return;
+    }
+    
+    // Calculate streak
+    const isConsecutive = stats.lastPlayedPuzzle === todaysPuzzle.dayNum - 1;
+    const newStreak = isConsecutive ? stats.currentStreak + 1 : 1;
+    
+    // Update stats
+    const updatedStats = {
+      gamesPlayed: stats.gamesPlayed + 1,
+      perfectGames: stats.perfectGames + (isPerfect ? 1 : 0),
+      totalCorrect: stats.totalCorrect + correct,
+      totalRarity: stats.totalRarity + gameState.rarityScore,
+      highestRarity: Math.max(stats.highestRarity, gameState.rarityScore),
+      highestScore: Math.max(stats.highestScore, correct),
+      totalGuessesUsed: stats.totalGuessesUsed + guessesUsed,
+      currentStreak: newStreak,
+      longestStreak: Math.max(stats.longestStreak, newStreak),
+      lastPlayedPuzzle: todaysPuzzle.dayNum,
+      lastPlayedAt: serverTimestamp(),
+      displayName: currentUser.displayName || 'Anonymous'
+    };
+    
+    await setDoc(statsRef, updatedStats, { merge: true });
+    userStats = updatedStats;
+    updateUserStatsDisplay();
+    
+    console.log('📊 Lifetime stats updated:', updatedStats);
+  } catch (error) {
+    console.error('❌ Error updating lifetime stats:', error);
+  }
+}
+
+async function loadLifetimeStats() {
+  if (!currentUser) return null;
+  
+  try {
+    const statsRef = doc(db, 'acesGridGames', currentUser.uid);
+    const statsDoc = await getDoc(statsRef);
+    
+    if (statsDoc.exists()) {
+      userStats = statsDoc.data();
+      console.log('📊 Lifetime stats loaded:', userStats);
+      return userStats;
+    }
+  } catch (error) {
+    console.error('❌ Error loading lifetime stats:', error);
+  }
+  return null;
+}
+
+// ============================================
+// UNIFIED SAVE/LOAD FUNCTIONS
+// ============================================
+function saveGameState() {
+  // Always save to localStorage as backup
+  saveGameStateLocal();
+  
+  // Also save to Firebase if authenticated
+  if (currentUser) {
+    saveGameStateFirebase();
+  }
+}
+
+async function loadGameState() {
+  // Try Firebase first if authenticated
+  if (currentUser) {
+    const loaded = await loadGameStateFirebase();
+    if (loaded) return true;
+  }
+  
+  // Fall back to localStorage
+  return loadGameStateLocal();
+}
+
+function applyLoadedGameState(saved) {
+  gameState = {
+    ...gameState,
+    guessesRemaining: saved.guessesRemaining,
+    score: saved.score,
+    rarityScore: saved.rarityScore,
+    cellStates: saved.cellStates,
+    gameOver: saved.gameOver,
+    usedPlayers: new Set(saved.usedPlayers || [])
+  };
+  
+  if (gameState.gameOver) {
+    document.getElementById('giveUpBtn').style.display = 'none';
+    document.getElementById('resultsBtn').style.display = 'inline-block';
+    document.getElementById('shareBtn').style.display = 'inline-block';
+    document.getElementById('answersBtn').style.display = 'inline-block';
+  }
+}
+
+// ============================================
+// USER STATS DISPLAY
+// ============================================
+function updateUserStatsDisplay() {
+  const container = document.getElementById('userStatsContainer');
+  if (!container) return;
+  
+  if (!currentUser) {
+    container.innerHTML = `
+      <div class="user-stats-content">
+        <div class="sign-in-prompt">
+          <span>🔒</span>
+          <a href="signin.html">Sign in</a> to track your stats across devices
+        </div>
+      </div>
+    `;
+    return;
+  }
+  
+  if (!userStats) {
+    container.innerHTML = `
+      <div class="user-stats-content">
+        <div class="user-greeting">👋 Welcome, ${currentUser.displayName || 'Player'}!</div>
+        <div class="stats-note">Complete a puzzle to start tracking your stats.</div>
+      </div>
+    `;
+    return;
+  }
+  
+  const avgScore = userStats.gamesPlayed > 0 
+    ? (userStats.totalCorrect / userStats.gamesPlayed).toFixed(1) 
+    : '0';
+  
+  container.innerHTML = `
+    <div class="user-stats-content">
+      <div class="user-greeting">👋 ${currentUser.displayName || 'Player'}</div>
+      <div class="lifetime-stats">
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${userStats.gamesPlayed}</span>
+          <span class="lifetime-label">Played</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${userStats.perfectGames}</span>
+          <span class="lifetime-label">Perfect</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${avgScore}</span>
+          <span class="lifetime-label">Avg Score</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${userStats.currentStreak}</span>
+          <span class="lifetime-label">Streak</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${userStats.highestRarity}</span>
+          <span class="lifetime-label">Best Rarity</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================
+// AUTH STATE HANDLING
+// ============================================
+function setupAuthListener() {
+  onAuthChange(async (user) => {
+    currentUser = user;
+    console.log(user ? `✅ User signed in: ${user.displayName}` : '👤 No user signed in');
+    
+    if (user && todaysPuzzle) {
+      // Load stats and sync game state
+      await loadLifetimeStats();
+      const firebaseHasState = await loadGameStateFirebase();
+      
+      if (firebaseHasState) {
+        // Firebase had newer state, update UI
+        renderGrid();
+        updateStats();
+      }
+    }
+    
+    updateUserStatsDisplay();
+  });
+}
+
+// ============================================
+// HOW TO PLAY TOGGLE
+// ============================================
+window.toggleHowToPlay = function() {
+  const section = document.getElementById('howToPlay');
+  const toggle = document.getElementById('howToPlayToggle');
+  section.classList.toggle('expanded');
+  toggle.textContent = section.classList.contains('expanded') ? '▲' : '▼';
+};
+
+// ============================================
+// INITIALIZATION
+// ============================================
+async function init() {
+  try {
+    // Check if we're before launch date
+    // Parse date parts to avoid timezone issues (YYYY-MM-DD)
+    const [launchYear, launchMonth, launchDay] = LAUNCH_DATE.split('-').map(Number);
+    const launchDate = new Date(launchYear, launchMonth - 1, launchDay).setHours(0, 0, 0, 0);
+    const now = new Date().setHours(0, 0, 0, 0);
+    
+    if (now < launchDate) {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      const displayDate = new Date(launchYear, launchMonth - 1, launchDay);
+      document.getElementById('puzzleDate').textContent = `Launching ${displayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`;
+      document.getElementById('gameGrid').innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+          <div style="font-size: 4rem; margin-bottom: 1rem;">🎯</div>
+          <h2 style="margin: 0 0 0.5rem 0;">Coming Soon!</h2>
+          <p style="color: var(--text-light); margin: 0;">The first Aces Grid puzzle will be available on launch day.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Check for existing auth user
+    currentUser = getCurrentUser();
+    if (currentUser) {
+      console.log(`✅ User already signed in: ${currentUser.displayName}`);
+    }
+    
+    console.log('Loading player data...');
+    const rawPlayers = await getAllPlayerStatsOptimized();
+    
+    // Filter out migrated profiles to prevent duplicates
+    allPlayers = rawPlayers.filter(p => p.migrated !== true);
+    console.log(`Loaded ${allPlayers.length} players (filtered ${rawPlayers.length - allPlayers.length} migrated profiles)`);
+    
+    // Generate today's puzzle
+    todaysPuzzle = generateDailyPuzzle();
+    console.log('Generated puzzle:', todaysPuzzle);
+    
+    // Display date
+    const today = new Date();
+    const puzzleNum = todaysPuzzle.dayNum;
+    document.getElementById('puzzleDate').textContent = 
+      `Puzzle #${puzzleNum} • ${today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}`;
+    
+    // Load lifetime stats if user is logged in
+    if (currentUser) {
+      await loadLifetimeStats();
+    }
+    
+    // Load saved state (will use Firebase if logged in, localStorage otherwise)
+    await loadGameState();
+    
+    // Update user stats display
+    updateUserStatsDisplay();
+    
+    // Set up auth state listener for future changes
+    setupAuthListener();
+    
+    // Render
+    renderGrid();
+    updateStats();
+    setupSearch();
+    
+    // Click outside modal to close
+    document.getElementById('searchModal').addEventListener('click', (e) => {
+      if (e.target.id === 'searchModal') closeModal();
+    });
+    document.getElementById('answersModal').addEventListener('click', (e) => {
+      if (e.target.id === 'answersModal') closeAnswersModal();
+    });
+    document.getElementById('gameOverModal').addEventListener('click', (e) => {
+      if (e.target.id === 'gameOverModal') closeGameOverModal();
+    });
+    
+    // Hide loading
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    
+  } catch (error) {
+    console.error('Error initializing game:', error);
+    document.getElementById('loadingOverlay').innerHTML = `
+      <div style="text-align: center; padding: 2rem;">
+        <p>Error loading game data</p>
+        <p style="color: var(--text-light); font-size: 0.9rem;">${error.message}</p>
+        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; cursor: pointer;">Retry</button>
+      </div>
+    `;
+  }
+}
+
+// Start
+init();
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="team-colors.js"></script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

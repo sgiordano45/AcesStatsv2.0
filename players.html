@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Players - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.softball-spinner {
+  position: relative;
+}
+
+.softball-spinner::before {
+  content: '⚾';
+  font-size: 80px;
+  animation: spin 1.5s ease-in-out infinite;
+  display: block;
+}
+
+@keyframes spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+
+/* Page Container */
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Page Header */
+.page-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  text-align: center;
+  padding: 4rem 2rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.page-header::after {
+  content: '⚾';
+  position: absolute;
+  bottom: -40px;
+  left: -40px;
+  font-size: 200px;
+  opacity: 0.05;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 3.5rem;
+  font-weight: 800;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.page-header p {
+  margin: 1rem 0 0 0;
+  font-size: 1.2rem;
+  opacity: 0.95;
+  position: relative;
+  z-index: 1;
+}
+
+/* Navigation */
+.filters-nav {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.nav-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.nav-link {
+  padding: 1rem 1.75rem;
+  border: 2px solid var(--primary-color);
+  background: white;
+  color: var(--primary-color);
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: var(--primary-color);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: -1;
+}
+
+.nav-link:hover::before,
+.nav-link.active::before {
+  transform: translateX(0);
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.nav-link.pitching {
+  border-color: #11998e;
+  color: #11998e;
+}
+
+.nav-link.pitching::before {
+  background: #11998e;
+}
+
+.nav-link.batting {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Summary */
+.summary {
+  background: var(--card-bg);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+.summary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+.summary p {
+  margin: 0 0 1rem 0;
+  color: var(--text-dark);
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.summary p:last-child {
+  margin-bottom: 0;
+  color: var(--text-light);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+/* Players Container */
+.players-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+/* Team Section */
+.team-section {
+  background: var(--card-bg);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.team-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.team-section::after {
+  content: '⚾';
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  font-size: 120px;
+  opacity: 0;
+  color: var(--primary-color);
+  transition: all 0.4s ease;
+  pointer-events: none;
+}
+
+.team-section:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
+}
+
+.team-section:hover::before {
+  opacity: 1;
+}
+
+.team-section:hover::after {
+  opacity: 0.05;
+  bottom: -10px;
+  right: -10px;
+}
+
+/* Team Header */
+.team-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  padding: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.team-logo {
+  height: 50px;
+  max-width: 70px;
+  margin-right: 1rem;
+  object-fit: contain;
+  filter: brightness(1.1) drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  transition: transform 0.3s ease;
+}
+
+.team-section:hover .team-logo {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.team-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+.player-count {
+  position: absolute;
+  right: 1.5rem;
+  font-size: 0.9rem;
+  background: rgba(255,255,255,0.2);
+  padding: 0.4rem 0.8rem;
+  border-radius: 16px;
+  font-weight: 700;
+  backdrop-filter: blur(4px);
+}
+
+/* Players List */
+.players-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.player-item {
+  border-bottom: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.player-item:last-child {
+  border-bottom: none;
+}
+
+.player-item:hover {
+  background: linear-gradient(90deg, rgba(45, 80, 22, 0.05) 0%, rgba(26, 107, 74, 0.05) 100%);
+}
+
+.player-link {
+  display: block;
+  padding: 1.25rem 1.5rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.player-name {
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-dark);
+  transition: color 0.2s ease;
+}
+
+.player-item:hover .player-name {
+  color: var(--primary-color);
+}
+
+.player-stats {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* Roster Section Headers */
+.roster-section-header {
+  background: #f8f9fa;
+  padding: 0.75rem 1.5rem;
+  border-top: 2px solid #e9ecef;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.roster-section-header.active {
+  background: linear-gradient(90deg, rgba(45, 80, 22, 0.1) 0%, rgba(26, 107, 74, 0.1) 100%);
+  color: var(--primary-color);
+  border-top-color: var(--primary-color);
+}
+
+.roster-section-header.inactive {
+  background: rgba(255, 193, 7, 0.1);
+  color: #856404;
+  border-top-color: #ffc107;
+}
+
+/* Inactive Players */
+.player-item.inactive .player-name {
+  color: #999;
+}
+
+.player-item.inactive .player-stats {
+  color: #aaa;
+}
+
+.player-item.inactive:hover .player-name {
+  color: #666;
+}
+
+/* Fade in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.team-section {
+  animation: fadeInUp 0.6s ease backwards;
+}
+
+.team-section:nth-child(1) { animation-delay: 0.05s; }
+.team-section:nth-child(2) { animation-delay: 0.1s; }
+.team-section:nth-child(3) { animation-delay: 0.15s; }
+.team-section:nth-child(4) { animation-delay: 0.2s; }
+.team-section:nth-child(5) { animation-delay: 0.25s; }
+.team-section:nth-child(6) { animation-delay: 0.3s; }
+.team-section:nth-child(7) { animation-delay: 0.35s; }
+.team-section:nth-child(8) { animation-delay: 0.4s; }
+.team-section:nth-child(9) { animation-delay: 0.45s; }
+.team-section:nth-child(10) { animation-delay: 0.5s; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 1rem;
+  }
+  
+  .page-header {
+    padding: 2rem 1rem;
+  }
+  
+  .page-header h1 {
+    font-size: 2.5rem;
+  }
+  
+  .nav-container {
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .nav-link {
+    padding: 0.8rem 1.25rem;
+    font-size: 0.95rem;
+    text-align: center;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .players-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .team-header {
+    padding: 1.25rem;
+  }
+  
+  .team-header h3 {
+    font-size: 1.3rem;
+  }
+  
+  .player-count {
+    right: 1.25rem;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+  }
+  
+  .summary {
+    padding: 1.5rem;
+  }
+  
+  .summary p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 2rem;
+  }
+  
+  .team-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+  
+  .player-count {
+    position: static;
+    background: rgba(255,255,255,0.3);
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+  }
+  
+  .team-logo {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+    height: 40px;
+  }
+  
+  .player-link {
+    padding: 1rem;
+  }
+  
+  .player-name {
+    font-size: 1rem;
+  }
+  
+  .player-stats {
+    font-size: 0.85rem;
+  }
+  
+  .summary {
+    padding: 1.25rem;
+  }
+  
+  .summary p {
+    font-size: 0.95rem;
+  }
+}
+</style>
+</head>
+<body>
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="softball-spinner"></div>
+</div>
+
+
+<div class="page-container">
+  <div class="page-header">
+    <h1>👤 All Players</h1>
+    <p>Browse all players organized by their most recent team assignment</p>
+  </div>
+
+  <div class="filters-nav">
+
+  </div>
+
+  <div id="summary" class="summary">
+    <p id="totalPlayersText"></p>
+    <p id="summaryDescText">Players are grouped by their most recent team assignment and split into current active roster and inactive players. Click on any player to view their detailed statistics.</p>
+  </div>
+
+  <div id="players-container" class="players-container">
+    <!-- Team sections will be generated dynamically -->
+  </div>
+</div>
+
+<script type="module">
+  // UPDATED: Import Firebase data functions with season helper
+  import { 
+    getAllPlayerStatsOptimized,
+    seasonsObjectToArray,
+    getCurrentSeason
+  } from './firebase-data.js';
+
+  let allData = [];
+  let currentSeasonMeta = null; // { year, season } populated from getCurrentSeason()
+
+  // Mobile menu toggle
+  function toggleMobileMenu() {
+    const menu = document.getElementById('mobileNavMenu');
+    menu.classList.toggle('open');
+  }
+  window.toggleMobileMenu = toggleMobileMenu;
+
+  // Hide loading overlay after page loads
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }, 800);
+  });
+
+function formatPlayerName(name) {
+  if (!name) return "";
+  
+  // If name already has spaces, capitalize each word properly
+  if (name.includes(' ')) {
+    return name.split(' ')
+      .map(word => {
+        // Handle special cases like DelleDonne, McDonald, etc.
+        if (word.toLowerCase() === 'delledonne') return 'DelleDonne';
+        if (word.toLowerCase() === 'mcdonald') return 'McDonald';
+        if (word.toLowerCase() === 'mccarthy') return 'McCarthy';
+		if (word.toLowerCase() === 'lacasse') return 'LaCasse';
+		if (word.toLowerCase() === 'mccabe') return 'McCabe';
+		if (word.toLowerCase() === "o'grady") return "O'Grady";
+		if (word.toLowerCase() === 'mcmahon') return 'McMahon';
+		if (word.toLowerCase() === 'mccorkell') return 'McCorkell';
+		if (word.toLowerCase() === 'denoble') return 'DeNoble';
+		if (word.toLowerCase() === 'digiacomo') return 'DiGiacomo';
+		if (word.toLowerCase() === 'deanna') return 'DeAnna';
+        // Add more special cases as needed
+        
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(' ');
+  }
+  
+  // If name has underscores, replace with spaces and capitalize
+  if (name.includes('_')) {
+    return name.split('_')
+      .map(word => {
+        // Handle special cases
+        if (word.toLowerCase() === 'delledonne') return 'DelleDonne';
+        if (word.toLowerCase() === 'mcdonald') return 'McDonald';
+        if (word.toLowerCase() === 'mccarthy') return 'McCarthy';
+        if (word.toLowerCase() === 'mccabe') return 'McCabe';
+		if (word.toLowerCase() === 'lacasse') return 'LaCasse';
+		        if (word.toLowerCase() === "o'grady") return "O'Grady";
+		if (word.toLowerCase() === 'mcmahon') return 'McMahon';
+				if (word.toLowerCase() === 'mccorkell') return 'McCorkell';
+		if (word.toLowerCase() === 'denoble') return 'DeNoble';
+		if (word.toLowerCase() === 'digiacomo') return 'DiGiacomo';
+		if (word.toLowerCase() === 'deanna') return 'DeAnna';
+		
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(' ');
+  }
+  
+  // Handle special cases for single words
+  if (name.toLowerCase() === 'delledonne') return 'DelleDonne';
+  if (name.toLowerCase() === 'mcdonald') return 'McDonald';
+  if (name.toLowerCase() === 'mccarthy') return 'McCarthy';
+  if (name.toLowerCase() === 'mccabe') return 'McCabe';
+  if (name.toLowerCase() === 'lacasse') return 'LaCasse';
+  if (name.toLowerCase() === "o'grady") return "O'Grady";
+  if (name.toLowerCase() === 'mcmahon') return 'McMahon';
+  		if (name.toLowerCase() === 'mccorkell') return 'McCorkell';
+		if (name.toLowerCase() === 'denoble') return 'DeNoble';
+		if (name.toLowerCase() === 'digiacomo') return 'DiGiacomo';
+		if (name.toLowerCase() === 'deanna') return 'DeAnna';
+  
+  
+  // Otherwise just capitalize the single name
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+}
+
+  function capitalize(str) {
+    return str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+  }
+
+  // UPDATED: Load data using optimized aggregated collection with object-keyed seasons
+  async function loadData() {
+    const loadStartTime = performance.now();
+    console.log('⚡ Loading players data from aggregated collection (OPTIMIZED)...');
+
+    try {
+      const seasonData = await getCurrentSeason();
+      if (seasonData) {
+        currentSeasonMeta = {
+          year: seasonData.year.toString(),
+          season: capitalize(seasonData.season)
+        };
+        console.log(`✅ Current season: ${currentSeasonMeta.year} ${currentSeasonMeta.season}`);
+      } else {
+        console.warn('⚠️ No current season found, active player detection may be inaccurate');
+      }
+
+      const players = await getAllPlayerStatsOptimized();
+      console.log(`✅ Loaded ${players?.length || 0} players from aggregated collection`);
+
+      if (!players || players.length === 0) {
+        console.warn('⚠️ No player data found');
+        document.getElementById('players-container').innerHTML =
+          '<p>No player data available.</p>';
+        return;
+      }
+
+      const flattenedData = [];
+
+      players.forEach(player => {
+        const playerName = formatPlayerName(player.name || player.displayName || player.userId);
+        
+        // Debug: log first player to see structure
+        if (flattenedData.length === 0) {
+          console.log('🔍 Sample player structure:', player);
+          console.log('🔍 Player seasons type:', typeof player.seasons);
+          console.log('🔍 Player seasons:', player.seasons);
+          console.log('🔍 Player keys:', Object.keys(player));
+        }
+        
+        // CRITICAL CHANGE: seasons is now an OBJECT with seasonId keys
+        if (player.seasons && typeof player.seasons === 'object') {
+          // Convert seasons object to array for processing
+          const seasonsArray = seasonsObjectToArray(player);
+          
+          seasonsArray.forEach(season => {
+            // Parse year and season from seasonId
+            // Format: "2024-fall" or "2025-spring"
+            let year = "";
+            let seasonName = "";
+            
+            if (season.seasonId) {
+              const parts = season.seasonId.split('-');
+              if (parts.length >= 2) {
+                year = parts[0];           // "2024"
+                seasonName = parts[1];     // "fall"
+              }
+            }
+            
+            // Fallback: try to get year and season from the season object directly
+            if (!year && season.year) year = season.year;
+            if (!seasonName && season.season) seasonName = season.season;
+            
+            flattenedData.push({
+              id: player.id || player.userId || player.playerId,
+			   name: formatPlayerName(playerName),
+              team: capitalize(season.team || player.currentTeam || ""),
+              year: year,
+              season: capitalize(seasonName),
+              games: Number(season.games) || 0,
+              atBats: Number(season.atBats) || 0,
+              hits: Number(season.hits) || 0,
+              runs: Number(season.runs) || 0,
+              walks: Number(season.walks) || 0
+            });
+          });
+        } else {
+          // Fallback: player has no seasons data
+          console.warn('⚠️ Player has no seasons object:', playerName);
+        }
+      });
+
+      console.log(`✅ Processed ${flattenedData.length} season records`);
+      allData = flattenedData;
+
+      generatePlayersByTeam();
+
+      const loadEndTime = performance.now();
+      console.log(`🎉 Page loaded in ${(loadEndTime - loadStartTime).toFixed(0)}ms`);
+
+    } catch (error) {
+      console.error('❌ Error loading player data:', error);
+      document.getElementById('players-container').innerHTML =
+        `<p>Error loading player data: ${error.message}</p>`;
+    }
+  }
+
+  function isPlayerActive(player) {
+    if (!currentSeasonMeta) return false;
+    return player.year === currentSeasonMeta.year && player.season === currentSeasonMeta.season;
+  }
+
+  function sortPlayers(players, isActive) {
+    return players.sort((a, b) => {
+      if (isActive) {
+        if (b.currentTeamGames !== a.currentTeamGames) {
+          return b.currentTeamGames - a.currentTeamGames;
+        }
+        return a.name.localeCompare(b.name);
+      } else {
+        const yearA = parseInt(a.year) || 0;
+        const yearB = parseInt(b.year) || 0;
+        
+        if (yearB !== yearA) return yearB - yearA;
+        
+        const seasonPriorityA = a.season === 'Fall' ? 2 : 1;
+        const seasonPriorityB = b.season === 'Fall' ? 2 : 1;
+        
+        if (seasonPriorityB !== seasonPriorityA) return seasonPriorityB - seasonPriorityA;
+        
+        return a.name.localeCompare(b.name);
+      }
+    });
+  }
+
+  function generatePlayersByTeam() {
+    const playerTeams = {};
+    
+    allData.forEach(p => {
+      if (!p.name || !p.team) return;
+      
+      if (p.team.toLowerCase() === "kings") return;
+      
+      if (!playerTeams[p.name]) {
+        playerTeams[p.name] = {
+		  id: p.id || p.playerId || p.userId,  // ← ADD THIS LINE
+          name: p.name,
+          team: p.team,
+          year: p.year,
+          season: p.season,
+          totalGames: 0,
+          totalAtBats: 0,
+          totalHits: 0,
+          totalRuns: 0,
+          totalWalks: 0,
+          currentTeamGames: 0
+        };
+      }
+      
+      const currentEntry = playerTeams[p.name];
+      const currentYear = parseInt(currentEntry.year) || 0;
+      const newYear = parseInt(p.year) || 0;
+      
+      const currentSeasonPriority = currentEntry.season === 'Fall' ? 2 : 1;
+      const newSeasonPriority = p.season === 'Fall' ? 2 : 1;
+      
+      if (newYear > currentYear ||
+          (newYear === currentYear && newSeasonPriority > currentSeasonPriority)) {
+        currentEntry.team = p.team;
+        currentEntry.year = p.year;
+        currentEntry.season = p.season;
+      }
+      
+      currentEntry.totalGames += p.games;
+      currentEntry.totalAtBats += p.atBats;
+      currentEntry.totalHits += p.hits;
+      currentEntry.totalRuns += p.runs;
+      currentEntry.totalWalks += p.walks;
+    });
+    
+    Object.values(playerTeams).forEach(player => {
+      const currentTeamData = allData.filter(p =>
+        p.name === player.name && p.team === player.team
+      );
+      player.currentTeamGames = currentTeamData.reduce((sum, p) => sum + p.games, 0);
+    });
+    
+    const teamGroups = {};
+    Object.values(playerTeams).forEach(player => {
+      if (!teamGroups[player.team]) {
+        teamGroups[player.team] = [];
+      }
+      teamGroups[player.team].push(player);
+    });
+    
+    const activeTeams = new Set(['Black', 'Blue', 'Carolina', 'Gold', 'Green', 'Orange', 'Purple', 'Red', 'Silver', 'White']);
+    
+    const allTeams = Object.keys(teamGroups);
+    const activeTeamsList = allTeams.filter(team => activeTeams.has(team)).sort();
+    const inactiveTeamsList = allTeams.filter(team => !activeTeams.has(team)).sort();
+    
+    const sortedTeams = [...activeTeamsList, ...inactiveTeamsList];
+    
+    let totalPlayers = 0;
+    let activePlayers = 0;
+    
+    Object.values(playerTeams).forEach(player => {
+      totalPlayers++;
+      if (isPlayerActive(player)) {
+        activePlayers++;
+      }
+    });
+    
+    const seasonLabel = currentSeasonMeta ? `${currentSeasonMeta.year} ${currentSeasonMeta.season}` : 'Current Season';
+
+    document.getElementById("totalPlayersText").textContent =
+      `Total Players: ${totalPlayers} (${activePlayers} active in ${seasonLabel}, ${totalPlayers - activePlayers} inactive) across ${sortedTeams.length} teams`;
+
+    document.getElementById("summaryDescText").textContent =
+      `Players are grouped by their most recent team assignment and split into current active roster (${seasonLabel}) and inactive players. Click on any player to view their detailed statistics.`;
+    
+    const container = document.getElementById("players-container");
+    container.innerHTML = '';
+    
+    sortedTeams.forEach(teamName => {
+      const players = teamGroups[teamName];
+      
+      const activePlayers = players.filter(p => isPlayerActive(p));
+      const inactivePlayers = players.filter(p => !isPlayerActive(p));
+      
+      sortPlayers(activePlayers, true);
+      sortPlayers(inactivePlayers, false);
+      
+      const teamSection = document.createElement('div');
+      teamSection.className = 'team-section';
+      
+      const teamHeader = document.createElement('div');
+      teamHeader.className = 'team-header';
+      
+      const logo = document.createElement('img');
+      logo.className = 'team-logo';
+      logo.src = `logos/${teamName.toLowerCase().replace(/\s+/g, '_')}.png`;
+      logo.alt = `${teamName} logo`;
+      logo.onerror = function() { this.style.display = 'none'; };
+      
+      const teamTitle = document.createElement('h3');
+      teamTitle.textContent = teamName;
+      
+      const playerCount = document.createElement('div');
+      playerCount.className = 'player-count';
+      playerCount.textContent = `${activePlayers.length}/${players.length} active`;
+      
+      teamHeader.appendChild(logo);
+      teamHeader.appendChild(teamTitle);
+      teamHeader.appendChild(playerCount);
+      
+      const playersList = document.createElement('ul');
+      playersList.className = 'players-list';
+      
+      if (activePlayers.length > 0) {
+        const activeHeader = document.createElement('li');
+        activeHeader.className = 'roster-section-header active';
+        activeHeader.textContent = `Current Roster (${activePlayers.length})`;
+        playersList.appendChild(activeHeader);
+        
+        activePlayers.forEach(player => {
+          const playerItem = createPlayerItem(player, teamName);
+          playersList.appendChild(playerItem);
+        });
+      }
+      
+      if (inactivePlayers.length > 0) {
+        const inactiveHeader = document.createElement('li');
+        inactiveHeader.className = 'roster-section-header inactive';
+        inactiveHeader.textContent = `Inactive Players (${inactivePlayers.length})`;
+        playersList.appendChild(inactiveHeader);
+        
+        inactivePlayers.forEach(player => {
+          const playerItem = createPlayerItem(player, teamName);
+          playerItem.classList.add('inactive');
+          playersList.appendChild(playerItem);
+        });
+      }
+      
+      teamSection.appendChild(teamHeader);
+      teamSection.appendChild(playersList);
+      container.appendChild(teamSection);
+    });
+  }
+
+  function createPlayerItem(player, teamName) {
+    const playerItem = document.createElement('li');
+    playerItem.className = 'player-item';
+    
+    const playerLink = document.createElement('a');
+    playerLink.href = `player.html?id=${encodeURIComponent(player.id)}`;
+    playerLink.className = 'player-link';
+    
+    const playerNameDiv = document.createElement('div');
+    playerNameDiv.className = 'player-name';
+    playerNameDiv.textContent = player.name;
+    
+    const playerStats = document.createElement('div');
+    playerStats.className = 'player-stats';
+    
+    const careerBA = player.totalAtBats > 0 ?
+      (player.totalHits / player.totalAtBats).toFixed(3) : '0.000';
+    
+    playerStats.textContent =
+      `${player.totalGames} games • ${player.totalHits}/${player.totalAtBats} (.${careerBA.slice(2)}) • ${player.currentTeamGames} with ${teamName} • Last: ${player.year} ${player.season}`;
+    
+    playerLink.appendChild(playerNameDiv);
+    playerLink.appendChild(playerStats);
+    playerItem.appendChild(playerLink);
+    
+    return playerItem;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadData);
+  } else {
+    loadData();
+  }
+</script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="team-colors.js"></script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

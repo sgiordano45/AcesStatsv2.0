@@ -1,0 +1,2193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Champions - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --gold-gradient: linear-gradient(135deg, #ffd700 0%, #ffb300 100%);
+    --champion-gradient: linear-gradient(135deg, #ffd700 0%, #f0c14b 50%, #daa520 100%);
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    --shadow-gold: 0 8px 24px rgba(255,215,0,0.3);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    line-height: 1.6;
+    color: var(--text-dark);
+  }
+
+  /* Loading Spinner */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .softball-spinner::before {
+    content: '⚾';
+    font-size: 80px;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+  }
+
+  .page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* Season Selector */
+  .season-selector {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0;
+  }
+
+  .season-btn {
+    padding: 0.75rem 1.5rem;
+    border: 2px solid var(--primary-color);
+    background: white;
+    color: var(--primary-color);
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .season-btn:hover, .season-btn.active {
+    background: var(--primary-color);
+    color: white;
+  }
+
+  /* Override filters-nav margin for this page */
+  .filters-nav {
+    margin-bottom: 2rem;
+  }
+
+  /* Champion Hero Section */
+  .champion-hero {
+    background: var(--champion-gradient);
+    border-radius: 24px;
+    padding: 3rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-gold);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+
+  .champion-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 50%);
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+  }
+
+  .champion-hero::after {
+    content: '🏆';
+    position: absolute;
+    bottom: -40px;
+    right: -20px;
+    font-size: 200px;
+    opacity: 0.15;
+  }
+
+  .champion-crown {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+    animation: bounce 2s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .champion-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #5d4e00;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 0.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .champion-team-name {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #3d3200;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .champion-season {
+    font-size: 1.5rem;
+    color: #5d4e00;
+    margin-top: 0.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .champion-record {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.5);
+    padding: 0.5rem 1.5rem;
+    border-radius: 50px;
+    margin-top: 1rem;
+    font-weight: 600;
+    color: #3d3200;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Championship Game Card */
+  .championship-game {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 3px solid var(--accent-color);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .championship-game::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--gold-gradient);
+  }
+
+  .championship-game-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .championship-game-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--text-dark);
+  }
+
+  .championship-matchup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .championship-team {
+    text-align: center;
+    padding: 1.5rem;
+    border-radius: 12px;
+    min-width: 200px;
+    flex: 1;
+    max-width: 300px;
+  }
+
+  .championship-team.winner {
+    background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(255,179,0,0.1) 100%);
+    border: 2px solid var(--accent-color);
+  }
+
+  .championship-team.loser {
+    background: #f7fafc;
+    border: 2px solid var(--border-color);
+  }
+
+  .championship-team-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .championship-score {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--primary-color);
+  }
+
+  .championship-team.winner .championship-score {
+    color: #b8860b;
+  }
+
+  .championship-vs {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+
+  .championship-details {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-light);
+  }
+
+  .championship-game-label {
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, rgba(45,80,22,0.1) 0%, rgba(26,107,74,0.1) 100%);
+    border-radius: 8px;
+    display: inline-block;
+    width: 100%;
+  }
+
+  .championship-divider {
+    border: none;
+    border-top: 2px dashed var(--border-color);
+    margin: 2rem 0;
+  }
+
+  /* Section Cards */
+  .section-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+  }
+
+  .section-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-header.gold {
+    background: var(--gold-gradient);
+    color: #3d3200;
+  }
+
+  .section-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .section-content {
+    padding: 2rem;
+  }
+
+  /* Player Cards Grid */
+  .players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .player-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .player-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+  }
+
+  .player-card.mvp {
+    border: 2px solid var(--accent-color);
+    background: linear-gradient(135deg, rgba(255,215,0,0.08) 0%, #ffffff 100%);
+  }
+
+  .player-card.mvp::before {
+    content: '👑 MVP';
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--gold-gradient);
+    color: #3d3200;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-bottom-left-radius: 8px;
+  }
+
+  .player-rank {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    width: 32px;
+    height: 32px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .player-card.mvp .player-rank {
+    background: var(--gold-gradient);
+    color: #3d3200;
+  }
+
+  .player-info {
+    margin-left: 2.5rem;
+  }
+
+  .player-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+  }
+
+  .player-name a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .player-name a:hover {
+    color: var(--primary-color);
+  }
+
+  .player-team {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 1rem;
+  }
+
+  .player-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .player-stat {
+    text-align: center;
+    padding: 0.5rem;
+    background: rgba(45,80,22,0.05);
+    border-radius: 8px;
+  }
+
+  .player-stat-value {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+  }
+
+  .player-stat-label {
+    color: var(--text-light);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+  }
+
+  /* Games List */
+  .games-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .game-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+  }
+
+  .game-card:hover {
+    transform: translateX(4px);
+    border-color: var(--primary-color);
+  }
+
+  .game-rank {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .game-rank.gold {
+    background: var(--gold-gradient);
+    color: #3d3200;
+  }
+
+  .game-info {
+    flex: 1;
+  }
+
+  .game-matchup {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+  }
+
+  .game-matchup .winner {
+    color: var(--primary-color);
+  }
+
+  .game-date {
+    font-size: 0.85rem;
+    color: var(--text-light);
+  }
+
+  .game-score {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    text-align: right;
+  }
+
+  .game-type {
+    font-size: 0.75rem;
+    color: white;
+    background: var(--secondary-color);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .game-type.championship {
+    background: var(--gold-gradient);
+    color: #3d3200;
+  }
+
+  /* Playoff Journey */
+  .playoff-journey {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .journey-step {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+  }
+
+  .journey-step.championship {
+    border-left-color: var(--accent-color);
+    background: linear-gradient(90deg, rgba(255,215,0,0.1) 0%, #f8f9fa 100%);
+  }
+
+  .journey-step.playoff {
+    border-left-color: var(--primary-color);
+    background: linear-gradient(90deg, rgba(45,80,22,0.08) 0%, #f8f9fa 100%);
+  }
+
+  .journey-step.playoff .journey-round {
+    color: var(--primary-color);
+    font-weight: 700;
+  }
+
+  .journey-round {
+    font-weight: 600;
+    color: var(--text-light);
+    min-width: 140px;
+  }
+
+  .journey-result {
+    flex: 1;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .journey-result .win {
+    color: var(--primary-color);
+  }
+
+  .journey-score {
+    font-weight: 700;
+    color: var(--primary-color);
+  }
+
+  /* Stats Leaders Table */
+  .leaders-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .leaders-table th {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+  }
+
+  .leaders-table th:first-child {
+    border-top-left-radius: 8px;
+  }
+
+  .leaders-table th:last-child {
+    border-top-right-radius: 8px;
+  }
+
+  .leaders-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .leaders-table tr:hover {
+    background: #f7fafc;
+  }
+
+  .leaders-table .rank-cell {
+    width: 50px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+
+  .leaders-table .stat-value {
+    font-weight: 700;
+    color: var(--primary-color);
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+  }
+
+  .empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  /* All-Time Champions */
+  .champions-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .timeline-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+  }
+
+  .timeline-item:hover {
+    transform: translateX(4px);
+    border-color: var(--accent-color);
+  }
+
+  .timeline-item.current {
+    background: linear-gradient(90deg, rgba(255,215,0,0.15) 0%, #f8f9fa 100%);
+    border: 2px solid var(--accent-color);
+  }
+
+  .timeline-season {
+    min-width: 120px;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .timeline-team {
+    flex: 1;
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+
+  .timeline-trophy {
+    font-size: 1.5rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .page-container {
+      padding: 1rem;
+    }
+
+    .champion-hero {
+      padding: 2rem 1.5rem;
+    }
+
+    .champion-team-name {
+      font-size: 2.5rem;
+    }
+
+    .championship-matchup {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .championship-team {
+      min-width: 100%;
+    }
+
+    .championship-vs {
+      display: none;
+    }
+
+    .players-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .game-card {
+      flex-wrap: wrap;
+    }
+
+    .game-score {
+      width: 100%;
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+
+    .journey-step {
+      flex-wrap: wrap;
+    }
+
+    .journey-round {
+      width: 100%;
+    }
+
+    .champion-photo-container {
+      padding: 1rem;
+    }
+
+    .champion-photo-container img {
+      max-height: 350px;
+    }
+  }
+
+  /* Champion Photo Section */
+  .champion-photo-container {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 3px solid var(--accent-color);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .champion-photo-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--gold-gradient);
+  }
+
+  .champion-photo-container img {
+    max-width: 100%;
+    max-height: 500px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .champion-photo-caption {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .champion-photo-badge {
+    display: block;
+    width: fit-content;
+    background: var(--gold-gradient);
+    color: #3d3200;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin: 0 auto 1rem auto;
+  }
+
+  /* Championship Badges Section */
+  .badges-summary {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .badge-tier-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .badge-tier-chip.total {
+    background: linear-gradient(135deg, rgba(45,80,22,0.12) 0%, rgba(26,107,74,0.08) 100%);
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  .badge-tier-chip.platinum {
+    background: linear-gradient(135deg, rgba(180,180,220,0.2) 0%, rgba(140,140,200,0.1) 100%);
+    border: 1px solid #8b8bc8;
+    color: #5a5a9e;
+  }
+
+  .badge-tier-chip.gold {
+    background: linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,179,0,0.1) 100%);
+    border: 1px solid #daa520;
+    color: #856404;
+  }
+
+  .badge-tier-chip.silver {
+    background: linear-gradient(135deg, rgba(192,192,192,0.2) 0%, rgba(160,160,160,0.1) 100%);
+    border: 1px solid #a0a0a0;
+    color: #606060;
+  }
+
+  .badge-tier-chip.bronze {
+    background: linear-gradient(135deg, rgba(205,127,50,0.2) 0%, rgba(180,100,30,0.1) 100%);
+    border: 1px solid #cd7f32;
+    color: #7d4a10;
+  }
+
+  .badge-tier-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .badge-tier-dot.platinum { background: #8b8bc8; }
+  .badge-tier-dot.gold     { background: #daa520; }
+  .badge-tier-dot.silver   { background: #a0a0a0; }
+  .badge-tier-dot.bronze   { background: #cd7f32; }
+
+  .badges-players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .badge-player-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    padding: 1.25rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+  }
+
+  .badge-player-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-color);
+  }
+
+  .badge-player-name {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text-dark);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .badge-count-pill {
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.2rem 0.6rem;
+    border-radius: 50px;
+  }
+
+  .badge-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .badge-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .badge-item .badge-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2d3748;
+    color: #fff;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    white-space: normal;
+    width: 220px;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    pointer-events: none;
+  }
+
+  .badge-item .badge-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #2d3748;
+  }
+
+  .badge-item:hover .badge-tooltip,
+  .badge-item.tooltip-open .badge-tooltip {
+    display: block;
+  }
+
+  .badge-item.platinum {
+    background: linear-gradient(90deg, rgba(180,180,220,0.15) 0%, transparent 100%);
+    border-left: 3px solid #8b8bc8;
+  }
+
+  .badge-item.gold {
+    background: linear-gradient(90deg, rgba(255,215,0,0.15) 0%, transparent 100%);
+    border-left: 3px solid #daa520;
+  }
+
+  .badge-item.silver {
+    background: linear-gradient(90deg, rgba(192,192,192,0.15) 0%, transparent 100%);
+    border-left: 3px solid #a0a0a0;
+  }
+
+  .badge-item.bronze {
+    background: linear-gradient(90deg, rgba(205,127,50,0.15) 0%, transparent 100%);
+    border-left: 3px solid #cd7f32;
+  }
+
+  .badge-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .badge-info {
+    flex: 1;
+  }
+
+  .badge-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    line-height: 1.2;
+  }
+
+  .badge-tier-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-light);
+  }
+
+  .badge-tier-label.platinum { color: #5a5a9e; }
+  .badge-tier-label.gold     { color: #856404; }
+  .badge-tier-label.silver   { color: #606060; }
+  .badge-tier-label.bronze   { color: #7d4a10; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<div class="page-container">
+  
+  <!-- Filters and Navigation -->
+  <div class="filters-nav">
+    <!-- Season Selector integrated with nav -->
+    <div class="season-selector" id="seasonSelector">
+      <!-- Populated by JavaScript -->
+    </div>
+  </div>
+
+  <!-- Champion Hero -->
+  <div class="champion-hero" id="championHero">
+    <div class="champion-crown">🏆</div>
+    <div class="champion-title">League Champions</div>
+    <h1 class="champion-team-name" id="championTeamName">Loading...</h1>
+    <div class="champion-season" id="championSeason"></div>
+    <div class="champion-record" id="championRecord"></div>
+  </div>
+
+  <!-- Champion Photo (only displays if photo exists) -->
+  <div class="champion-photo-container" id="championPhotoContainer" style="display: none;">
+    <div class="champion-photo-badge">📸 Championship Celebration</div>
+    <img id="championPhotoImg" src="" alt="Championship Team Photo">
+    <div class="champion-photo-caption" id="championPhotoCaption"></div>
+  </div>
+
+  <!-- Championship Game -->
+  <div class="championship-game" id="championshipGame">
+    <div class="championship-game-header">
+      <span style="font-size: 1.5rem;">🏆</span>
+      <h2>Championship Game</h2>
+    </div>
+    <div id="championshipGameContent">
+      <!-- Populated by JavaScript -->
+    </div>
+  </div>
+
+  <!-- Top Performers -->
+  <div class="section-card">
+    <div class="section-header gold">
+      <span style="font-size: 1.5rem;">⭐</span>
+      <h2 id="teamStarsHeader">Team Stars</h2>
+    </div>
+    <div class="section-content">
+      <div class="players-grid" id="teamStars">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Pitching -->
+  <div class="section-card" id="teamPitchingSection">
+    <div class="section-header">
+      <span style="font-size: 1.5rem;">🥎</span>
+      <h2 id="teamPitchingHeader">Team Pitching</h2>
+    </div>
+    <div class="section-content">
+      <div class="players-grid" id="teamPitching">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Championship Team Roster -->
+  <div class="section-card">
+    <div class="section-header">
+      <span style="font-size: 1.5rem;">👥</span>
+      <h2 id="rosterHeader">Champion Roster</h2>
+    </div>
+    <div class="section-content">
+      <div class="players-grid" id="championRoster">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Championship Badges -->
+  <div class="section-card" id="championBadgesSection" style="display:none;">
+    <div class="section-header gold">
+      <span style="font-size: 1.5rem;">🎖️</span>
+      <h2 id="badgesHeader">Championship Badges</h2>
+    </div>
+    <div class="section-content">
+      <div class="badges-summary" id="badgesSummary"></div>
+      <div class="badges-players-grid" id="badgesPlayersGrid"></div>
+    </div>
+  </div>
+
+  <!-- Season Journey -->
+  <div class="section-card">
+    <div class="section-header">
+      <span style="font-size: 1.5rem;">🛤️</span>
+      <h2>Season Journey</h2>
+    </div>
+    <div class="section-content">
+      <div class="playoff-journey" id="playoffJourney">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- All-Time Champions -->
+  <div class="section-card">
+    <div class="section-header gold">
+      <span style="font-size: 1.5rem;">🏆</span>
+      <h2>Championship History</h2>
+    </div>
+    <div class="section-content">
+      <div class="champions-timeline" id="championsTimeline">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { db, collection, doc, getDoc, getDocs, query, where, orderBy, limit } from './firebase-config.js';
+  import { NavigationComponent } from './nav-component.js';
+  import { getChampionPhoto } from './firebase-storage.js';
+
+  let allSeasons = [];
+  let championsData = {}; // Map of seasonId -> champion data from Firebase
+  let currentSeasonId = null;
+  let seasonData = {};
+
+  async function init() {
+    try {
+      // Load champions collection first
+      const championsSnap = await getDocs(collection(db, 'champions'));
+      championsData = {};
+      
+      championsSnap.forEach(docSnap => {
+        championsData[docSnap.id] = { id: docSnap.id, ...docSnap.data() };
+      });
+
+      console.log('🏆 Loaded champions:', Object.keys(championsData));
+      console.log('🏆 Champions data:', championsData);
+      
+      // Show each champion's season ID to verify format
+      Object.entries(championsData).forEach(([seasonId, data]) => {
+        console.log(`  - ${seasonId}: ${data.team}`);
+      });
+
+      // Load seasons
+      const seasonsSnap = await getDocs(collection(db, 'seasons'));
+      allSeasons = [];
+      
+      seasonsSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        allSeasons.push({
+          id: docSnap.id,
+          ...data,
+          startDate: data.startDate || data.start_date
+        });
+      });
+
+      console.log('📅 All seasons:', allSeasons.map(s => s.id));
+
+      // Sort by date descending (most recent first)
+      allSeasons.sort((a, b) => {
+        const dateA = a.startDate ? new Date(a.startDate) : new Date(0);
+        const dateB = b.startDate ? new Date(b.startDate) : new Date(0);
+        return dateB - dateA;
+      });
+
+      // Filter to seasons that have champions in the champions collection
+      let champSeasons = allSeasons.filter(s => championsData[s.id]);
+      
+      console.log('🏆 Seasons with champions (before sort):', champSeasons.map(s => s.id));
+      
+      // Ensure proper sorting: most recent first (2025-fall, 2025-summer, 2024-fall, etc.)
+      champSeasons.sort((a, b) => {
+        const partsA = a.id.split('-');
+        const partsB = b.id.split('-');
+        const yearA = parseInt(partsA[0]) || 0;
+        const yearB = parseInt(partsB[0]) || 0;
+        const seasonA = (partsA[1] || '').toLowerCase();
+        const seasonB = (partsB[1] || '').toLowerCase();
+        
+        // Sort by year descending
+        if (yearA !== yearB) return yearB - yearA;
+        
+        // Within same year: fall comes after summer, so fall should appear first
+        if (seasonA === 'fall' && seasonB === 'summer') return -1;
+        if (seasonA === 'summer' && seasonB === 'fall') return 1;
+        return 0;
+      });
+      
+      console.log('🏆 Seasons with champions (after sort):', champSeasons.map(s => s.id));
+
+      // Render season selector
+      renderSeasonSelector(champSeasons);
+
+      // Load most recent season with a champion
+      if (champSeasons.length > 0) {
+        await loadSeasonData(champSeasons[0].id);
+      } else {
+        console.log('⚠️ No champion seasons found');
+        showNoChampion();
+      }
+
+    } catch (error) {
+      console.error('Error initializing:', error);
+      showError();
+    } finally {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+  }
+
+  function renderSeasonSelector(seasons) {
+    const container = document.getElementById('seasonSelector');
+    container.innerHTML = seasons.map(s => {
+      const displayName = formatSeasonName(s.id);
+      return `<button class="season-btn" data-season="${s.id}">${displayName}</button>`;
+    }).join('');
+
+    // Add click handlers
+    container.querySelectorAll('.season-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('.season-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadSeasonData(btn.dataset.season);
+      });
+    });
+  }
+
+  function formatSeasonName(seasonId) {
+    // Convert "2025-fall" to "Fall 2025"
+    const parts = seasonId.split('-');
+    if (parts.length >= 2) {
+      const year = parts[0];
+      const season = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+      return `${season} ${year}`;
+    }
+    return seasonId;
+  }
+
+  async function loadSeasonData(seasonId) {
+    currentSeasonId = seasonId;
+    console.log('🏆 Loading season data for:', seasonId);
+    
+    // Update active button
+    document.querySelectorAll('.season-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.season === seasonId);
+    });
+
+    try {
+      // Load season document
+      const seasonDoc = await getDoc(doc(db, 'seasons', seasonId));
+      seasonData = seasonDoc.exists() ? { id: seasonId, ...seasonDoc.data() } : { id: seasonId };
+      console.log('📅 Season doc exists:', seasonDoc.exists());
+
+      // Load all games from seasons/{seasonId}/games
+      const gamesSnap = await getDocs(collection(db, 'seasons', seasonId, 'games'));
+      seasonData.games = [];
+      gamesSnap.forEach(docSnap => {
+        seasonData.games.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      
+      // Log game breakdown
+      const regularGames = seasonData.games.filter(g => {
+        const gameType = (g.gameType || g.game_type || '').toLowerCase();
+        return gameType !== 'playoff';
+      });
+      const playoffGames = seasonData.games.filter(g => {
+        const gameType = (g.gameType || g.game_type || '').toLowerCase();
+        return gameType === 'playoff';
+      });
+      console.log('📊 Games loaded:', seasonData.games.length, '(Regular:', regularGames.length, ', Playoff:', playoffGames.length + ')');
+
+      // Load batting stats from aggregatedPlayerStats and filter by season
+      const allPlayersSnap = await getDocs(collection(db, 'aggregatedPlayerStats'));
+      console.log('👥 Total players in aggregatedPlayerStats:', allPlayersSnap.size);
+      
+      seasonData.batting = [];
+      seasonData.pitching = [];
+      allPlayersSnap.forEach(docSnap => {
+        const playerData = docSnap.data();
+        
+        // Skip migrated legacy profiles
+        if (playerData.migrated === true) return;
+        
+        // Check if player has stats for this season
+        // Season keys include team: "2025-fall-green", "2025-fall-gold-sub"
+        // We need to match any key that starts with the seasonId (e.g., "2025-fall")
+        if (playerData.seasons) {
+          const matchingSeasonKeys = Object.keys(playerData.seasons).filter(key => 
+            key.startsWith(seasonId + '-') || key === seasonId
+          );
+          
+          // Use the first matching season (primary team, not sub appearances)
+          // Prefer non-sub entries
+          const primaryKey = matchingSeasonKeys.find(k => !k.includes('-sub')) || matchingSeasonKeys[0];
+          
+          if (primaryKey) {
+            const seasonStats = playerData.seasons[primaryKey];
+            seasonData.batting.push({
+              id: docSnap.id,
+              playerId: docSnap.id,
+              name: playerData.name || playerData.displayName,
+              team: seasonStats.team || seasonStats.teamId,
+              teamId: seasonStats.teamId || seasonStats.team,
+              games: seasonStats.games || seasonStats.g || 0,
+              ba: seasonStats.ba || seasonStats.battingAverage || seasonStats.avg || 0,
+              hits: seasonStats.hits || seasonStats.h || 0,
+              runs: seasonStats.runs || seasonStats.r || 0,
+              walks: seasonStats.walks || seasonStats.bb || 0,
+              obp: seasonStats.obp || seasonStats.onBasePercentage || 0,
+              acesBPI: seasonStats.acesBPI || seasonStats.AcesWar || seasonStats.acesBpi || 0,
+              ...seasonStats
+            });
+          }
+        }
+        
+        // Check for pitching stats independently (player may have pitching without batting)
+        if (playerData.pitchingSeasons) {
+          const pitchingKeys = Object.keys(playerData.pitchingSeasons).filter(key => 
+            key.startsWith(seasonId + '-') || key === seasonId
+          );
+          const pitchingKey = pitchingKeys.find(k => !k.includes('-sub')) || pitchingKeys[0];
+          
+          if (pitchingKey) {
+            const pitchingStats = playerData.pitchingSeasons[pitchingKey];
+            seasonData.pitching.push({
+              id: docSnap.id,
+              playerId: docSnap.id,
+              name: playerData.name || playerData.displayName,
+              team: pitchingStats.team || pitchingStats.teamId,
+              teamId: pitchingStats.teamId || pitchingStats.team,
+              ...pitchingStats
+            });
+          }
+        }
+      });
+      console.log('⚾ Batting stats for season:', seasonData.batting.length);
+      console.log('🥎 Pitching stats for season:', (seasonData.pitching || []).length);
+
+      // Load teams from top-level teams collection
+      const teamsSnap = await getDocs(collection(db, 'teams'));
+      seasonData.teams = {};
+      teamsSnap.forEach(docSnap => {
+        seasonData.teams[docSnap.id] = { id: docSnap.id, ...docSnap.data() };
+      });
+      console.log('🏟️ Teams loaded:', Object.keys(seasonData.teams).length);
+
+      // Load player badges for this season
+      const badgesSnap = await getDocs(collection(db, 'playerBadges'));
+      const badgesData = [];
+      badgesSnap.forEach(docSnap => {
+        if (docSnap.id.startsWith(seasonId + '_')) {
+          badgesData.push({ docId: docSnap.id, ...docSnap.data() });
+        }
+      });
+      console.log('🎖️ Badges loaded for season:', badgesData.length);
+
+      // Get champion from champions collection
+      const championDoc = championsData[seasonId];
+      const champion = championDoc?.team || findChampionFromGames(seasonData.games);
+      console.log('🏆 Champion:', champion);
+
+      // Render everything
+      renderChampionHero(champion, seasonId);
+      await renderChampionPhoto(seasonId); // Load champion photo if exists
+      renderChampionshipGame(champion, seasonData.games);
+      renderTeamStars(champion, seasonData);
+      renderTeamPitching(champion, seasonData);
+      renderChampionRoster(champion, seasonData);
+      renderChampionBadges(champion, seasonId, badgesData);
+      renderSeasonJourney(champion, seasonData.games);
+      renderChampionsTimeline(seasonId);
+
+    } catch (error) {
+      console.error('Error loading season data:', error);
+      showError();
+    }
+  }
+
+  function findChampionFromGames(games) {
+    // Find championship game - handle both gameType and game_type fields
+    const champGame = games.find(g => {
+      const gameType = (g.gameType || g.game_type || '').toLowerCase();
+      const round = (g.round || g.playoff_round || '').toLowerCase();
+      return gameType === 'playoff' && (round.includes('champ') || round.includes('final'));
+    });
+
+    if (champGame) {
+      const winner = champGame.winner || champGame.Winner;
+      if (winner && winner.toLowerCase() !== 'tie') {
+        return winner;
+      }
+    }
+    return null;
+  }
+
+  function renderChampionHero(champion, seasonId) {
+    const teamName = champion ? formatTeamName(champion) : 'No Champion Yet';
+    const seasonName = formatSeasonName(seasonId);
+    const championDoc = championsData[seasonId] || {};
+    
+    document.getElementById('championTeamName').textContent = teamName;
+    document.getElementById('championSeason').textContent = seasonName + ' Champions';
+    
+    // Build record/info line
+    let infoHtml = '';
+    
+    // Calculate record if we have games
+    const record = calculateTeamRecord(champion, seasonData.games);
+    if (record) {
+      infoHtml = `⚾ ${record.wins}-${record.losses}${record.ties ? '-' + record.ties : ''} Regular Season`;
+    }
+    
+    // Add runner-up if available
+    if (championDoc.runnerUp) {
+      if (infoHtml) infoHtml += ' • ';
+      infoHtml += `Runner-up: ${formatTeamName(championDoc.runnerUp)}`;
+    }
+    
+    document.getElementById('championRecord').innerHTML = infoHtml;
+  }
+
+  /**
+   * Render champion photo if one exists for this season
+   * Photo must have champs=true and seasonId matching the current season
+   */
+  async function renderChampionPhoto(seasonId) {
+    const container = document.getElementById('championPhotoContainer');
+    const img = document.getElementById('championPhotoImg');
+    const caption = document.getElementById('championPhotoCaption');
+    
+    // Hide by default
+    container.style.display = 'none';
+    
+    try {
+      const photo = await getChampionPhoto(seasonId);
+      
+      if (photo && photo.url) {
+        // Set the image source
+        img.src = photo.url;
+        img.alt = photo.name || `${formatSeasonName(seasonId)} Championship Photo`;
+        
+        // Set caption if available
+        if (photo.name) {
+          caption.textContent = photo.name;
+          caption.style.display = 'block';
+        } else {
+          caption.style.display = 'none';
+        }
+        
+        // Show the container
+        container.style.display = 'block';
+        console.log(`📷 Champion photo displayed for ${seasonId}`);
+      } else {
+        console.log(`📷 No champion photo to display for ${seasonId}`);
+      }
+    } catch (error) {
+      console.error('Error loading champion photo:', error);
+      container.style.display = 'none';
+    }
+  }
+
+  function formatTeamName(teamId) {
+    if (!teamId) return 'Unknown';
+    // Capitalize first letter of each word, handle underscores
+    return teamId
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+      .trim();
+  }
+
+  function calculateTeamRecord(teamName, games) {
+    if (!teamName || !games) return null;
+    
+    const teamLower = teamName.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+    let wins = 0, losses = 0, ties = 0;
+
+    // Helper to get team name from various field formats
+    function getTeamName(game, side) {
+      return game[`${side}Team`] || game[`${side}TeamName`] || game[`${side}TeamId`] || '';
+    }
+
+    games.forEach(game => {
+      // Regular season only
+      const gameType = (game.gameType || game.game_type || '').toLowerCase();
+      if (gameType === 'playoff') return;
+
+      const home = getTeamName(game, 'home').toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+      const away = getTeamName(game, 'away').toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+      const winner = (game.winner || game.Winner || '').toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+
+      // Check if this team played in this game
+      const teamIsHome = home === teamLower || home.includes(teamLower) || teamLower.includes(home);
+      const teamIsAway = away === teamLower || away.includes(teamLower) || teamLower.includes(away);
+
+      if (!teamIsHome && !teamIsAway) return;
+
+      // Only count completed games — use != null so score of 0 is valid
+      const homeScore = game.homeScore != null ? game.homeScore : game['home score'];
+      const awayScore = game.awayScore != null ? game.awayScore : game['away score'];
+      if (homeScore == null || awayScore == null) return;
+
+      if (winner === 'tie') {
+        ties++;
+      } else if (winner.includes(teamLower) || teamLower.includes(winner)) {
+        wins++;
+      } else if (winner) {
+        losses++;
+      }
+    });
+
+    return { wins, losses, ties };
+  }
+
+  function renderChampionshipGame(champion, games) {
+    const container = document.getElementById('championshipGameContent');
+    
+    // Helper to get team name from various field formats
+    function getTeamName(game, side) {
+      return game[`${side}Team`] || game[`${side}TeamName`] || game[`${side}TeamId`] || '';
+    }
+    
+    // Helper to get score (handles both string and number)
+    function getScore(game, side) {
+      const score = game[`${side}Score`] || game[`${side} score`] || 0;
+      return parseInt(score, 10) || 0;
+    }
+    
+    // Helper to parse date for sorting
+    function parseGameDate(game) {
+      const dateVal = game.date || game.Date;
+      if (!dateVal) return new Date(0);
+      if (dateVal.seconds) return new Date(dateVal.seconds * 1000);
+      if (dateVal.toDate) return dateVal.toDate();
+      return new Date(dateVal);
+    }
+    
+    // Find ALL championship games - check both gameType and game_type
+    const champGames = games
+      .filter(g => {
+        const gameType = (g.gameType || g.game_type || '').toLowerCase();
+        const round = (g.round || g.playoff_round || '').toLowerCase();
+        return gameType === 'playoff' && (round.includes('champ') || round === 'finals');
+      })
+      .sort((a, b) => parseGameDate(a) - parseGameDate(b)); // Sort by date ascending
+
+    if (champGames.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🏆</div>
+          <p>Championship game details not available</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Render each championship game
+    container.innerHTML = champGames.map((champGame, index) => {
+      const homeTeam = getTeamName(champGame, 'home');
+      const awayTeam = getTeamName(champGame, 'away');
+      const homeScore = getScore(champGame, 'home');
+      const awayScore = getScore(champGame, 'away');
+      const winner = (champGame.winner || champGame.Winner || '').toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+      const gameDate = champGame.date || champGame.Date;
+
+      const homeLower = homeTeam.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+      const awayLower = awayTeam.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+      
+      const homeIsWinner = winner.includes(homeLower) || homeLower.includes(winner);
+      const awayIsWinner = winner.includes(awayLower) || awayLower.includes(winner);
+      
+      // Only show CHAMPION badge on the last game (the decisive one)
+      const isLastGame = index === champGames.length - 1;
+      const showChampionBadge = isLastGame;
+      
+      // Game label for multiple championship games
+      const gameLabel = champGames.length > 1 ? `Game ${index + 1}${isLastGame ? ' (Deciding Game)' : ''}` : '';
+
+      return `
+        ${gameLabel ? `<div class="championship-game-label">${gameLabel}</div>` : ''}
+        <div class="championship-matchup">
+          <div class="championship-team ${awayIsWinner ? 'winner' : 'loser'}">
+            <div class="championship-team-name">${formatTeamName(awayTeam)}</div>
+            <div class="championship-score">${awayScore}</div>
+            ${showChampionBadge && awayIsWinner ? '<div style="color: #b8860b; font-weight: 600;">🏆 CHAMPION</div>' : ''}
+          </div>
+          <div class="championship-vs">VS</div>
+          <div class="championship-team ${homeIsWinner ? 'winner' : 'loser'}">
+            <div class="championship-team-name">${formatTeamName(homeTeam)}</div>
+            <div class="championship-score">${homeScore}</div>
+            ${showChampionBadge && homeIsWinner ? '<div style="color: #b8860b; font-weight: 600;">🏆 CHAMPION</div>' : ''}
+          </div>
+        </div>
+        ${gameDate ? `
+          <div class="championship-details">
+            📅 ${formatDate(gameDate)}
+          </div>
+        ` : ''}
+        ${index < champGames.length - 1 ? '<hr class="championship-divider">' : ''}
+      `;
+    }).join('');
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+      let date;
+      
+      // Handle Firebase Timestamp
+      if (dateStr.seconds) {
+        date = new Date(dateStr.seconds * 1000);
+      } else if (dateStr.toDate && typeof dateStr.toDate === 'function') {
+        date = dateStr.toDate();
+      } else {
+        date = new Date(dateStr);
+      }
+      
+      // Check for invalid date
+      if (isNaN(date.getTime())) {
+        return typeof dateStr === 'string' ? dateStr : '';
+      }
+      
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    } catch {
+      return typeof dateStr === 'string' ? dateStr : '';
+    }
+  }
+
+  function renderTeamStars(champion, data) {
+    const container = document.getElementById('teamStars');
+    const header = document.getElementById('teamStarsHeader');
+    const championDoc = championsData[currentSeasonId] || {};
+    const mvpId = championDoc.mvp; // Player ID if MVP is specified in champions collection
+    
+    if (!champion) {
+      container.innerHTML = '<div class="empty-state"><p>No champion data available</p></div>';
+      return;
+    }
+    
+    // Update header with team name
+    header.textContent = `${formatTeamName(champion)} Stars`;
+    
+    // Filter to only champion team players with minimum 24 at bats
+    const championLower = champion.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+    let teamPlayers = data.batting.filter(p => {
+      const teamName = (p.team || p.teamId || '').toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+      const atBats = p.atBats || p.ab || 0;
+      return (teamName === championLower || teamName.includes(championLower) || championLower.includes(teamName)) 
+             && atBats >= 24;
+    });
+
+    if (teamPlayers.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">⭐</div>
+          <p>Team statistics not available</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Sort by AcesBPI and take top 3
+    teamPlayers = teamPlayers
+      .sort((a, b) => {
+        const bpiA = a.acesBPI || a.AcesWar || a.acesBpi || 0;
+        const bpiB = b.acesBPI || b.AcesWar || b.acesBpi || 0;
+        return bpiB - bpiA;
+      })
+      .slice(0, 3);
+
+    // If MVP is specified, ensure they're first
+    if (mvpId) {
+      const mvpIndex = teamPlayers.findIndex(p => {
+        const playerId = p.id || p.playerId || p.name?.toLowerCase().replace(/\s+/g, '_');
+        return playerId === mvpId || p.name?.toLowerCase().replace(/\s+/g, '_') === mvpId;
+      });
+      
+      if (mvpIndex > 0) {
+        const [mvpPlayer] = teamPlayers.splice(mvpIndex, 1);
+        teamPlayers.unshift(mvpPlayer);
+        teamPlayers = teamPlayers.slice(0, 3);
+      } else if (mvpIndex === -1) {
+        // MVP not in top 3, find them in full team data
+        const allTeamPlayers = data.batting.filter(p => {
+          const teamName = (p.team || p.teamId || '').toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+          return teamName === championLower || teamName.includes(championLower) || championLower.includes(teamName);
+        });
+        const mvpPlayer = allTeamPlayers.find(p => {
+          const playerId = p.id || p.playerId || p.name?.toLowerCase().replace(/\s+/g, '_');
+          return playerId === mvpId || p.name?.toLowerCase().replace(/\s+/g, '_') === mvpId;
+        });
+        if (mvpPlayer) {
+          teamPlayers.unshift(mvpPlayer);
+          teamPlayers = teamPlayers.slice(0, 3);
+        }
+      }
+    }
+
+    container.innerHTML = teamPlayers.map((player, index) => {
+      const playerId = player.id || player.playerId || player.name?.toLowerCase().replace(/\s+/g, '_');
+      const bpi = player.acesBPI || player.AcesWar || player.acesBpi || 0;
+      const ba = player.ba || player.avg || player.battingAverage || 0;
+      const hits = player.hits || player.h || 0;
+      const runs = player.runs || player.r || 0;
+      
+      // Check if this player is the designated MVP
+      const isMvp = mvpId ? (playerId === mvpId || player.name?.toLowerCase().replace(/\s+/g, '_') === mvpId) : (index === 0);
+      
+      return `
+        <div class="player-card">
+          <div class="player-rank">${index + 1}</div>
+          <div class="player-info">
+            <div class="player-name">
+              <a href="player.html?id=${encodeURIComponent(playerId)}">${player.name || 'Unknown'}</a>
+            </div>
+            <div class="player-team">${formatTeamName(player.team || player.teamId)}</div>
+            <div class="player-stats">
+              <div class="player-stat">
+                <div class="player-stat-value">${ba.toFixed(3)}</div>
+                <div class="player-stat-label">AVG</div>
+              </div>
+              <div class="player-stat">
+                <div class="player-stat-value">${hits}</div>
+                <div class="player-stat-label">Hits</div>
+              </div>
+              <div class="player-stat">
+                <div class="player-stat-value">${bpi.toFixed(2)}</div>
+                <div class="player-stat-label">BPI</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderTeamPitching(champion, data) {
+    const container = document.getElementById('teamPitching');
+    const header = document.getElementById('teamPitchingHeader');
+    const section = document.getElementById('teamPitchingSection');
+    
+    if (!champion || !data.pitching || data.pitching.length === 0) {
+      // Hide the entire section if no pitching data
+      if (section) section.style.display = 'none';
+      return;
+    }
+    
+    // Filter to only champion team pitchers
+    const championLower = champion.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+    const teamPitchers = data.pitching.filter(p => {
+      const teamName = (p.team || p.teamId || '').toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+      return teamName === championLower || teamName.includes(championLower) || championLower.includes(teamName);
+    });
+
+    if (teamPitchers.length === 0) {
+      // Hide the entire section if no team pitchers
+      if (section) section.style.display = 'none';
+      return;
+    }
+    
+    // Show section and update header
+    if (section) section.style.display = 'block';
+    header.textContent = `${formatTeamName(champion)} Pitching`;
+
+    // Sort by innings pitched (most to least)
+    const sortedPitchers = teamPitchers.sort((a, b) => {
+      const ipA = a.inningsPitched || a.ip || 0;
+      const ipB = b.inningsPitched || b.ip || 0;
+      return ipB - ipA;
+    });
+
+    container.innerHTML = sortedPitchers.map((player, index) => {
+      const playerId = player.id || player.playerId || player.name?.toLowerCase().replace(/\s+/g, '_');
+      const era = player.earnedRunAverage || player.era || 0;
+      const ip = player.inningsPitched || player.ip || 0;
+      const games = player.games || player.g || 0;
+      const runsAllowed = player.runsAllowed || player.ra || 0;
+      
+      return `
+        <div class="player-card">
+          <div class="player-rank">${index + 1}</div>
+          <div class="player-info">
+            <div class="player-name">
+              <a href="player.html?id=${encodeURIComponent(playerId)}">${player.name || 'Unknown'}</a>
+            </div>
+            <div class="player-team">${games} game${games !== 1 ? 's' : ''} pitched</div>
+            <div class="player-stats">
+              <div class="player-stat">
+                <div class="player-stat-value">${era.toFixed(2)}</div>
+                <div class="player-stat-label">ERA</div>
+              </div>
+              <div class="player-stat">
+                <div class="player-stat-value">${ip}</div>
+                <div class="player-stat-label">IP</div>
+              </div>
+              <div class="player-stat">
+                <div class="player-stat-value">${runsAllowed}</div>
+                <div class="player-stat-label">RA</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderChampionRoster(champion, data) {
+    const container = document.getElementById('championRoster');
+    const header = document.getElementById('rosterHeader');
+    
+    if (!champion) {
+      container.innerHTML = '<div class="empty-state"><p>No champion data available</p></div>';
+      return;
+    }
+
+    header.textContent = `${formatTeamName(champion)} Roster`;
+
+    // Find players from champion team
+    const championLower = champion.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+    const teamPlayers = data.batting
+      .filter(p => {
+        const teamName = (p.team || p.teamId || '').toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+        return teamName === championLower || teamName.includes(championLower) || championLower.includes(teamName);
+      })
+      .sort((a, b) => {
+        const bpiA = a.acesBPI || a.AcesWar || a.acesBpi || 0;
+        const bpiB = b.acesBPI || b.AcesWar || b.acesBpi || 0;
+        return bpiB - bpiA;
+      });
+
+    if (teamPlayers.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">👥</div>
+          <p>Roster data not available</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = teamPlayers.map((player, index) => {
+      const playerId = player.id || player.playerId || player.name?.toLowerCase().replace(/\s+/g, '_');
+      const ba = player.ba || player.avg || player.battingAverage || 0;
+      const hits = player.hits || player.h || 0;
+      const runs = player.runs || player.r || 0;
+      const games = player.games || player.g || 0;
+      
+      return `
+        <div class="player-card">
+          <div class="player-rank">${index + 1}</div>
+          <div class="player-info">
+            <div class="player-name">
+              <a href="player.html?id=${encodeURIComponent(playerId)}">${player.name || 'Unknown'}</a>
+            </div>
+            <div class="player-team">${games} games played</div>
+            <div class="player-stats">
+              <div class="player-stat">
+                <div class="player-stat-value">${ba.toFixed(3)}</div>
+                <div class="player-stat-label">AVG</div>
+              </div>
+              <div class="player-stat">
+                <div class="player-stat-value">${hits}</div>
+                <div class="player-stat-label">Hits</div>
+              </div>
+              <div class="player-stat">
+                <div class="player-stat-value">${runs}</div>
+                <div class="player-stat-label">Runs</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderChampionBadges(champion, seasonId, badgesData) {
+    const section = document.getElementById('championBadgesSection');
+    const summaryEl = document.getElementById('badgesSummary');
+    const gridEl = document.getElementById('badgesPlayersGrid');
+    const header = document.getElementById('badgesHeader');
+
+    if (!champion || !badgesData || badgesData.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    // Filter to champion team players
+    const championLower = champion.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+    const teamBadges = badgesData.filter(p => {
+      const teamId = (p.teamId || '').toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+      return teamId === championLower || teamId.includes(championLower) || championLower.includes(teamId);
+    });
+
+    if (teamBadges.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    const TIER_ORDER = ['platinum', 'gold', 'silver', 'bronze'];
+
+    // Build per-player badge lists (skip hidden badges)
+    const playerList = teamBadges.map(p => {
+      const earned = p.earned || {};
+      const visibleBadges = Object.entries(earned)
+        .filter(([, b]) => !b.hidden)
+        .map(([id, b]) => ({ id, ...b }))
+        .sort((a, b) => TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier));
+      return { name: p.playerName || p.name || 'Unknown', badges: visibleBadges };
+    })
+    .filter(p => p.badges.length > 0)
+    .sort((a, b) => b.badges.length - a.badges.length);
+
+    if (playerList.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    // Tier counts across all players
+    const tierCounts = { platinum: 0, gold: 0, silver: 0, bronze: 0 };
+    let totalCount = 0;
+    playerList.forEach(p => {
+      p.badges.forEach(b => {
+        if (tierCounts[b.tier] !== undefined) tierCounts[b.tier]++;
+        totalCount++;
+      });
+    });
+
+    // Update header
+    header.textContent = `${formatTeamName(champion)} Championship Badges`;
+    section.style.display = 'block';
+
+    // Summary chips
+    const tierLabels = { platinum: 'Platinum', gold: 'Gold', silver: 'Silver', bronze: 'Bronze' };
+    summaryEl.innerHTML = `
+      <div class="badge-tier-chip total">🎖️ ${totalCount} Total Badge${totalCount !== 1 ? 's' : ''}</div>
+      ${TIER_ORDER.filter(t => tierCounts[t] > 0).map(t => `
+        <div class="badge-tier-chip ${t}">
+          <span class="badge-tier-dot ${t}"></span>
+          ${tierCounts[t]} ${tierLabels[t]}
+        </div>
+      `).join('')}
+    `;
+
+    // Per-player cards
+    gridEl.innerHTML = playerList.map(p => `
+      <div class="badge-player-card">
+        <div class="badge-player-name">
+          <span>${p.name}</span>
+          <span class="badge-count-pill">${p.badges.length} badge${p.badges.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="badge-list">
+          ${p.badges.map(b => `
+            <div class="badge-item ${b.tier || 'unknown'}">
+              <span class="badge-icon">${b.icon || '🏅'}</span>
+              <div class="badge-info">
+                <div class="badge-name">${b.name}</div>
+                <div class="badge-tier-label ${b.tier || ''}">${b.tier ? b.tier.charAt(0).toUpperCase() + b.tier.slice(1) : 'Badge'}</div>
+              </div>
+              ${b.description ? `<div class="badge-tooltip"><strong>${b.name}</strong><br>${b.description}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+
+    // Tap-to-toggle tooltips for mobile
+    gridEl.querySelectorAll('.badge-item').forEach(item => {
+      item.addEventListener('click', e => {
+        const isOpen = item.classList.contains('tooltip-open');
+        gridEl.querySelectorAll('.badge-item.tooltip-open').forEach(el => el.classList.remove('tooltip-open'));
+        if (!isOpen) item.classList.add('tooltip-open');
+        e.stopPropagation();
+      });
+    });
+    document.addEventListener('click', () => {
+      gridEl.querySelectorAll('.badge-item.tooltip-open').forEach(el => el.classList.remove('tooltip-open'));
+    }, { once: false });
+  }
+
+  function renderSeasonJourney(champion, games) {
+    const container = document.getElementById('playoffJourney');
+    
+    if (!champion) {
+      container.innerHTML = '<div class="empty-state"><p>No season journey available</p></div>';
+      return;
+    }
+
+    const championLower = champion.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+    
+    // Helper to parse date (handles Firebase timestamps)
+    function parseGameDate(game) {
+      const dateVal = game.date || game.Date;
+      if (!dateVal) return new Date(0);
+      if (dateVal.seconds) return new Date(dateVal.seconds * 1000);
+      if (dateVal.toDate) return dateVal.toDate();
+      return new Date(dateVal);
+    }
+    
+    // Helper to get team name from various field formats
+    function getTeamName(game, side) {
+      // side is 'home' or 'away'
+      return game[`${side}Team`] || game[`${side}TeamName`] || game[`${side}TeamId`] || '';
+    }
+    
+    // Helper to get score (handles both string and number)
+    function getScore(game, side) {
+      const raw = game[`${side}Score`] != null ? game[`${side}Score`] : game[`${side} score`];
+      const parsed = parseInt(raw, 10);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+
+    // Helper to check if game is a playoff game
+    function isPlayoffGame(game) {
+      const gameType = (game.gameType || game.game_type || '').toLowerCase();
+      return gameType === 'playoff';
+    }
+    
+    // Get ALL games involving the champion (regular season + playoffs)
+    const teamGames = games
+      .filter(g => {
+        const home = getTeamName(g, 'home').toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+        const away = getTeamName(g, 'away').toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+        return home.includes(championLower) || away.includes(championLower) || 
+               championLower.includes(home) || championLower.includes(away);
+      })
+      .filter(g => {
+        // Only include games with scores (completed games)
+        // Use != null so that a score of 0 is still treated as valid
+        const homeScore = g.homeScore != null ? g.homeScore : g['home score'];
+        const awayScore = g.awayScore != null ? g.awayScore : g['away score'];
+        return homeScore != null && awayScore != null;
+      })
+      .sort((a, b) => {
+        // First, check if either is the championship - championship always goes last
+        const roundA = (a.round || a.playoff_round || '').toLowerCase();
+        const roundB = (b.round || b.playoff_round || '').toLowerCase();
+        const aIsChamp = roundA.includes('champ');
+        const bIsChamp = roundB.includes('champ');
+        
+        if (aIsChamp && !bIsChamp) return 1;  // a (championship) goes after b
+        if (bIsChamp && !aIsChamp) return -1; // b (championship) goes after a
+        
+        // Otherwise sort by date ascending (earliest first)
+        const dateA = parseGameDate(a);
+        const dateB = parseGameDate(b);
+        return dateA - dateB;
+      });
+
+    if (teamGames.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🛤️</div>
+          <p>Season journey data not available</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = teamGames.map(game => {
+      const home = getTeamName(game, 'home');
+      const away = getTeamName(game, 'away');
+      const homeScore = getScore(game, 'home');
+      const awayScore = getScore(game, 'away');
+      const winner = (game.winner || game.Winner || '').toLowerCase();
+      const isPlayoff = isPlayoffGame(game);
+      const round = game.round || game.playoff_round || (isPlayoff ? 'Playoff' : 'Regular Season');
+      const isChampionship = round.toLowerCase().includes('champ');
+      
+      const homeLower = home.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+      const awayLower = away.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+      
+      const championIsHome = homeLower.includes(championLower) || championLower.includes(homeLower);
+      const opponent = championIsHome ? away : home;
+      const champScore = championIsHome ? homeScore : awayScore;
+      const oppScore = championIsHome ? awayScore : homeScore;
+      
+      const winnerLower = winner.replace(/\s+/g, '').replace(/_/g, '');
+      const didWin = winnerLower.includes(championLower) || championLower.includes(winnerLower);
+
+      return `
+        <div class="journey-step ${isChampionship ? 'championship' : ''} ${isPlayoff ? 'playoff' : ''}">
+          <div class="journey-round">${round}</div>
+          <div class="journey-result">
+            <span class="${didWin ? 'win' : ''}">${didWin ? '✅ W' : '❌ L'}</span>
+            vs ${formatTeamName(opponent)}
+          </div>
+          <div class="journey-score">${champScore} - ${oppScore}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderChampionsTimeline(currentSeason) {
+    const container = document.getElementById('championsTimeline');
+    
+    // Get all seasons with champions from the champions collection
+    const champSeasons = allSeasons
+      .filter(s => championsData[s.id])
+      .sort((a, b) => {
+        // Sort by year-season: 2025-fall, 2025-summer, 2024-fall, etc.
+        const [yearA, seasonA] = a.id.split('-');
+        const [yearB, seasonB] = b.id.split('-');
+        
+        if (yearA !== yearB) return parseInt(yearB) - parseInt(yearA);
+        if (seasonA === 'fall' && seasonB === 'summer') return -1;
+        if (seasonA === 'summer' && seasonB === 'fall') return 1;
+        return 0;
+      });
+
+    if (champSeasons.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🏆</div>
+          <p>Championship history not available</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = champSeasons.map(season => {
+      const championDoc = championsData[season.id];
+      const champion = championDoc?.team;
+      const isCurrent = season.id === currentSeason;
+      
+      return `
+        <div class="timeline-item ${isCurrent ? 'current' : ''}" onclick="loadSeasonData('${season.id}')">
+          <div class="timeline-season">${formatSeasonName(season.id)}</div>
+          <div class="timeline-team">${formatTeamName(champion)}</div>
+          <div class="timeline-trophy">🏆</div>
+        </div>
+      `;
+    }).join('');
+
+    // Make timeline items clickable
+    container.querySelectorAll('.timeline-item').forEach(item => {
+      item.style.cursor = 'pointer';
+    });
+  }
+
+  function showNoChampion() {
+    document.getElementById('championTeamName').textContent = 'No Champion Yet';
+    document.getElementById('championSeason').textContent = 'Season in progress';
+    document.getElementById('championRecord').innerHTML = '';
+  }
+
+  function showError() {
+    document.getElementById('championTeamName').textContent = 'Error Loading Data';
+    document.getElementById('championSeason').textContent = 'Please try again later';
+  }
+
+  // Make loadSeasonData available globally for timeline clicks
+  window.loadSeasonData = loadSeasonData;
+
+  // Initialize on load
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }, 500);
+  });
+
+  init();
+</script>
+
+<script src="team-colors.js"></script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

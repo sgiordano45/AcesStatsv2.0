@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Scouting Report - Mountainside Aces</title>
+  <link rel="icon" type="image/png" href="aces-favicon.png">
+  <link rel="stylesheet" href="nav-styles.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f0;
+      color: #111;
+      margin: 0;
+    }
+
+    /* ── Screen controls bar ───────────────────────────── */
+    .controls {
+      background: linear-gradient(135deg, #1a6b4a 0%, #2d5016 100%);
+      color: white;
+      padding: 0.9rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+    }
+
+    .controls h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .ctrl-group { display: flex; flex-direction: column; gap: 2px; }
+
+    .ctrl-group label {
+      font-size: 0.7rem;
+      opacity: 0.75;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .ctrl-group select {
+      padding: 0.38rem 0.7rem;
+      border-radius: 5px;
+      border: none;
+      font-size: 0.88rem;
+      background: white;
+      color: #1a6b4a;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 150px;
+    }
+    .ctrl-group select:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-print {
+      margin-left: auto;
+      background: white;
+      color: #1a6b4a;
+      border: none;
+      border-radius: 6px;
+      padding: 0.45rem 1rem;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+    }
+    .btn-print:hover:not(:disabled) { background: #e0f2ea; }
+    .btn-print:disabled { opacity: 0.35; cursor: default; }
+
+    /* ── Report wrapper ────────────────────────────────── */
+    .report-wrap {
+      max-width: 960px;
+      margin: 1.2rem auto;
+      padding: 0 1rem;
+    }
+
+    /* State cards */
+    .state-card {
+      text-align: center;
+      padding: 3.5rem 1rem;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      color: #666;
+    }
+    .state-card h3 { margin: 0 0 0.4rem; color: #1a6b4a; }
+    .state-card p  { margin: 0; font-size: 0.9rem; }
+
+    .spinner {
+      width: 34px; height: 34px;
+      border: 4px solid #ddd;
+      border-top-color: #1a6b4a;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 0 auto 0.8rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Report: header ─────────────────────────────────── */
+    .rpt-header {
+      background: white;
+      border-radius: 8px 8px 0 0;
+      border-bottom: 3px solid #1a6b4a;
+      padding: 0.8rem 1.2rem 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .rpt-logo {
+      width: 46px;
+      height: 46px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .rpt-title { flex: 1; }
+    .rpt-title h2 {
+      margin: 0 0 0.1rem;
+      font-size: 1.3rem;
+      color: #1a6b4a;
+      text-transform: capitalize;
+    }
+    .rpt-title p {
+      margin: 0;
+      font-size: 0.75rem;
+      color: #777;
+    }
+
+    .rpt-meta {
+      text-align: right;
+      font-size: 0.72rem;
+      color: #999;
+      line-height: 1.5;
+    }
+    .rpt-meta strong { display: block; font-size: 0.82rem; color: #444; }
+
+    /* ── Report: body ───────────────────────────────────── */
+    .rpt-body {
+      background: white;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 0.8rem 1.2rem 1.2rem;
+    }
+
+    /* ── Player grid ────────────────────────────────────── */
+    .player-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.55rem;
+      margin-top: 0.65rem;
+    }
+
+    .p-card {
+      border: 1.5px solid #c8e6d5;
+      border-radius: 7px;
+      padding: 0.55rem 0.7rem 0.55rem;
+      background: #f8fef9;
+      position: relative;
+      break-inside: avoid;
+    }
+
+    .p-card.captain {
+      border-color: #c8a000;
+      background: #fffef0;
+    }
+
+    .p-num {
+      position: absolute;
+      top: 0.38rem;
+      right: 0.55rem;
+      font-size: 0.82rem;
+      color: #888;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .p-name {
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: #152e1e;
+      padding-right: 2.2rem;
+      margin-bottom: 0.4rem;
+      line-height: 1.2;
+    }
+    .p-name.cap-mark::after {
+      content: ' ©';
+      font-weight: 400;
+      color: #b8860b;
+      font-size: 0.7rem;
+    }
+
+    .p-stats {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .p-stat {
+      flex: 1;
+      text-align: center;
+    }
+
+    .p-stat-lbl {
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #999;
+      line-height: 1;
+      margin-bottom: 1px;
+    }
+
+    .p-stat-val {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #1a6b4a;
+      line-height: 1.1;
+    }
+    .p-stat-val.career {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #3a6a8a;
+    }
+    .p-stat-val.na {
+      color: #ccc;
+      font-size: 0.9rem;
+      font-weight: 400;
+    }
+
+    .p-row-lbl {
+      font-size: 0.55rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #999;
+      margin-bottom: 2px;
+      margin-top: 5px;
+    }
+    .p-row-lbl:first-of-type { margin-top: 0; }
+    .p-row-lbl.career-lbl { color: #5a7a9a; }
+
+    /* ── Team totals footer ─────────────────────────────── */
+    .rpt-footer {
+      margin-top: 0.7rem;
+      padding-top: 0.55rem;
+      border-top: 1px solid #e5e7eb;
+      font-size: 0.76rem;
+      color: #666;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem 1.5rem;
+    }
+    .rpt-footer strong { color: #1a6b4a; }
+
+    /* ── PRINT ──────────────────────────────────────────── */
+    @media print {
+      @page {
+        size: letter portrait;
+        margin: 0.5in 0.5in 0.5in 0.5in;
+      }
+
+      body { background: white; }
+
+      nav#main-nav,
+      .controls { display: none !important; }
+
+      .report-wrap {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .rpt-header {
+        border-radius: 0;
+        padding: 0.35rem 0.5rem 0.3rem;
+        border-bottom-width: 2pt;
+      }
+      .rpt-logo { width: 38px; height: 38px; }
+      .rpt-title h2 { font-size: 1.05rem; }
+      .rpt-title p  { font-size: 0.68rem; }
+      .rpt-meta { font-size: 0.65rem; }
+
+      .rpt-body {
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0.4rem 0.5rem 0.5rem;
+      }
+
+      /* 5 columns on letter paper */
+      .player-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.35rem;
+        margin-top: 0.35rem;
+      }
+
+      .p-card {
+        padding: 0.3rem 0.45rem 0.35rem;
+        border-radius: 4px;
+        border-width: 1pt;
+      }
+
+      .p-name     { font-size: 0.68rem; margin-bottom: 0.2rem; }
+      .p-num      { font-size: 0.68rem; top: 0.28rem; right: 0.38rem; }
+      .p-stat-lbl { font-size: 0.52rem; }
+      .p-stat-val { font-size: 0.8rem; }
+      .p-stat-val.career { font-size: 0.68rem; }
+      .p-stat-val.na { font-size: 0.68rem; }
+      .p-row-lbl  { font-size: 0.48rem; margin-top: 3px; }
+
+      .rpt-footer { font-size: 0.65rem; margin-top: 0.4rem; padding-top: 0.35rem; }
+
+      .state-card { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="filters-nav"></div>
+
+  <!-- Screen controls -->
+  <div class="controls">
+    <h1>📋 Team Scouting Report</h1>
+
+    <div class="ctrl-group">
+      <label for="seasonSel">Season</label>
+      <select id="seasonSel"><option value="">Loading…</option></select>
+    </div>
+
+    <div class="ctrl-group">
+      <label for="teamSel">Team</label>
+      <select id="teamSel" disabled><option value="">Select season first</option></select>
+    </div>
+
+    <button class="btn-print" id="btnPrint" disabled>🖨 Print</button>
+  </div>
+
+  <!-- Report area -->
+  <div class="report-wrap">
+    <div id="rptContainer">
+      <div class="state-card">
+        <h3>📋 Select a Season &amp; Team</h3>
+        <p>Choose a season and team above to generate the printable scouting report.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav — auto-initializes into .filters-nav, same as current-season.html -->
+  <script type="module">
+    import { NavigationComponent } from './nav-component.js';
+    import './firebase-auth.js'; // Sets window.auth so nav picks up auth state + role
+  </script>
+
+  <!-- Main data logic -->
+  <script type="module">
+    import { db, getAllSeasons, getAllTeams, getSeasonPlayerStatsOptimized, getAllPlayerStatsOptimized } from './firebase-data.js';
+    import { getTeamRosterDoc } from './firebase-roster.js';
+    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const seasonSel  = document.getElementById('seasonSel');
+    const teamSel    = document.getElementById('teamSel');
+    const btnPrint   = document.getElementById('btnPrint');
+    const rptCont    = document.getElementById('rptContainer');
+
+    let allTeams = [];
+    let currentReportData = null; // { sid, tid, players } — kept for print window
+
+    // ── Boot ────────────────────────────────────────────────────────────────
+    async function boot() {
+      try {
+        const [seasons, teams] = await Promise.all([getAllSeasons(), getAllTeams()]);
+        allTeams = teams;
+
+        seasons.sort((a, b) => {
+          if (b.year !== a.year) return b.year - a.year;
+          return a.season === 'spring' ? 1 : -1;
+        });
+
+        seasonSel.innerHTML = '<option value="">— Season —</option>';
+        seasons.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          const label = `${s.year} ${cap(s.season)}`;
+          opt.textContent = s.isActive ? `${label} (Current)` : label;
+          seasonSel.appendChild(opt);
+        });
+
+        seasonSel.addEventListener('change', onSeasonChange);
+        teamSel.addEventListener('change', onTeamChange);
+        btnPrint.addEventListener('click', printReport);
+
+        // Auto-load current/most-recent season
+        if (seasons.length) {
+          seasonSel.value = seasons[0].id;
+          await onSeasonChange();
+        }
+      } catch (e) {
+        rptCont.innerHTML = err(e);
+      }
+    }
+
+    // ── Season selected ─────────────────────────────────────────────────────
+    async function onSeasonChange() {
+      const sid = seasonSel.value;
+      if (!sid) {
+        teamSel.disabled = true;
+        teamSel.innerHTML = '<option value="">Select season first</option>';
+        btnPrint.disabled = true;
+        showEmpty();
+        return;
+      }
+
+      teamSel.innerHTML = '<option value="">Loading…</option>';
+      teamSel.disabled  = true;
+      btnPrint.disabled = true;
+
+      try {
+        // Discover teams that have batting stats in this season
+        const stats = await getSeasonPlayerStatsOptimized(sid);
+        const teamIds = [...new Set(
+          stats.map(p => (p.team || p.currentTeam || '').toLowerCase()).filter(Boolean)
+        )].sort();
+
+        teamSel.innerHTML = '<option value="">— Team —</option>';
+        const pool = teamIds.length ? teamIds : allTeams.map(t => t.id.toLowerCase());
+        pool.forEach(tid => {
+          const known = allTeams.find(t => t.id.toLowerCase() === tid);
+          const label = known?.name ? cap(known.name) : cap(tid);
+          const opt   = document.createElement('option');
+          opt.value   = tid;
+          opt.textContent = label;
+          teamSel.appendChild(opt);
+        });
+
+        teamSel.disabled = false;
+        showEmpty();
+      } catch (e) {
+        teamSel.innerHTML = '<option value="">Error loading</option>';
+        console.error(e);
+      }
+    }
+
+    // ── Team selected ───────────────────────────────────────────────────────
+    async function onTeamChange() {
+      const sid = seasonSel.value;
+      const tid = teamSel.value;
+      if (!sid || !tid) { btnPrint.disabled = true; showEmpty(); return; }
+
+      showLoading();
+      btnPrint.disabled = true;
+
+      try {
+        const [roster, allStats, allPlayers] = await Promise.all([
+          getTeamRosterDoc(tid, sid),
+          getSeasonPlayerStatsOptimized(sid),
+          getAllPlayerStatsOptimized()
+        ]);
+
+        // Build career lookup: playerId → career object
+        const careerMap = {};
+        allPlayers.forEach(p => { if (p.id) careerMap[p.id] = p.career || null; });
+
+        // Stats filtered to this team
+        const tStats = allStats.filter(p =>
+          (p.team || p.currentTeam || '').toLowerCase() === tid.toLowerCase()
+        );
+
+        let players;
+        if (roster && roster.length > 0) {
+          // Roster doc is source of truth for team composition + jersey numbers
+          players = roster.map(rp => {
+            const st = tStats.find(s =>
+              s.id === rp.id ||
+              s.id === rp.legacyId ||
+              norm(s.name) === norm(rp.name)
+            );
+            const careerRec = careerMap[rp.id] || careerMap[rp.legacyId] || (st ? careerMap[st.id] : null);
+            return blend(rp, st, careerRec);
+          });
+        } else {
+          // No roster doc — fall back to stats collection
+          players = tStats.map(s => blend(null, s, careerMap[s.id] || null));
+        }
+
+        // Sort: by jersey number if present, then alphabetically
+        players.sort((a, b) => {
+          if (a.num != null && b.num != null) return a.num - b.num;
+          if (a.num != null) return -1;
+          if (b.num != null) return 1;
+          return a.name.localeCompare(b.name);
+        });
+
+        currentReportData = { sid, tid, players };
+        render(sid, tid, players);
+        loadTeamSprayCharts(players);
+        btnPrint.disabled = false;
+      } catch (e) {
+        rptCont.innerHTML = err(e);
+        console.error(e);
+      }
+    }
+
+    // ── Merge roster player + stats record + career record ──────────────────
+    function blend(rp, st, career) {
+      const name    = rp?.name || st?.name || st?.playerName || '?';
+      const num     = rp?.number ?? null;
+      const captain = rp?.isCaptain || false;
+
+      const ab = +(st?.atBats ?? 0);
+      const h  = +(st?.hits   ?? 0);
+      const bb = +(st?.walks  ?? 0);
+      const g  = +(st?.games  ?? 0);
+
+      // Season AVG/OBP — prefer stored; recalculate if needed
+      let avg = (st?.battingAverage != null) ? st.battingAverage : (ab > 0 ? h / ab : null);
+      let obp = (st?.onBasePercentage != null) ? st.onBasePercentage : ((ab + bb) > 0 ? (h + bb) / (ab + bb) : null);
+
+      // Career AVG/OBP
+      const cab = +(career?.atBats ?? 0);
+      const ch  = +(career?.hits   ?? 0);
+      const cbb = +(career?.walks  ?? 0);
+      let careerAvg = (career?.battingAverage != null) ? career.battingAverage : (cab > 0 ? ch / cab : null);
+      let careerObp = (career?.onBasePercentage != null) ? career.onBasePercentage : ((cab + cbb) > 0 ? (ch + cbb) / (cab + cbb) : null);
+
+      const id = rp?.id || rp?.legacyId || st?.id || null;
+      return { id, name, num, captain, ab, h, bb, g, avg, obp, careerAvg, careerObp, cab };
+    }
+
+    // ── Render the report ────────────────────────────────────────────────────
+    function render(sid, tid, players) {
+      const seasonLabel = seasonSel.options[seasonSel.selectedIndex]?.text || sid;
+      const teamLabel   = (() => {
+        const known = allTeams.find(t => t.id.toLowerCase() === tid);
+        return known?.name ? cap(known.name) : cap(tid);
+      })();
+      const now = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      // Team aggregate (only players with at-bats)
+      const batters  = players.filter(p => p.ab > 0);
+      const totAB    = batters.reduce((s, p) => s + p.ab, 0);
+      const totH     = batters.reduce((s, p) => s + p.h,  0);
+      const totBB    = batters.reduce((s, p) => s + p.bb, 0);
+      const tmAVG    = totAB > 0 ? fmt(totH / totAB) : '—';
+      const tmOBP    = (totAB + totBB) > 0 ? fmt((totH + totBB) / (totAB + totBB)) : '—';
+
+      const cards = players.map(p => cardHtml(p)).join('');
+
+      rptCont.innerHTML = `
+        <div class="rpt-header">
+          <img class="rpt-logo" src="logos/${tid}.png" onerror="this.src='logos/green.png'" alt="${teamLabel}">
+          <div class="rpt-title">
+            <h2>${teamLabel} Team</h2>
+            <p>${seasonLabel} &mdash; Scouting Report</p>
+          </div>
+          <div class="rpt-meta">
+            <strong>${players.length} players</strong>
+            ${now}
+          </div>
+        </div>
+        <div class="rpt-body">
+          <div class="player-grid">${cards}</div>
+          <div class="rpt-footer">
+            Team totals (${batters.length} with ABs) &mdash;
+            AVG: <strong>${tmAVG}</strong> &nbsp;&bull;&nbsp;
+            OBP: <strong>${tmOBP}</strong> &nbsp;&bull;&nbsp;
+            AB: <strong>${totAB}</strong>
+          </div>
+        </div>`;
+    }
+
+    // ── Build a single player card (reused by screen + print) ───────────────
+    function cardHtml(p, large = false) {
+      const avgStr     = p.avg     != null && p.ab  > 0 ? fmt(p.avg)     : null;
+      const obpStr     = p.obp     != null && p.ab  > 0 ? fmt(p.obp)     : null;
+      const cAvgStr    = p.careerAvg != null && p.cab > 0 ? fmt(p.careerAvg) : null;
+      const cObpStr    = p.careerObp != null && p.cab > 0 ? fmt(p.careerObp) : null;
+      const hasCareer  = cAvgStr || cObpStr;
+
+      return `
+        <div class="p-card${p.captain ? ' captain' : ''}${large ? ' large' : ''}" ${p.id ? `data-player-id="${p.id}"` : ''}>
+          ${p.num != null ? `<div class="p-num">#${p.num}</div>` : ''}
+          <div class="p-name${p.captain ? ' cap-mark' : ''}">${esc(p.name)}</div>
+          <div class="p-row-lbl">Season</div>
+          <div class="p-stats">
+            <div class="p-stat">
+              <div class="p-stat-lbl">AVG</div>
+              <div class="p-stat-val${avgStr ? '' : ' na'}">${avgStr ?? '—'}</div>
+            </div>
+            <div class="p-stat">
+              <div class="p-stat-lbl">OBP</div>
+              <div class="p-stat-val${obpStr ? '' : ' na'}">${obpStr ?? '—'}</div>
+            </div>
+          </div>
+          ${hasCareer ? `
+          <div class="p-row-lbl career-lbl">Career</div>
+          <div class="p-stats">
+            <div class="p-stat">
+              <div class="p-stat-lbl">AVG</div>
+              <div class="p-stat-val career${cAvgStr ? '' : ' na'}">${cAvgStr ?? '—'}</div>
+            </div>
+            <div class="p-stat">
+              <div class="p-stat-lbl">OBP</div>
+              <div class="p-stat-val career${cObpStr ? '' : ' na'}">${cObpStr ?? '—'}</div>
+            </div>
+          </div>` : ''}
+          <div class="p-spray" style="display:none;margin-top:6px;">
+            <div class="p-row-lbl" style="margin-bottom:3px;">Spray</div>
+            <svg viewBox="0 0 300 270" style="width:100%;display:block;border-radius:4px;"></svg>
+          </div>
+        </div>`;
+    }
+
+    // ── Print: open nicely-formatted standalone window ───────────────────────
+    function printReport() {
+      if (!currentReportData) return;
+      const { sid, tid, players } = currentReportData;
+
+      const seasonLabel = seasonSel.options[seasonSel.selectedIndex]?.text || sid;
+      const teamLabel   = (() => {
+        const known = allTeams.find(t => t.id.toLowerCase() === tid);
+        return known?.name ? cap(known.name) : cap(tid);
+      })();
+
+      const batters = players.filter(p => p.ab > 0);
+      const totAB   = batters.reduce((s, p) => s + p.ab, 0);
+      const totH    = batters.reduce((s, p) => s + p.h,  0);
+      const totBB   = batters.reduce((s, p) => s + p.bb, 0);
+      const tmAVG   = totAB > 0 ? fmt(totH / totAB) : '—';
+      const tmOBP   = (totAB + totBB) > 0 ? fmt((totH + totBB) / (totAB + totBB)) : '—';
+
+      const now = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+      const cards = players.map(p => {
+        const avgStr  = p.avg     != null && p.ab  > 0 ? fmt(p.avg)     : null;
+        const obpStr  = p.obp     != null && p.ab  > 0 ? fmt(p.obp)     : null;
+        const cAvgStr = p.careerAvg != null && p.cab > 0 ? fmt(p.careerAvg) : null;
+        const cObpStr = p.careerObp != null && p.cab > 0 ? fmt(p.careerObp) : null;
+        const hasCareer = cAvgStr || cObpStr;
+
+        // Grab spray SVG content from the live DOM if it was rendered
+        let spraySvgHtml = '';
+        if (p.id) {
+          const liveCard  = document.querySelector(`[data-player-id="${p.id}"]`);
+          const liveSlot  = liveCard?.querySelector('.p-spray');
+          const liveSvg   = liveSlot?.querySelector('svg');
+          if (liveSlot && liveSlot.style.display !== 'none' && liveSvg) {
+            spraySvgHtml = `
+              <div class="row-lbl" style="margin-top:5px;">Spray</div>
+              <svg viewBox="0 0 300 270" style="width:100%;display:block;border-radius:3pt;">${liveSvg.innerHTML}</svg>`;
+          }
+        }
+
+        return `
+          <div class="pc${p.captain ? ' cap' : ''}">
+            ${p.num != null ? `<div class="pnum">#${p.num}</div>` : ''}
+            <div class="pname${p.captain ? ' capmark' : ''}">${esc(p.name)}</div>
+            <div class="row-lbl">Season</div>
+            <div class="pstats">
+              <div class="ps"><div class="psl">AVG</div><div class="psv${avgStr ? '' : ' na'}">${avgStr ?? '—'}</div></div>
+              <div class="ps"><div class="psl">OBP</div><div class="psv${obpStr ? '' : ' na'}">${obpStr ?? '—'}</div></div>
+            </div>
+            ${hasCareer ? `
+            <div class="row-lbl clbl">Career</div>
+            <div class="pstats">
+              <div class="ps"><div class="psl">AVG</div><div class="psv career${cAvgStr ? '' : ' na'}">${cAvgStr ?? '—'}</div></div>
+              <div class="ps"><div class="psl">OBP</div><div class="psv career${cObpStr ? '' : ' na'}">${cObpStr ?? '—'}</div></div>
+            </div>` : ''}
+            ${spraySvgHtml}
+          </div>`;
+      }).join('');
+
+      const pw = window.open('', '_blank');
+      pw.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Scouting Report — ${teamLabel} ${seasonLabel}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      padding: 0.5in;
+      background: white;
+      color: #111;
+    }
+    /* Header */
+    .hdr {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 3pt solid #1a6b4a;
+      padding-bottom: 0.45rem;
+      margin-bottom: 0.5rem;
+    }
+    .hdr-logo { width: 52px; height: 52px; object-fit: contain; }
+    .hdr-main { flex: 1; }
+    .hdr-main h1 { font-size: 1.4rem; color: #1a6b4a; font-weight: 800; line-height: 1.1; }
+    .hdr-main p  { font-size: 0.8rem; color: #555; margin-top: 2px; }
+    .hdr-right { text-align: right; font-size: 0.72rem; color: #777; line-height: 1.5; }
+    .hdr-right strong { display: block; font-size: 0.82rem; color: #333; }
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.4rem;
+    }
+    /* Player card */
+    .pc {
+      border: 1.5pt solid #c8e6d5;
+      border-radius: 6pt;
+      padding: 0.5rem 0.6rem 0.45rem;
+      background: #f8fef9;
+      position: relative;
+      break-inside: avoid;
+    }
+    .pc.cap { border-color: #c8a000; background: #fffef0; }
+    .pnum {
+      position: absolute;
+      top: 0.3rem; right: 0.45rem;
+      font-size: 0.82rem; color: #888; font-weight: 700; line-height: 1;
+    }
+    .pname {
+      font-weight: 700; font-size: 0.82rem; color: #152e1e;
+      padding-right: 2.2rem; line-height: 1.2; margin-bottom: 0.25rem;
+    }
+    .pname.capmark::after { content: ' ©'; font-weight: 400; color: #b8860b; font-size: 0.68rem; }
+    .row-lbl {
+      font-size: 0.52rem; text-transform: uppercase; letter-spacing: 0.06em;
+      color: #888; margin-bottom: 2px; margin-top: 4px;
+    }
+    .row-lbl:first-of-type { margin-top: 0; }
+    .clbl { color: #5a7a9a; }
+    .pstats { display: flex; gap: 0.4rem; }
+    .ps { flex: 1; text-align: center; }
+    .psl { font-size: 0.52rem; text-transform: uppercase; letter-spacing: 0.05em; color: #999; line-height: 1; margin-bottom: 1px; }
+    .psv { font-size: 1.05rem; font-weight: 800; color: #1a6b4a; line-height: 1.1; }
+    .psv.career { font-size: 0.88rem; color: #3a6a8a; font-weight: 700; }
+    .psv.na { color: #ccc; font-size: 0.78rem; font-weight: 400; }
+    /* Footer */
+    .ftr {
+      margin-top: 0.5rem;
+      padding-top: 0.35rem;
+      border-top: 1pt solid #ddd;
+      font-size: 0.72rem;
+      color: #555;
+    }
+    .ftr strong { color: #1a6b4a; }
+    @media print {
+      body { padding: 0; }
+      @page { size: letter portrait; margin: 0.5in; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hdr">
+    <img class="hdr-logo" src="logos/${tid}.png" onerror="this.src='logos/green.png'" alt="${teamLabel}">
+    <div class="hdr-main">
+      <h1>${teamLabel} — Scouting Report</h1>
+      <p>${seasonLabel}</p>
+    </div>
+    <div class="hdr-right">
+      <strong>${players.length} players</strong>
+      ${now}
+    </div>
+  </div>
+  <div class="grid">${cards}</div>
+  <div class="ftr">
+    Team totals (${batters.length} with ABs) &mdash;
+    AVG: <strong>${tmAVG}</strong> &nbsp;&bull;&nbsp;
+    OBP: <strong>${tmOBP}</strong> &nbsp;&bull;&nbsp;
+    AB: <strong>${totAB}</strong>
+  </div>
+  <script>window.print();<\/script>
+</body>
+</html>`);
+      pw.document.close();
+    }
+
+    // ── Utilities ───────────────────────────────────────────────────────────
+    function showEmpty() {
+      rptCont.innerHTML = `
+        <div class="state-card">
+          <h3>📋 Select a Season &amp; Team</h3>
+          <p>Choose a season and team above to generate the scouting report.</p>
+        </div>`;
+    }
+
+    function showLoading() {
+      rptCont.innerHTML = `
+        <div class="state-card">
+          <div class="spinner"></div>
+          <p>Loading roster and stats…</p>
+        </div>`;
+    }
+
+    function fmt(v) {
+      if (v == null || isNaN(v)) return null;
+      const n = +v;
+      // Drop leading zero for rates < 1 (e.g. 0.333 → .333)
+      return n < 1 ? n.toFixed(3).slice(1) : n.toFixed(3);
+    }
+
+    function cap(s) {
+      if (!s) return '';
+      return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+    }
+
+    function norm(s) { return (s || '').toLowerCase().trim(); }
+
+    function esc(s) {
+      return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function err(e) {
+      return `<div class="state-card"><h3>Error</h3><p>${esc(e.message)}</p></div>`;
+    }
+
+    // ── Mini spray chart: field geometry ────────────────────────────────────────
+    const _TSC_HOME  = { x: 150, y: 248 };
+    const _TSC_OF_R  = 210, _TSC_IF_R = 105, _TSC_SCALE = 1.05;
+    const _TSC_FL_L  = { x: _TSC_HOME.x - _TSC_OF_R * Math.sin(Math.PI/4), y: _TSC_HOME.y - _TSC_OF_R * Math.cos(Math.PI/4) };
+    const _TSC_FL_R  = { x: _TSC_HOME.x + _TSC_OF_R * Math.sin(Math.PI/4), y: _TSC_HOME.y - _TSC_OF_R * Math.cos(Math.PI/4) };
+    const _TSC_IF_L  = { x: _TSC_HOME.x - _TSC_IF_R * Math.sin(Math.PI/4), y: _TSC_HOME.y - _TSC_IF_R * Math.cos(Math.PI/4) };
+    const _TSC_IF_R2 = { x: _TSC_HOME.x + _TSC_IF_R * Math.sin(Math.PI/4), y: _TSC_HOME.y - _TSC_IF_R * Math.cos(Math.PI/4) };
+    const _TSC_BD    = 88;
+    const _TSC_1B    = { x: _TSC_HOME.x + _TSC_BD * Math.sin(Math.PI/4), y: _TSC_HOME.y - _TSC_BD * Math.cos(Math.PI/4) };
+    const _TSC_3B    = { x: _TSC_HOME.x - _TSC_BD * Math.sin(Math.PI/4), y: _TSC_HOME.y - _TSC_BD * Math.cos(Math.PI/4) };
+    const _TSC_2B    = { x: _TSC_HOME.x, y: _TSC_HOME.y - _TSC_BD * Math.SQRT2 };
+    const _TSC_ZONES = {
+      LF:{x:48,y:88}, LCF:{x:98,y:58}, CF:{x:150,y:42}, RCF:{x:202,y:58}, RF:{x:252,y:88},
+      '3B':{x:Math.round(_TSC_3B.x),y:Math.round(_TSC_3B.y)}, SS:{x:112,y:158},
+      '2B':{x:188,y:158}, '1B':{x:Math.round(_TSC_1B.x),y:Math.round(_TSC_1B.y)},
+      P:{x:150,y:208}, C:{x:150,y:236},
+    };
+
+    function _tscDrawField(svgEl) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const add = (tag, attrs) => {
+        const n = document.createElementNS(ns, tag);
+        Object.entries(attrs).forEach(([k,v]) => n.setAttribute(k,v));
+        svgEl.appendChild(n);
+      };
+      add('rect', { x:0, y:0, width:300, height:270, fill:'#f7fdf4' });
+      add('path', { d:`M ${_TSC_FL_L.x.toFixed(1)} ${_TSC_FL_L.y.toFixed(1)} A ${_TSC_OF_R} ${_TSC_OF_R} 0 0 1 ${_TSC_FL_R.x.toFixed(1)} ${_TSC_FL_R.y.toFixed(1)} L ${_TSC_HOME.x} ${_TSC_HOME.y} Z`, fill:'#e4f2ec', stroke:'#b2d8cc', 'stroke-width':'1.5' });
+      add('path', { d:`M ${_TSC_IF_L.x.toFixed(1)} ${_TSC_IF_L.y.toFixed(1)} A ${_TSC_IF_R} ${_TSC_IF_R} 0 0 1 ${_TSC_IF_R2.x.toFixed(1)} ${_TSC_IF_R2.y.toFixed(1)} L ${_TSC_HOME.x} ${_TSC_HOME.y} Z`, fill:'#ede8df', stroke:'#d4b896', 'stroke-width':'1' });
+      add('polyline', { points:`${_TSC_HOME.x},${_TSC_HOME.y} ${_TSC_1B.x.toFixed(1)},${_TSC_1B.y.toFixed(1)} ${_TSC_2B.x},${_TSC_2B.y} ${_TSC_3B.x.toFixed(1)},${_TSC_3B.y.toFixed(1)} ${_TSC_HOME.x},${_TSC_HOME.y}`, fill:'none', stroke:'#c4a882', 'stroke-width':'1' });
+      add('line', { x1:_TSC_HOME.x, y1:_TSC_HOME.y, x2:_TSC_FL_L.x.toFixed(1), y2:_TSC_FL_L.y.toFixed(1), stroke:'#b2d8cc', 'stroke-width':'1' });
+      add('line', { x1:_TSC_HOME.x, y1:_TSC_HOME.y, x2:_TSC_FL_R.x.toFixed(1), y2:_TSC_FL_R.y.toFixed(1), stroke:'#b2d8cc', 'stroke-width':'1' });
+    }
+
+    function _tscAddDot(svgEl, cx, cy, isHit, precise) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const c  = document.createElementNS(ns, 'circle');
+      c.setAttribute('cx', cx.toFixed(1)); c.setAttribute('cy', cy.toFixed(1));
+      c.setAttribute('r', precise ? '4' : '5');
+      c.setAttribute('fill', isHit ? '#22c55e' : '#ef4444');
+      c.setAttribute('fill-opacity', precise ? '0.7' : '0.8');
+      c.setAttribute('stroke', 'white'); c.setAttribute('stroke-width', '0.8');
+      svgEl.appendChild(c);
+    }
+
+    // Fetch spray data for all players and inject mini charts into their cards
+    async function loadTeamSprayCharts(players) {
+      const withIds = players.filter(p => p.id);
+      if (!withIds.length) return;
+
+      // Fetch all in parallel
+      const results = await Promise.allSettled(
+        withIds.map(p => getDoc(doc(db, 'sprayChartData', p.id)).then(snap => ({ id: p.id, snap })))
+      );
+
+      results.forEach(r => {
+        if (r.status !== 'fulfilled') return;
+        const { id, snap } = r.value;
+        if (!snap.exists()) return;
+
+        const data         = snap.data();
+        const precisePlays = (data.csvPlays || []).filter(p => p.angle_deg != null && p.distance_ft != null);
+        const zonePlays    = [];
+        Object.values(data.gamePlays || {}).forEach(arr =>
+          (arr || []).forEach(p => { if (p.zone && _TSC_ZONES[p.zone]) zonePlays.push(p); })
+        );
+        if (!precisePlays.length && !zonePlays.length) return;
+
+        // Find the card and its spray slot
+        const card = document.querySelector(`[data-player-id="${id}"]`);
+        if (!card) return;
+        const slot  = card.querySelector('.p-spray');
+        const svgEl = slot?.querySelector('svg');
+        if (!slot || !svgEl) return;
+
+        _tscDrawField(svgEl);
+
+        // Precise dots
+        precisePlays.forEach(p => {
+          const rad = p.angle_deg * Math.PI / 180;
+          const cx  = _TSC_HOME.x + p.distance_ft * Math.sin(rad) * _TSC_SCALE;
+          const cy  = _TSC_HOME.y - p.distance_ft * Math.cos(rad) * _TSC_SCALE;
+          if (Math.hypot(cx - _TSC_HOME.x, cy - _TSC_HOME.y) <= _TSC_OF_R + 10)
+            _tscAddDot(svgEl, cx, cy, p.result === 'Hit', true);
+        });
+
+        // Zone dots with jitter
+        const zoneCount = {}, zoneIdx = {};
+        zonePlays.forEach(p => { zoneCount[p.zone] = (zoneCount[p.zone]||0)+1; });
+        zonePlays.forEach(p => {
+          const z = _TSC_ZONES[p.zone], idx = zoneIdx[p.zone] = (zoneIdx[p.zone]||0)+1;
+          const spread = Math.min(14, 3 + zoneCount[p.zone]*2);
+          const cx = zoneCount[p.zone]>1 ? z.x + spread*Math.cos(idx*137.5*Math.PI/180) : z.x;
+          const cy = zoneCount[p.zone]>1 ? z.y + spread*Math.sin(idx*137.5*Math.PI/180) : z.y;
+          _tscAddDot(svgEl, cx, cy, p.result==='Hit', false);
+        });
+
+        slot.style.display = '';
+      });
+    }
+
+    boot();
+  </script>
+  <script src="mobile-enhancements.js"></script>
+  <script src="theme-toggle.js"></script>
+</body>
+</html>

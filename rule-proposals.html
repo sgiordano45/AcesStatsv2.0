@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mountainside Aces - Rule Proposals</title>
+    <meta name="theme-color" content="#2d5016">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="mobile-enhancements.css">
+    <link rel="stylesheet" href="nav-styles.css">
+    <style>
+        :root {
+            --primary-color: #2d5016;
+            --secondary-color: #1a6b4a;
+            --accent-color: #ffd700;
+            --card-bg: #ffffff;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+            --harvest-primary: #8b4513;
+            --harvest-secondary: #cd853f;
+            --success-color: #38a169;
+            --error-color: #e53e3e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            min-height: 100vh;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .softball-spinner::before {
+            content: '📋';
+            font-size: 80px;
+            animation: spin 1.5s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--harvest-primary) 0%, var(--harvest-secondary) 100%);
+            padding: 4rem 2rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .header::after {
+            content: '📋';
+            position: absolute;
+            bottom: -40px;
+            left: -40px;
+            font-size: 200px;
+            opacity: 0.05;
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header h1 {
+            color: white;
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.3rem;
+            font-weight: 300;
+        }
+
+        .season-badge {
+            display: inline-block;
+            padding: 0.5rem 1.25rem;
+            background: var(--accent-color);
+            color: var(--harvest-primary);
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        /* Desktop-only Back Home button */
+        .desktop-home-btn {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: var(--harvest-primary);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 2px solid var(--harvest-primary);
+        }
+
+        .desktop-home-btn:hover {
+            background: var(--harvest-primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        @media (max-width: 768px) {
+            .desktop-home-btn {
+                display: none;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .header {
+                padding: 3rem 1.5rem;
+            }
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Auth Required Message */
+        .auth-required {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+        }
+
+        .auth-required-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .auth-required h2 {
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            font-size: 1.75rem;
+        }
+
+        .auth-required p {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .sign-in-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--harvest-primary) 0%, var(--harvest-secondary) 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .sign-in-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Form Section */
+        .proposal-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .section-icon {
+            font-size: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .user-welcome {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, rgba(45, 80, 22, 0.1) 0%, rgba(26, 107, 74, 0.1) 100%);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .user-welcome-text {
+            color: var(--text-dark);
+        }
+
+        .user-name {
+            font-weight: 600;
+        }
+
+        /* Form Styles */
+        .proposal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .required-star {
+            color: var(--error-color);
+        }
+
+        .form-hint {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            padding: 1rem 1.25rem;
+            font-size: 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            transition: all 0.3s;
+            font-family: inherit;
+            background: white;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--harvest-primary);
+            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .char-count {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            text-align: right;
+        }
+
+        .char-count.warning {
+            color: #d69e2e;
+        }
+
+        .char-count.error {
+            color: var(--error-color);
+        }
+
+        /* Category Select */
+        .category-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .category-option {
+            position: relative;
+        }
+
+        .category-option input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .category-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .category-option input:checked + .category-label {
+            border-color: var(--harvest-primary);
+            background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(205, 133, 63, 0.1) 100%);
+            color: var(--harvest-primary);
+        }
+
+        .category-label:hover {
+            border-color: var(--harvest-secondary);
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1.25rem 2rem;
+            background: linear-gradient(135deg, var(--harvest-primary) 0%, var(--harvest-secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Success Message */
+        .success-message {
+            display: none;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(56, 161, 105, 0.1) 0%, rgba(72, 187, 120, 0.1) 100%);
+            border: 2px solid var(--success-color);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .success-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .success-message h3 {
+            color: var(--success-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .success-message p {
+            color: var(--text-dark);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Error Message */
+        .error-message {
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, rgba(229, 62, 62, 0.1) 0%, rgba(252, 129, 129, 0.1) 100%);
+            border: 2px solid var(--error-color);
+            border-radius: 12px;
+            color: var(--error-color);
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Info Card */
+        .info-card {
+            background: linear-gradient(135deg, rgba(45, 80, 22, 0.05) 0%, rgba(26, 107, 74, 0.05) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .info-card h4 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .info-card ul {
+            margin: 0;
+            padding-left: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        .info-card li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Recent Proposals Section */
+        .proposals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .proposal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: all 0.2s;
+        }
+
+        .proposal-card:hover {
+            box-shadow: var(--shadow-sm);
+            border-color: var(--harvest-secondary);
+        }
+
+        .proposal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .proposal-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
+
+        .proposal-category {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            background: linear-gradient(135deg, var(--harvest-primary) 0%, var(--harvest-secondary) 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .proposal-description {
+            color: var(--text-dark);
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .proposal-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .proposal-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .no-proposals {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
+
+        .no-proposals-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        footer .credits {
+            opacity: 0.8;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .tab-btn:hover {
+            color: var(--harvest-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--harvest-primary);
+            border-bottom-color: var(--harvest-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="softball-spinner"></div>
+    </div>
+
+    <a href="index.html" class="desktop-home-btn">
+        🏠 Back Home
+    </a>
+    
+    <header class="header">
+        <div class="header-content">
+            <h1>📋 Rule Proposals</h1>
+            <p class="header-subtitle">Submit your ideas to improve the league</p>
+            <span class="season-badge">Community Input Welcome</span>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Auth Required State (shown when not logged in) -->
+        <div class="auth-required" id="authRequired" style="display: none;">
+            <div class="auth-required-icon">🔐</div>
+            <h2>Sign In Required</h2>
+            <p>You need to be signed in to submit a rule proposal. All league members can participate!</p>
+            <a href="signin.html" class="sign-in-btn">
+                👤 Sign In to Continue
+            </a>
+        </div>
+
+        <!-- Main Content (shown when logged in) -->
+        <div id="mainContent" style="display: none;">
+            <div class="proposal-section">
+                <div class="tab-nav">
+                    <button class="tab-btn active" data-tab="submit">✏️ Submit Proposal</button>
+                    <button class="tab-btn" data-tab="recent">📜 Recent Proposals</button>
+                </div>
+
+                <!-- Submit Tab -->
+                <div class="tab-content active" id="submitTab">
+                    <div class="user-welcome" id="userWelcome">
+                        <div class="user-avatar" id="userAvatar">?</div>
+                        <div class="user-welcome-text">
+                            Submitting as <span class="user-name" id="userName">Guest</span>
+                        </div>
+                    </div>
+
+                    <div class="success-message" id="successMessage">
+                        <div class="success-icon">✅</div>
+                        <h3>Proposal Submitted!</h3>
+                        <p>Thank you for your input. The rules committee will review your proposal.</p>
+                    </div>
+
+                    <div class="error-message" id="errorMessage"></div>
+
+                    <form class="proposal-form" id="proposalForm">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Rule Category <span class="required-star">*</span>
+                            </label>
+                            <div class="category-options">
+                                <div class="category-option">
+                                    <input type="radio" name="category" value="gameplay" id="catGameplay" required>
+                                    <label class="category-label" for="catGameplay">⚾ Gameplay</label>
+                                </div>
+                                <div class="category-option">
+                                    <input type="radio" name="category" value="scoring" id="catScoring">
+                                    <label class="category-label" for="catScoring">📊 Scoring</label>
+                                </div>
+                                <div class="category-option">
+                                    <input type="radio" name="category" value="eligibility" id="catEligibility">
+                                    <label class="category-label" for="catEligibility">✅ Eligibility</label>
+                                </div>
+                                <div class="category-option">
+                                    <input type="radio" name="category" value="playoffs" id="catPlayoffs">
+                                    <label class="category-label" for="catPlayoffs">🏆 Playoffs</label>
+                                </div>
+                                <div class="category-option">
+                                    <input type="radio" name="category" value="scheduling" id="catScheduling">
+                                    <label class="category-label" for="catScheduling">📅 Scheduling</label>
+                                </div>
+                                <div class="category-option">
+                                    <input type="radio" name="category" value="other" id="catOther">
+                                    <label class="category-label" for="catOther">💡 Other</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="proposalTitle">
+                                Proposal Title <span class="required-star">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-input" 
+                                   id="proposalTitle" 
+                                   placeholder="e.g., Adjust courtesy runner rules for injured players"
+                                   maxlength="100"
+                                   required>
+                            <div class="char-count"><span id="titleCount">0</span>/100</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="proposalDescription">
+                                Description <span class="required-star">*</span>
+                                <span class="form-hint">- Describe the proposed rule change</span>
+                            </label>
+                            <textarea class="form-textarea" 
+                                      id="proposalDescription" 
+                                      placeholder="Explain what rule you want to change and how it should work..."
+                                      maxlength="2000"
+                                      required></textarea>
+                            <div class="char-count"><span id="descCount">0</span>/2000</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="proposalRationale">
+                                Rationale
+                                <span class="form-hint">- Why is this change needed? (optional)</span>
+                            </label>
+                            <textarea class="form-textarea" 
+                                      id="proposalRationale" 
+                                      placeholder="Explain why you think this would improve the league..."
+                                      maxlength="1000"
+                                      style="min-height: 100px;"></textarea>
+                            <div class="char-count"><span id="rationaleCount">0</span>/1000</div>
+                        </div>
+
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            📤 Submit Proposal
+                        </button>
+                    </form>
+
+                    <div class="info-card">
+                        <h4>💡 Tips for a Great Proposal</h4>
+                        <ul>
+                            <li>Be specific about what rule you want to change</li>
+                            <li>Explain how the new rule would work in practice</li>
+                            <li>Consider how it might affect different situations</li>
+                            <li>Think about potential unintended consequences</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Recent Proposals Tab -->
+                <div class="tab-content" id="recentTab">
+                    <div class="proposals-list" id="proposalsList">
+                        <div class="no-proposals">
+                            <div class="no-proposals-icon">📭</div>
+                            <p>Loading proposals...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 Mountainside Aces | All Rights Reserved</p>
+        <p class="credits">Your voice matters - help shape the league!</p>
+    </footer>
+    
+    <script type="module">
+        import { doc, setDoc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { db } from './firebase-data.js';
+        import { auth } from './firebase-auth.js';
+
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const authRequired = document.getElementById('authRequired');
+        const mainContent = document.getElementById('mainContent');
+        const proposalForm = document.getElementById('proposalForm');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+        const proposalsList = document.getElementById('proposalsList');
+
+        // Character counters
+        const titleInput = document.getElementById('proposalTitle');
+        const descInput = document.getElementById('proposalDescription');
+        const rationaleInput = document.getElementById('proposalRationale');
+        const titleCount = document.getElementById('titleCount');
+        const descCount = document.getElementById('descCount');
+        const rationaleCount = document.getElementById('rationaleCount');
+
+        let currentUser = null;
+
+        // Category icons mapping
+        const categoryIcons = {
+            'gameplay': '⚾',
+            'scoring': '📊',
+            'eligibility': '✅',
+            'playoffs': '🏆',
+            'scheduling': '📅',
+            'other': '💡'
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupCharCounters();
+            setupTabs();
+        });
+
+        // Auth state listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                showMainContent(user);
+                await loadRecentProposals();
+            } else {
+                currentUser = null;
+                showAuthRequired();
+            }
+            loadingOverlay.classList.add('hidden');
+        });
+
+        function showAuthRequired() {
+            authRequired.style.display = 'block';
+            mainContent.style.display = 'none';
+        }
+
+        function showMainContent(user) {
+            authRequired.style.display = 'none';
+            mainContent.style.display = 'block';
+            
+            // Set user info
+            const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+            userName.textContent = displayName;
+            userAvatar.textContent = displayName.charAt(0).toUpperCase();
+        }
+
+        // Character counters
+        function setupCharCounters() {
+            titleInput.addEventListener('input', () => updateCharCount(titleInput, titleCount, 100));
+            descInput.addEventListener('input', () => updateCharCount(descInput, descCount, 2000));
+            rationaleInput.addEventListener('input', () => updateCharCount(rationaleInput, rationaleCount, 1000));
+        }
+
+        function updateCharCount(input, counter, max) {
+            const count = input.value.length;
+            counter.textContent = count;
+            
+            const parent = counter.parentElement;
+            parent.classList.remove('warning', 'error');
+            
+            if (count > max * 0.9) {
+                parent.classList.add('error');
+            } else if (count > max * 0.75) {
+                parent.classList.add('warning');
+            }
+        }
+
+        // Tab navigation
+        function setupTabs() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabId = btn.dataset.tab;
+                    
+                    // Update active states
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(tabId + 'Tab').classList.add('active');
+                });
+            });
+        }
+
+        // Form submission
+        proposalForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                showError('You must be signed in to submit a proposal.');
+                return;
+            }
+
+            const category = document.querySelector('input[name="category"]:checked')?.value;
+            const title = titleInput.value.trim();
+            const description = descInput.value.trim();
+            const rationale = rationaleInput.value.trim();
+
+            if (!category || !title || !description) {
+                showError('Please fill in all required fields.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '⏳ Submitting...';
+
+            try {
+                // Add to Firestore
+                await addDoc(collection(db, 'rule_proposals'), {
+                    category,
+                    title,
+                    description,
+                    rationale: rationale || null,
+                    submittedBy: {
+                        uid: currentUser.uid,
+                        displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Anonymous',
+                        email: currentUser.email
+                    },
+                    status: 'pending',
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+
+                // Show success
+                successMessage.classList.add('show');
+                proposalForm.reset();
+                titleCount.textContent = '0';
+                descCount.textContent = '0';
+                rationaleCount.textContent = '0';
+                
+                // Reload proposals
+                await loadRecentProposals();
+
+                // Hide success after 5 seconds
+                setTimeout(() => {
+                    successMessage.classList.remove('show');
+                }, 5000);
+
+            } catch (error) {
+                console.error('Error submitting proposal:', error);
+                showError('Failed to submit proposal. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '📤 Submit Proposal';
+            }
+        });
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 5000);
+        }
+
+        // Load recent proposals
+        async function loadRecentProposals() {
+            try {
+                const proposalsRef = collection(db, 'rule_proposals');
+                const q = query(proposalsRef, orderBy('createdAt', 'desc'), limit(20));
+                const snapshot = await getDocs(q);
+
+                if (snapshot.empty) {
+                    proposalsList.innerHTML = `
+                        <div class="no-proposals">
+                            <div class="no-proposals-icon">📭</div>
+                            <p>No proposals yet. Be the first to submit one!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const icon = categoryIcons[data.category] || '📋';
+                    const date = data.createdAt?.toDate ? 
+                        data.createdAt.toDate().toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric',
+                            year: 'numeric'
+                        }) : 'Recently';
+
+                    html += `
+                        <div class="proposal-card">
+                            <div class="proposal-header">
+                                <div class="proposal-title">${escapeHtml(data.title)}</div>
+                                <span class="proposal-category">${icon} ${capitalize(data.category)}</span>
+                            </div>
+                            <div class="proposal-description">${escapeHtml(data.description)}</div>
+                            <div class="proposal-meta">
+                                <span>👤 ${escapeHtml(data.submittedBy?.displayName || 'Anonymous')}</span>
+                                <span>📅 ${date}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                proposalsList.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading proposals:', error);
+                proposalsList.innerHTML = `
+                    <div class="no-proposals">
+                        <div class="no-proposals-icon">⚠️</div>
+                        <p>Unable to load proposals. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function capitalize(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+    </script>
+    <script type="module">
+        import { NavigationComponent } from './nav-component.js';
+    </script>
+    <script src="mobile-enhancements.js"></script>
+    <script src="theme-toggle.js"></script>
+</body>
+</html>

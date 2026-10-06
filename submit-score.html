@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Game Score | Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --secondary-color: #1a6b4a;
+      --accent-color: #ffd700;
+      --card-bg: #ffffff;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+      --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      min-height: 100vh;
+      color: var(--text-dark);
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      padding: 3rem 2rem 2rem 2rem;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      right: -50px;
+      width: 300px;
+      height: 300px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+
+    .header::after {
+      content: '🔢️';
+      position: absolute;
+      bottom: -40px;
+      left: -40px;
+      font-size: 200px;
+      opacity: 0.03;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .subtitle {
+      color: rgba(255,255,255,0.9);
+      font-size: 1.1rem;
+    }
+
+    .back-home-btn {
+      position: absolute;
+      top: 2rem;
+      right: 2rem;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255,255,255,0.3);
+      z-index: 2;
+    }
+
+    .back-home-btn:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateX(-5px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    /* Main Container */
+    .submit-score-container {
+      max-width: 900px;
+      margin: -2rem auto 3rem auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .content-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 2.5rem;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .content-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    }
+
+    /* Auth Gate */
+    .auth-gate {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+
+    .auth-gate h2 {
+      color: var(--primary-color);
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .auth-gate p {
+      color: var(--text-light);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Messages */
+    .error-message {
+      background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+      border: 2px solid #fcc;
+      color: #c33;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 500;
+    }
+
+    .error-message::before {
+      content: '⚠️';
+      font-size: 1.5rem;
+    }
+
+    .success-message {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      border: 2px solid #28a745;
+      color: #155724;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 500;
+    }
+
+    .success-message::before {
+      content: '✅';
+      font-size: 1.5rem;
+    }
+
+    /* Access Level Badge */
+    .access-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+
+    .access-badge.full-access {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .access-badge.team-access {
+      background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+      color: #5a3e00;
+    }
+
+    /* Form Sections */
+    .form-section {
+      margin-bottom: 2.5rem;
+      padding-bottom: 2.5rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .form-section:last-of-type {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .form-section h2 {
+      color: var(--primary-color);
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .form-section h2::before {
+      content: "";
+      width: 6px;
+      height: 28px;
+      background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      border-radius: 3px;
+    }
+
+    /* Form Groups */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--text-dark);
+      font-size: 0.95rem;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 4px rgba(45, 80, 22, 0.1);
+    }
+
+    .form-group select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232d5016' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+      appearance: none;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    /* Score Inputs */
+    .score-inputs {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1.5rem;
+      align-items: end;
+    }
+
+    .vs-separator {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary-color);
+      text-align: center;
+      padding-bottom: 0.875rem;
+    }
+
+    /* Checkbox */
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .checkbox-group:hover {
+      background: #e9ecef;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--primary-color);
+    }
+
+    .checkbox-group label {
+      margin: 0;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    /* Inning Entry Styles */
+    .inning-toggle {
+      margin-bottom: 1.5rem;
+    }
+
+    .inning-entry-section {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border: 2px solid #7dd3fc;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      display: none;
+    }
+
+    .inning-entry-section.active {
+      display: block;
+    }
+
+    .inning-entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .inning-entry-header h4 {
+      margin: 0;
+      color: var(--primary-color);
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .inning-controls {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .inning-btn {
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--primary-color);
+      background: white;
+      color: var(--primary-color);
+      border-radius: 8px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .inning-btn:hover:not(:disabled) {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .inning-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .inning-count {
+      font-weight: 600;
+      color: var(--text-dark);
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .line-score-grid {
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+
+    .line-score-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 400px;
+    }
+
+    .line-score-table th,
+    .line-score-table td {
+      padding: 0.5rem;
+      text-align: center;
+      border: 1px solid #cbd5e1;
+    }
+
+    .line-score-table th {
+      background: var(--primary-color);
+      color: white;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .line-score-table th.team-header {
+      background: #1e40af;
+      text-align: left;
+      padding-left: 0.75rem;
+      min-width: 100px;
+    }
+
+    .line-score-table th.total-header {
+      background: #166534;
+      min-width: 60px;
+    }
+
+    .line-score-table td.team-name {
+      background: #f1f5f9;
+      font-weight: 600;
+      text-align: left;
+      padding-left: 0.75rem;
+      white-space: nowrap;
+    }
+
+    .line-score-table td.total-cell {
+      background: #dcfce7;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #166534;
+    }
+
+    .inning-input {
+      width: 45px;
+      height: 36px;
+      text-align: center;
+      border: 2px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 0;
+      transition: all 0.2s ease;
+    }
+
+    .inning-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.15);
+    }
+
+    .inning-input::-webkit-inner-spin-button,
+    .inning-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .inning-input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    /* Disabled/readonly state for main score inputs */
+    .score-inputs.inning-mode input {
+      background: #e2e8f0;
+      color: #64748b;
+      cursor: not-allowed;
+      border-color: #cbd5e1;
+    }
+
+    .score-inputs.inning-mode input:focus {
+      box-shadow: none;
+      border-color: #cbd5e1;
+    }
+
+    .inning-mode-notice {
+      display: none;
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      color: #92400e;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+      text-align: center;
+    }
+
+    .inning-mode-notice.visible {
+      display: block;
+    }
+
+    /* Responsive adjustments for inning grid */
+    @media (max-width: 600px) {
+      .inning-input {
+        width: 38px;
+        height: 32px;
+        font-size: 0.9rem;
+      }
+
+      .line-score-table th,
+      .line-score-table td {
+        padding: 0.35rem;
+      }
+
+      .inning-entry-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    /* Game Preview */
+    .game-preview {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-top: 2rem;
+      border: 2px solid var(--border-color);
+    }
+
+    .game-preview h3 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      color: var(--primary-color);
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .game-preview h3::before {
+      content: '👁️';
+      font-size: 1.3rem;
+    }
+
+    .preview-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .preview-row:last-child {
+      border-bottom: none;
+    }
+
+    .preview-label {
+      font-weight: 600;
+      color: var(--text-light);
+    }
+
+    .preview-value {
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    /* Submit Button */
+    .submit-button {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      border: none;
+      padding: 1.25rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.2);
+      transition: left 0.3s ease;
+    }
+
+    .submit-button:hover::before {
+      left: 100%;
+    }
+
+    .submit-button:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .submit-button:disabled {
+      background: linear-gradient(135deg, #ccc 0%, #999 100%);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Loading Spinner */
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      animation: spinner-spin 1s linear infinite;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spinner-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .back-home-btn {
+        position: static;
+        margin-top: 1rem;
+        justify-content: center;
+      }
+
+      .submit-score-container {
+        margin: 1rem auto 2rem auto;
+        padding: 0 1rem;
+      }
+
+      .content-card {
+        padding: 1.5rem;
+      }
+
+      .form-row,
+      .score-inputs {
+        grid-template-columns: 1fr;
+      }
+
+      .vs-separator {
+        padding-bottom: 0;
+        padding-top: 0.5rem;
+      }
+
+      .form-section h2 {
+        font-size: 1.3rem;
+      }
+    }
+
+    /* ========================
+       DARK MODE
+       ======================== */
+    [data-theme="dark"] body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .content-card {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    [data-theme="dark"] .form-section {
+      border-bottom-color: #334155;
+    }
+
+    [data-theme="dark"] .form-group label {
+      color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .form-group input,
+    [data-theme="dark"] .form-group select {
+      background: #263348;
+      border-color: #334155;
+      color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .checkbox-group {
+      background: #263348;
+    }
+
+    [data-theme="dark"] .checkbox-group:hover {
+      background: #2d3e55;
+    }
+
+    [data-theme="dark"] .inning-entry-section {
+      background: linear-gradient(135deg, #0f2233 0%, #0f2940 100%);
+      border-color: #1e6fa8;
+    }
+
+    [data-theme="dark"] .inning-btn {
+      background: #263348;
+      color: #7dd3fc;
+      border-color: #1e6fa8;
+    }
+
+    [data-theme="dark"] .inning-btn:hover:not(:disabled) {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    [data-theme="dark"] .inning-input {
+      background: #263348;
+      border-color: #334155;
+      color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .line-score-table td {
+      border-color: #334155;
+      color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .line-score-table td.team-name {
+      background: #263348;
+      color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .line-score-table td.total-cell {
+      background: #0d2e1a;
+      color: #4ade80;
+    }
+
+    [data-theme="dark"] .score-inputs.inning-mode input {
+      background: #1a2436;
+      color: #64748b;
+      border-color: #334155;
+    }
+
+    [data-theme="dark"] .inning-mode-notice {
+      background: #2d2208;
+      border-color: #f59e0b;
+      color: #fde68a;
+    }
+
+    [data-theme="dark"] .game-preview {
+      background: linear-gradient(135deg, #1e293b 0%, #263348 100%);
+      border-color: #334155;
+    }
+
+    [data-theme="dark"] .preview-row {
+      border-bottom-color: #334155;
+    }
+
+    [data-theme="dark"] .preview-label {
+      color: #94a3b8;
+    }
+
+    [data-theme="dark"] .preview-value {
+      color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .error-message {
+      background: linear-gradient(135deg, #2d1010 0%, #3d1515 100%);
+      border-color: #ef4444;
+      color: #fecaca;
+    }
+
+    [data-theme="dark"] .success-message {
+      background: linear-gradient(135deg, #0d2e1a 0%, #0f3820 100%);
+      border-color: #28a745;
+      color: #a7f3d0;
+    }
+  </style>
+</head>
+<body>
+  <div id="nav-placeholder"></div>
+
+<div class="page-container">
+  <!-- Header -->
+  <div class="header">
+    <a href="profile.html" class="back-home-btn">
+      <span>←</span> Back to Profile
+    </a>
+    <div class="header-content">
+      <h1>🔢️ Submit Game Score</h1>
+      <p class="subtitle">Update game results for completed games</p>
+    </div>
+  </div>
+
+  <div class="submit-score-container">
+    <!-- Auth Gate (shown when not authorized) -->
+    <div id="authGate" class="content-card" style="display: none;">
+      <div class="auth-gate">
+        <h2>🔒 Authorization Required</h2>
+        <p>You must be signed in as a Captain, Team Staff, League Staff, or Admin to submit game scores.</p>
+        <button onclick="location.href='signin.html'" class="submit-button" style="max-width: 400px; margin: 0 auto;">
+          Sign In to Continue
+        </button>
+      </div>
+    </div>
+
+    <!-- Form (shown when authorized) -->
+    <div id="scoreForm" class="content-card" style="display: none;">
+      <div id="messageArea"></div>
+      
+      <!-- Access Level Indicator -->
+      <div id="accessBadge" class="access-badge" style="display: none;"></div>
+
+      <!-- Guide Link -->
+      <div style="margin-bottom:1.5rem; padding:0.75rem 1rem; background:#e0f2fe; border:1px solid #7dd3fc; border-radius:10px; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+        <span style="font-size:0.875rem; color:#0c4a6e;">Need help submitting scores or stats?</span>
+        <a href="scoring-guide.html" style="font-size:0.875rem; font-weight:600; color:#0891b2; text-decoration:none; white-space:nowrap;">View Score &amp; Stats Guide →</a>
+      </div>
+
+      <form id="submitScoreForm">
+        <!-- Game Selection -->
+        <div class="form-section">
+          <h2>🎯 Select Game</h2>
+          <div class="form-group">
+            <label for="seasonSelect">Season *</label>
+            <select id="seasonSelect" required>
+              <option value="">Loading seasons...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="gameSelect">Game *</label>
+            <select id="gameSelect" required disabled>
+              <option value="">Select a season first</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Score Entry -->
+        <div class="form-section">
+          <h2>📊 Enter Score</h2>
+          
+          <!-- Inning Toggle -->
+          <div class="checkbox-group inning-toggle">
+            <input type="checkbox" id="inningModeCheckbox">
+            <label for="inningModeCheckbox">Enter inning-by-inning scores (optional)</label>
+          </div>
+          
+          <!-- Main Score Inputs -->
+          <div class="score-inputs" id="scoreInputsContainer">
+            <div class="form-group">
+              <label for="homeScore"><span id="homeTeamLabel">Home Team</span> Score *</label>
+              <input type="number" id="homeScore" min="0" required>
+            </div>
+            <div class="vs-separator">VS</div>
+            <div class="form-group">
+              <label for="awayScore"><span id="awayTeamLabel">Away Team</span> Score *</label>
+              <input type="number" id="awayScore" min="0" required>
+            </div>
+          </div>
+          <div class="inning-mode-notice" id="inningModeNotice">
+            ℹ️ Totals are calculated from inning scores above
+          </div>
+          
+          <!-- Inning Entry Grid -->
+          <div class="inning-entry-section" id="inningEntrySection">
+            <div class="inning-entry-header">
+              <h4>📋 Line Score</h4>
+              <div class="inning-controls">
+                <button type="button" class="inning-btn" id="removeInningBtn" onclick="removeInning()" title="Remove inning">−</button>
+                <span class="inning-count" id="inningCount">7 innings</span>
+                <button type="button" class="inning-btn" id="addInningBtn" onclick="addInning()" title="Add inning">+</button>
+              </div>
+            </div>
+            <div class="line-score-grid">
+              <table class="line-score-table" id="lineScoreTable">
+                <thead>
+                  <tr>
+                    <th class="team-header">Team</th>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>3</th>
+                    <th>4</th>
+                    <th>5</th>
+                    <th>6</th>
+                    <th>7</th>
+                    <th class="total-header">R</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr id="awayRow">
+                    <td class="team-name" id="awayTeamCell">Away</td>
+                    <!-- Inning inputs generated by JS -->
+                  </tr>
+                  <tr id="homeRow">
+                    <td class="team-name" id="homeTeamCell">Home</td>
+                    <!-- Inning inputs generated by JS -->
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Details -->
+        <div class="form-section">
+          <h2>📝 Game Details</h2>
+          <div class="checkbox-group">
+            <input type="checkbox" id="forfeitCheckbox">
+            <label for="forfeitCheckbox">This game was a forfeit</label>
+          </div>
+          <div class="form-group" style="margin-top: 1rem;">
+            <label for="gameNotes">Additional Notes (Optional)</label>
+            <input type="text" id="gameNotes" placeholder="Any additional details about the game">
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div id="gamePreview" class="game-preview" style="display: none;">
+          <h3>Preview Submission</h3>
+          <div class="preview-row">
+            <span class="preview-label">Home Team:</span>
+            <span class="preview-value" id="previewHome">-</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-label">Away Team:</span>
+            <span class="preview-value" id="previewAway">-</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-label">Score:</span>
+            <span class="preview-value" id="previewScore">-</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-label">Winner:</span>
+            <span class="preview-value" id="previewWinner" style="font-weight: 700; color: var(--primary-color);">-</span>
+          </div>
+          <div class="preview-row" id="previewLineScoreRow" style="display: none;">
+            <span class="preview-label">Line Score:</span>
+            <span class="preview-value" id="previewLineScore" style="font-family: monospace;">-</span>
+          </div>
+          <div class="preview-row" id="previewForfeitRow" style="display: none;">
+            <span class="preview-label">Status:</span>
+            <span class="preview-value" style="color: #c33; font-weight: 700;">⚠️ FORFEIT</span>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-button" id="submitButton">
+          Submit Score
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, hasLeagueRole, getUserTeamIds, canSubmitForGame } from './firebase-auth.js';
+    import { db } from './firebase-config.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { 
+      collection, 
+      getDocs, 
+      doc, 
+      updateDoc,
+      getDoc,
+      Timestamp,
+      query,
+      where,
+      orderBy
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    let currentUser = null;
+    let userProfile = null;
+    let selectedGame = null;
+    let allGames = [];
+    
+    // Access control state
+    let hasFullAccess = false;
+    let userTeamIds = [];
+    
+    // Inning entry state
+    let inningMode = false;
+    let inningCount = 7;
+    let homeInnings = [];
+    let awayInnings = [];
+    const MIN_INNINGS = 1;
+    const MAX_INNINGS = 15;
+
+    // Check authorization on page load
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        await checkAuthorization();
+      } else {
+        showAuthGate();
+      }
+    });
+
+    async function checkAuthorization() {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        
+        if (!userDoc.exists()) {
+          showError('User profile not found. Please complete your profile setup.');
+          showAuthGate();
+          return;
+        }
+
+        userProfile = userDoc.data();
+
+        // Use helper functions from firebase-auth.js
+        hasFullAccess = hasLeagueRole(userProfile);
+        
+        // Check if user is captain or team-staff (all legacy and new field patterns)
+        const isCaptain = userProfile.isCaptain === true || userProfile.userRole === 'captain';
+        const isTeamStaff = userProfile.isTeamStaff === true ||
+                            userProfile.userType === 'team-staff' ||
+                            userProfile.userRole === 'team-staff' ||
+                            userProfile.role === 'team-staff' ||
+                            !!(userProfile.teamRoles && Object.values(userProfile.teamRoles).some(
+                              r => r.role === 'team-staff' && r.status === 'active'
+                            ));
+        
+        // Get user's team IDs using helper function (returns lowercase)
+        userTeamIds = getUserTeamIds(userProfile);
+        
+        // Supplement userTeamIds from teamRoles map for users set up via admin panel
+        if (userProfile.teamRoles) {
+          for (const [teamId, teamRole] of Object.entries(userProfile.teamRoles)) {
+            if ((teamRole.role === 'team-staff' || teamRole.role === 'captain') &&
+                teamRole.status === 'active') {
+              const normalizedId = teamId.toLowerCase();
+              if (!userTeamIds.includes(normalizedId)) {
+                userTeamIds.push(normalizedId);
+              }
+            }
+          }
+        }
+        
+        // Check authorization
+        const isAuthorized = hasFullAccess || ((isCaptain || isTeamStaff) && userTeamIds.length > 0);
+
+        if (isAuthorized) {
+          showForm();
+          updateAccessBadge();
+          await loadSeasons();
+        } else if (isCaptain || isTeamStaff) {
+          // They have a role but no team assigned
+          showError('Your account is not linked to a team. Please contact a league administrator to set up your team assignment.');
+          showAuthGate();
+        } else {
+          showError('You do not have permission to submit game scores. Please contact a league administrator if you believe this is an error.');
+          showAuthGate();
+        }
+      } catch (error) {
+        console.error('Error checking authorization:', error);
+        showError('Error checking authorization. Please try again.');
+        showAuthGate();
+      }
+    }
+    
+    // Update the access badge to show user's permissions
+    function updateAccessBadge() {
+      const badge = document.getElementById('accessBadge');
+      
+      if (hasFullAccess) {
+        badge.className = 'access-badge full-access';
+        badge.innerHTML = '👑 Full Access — Can submit scores for all games';
+      } else {
+        // Get team names for display
+        const teamNames = userTeamIds.map(id => 
+          id.charAt(0).toUpperCase() + id.slice(1)
+        ).join(', ');
+        
+        badge.className = 'access-badge team-access';
+        badge.innerHTML = `🎯 Team Access — Showing games for: ${teamNames}`;
+      }
+      
+      badge.style.display = 'inline-flex';
+    }
+
+    // ========================================
+    // INNING ENTRY FUNCTIONS
+    // ========================================
+    
+    // Initialize inning mode checkbox listener
+    document.getElementById('inningModeCheckbox')?.addEventListener('change', function(e) {
+      if (e.target.checked) {
+        enableInningMode();
+      } else {
+        // Check if there's data to confirm clearing
+        const hasData = homeInnings.some(v => v > 0) || awayInnings.some(v => v > 0);
+        if (hasData) {
+          if (confirm('This will clear all inning-by-inning data. Continue?')) {
+            disableInningMode();
+          } else {
+            // Revert checkbox
+            e.target.checked = true;
+          }
+        } else {
+          disableInningMode();
+        }
+      }
+    });
+    
+    function enableInningMode() {
+      inningMode = true;
+      
+      // Show inning entry section
+      document.getElementById('inningEntrySection').classList.add('active');
+      
+      // Gray out main score inputs
+      const scoreInputs = document.getElementById('scoreInputsContainer');
+      scoreInputs.classList.add('inning-mode');
+      document.getElementById('homeScore').readOnly = true;
+      document.getElementById('awayScore').readOnly = true;
+      
+      // Show notice
+      document.getElementById('inningModeNotice').classList.add('visible');
+      
+      // Initialize inning arrays and build grid
+      homeInnings = new Array(inningCount).fill(0);
+      awayInnings = new Array(inningCount).fill(0);
+      buildInningGrid();
+      
+      // Clear main inputs and recalculate
+      calculateTotals();
+    }
+    
+    function disableInningMode() {
+      inningMode = false;
+      
+      // Hide inning entry section
+      document.getElementById('inningEntrySection').classList.remove('active');
+      
+      // Re-enable main score inputs
+      const scoreInputs = document.getElementById('scoreInputsContainer');
+      scoreInputs.classList.remove('inning-mode');
+      document.getElementById('homeScore').readOnly = false;
+      document.getElementById('awayScore').readOnly = false;
+      
+      // Hide notice
+      document.getElementById('inningModeNotice').classList.remove('visible');
+      
+      // Clear inning data
+      homeInnings = [];
+      awayInnings = [];
+      inningCount = 7;
+      
+      // Clear main inputs
+      document.getElementById('homeScore').value = '';
+      document.getElementById('awayScore').value = '';
+      
+      updatePreview();
+    }
+    
+    function buildInningGrid() {
+      const homeRow = document.getElementById('homeRow');
+      const awayRow = document.getElementById('awayRow');
+      const headerRow = document.querySelector('#lineScoreTable thead tr');
+      
+      // Get team names
+      const homeTeam = selectedGame ? 
+        (selectedGame.homeTeamName || selectedGame['home team'] || selectedGame.homeTeam || 'Home') : 'Home';
+      const awayTeam = selectedGame ? 
+        (selectedGame.awayTeamName || selectedGame['away team'] || selectedGame.awayTeam || 'Away') : 'Away';
+      
+      // Update team name cells
+      document.getElementById('homeTeamCell').textContent = homeTeam;
+      document.getElementById('awayTeamCell').textContent = awayTeam;
+      
+      // Build header
+      let headerHtml = '<th class="team-header">Team</th>';
+      for (let i = 1; i <= inningCount; i++) {
+        headerHtml += `<th>${i}</th>`;
+      }
+      headerHtml += '<th class="total-header">R</th>';
+      headerRow.innerHTML = headerHtml;
+      
+      // Build away row
+      let awayHtml = `<td class="team-name" id="awayTeamCell">${awayTeam}</td>`;
+      for (let i = 0; i < inningCount; i++) {
+        awayHtml += `<td><input type="number" class="inning-input" id="away_${i}" min="0" value="${awayInnings[i] || 0}" onchange="updateInning('away', ${i}, this.value)"></td>`;
+      }
+      awayHtml += `<td class="total-cell" id="awayTotal">0</td>`;
+      awayRow.innerHTML = awayHtml;
+      
+      // Build home row
+      let homeHtml = `<td class="team-name" id="homeTeamCell">${homeTeam}</td>`;
+      for (let i = 0; i < inningCount; i++) {
+        homeHtml += `<td><input type="number" class="inning-input" id="home_${i}" min="0" value="${homeInnings[i] || 0}" onchange="updateInning('home', ${i}, this.value)"></td>`;
+      }
+      homeHtml += `<td class="total-cell" id="homeTotal">0</td>`;
+      homeRow.innerHTML = homeHtml;
+      
+      // Update inning count display
+      document.getElementById('inningCount').textContent = `${inningCount} inning${inningCount !== 1 ? 's' : ''}`;
+      
+      // Update button states
+      document.getElementById('removeInningBtn').disabled = inningCount <= MIN_INNINGS;
+      document.getElementById('addInningBtn').disabled = inningCount >= MAX_INNINGS;
+      
+      calculateTotals();
+    }
+    
+    // Make functions available globally for onclick handlers
+    window.updateInning = function(team, index, value) {
+      const runs = Math.max(0, parseInt(value) || 0);
+      
+      if (team === 'home') {
+        homeInnings[index] = runs;
+      } else {
+        awayInnings[index] = runs;
+      }
+      
+      // Update the input to show cleaned value
+      document.getElementById(`${team}_${index}`).value = runs;
+      
+      calculateTotals();
+    };
+    
+    window.addInning = function() {
+      if (inningCount >= MAX_INNINGS) return;
+      
+      inningCount++;
+      homeInnings.push(0);
+      awayInnings.push(0);
+      buildInningGrid();
+    };
+    
+    window.removeInning = function() {
+      if (inningCount <= MIN_INNINGS) return;
+      
+      // Check if last inning has data
+      const lastHomeRuns = homeInnings[inningCount - 1] || 0;
+      const lastAwayRuns = awayInnings[inningCount - 1] || 0;
+      
+      if (lastHomeRuns > 0 || lastAwayRuns > 0) {
+        if (!confirm(`Inning ${inningCount} has runs recorded. Remove anyway?`)) {
+          return;
+        }
+      }
+      
+      inningCount--;
+      homeInnings.pop();
+      awayInnings.pop();
+      buildInningGrid();
+    };
+    
+    function calculateTotals() {
+      const homeTotal = homeInnings.reduce((sum, runs) => sum + (runs || 0), 0);
+      const awayTotal = awayInnings.reduce((sum, runs) => sum + (runs || 0), 0);
+      
+      // Update total cells in grid
+      const homeTotalCell = document.getElementById('homeTotal');
+      const awayTotalCell = document.getElementById('awayTotal');
+      if (homeTotalCell) homeTotalCell.textContent = homeTotal;
+      if (awayTotalCell) awayTotalCell.textContent = awayTotal;
+      
+      // Update main score inputs (grayed out but showing calculated values)
+      document.getElementById('homeScore').value = homeTotal;
+      document.getElementById('awayScore').value = awayTotal;
+      
+      updatePreview();
+    }
+    
+    // Reset inning state when game selection changes
+    function resetInningState() {
+      // If in inning mode, rebuild grid with new team names
+      if (inningMode) {
+        buildInningGrid();
+      }
+    }
+
+    function showAuthGate() {
+      document.getElementById('authGate').style.display = 'block';
+      document.getElementById('scoreForm').style.display = 'none';
+    }
+
+    function showForm() {
+      document.getElementById('authGate').style.display = 'none';
+      document.getElementById('scoreForm').style.display = 'block';
+    }
+
+    function showError(message) {
+      const messageArea = document.getElementById('messageArea');
+      messageArea.innerHTML = `<div class="error-message">${message}</div>`;
+    }
+
+    function showSuccess(message) {
+      const messageArea = document.getElementById('messageArea');
+      messageArea.innerHTML = `<div class="success-message">${message}</div>`;
+    }
+
+    // Format season ID for display (e.g., "2025-fall" -> "2025 Fall")
+    function formatSeasonId(id) {
+      if (!id) return '';
+      // Replace hyphens with spaces and capitalize each word
+      return id.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+    }
+
+    async function loadSeasons() {
+      const seasonSelect = document.getElementById('seasonSelect');
+      
+      try {
+        const seasonsRef = collection(db, 'seasons');
+        const seasonsSnapshot = await getDocs(seasonsRef);
+        
+        const seasons = [];
+        seasonsSnapshot.forEach(doc => {
+          seasons.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+
+        // Sort by season ID descending (most recent first)
+        seasons.sort((a, b) => {
+          // Extract year and season type for comparison
+          const parseSeasonId = (id) => {
+            const match = id.match(/(\d{4})-?(fall|summer|spring)?/i);
+            if (match) {
+              const year = parseInt(match[1]);
+              const seasonType = match[2]?.toLowerCase() || '';
+              // Fall = 1, Summer = 0, Spring = -1 for sorting within year
+              const seasonOrder = seasonType === 'fall' ? 1 : seasonType === 'summer' ? 0 : -1;
+              return year * 10 + seasonOrder;
+            }
+            return 0;
+          };
+          return parseSeasonId(b.id) - parseSeasonId(a.id);
+        });
+
+        seasonSelect.innerHTML = '<option value="">Select a season</option>';
+        seasons.forEach(season => {
+          const option = document.createElement('option');
+          option.value = season.id;
+          option.textContent = season.name || formatSeasonId(season.id);
+          seasonSelect.appendChild(option);
+        });
+
+        seasonSelect.addEventListener('change', (e) => {
+          if (e.target.value) {
+            loadGames(e.target.value);
+          } else {
+            document.getElementById('gameSelect').innerHTML = '<option value="">Select a season first</option>';
+            document.getElementById('gameSelect').disabled = true;
+          }
+        });
+
+      } catch (error) {
+        console.error('Error loading seasons:', error);
+        showError('Error loading seasons. Please try again.');
+      }
+    }
+
+    async function loadGames(seasonId) {
+      const gameSelect = document.getElementById('gameSelect');
+      gameSelect.innerHTML = '<option value="">Loading games...</option>';
+      gameSelect.disabled = true;
+      allGames = [];
+
+      try {
+        // Load regular season games
+        const gamesRef = collection(db, 'seasons', seasonId, 'games');
+        const gamesSnapshot = await getDocs(gamesRef);
+
+        gamesSnapshot.forEach(doc => {
+          const data = doc.data();
+          
+          // Skip placeholder games and team documents
+          if (data.placeholder === true || doc.id.startsWith('team_')) {
+            return;
+          }
+
+          // Determine if this is a playoff game
+          const isPlayoffGame = data.gameType === 'playoff' || 
+                               data.game_type === 'playoff' ||
+                               data.round !== undefined;
+
+          // Parse date
+          let gameDate = null;
+          if (data.date) {
+            if (data.date.toDate) {
+              gameDate = data.date.toDate();
+            } else if (typeof data.date === 'string') {
+              gameDate = new Date(data.date);
+            }
+          }
+
+          // Check if score exists
+          const hasScore = 
+            (data.homeScore !== undefined && data.homeScore !== null && data.homeScore !== '') ||
+            (data.awayScore !== undefined && data.awayScore !== null && data.awayScore !== '') ||
+            (data['home score'] && data['home score'].trim() !== '') ||
+            (data['away score'] && data['away score'].trim() !== '') ||
+            (data.winner && data.winner.trim() !== '');
+          
+          // Get team IDs (normalize to lowercase for comparison)
+          const homeTeamId = (data.homeTeamId || '').toLowerCase();
+          const awayTeamId = (data.awayTeamId || '').toLowerCase();
+
+          allGames.push({
+            id: doc.id,
+            ...data,
+            homeTeamId: homeTeamId,
+            awayTeamId: awayTeamId,
+            gameDate: gameDate || new Date(0),
+            hasScore: hasScore,
+            seasonId: seasonId,
+            isPlayoff: isPlayoffGame,
+            game_type: data.game_type || data.gameType || 'Regular'
+          });
+        });
+        
+        // Filter games based on access level
+        // Show all unscored games — no date cutoff, hasScore is the only gate
+        let filteredGames = allGames.filter(game => !game.hasScore);
+
+        if (!hasFullAccess) {
+          // Team-restricted: only show games involving user's team(s)
+          filteredGames = filteredGames.filter(game => {
+            return userTeamIds.includes(game.homeTeamId) || 
+                   userTeamIds.includes(game.awayTeamId);
+          });
+          
+          console.log(`Filtered ${allGames.length} games to ${filteredGames.length} for teams: ${userTeamIds.join(', ')}`);
+        }
+
+        // Sort by date ascending (soonest first), undated games go last
+        filteredGames.sort((a, b) => {
+          if (a.gameDate.getTime() === 0 && b.gameDate.getTime() === 0) return 0;
+          if (a.gameDate.getTime() === 0) return 1;
+          if (b.gameDate.getTime() === 0) return -1;
+          return a.gameDate - b.gameDate;
+        });
+        
+        // Update allGames to filtered list for selection
+        allGames = filteredGames;
+
+        gameSelect.innerHTML = '<option value="">Select a game</option>';
+        
+        if (filteredGames.length === 0) {
+          if (!hasFullAccess) {
+            gameSelect.innerHTML = '<option value="">No upcoming unscored games for your team</option>';
+          } else {
+            gameSelect.innerHTML = '<option value="">No upcoming unscored games</option>';
+          }
+          return;
+        }
+
+        filteredGames.forEach((game, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          
+          let dateStr = 'TBD';
+          if (game.gameDate.getTime() !== 0) {
+            dateStr = game.gameDate.toLocaleDateString('en-US', { 
+              month: 'short', 
+              day: 'numeric' 
+            });
+          }
+          
+          // Handle both camelCase and space-separated field names
+          const homeTeam = game.homeTeamName || game['home team'] || game.homeTeam || 'TBD';
+          const awayTeam = game.awayTeamName || game['away team'] || game.awayTeam || 'TBD';
+          
+          const gameTypeLabel = game.isPlayoff ? ' 🏆 ' : ' ';
+          const statusBadge = game.hasScore ? ' ✓' : ' [No Score]';
+          const roundLabel = game.round ? ` (${game.round})` : '';
+          
+          option.textContent = `${dateStr}:${gameTypeLabel}${homeTeam} vs ${awayTeam}${roundLabel}${statusBadge}`;
+          gameSelect.appendChild(option);
+        });
+
+        gameSelect.disabled = false;
+
+        gameSelect.addEventListener('change', (e) => {
+          if (e.target.value !== '') {
+            loadGameDetails(parseInt(e.target.value));
+          } else {
+            clearGameDetails();
+          }
+        });
+
+      } catch (error) {
+        console.error('Error loading games:', error);
+        showError('Error loading games. Please try again.');
+        gameSelect.innerHTML = '<option value="">Error loading games</option>';
+      }
+    }
+
+    function loadGameDetails(gameIndex) {
+      selectedGame = allGames[gameIndex];
+      
+      // Handle both camelCase and space-separated field names
+      const homeTeam = selectedGame.homeTeamName || selectedGame['home team'] || selectedGame.homeTeam || 'TBD';
+      const awayTeam = selectedGame.awayTeamName || selectedGame['away team'] || selectedGame.awayTeam || 'TBD';
+      
+      document.getElementById('homeTeamLabel').textContent = homeTeam;
+      document.getElementById('awayTeamLabel').textContent = awayTeam;
+      
+      // Check if game has existing lineScore data
+      const existingLineScore = selectedGame.lineScore;
+      
+      // Pre-fill existing scores if any - handle both naming conventions
+      const homeScore = selectedGame.homeScore || selectedGame['home score'];
+      const awayScore = selectedGame.awayScore || selectedGame['away score'];
+      
+      // Reset inning mode first
+      if (inningMode) {
+        document.getElementById('inningModeCheckbox').checked = false;
+        disableInningMode();
+      }
+      
+      // If game has lineScore data, pre-populate inning mode
+      if (existingLineScore && existingLineScore.home && existingLineScore.away) {
+        // Enable inning mode and load existing data
+        homeInnings = [...existingLineScore.home];
+        awayInnings = [...existingLineScore.away];
+        inningCount = Math.max(homeInnings.length, awayInnings.length, 1);
+        
+        // Pad arrays if needed
+        while (homeInnings.length < inningCount) homeInnings.push(0);
+        while (awayInnings.length < inningCount) awayInnings.push(0);
+        
+        document.getElementById('inningModeCheckbox').checked = true;
+        enableInningMode();
+      } else {
+        // No lineScore, just fill regular scores
+        if (homeScore !== undefined && homeScore !== null && homeScore !== '') {
+          document.getElementById('homeScore').value = homeScore;
+        } else {
+          document.getElementById('homeScore').value = '';
+        }
+        
+        if (awayScore !== undefined && awayScore !== null && awayScore !== '') {
+          document.getElementById('awayScore').value = awayScore;
+        } else {
+          document.getElementById('awayScore').value = '';
+        }
+      }
+      
+      document.getElementById('forfeitCheckbox').checked = selectedGame.forfeit || false;
+      document.getElementById('gameNotes').value = '';
+      
+      // Update inning grid team names if in inning mode
+      if (inningMode) {
+        buildInningGrid();
+      }
+      
+      updatePreview();
+    }
+
+    function clearGameDetails() {
+      selectedGame = null;
+      document.getElementById('homeTeamLabel').textContent = 'Home Team';
+      document.getElementById('awayTeamLabel').textContent = 'Away Team';
+      document.getElementById('homeScore').value = '';
+      document.getElementById('awayScore').value = '';
+      document.getElementById('forfeitCheckbox').checked = false;
+      document.getElementById('gameNotes').value = '';
+      document.getElementById('gamePreview').style.display = 'none';
+      
+      // Reset inning mode
+      if (inningMode) {
+        document.getElementById('inningModeCheckbox').checked = false;
+        disableInningMode();
+      }
+    }
+
+    function updatePreview() {
+      if (!selectedGame) return;
+
+      const homeScore = parseInt(document.getElementById('homeScore').value) || 0;
+      const awayScore = parseInt(document.getElementById('awayScore').value) || 0;
+      const isForfeit = document.getElementById('forfeitCheckbox').checked;
+
+      const homeTeam = selectedGame.homeTeamName || selectedGame['home team'] || selectedGame.homeTeam || 'TBD';
+      const awayTeam = selectedGame.awayTeamName || selectedGame['away team'] || selectedGame.awayTeam || 'TBD';
+
+      let winner = '';
+      if (homeScore > awayScore) {
+        winner = homeTeam;
+      } else if (awayScore > homeScore) {
+        winner = awayTeam;
+      } else {
+        winner = 'Tie';
+      }
+
+      document.getElementById('previewHome').textContent = homeTeam;
+      document.getElementById('previewAway').textContent = awayTeam;
+      document.getElementById('previewScore').textContent = `${homeScore} - ${awayScore}`;
+      document.getElementById('previewWinner').textContent = winner;
+      document.getElementById('previewForfeitRow').style.display = isForfeit ? 'flex' : 'none';
+      
+      // Show line score if in inning mode
+      const lineScoreRow = document.getElementById('previewLineScoreRow');
+      if (inningMode && homeInnings.length > 0) {
+        const awayLine = awayInnings.join('-');
+        const homeLine = homeInnings.join('-');
+        document.getElementById('previewLineScore').textContent = `${inningCount} inn`;
+        lineScoreRow.style.display = 'flex';
+      } else {
+        lineScoreRow.style.display = 'none';
+      }
+      
+      document.getElementById('gamePreview').style.display = 'block';
+    }
+
+    // Add event listeners for live preview
+    document.getElementById('homeScore')?.addEventListener('input', updatePreview);
+    document.getElementById('awayScore')?.addEventListener('input', updatePreview);
+    document.getElementById('forfeitCheckbox')?.addEventListener('change', updatePreview);
+
+    // Form submission
+    document.getElementById('submitScoreForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (!selectedGame) {
+        showError('Please select a game first.');
+        return;
+      }
+
+      const homeScore = parseInt(document.getElementById('homeScore').value);
+      const awayScore = parseInt(document.getElementById('awayScore').value);
+      const isForfeit = document.getElementById('forfeitCheckbox').checked;
+      const notes = document.getElementById('gameNotes').value.trim();
+
+      if (isNaN(homeScore) || isNaN(awayScore)) {
+        showError('Please enter valid scores for both teams.');
+        return;
+      }
+
+      if (homeScore < 0 || awayScore < 0) {
+        showError('Scores cannot be negative.');
+        return;
+      }
+
+      // Determine winner - handle both field name conventions
+      const homeTeam = selectedGame.homeTeamName || selectedGame['home team'] || selectedGame.homeTeam || 'TBD';
+      const awayTeam = selectedGame.awayTeamName || selectedGame['away team'] || selectedGame.awayTeam || 'TBD';
+      
+      const homeTeamId = selectedGame.homeTeamId || homeTeam?.toLowerCase().replace(/\s+/g, '_') || null;
+      const awayTeamId = selectedGame.awayTeamId || awayTeam?.toLowerCase().replace(/\s+/g, '_') || null;
+      
+      let winner = null;
+      if (homeScore > awayScore) {
+        winner = homeTeamId;
+      } else if (awayScore > homeScore) {
+        winner = awayTeamId;
+      } else {
+        winner = 'tie';
+      }
+
+      // Prepare update data
+      const updateData = {
+        homeScore: homeScore,
+        awayScore: awayScore,
+        winner: winner,
+        status: 'completed',
+        forfeit: isForfeit,
+        lastScoreUpdate: Timestamp.now(),
+        scoreSubmittedBy: currentUser.uid,
+        scoreSubmittedByEmail: currentUser.email
+      };
+
+      // Add lineScore data if inning mode is enabled
+      if (inningMode && homeInnings.length > 0) {
+        updateData.lineScore = {
+          home: [...homeInnings],
+          away: [...awayInnings],
+          innings: inningCount
+        };
+      }
+
+      if (notes) {
+        updateData.gameNotes = notes;
+      }
+
+      // Confirm before submitting
+      let confirmMessage = `Submit this score?\n\n${homeTeam}: ${homeScore}\n${awayTeam}: ${awayScore}`;
+      if (inningMode) {
+        confirmMessage += `\n\n📋 Line score included (${inningCount} innings)`;
+      }
+      if (isForfeit) {
+        confirmMessage += '\n\n⚠️ FORFEIT';
+      }
+      
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+
+      // Disable submit button and show loading
+      const submitButton = document.getElementById('submitButton');
+      submitButton.disabled = true;
+      submitButton.innerHTML = '<span class="loading-spinner"></span>Submitting...';
+
+      try {
+        // All games (regular and playoff) are stored in the games collection
+        const gameRef = doc(db, 'seasons', selectedGame.seasonId, 'games', selectedGame.id);
+        await updateDoc(gameRef, updateData);
+
+        const gameTypeLabel = selectedGame.isPlayoff ? '🏆 ' : '';
+        const lineScoreLabel = inningMode ? ` (${inningCount} innings)` : '';
+        showSuccess(`✅ ${gameTypeLabel}Score submitted successfully! ${homeTeam} ${homeScore} - ${awayTeam} ${awayScore}${lineScoreLabel}`);
+        
+        // Reset form
+        document.getElementById('submitScoreForm').reset();
+        clearGameDetails();
+        
+        // Reload games to reflect the update
+        const seasonSelect = document.getElementById('seasonSelect');
+        if (seasonSelect.value) {
+          await loadGames(seasonSelect.value);
+        }
+
+      } catch (error) {
+        console.error('Error submitting score:', error);
+        showError(`Error submitting score: ${error.message}`);
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Submit Score';
+      }
+    });
+  </script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="mobile-enhancements.js"></script>
+</div><!-- Close page-container -->
+<script src="theme-toggle.js"></script>
+</body>
+</html>

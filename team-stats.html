@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="/manifest.json">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Stats - Mountainside Aces</title>
+  <meta name="theme-color" content="#2d5016">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="mobile-enhancements.css">
+  <link rel="stylesheet" href="nav-styles.css">
+  <style>
+    :root {
+      --primary: #2d5016;
+      --primary-light: #4a7c2e;
+      --accent: #e8f5e0;
+      --text: #1a202c;
+      --text-light: #718096;
+      --border: #e2e8f0;
+      --card: #ffffff;
+      --radius: 12px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0; padding: 0;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      min-height: 100vh;
+      color: var(--text);
+    }
+
+    /* ── Loading overlay ─────────────────────────── */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 1;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+      visibility: visible;
+    }
+    .loading-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .softball-spinner {
+      text-align: center;
+    }
+    .softball-spinner::before {
+      content: '⚾';
+      font-size: 80px;
+      display: block;
+      animation: spin 1.5s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+    .softball-spinner::after {
+      content: 'Loading team stats...';
+      display: block;
+      font-size: 1.1rem;
+      color: #4a5568;
+      font-weight: 600;
+    }
+    @keyframes spin {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50%       { transform: rotate(180deg) scale(1.1); }
+    }
+
+    /* ── Hero banner ─────────────────────────────── */
+    .header {
+      background: linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%);
+      color: white;
+      text-align: center;
+      padding: 4rem 2rem;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%; right: -10%;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .header::after {
+      content: '🏟️';
+      position: absolute;
+      bottom: -30px; left: 5%;
+      font-size: 140px;
+      opacity: 0.12;
+      transform: rotate(-10deg);
+      pointer-events: none;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 3rem;
+      font-weight: 800;
+      text-shadow: 2px 4px 8px rgba(0,0,0,0.2);
+      letter-spacing: -0.5px;
+      position: relative;
+      z-index: 1;
+    }
+    .header p {
+      margin: 0.75rem 0 0;
+      font-size: 1.15rem;
+      opacity: 0.9;
+      font-weight: 300;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Page container ──────────────────────────── */
+    .page-container {
+      max-width: 1400px;
+      margin: 2.5rem auto;
+      padding: 0 2rem;
+    }
+
+    /* ── Filter bar ──────────────────────────────── */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+    }
+    .filter-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .filter-select {
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: white;
+      color: var(--text);
+      cursor: pointer;
+      min-width: 130px;
+    }
+    .filter-select:focus { outline: none; border-color: var(--primary); }
+
+    /* ── Per-game toggle ─────────────────────────── */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+    .toggle-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: #cbd5e0;
+      border-radius: 22px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-track::before {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 3px; top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-switch input:checked + .toggle-track { background: var(--primary); }
+    .toggle-switch input:checked + .toggle-track::before { transform: translateX(18px); }
+
+    /* ── Summary bar ─────────────────────────────── */
+    .summary-bar {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .summary-chip {
+      background: var(--card);
+      border-radius: 8px;
+      padding: 10px 16px;
+      box-shadow: var(--shadow);
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+    .summary-chip strong { color: var(--primary); font-size: 1rem; }
+
+    /* ── Table card ──────────────────────────────── */
+    .table-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .table-card-header {
+      background: var(--primary);
+      color: white;
+      padding: 14px 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .table-scroll { overflow-x: auto; }
+    table.stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    table.stats-table th {
+      padding: 9px 12px;
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-light);
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      background: #fafbfc;
+    }
+    table.stats-table th:hover { background: #f0f4f8; color: var(--primary); }
+    table.stats-table th.sorted-asc::after  { content: ' ▲'; font-size: 0.65rem; }
+    table.stats-table th.sorted-desc::after { content: ' ▼'; font-size: 0.65rem; }
+    table.stats-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f0f4f8;
+      white-space: nowrap;
+    }
+    table.stats-table tr:last-child td { border-bottom: none; }
+    table.stats-table tbody tr:hover { background: #f7faf3; }
+    .team-cell {
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .team-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .stat-rate { color: var(--primary); font-weight: 700; }
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 800;
+      background: #e8f5e0;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .rank-badge.r1 { background: #ffd700; color: #7a5800; }
+    .rank-badge.r2 { background: #c0c0c0; color: #444; }
+    .rank-badge.r3 { background: #cd7f32; color: white; }
+
+    /* ── Empty / Loading ─────────────────────────── */
+    .state-box {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-light);
+    }
+    .state-box .icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+    /* ── Share button ────────────────────────────── */
+    .share-standings-btn {
+      background: rgba(255,255,255,0.18);
+      border: 1.5px solid rgba(255,255,255,0.45);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .share-standings-btn:hover { background: rgba(255,255,255,0.30); }
+
+    /* ── Share chart button ──────────────────────── */
+    .share-chart-btn {
+      background: var(--primary);
+      border: none;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: background 0.15s;
+      white-space: nowrap;
+      margin-left: auto;
+    }
+    .share-chart-btn:hover { background: #3a6b1e; }
+
+    /* ── Share modal ─────────────────────────────── */
+    .share-modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .share-modal-overlay.active { display: flex; }
+    .share-modal {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 340px;
+      width: 90%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    }
+    .share-modal h3 {
+      margin: 0 0 6px;
+      font-size: 1.05rem;
+      color: var(--primary);
+    }
+    .share-modal p {
+      margin: 0 0 18px;
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+    .share-modal-options { display: flex; flex-direction: column; gap: 10px; }
+    .share-option-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #f7faf3;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s, background 0.15s;
+      font-family: inherit;
+      width: 100%;
+    }
+    .share-option-btn:hover { border-color: var(--primary); background: #edf7e3; }
+    .share-option-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .share-option-title { font-size: 0.9rem; font-weight: 700; color: var(--text); }
+    .share-option-desc  { font-size: 0.78rem; color: var(--text-light); margin-top: 2px; }
+    .share-modal-cancel {
+      margin-top: 14px;
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text-light);
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 6px;
+      font-family: inherit;
+    }
+    .share-modal-cancel:hover { color: var(--text); }
+
+    /* ── Tabs ───────────────────────────────────── */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 5px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 9px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-light);
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .tab-btn.active { background: var(--primary); color: white; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Trends ─────────────────────────────────── */
+    .trends-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .trends-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .trends-controls h3 { margin: 0; font-size: 1rem; color: var(--primary); }
+    .chart-wrap { position: relative; height: 400px; }
+    .partial-note {
+      font-size: 0.78rem;
+      color: #b7791f;
+      background: #fef3c7;
+      border: 1px solid #f6d860;
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin-top: 10px;
+      display: none;
+    }
+    .partial-note.show { display: block; }
+
+    /* ── Mobile ──────────────────────────────────── */
+    @media (max-width: 600px) {
+      .header { padding: 2.5rem 1.2rem; }
+      .header h1 { font-size: 2rem; }
+      .header p { font-size: 1rem; }
+      .page-container { padding: 0 1rem; margin-top: 1.5rem; }
+      .filter-bar { padding: 12px; gap: 8px; }
+      .filter-select { min-width: 110px; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<!-- Desktop nav injection point -->
+<div class="filters-nav"></div>
+
+<!-- Hero banner -->
+<header class="header">
+  <h1>🏟️ Team Batting Stats</h1>
+  <p>Season totals aggregated from all players on each team</p>
+</header>
+
+<div class="page-container">
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <span class="filter-label">Year</span>
+    <select id="yearSelect" class="filter-select">
+      <option value="">All Years</option>
+    </select>
+    <span class="filter-label" style="margin-left:8px;">Season</span>
+    <select id="seasonSelect" class="filter-select">
+      <option value="">All Seasons</option>
+      <option value="summer">Summer</option>
+      <option value="fall">Fall</option>
+    </select>
+    <div class="toggle-wrap">
+      <span class="toggle-label">Per Game</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="perGameToggle">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="table">📊 Stats Table</button>
+    <button class="tab-btn" data-tab="trends">📈 Trends</button>
+    <button class="tab-btn" data-tab="running">🎯 Running Avg</button>
+  </div>
+
+  <!-- Stats Table tab -->
+  <div class="tab-panel active" id="tab-table">
+    <div class="summary-bar" id="summaryBar" style="display:none;"></div>
+    <div id="tableWrap"></div>
+  </div>
+
+  <!-- Trends tab -->
+  <div class="tab-panel" id="tab-trends">
+    <div class="trends-card">
+      <div class="trends-controls">
+        <h3>📈 Team Performance Trends</h3>
+        <span class="filter-label">Stat</span>
+        <select id="trendStatSel" class="filter-select" style="min-width:220px;">
+          <optgroup label="Batting — all teams">
+            <option value="hits_pg">H/G — Hits per Game</option>
+            <option value="runs_pg">R/G — Runs per Game</option>
+            <option value="walks_pg">BB/G — Walks per Game</option>
+            <option value="homeRuns_pg">HR/G — Home Runs per Game</option>
+            <option value="atBats_pg">AB/G — At Bats per Game</option>
+            <option value="avg">AVG — Batting Average</option>
+            <option value="obp">OBP — On-Base Percentage</option>
+          </optgroup>
+          <optgroup label="Pitching — all teams">
+            <option value="ra_pg">RA/G — Runs Allowed per Game</option>
+            <option value="ip_pg">IP/G — Innings Pitched per Game</option>
+          </optgroup>
+          <optgroup label="Batting — partial data ⚠️">
+            <option value="doubles_pg">2B/G — Doubles per Game</option>
+            <option value="triples_pg">3B/G — Triples per Game</option>
+            <option value="rbis_pg">RBI/G — RBIs per Game</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="trendsChart"></canvas>
+      </div>
+      <p class="partial-note" id="partialNote">
+        ⚠️ This stat is only available for some teams. Teams with no recorded data for a season are omitted from that data point.
+      </p>
+    </div>
+  </div>
+
+  <!-- Running Avg tab -->
+  <div class="tab-panel" id="tab-running">
+    <div class="trends-card">
+      <div class="trends-controls">
+        <h3>🎯 Running Season Averages</h3>
+        <span class="filter-label">Season</span>
+        <select id="runningSeasonSel" class="filter-select"></select>
+        <span class="filter-label">Stat</span>
+        <select id="runningStatSel" class="filter-select" style="min-width:220px;">
+          <option value="hits_pg">H/G — Hits per Game</option>
+          <option value="runs_pg">R/G — Runs per Game</option>
+          <option value="walks_pg">BB/G — Walks per Game</option>
+          <option value="hr_pg">HR/G — Home Runs per Game</option>
+          <option value="ab_pg">AB/G — At Bats per Game</option>
+          <option value="avg">AVG — Batting Average</option>
+          <option value="obp">OBP — On-Base Percentage</option>
+          <option value="doubles_pg">2B/G — Doubles per Game</option>
+          <option value="triples_pg">3B/G — Triples per Game</option>
+          <option value="rbis_pg">RBI/G — RBIs per Game</option>
+          <option value="ra_pg">RA/G — Runs Allowed per Game</option>
+          <option value="run_diff_pg">+/- — Run Differential per Game</option>
+        </select>
+        <button class="share-chart-btn" id="shareRunningBtn">📤 Share</button>
+      </div>
+      <p style="font-size:0.8rem;color:var(--text-light);margin:0 0 12px 0;">Cumulative per-game average through each game played — e.g., after Game 4 the value reflects the season average across all 4 games.</p>
+      <div id="runningLoading" style="display:none;text-align:center;padding:20px;color:var(--text-light);">⏳ Loading game data…</div>
+      <div class="chart-wrap">
+        <canvas id="runningChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .page-container -->
+
+<script type="module">
+  import { getAllPlayerStatsOptimized, getCurrentSeason, getAllSeasons, db } from './firebase-data.js';
+  import { auth } from './firebase-auth.js';
+  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { NavigationComponent } from './nav-component.js';
+
+  // ── Team colors (used for dots) ───────────────────────
+  const TEAM_COLORS = {
+    black:    '#1a1a1a', white:    '#9e9e9e', silver:   '#708090',
+    red:      '#c0392b', blue:     '#2980b9', green:    '#27ae60',
+    orange:   '#e67e22', gold:     '#f1c40f', purple:   '#8e44ad',
+    yellow:   '#f9ca24', gray:     '#95a5a6', navy:     '#1b2a4a',
+    teal:     '#008080', carolina: '#4b9cd3', army:     '#654321'
+  };
+  function teamColor(name) {
+    return TEAM_COLORS[(name || '').toLowerCase()] || '#2d5016';
+  }
+
+  const fmtAvg = (v) => {
+    if (typeof v !== 'number' || isNaN(v)) return '---';
+    return v >= 1 ? v.toFixed(3) : '.' + Math.round(v * 1000).toString().padStart(3,'0');
+  };
+
+  // ── State ─────────────────────────────────────────────
+  let allPlayers = [];
+  let currentSeason = null;
+  let sortCol = 'avg';
+  let sortDir = -1; // -1 = desc
+  let perGame  = false;
+
+  // ── Build team rows from player data ──────────────────
+  function buildTeamRows(yearFilter, seasonFilter) {
+    // 2025 and earlier: seasonId = "2025-fall-silver" (team in key)
+    // 2026+:            seasonId = "2026-summer"      (team in sData.team)
+    const teams = {}; // grouped by "year-season-team"
+
+    allPlayers.forEach(player => {
+      if (!player.seasons) return;
+      Object.entries(player.seasons).forEach(([seasonId, sData]) => {
+        // Skip sub seasons
+        const sub = sData.sub || sData.Sub || '';
+        if (sub === 'Yes' || sub === 'yes' || sub === true) return;
+
+        const parts  = seasonId.split('-');
+        const year   = parts[0];
+        const season = parts[1];
+        if (!year || !season) return;
+
+        // Team: prefer field on the data; fall back to key suffix (2025 style)
+        const teamRaw = sData.team
+          ? sData.team
+          : parts.slice(2).join('-');  // e.g. "silver" from "2025-fall-silver"
+        if (!teamRaw) return; // no team info at all — skip
+
+        const team = teamRaw.charAt(0).toUpperCase() + teamRaw.slice(1);
+
+        if (yearFilter   && year   !== yearFilter)   return;
+        if (seasonFilter && season !== seasonFilter)  return;
+
+        const groupKey = `${year}-${season}-${team.toLowerCase()}`;
+
+        if (!teams[groupKey]) {
+          teams[groupKey] = {
+            groupKey, year,
+            season: season.charAt(0).toUpperCase() + season.slice(1),
+            team, games:0, atBats:0, hits:0, runs:0, walks:0,
+            singles:0, doubles:0, triples:0, homeRuns:0, rbis:0, plateAppearances:0,
+            playerCount: 0
+          };
+        }
+        const t = teams[groupKey];
+        t.playerCount++;
+        t.games            = Math.max(t.games, Number(sData.games) || 0);
+        t.atBats          += Number(sData.atBats)            || 0;
+        t.hits            += Number(sData.hits)              || 0;
+        t.runs            += Number(sData.runs)              || 0;
+        t.walks           += Number(sData.walks)             || 0;
+        t.singles         += Number(sData.singles)           || 0;
+        t.doubles         += Number(sData.doubles)           || 0;
+        t.triples         += Number(sData.triples)           || 0;
+        t.homeRuns        += Number(sData.homeRuns)          || 0;
+        t.rbis            += Number(sData.rbis || sData.rbi) || 0;
+        t.plateAppearances+= Number(sData.plateAppearances)  || (Number(sData.atBats||0) + Number(sData.walks||0));
+      });
+    });
+
+    // Compute rate stats
+    Object.values(teams).forEach(t => {
+      t.avg = t.atBats > 0 ? t.hits / t.atBats : 0;
+      t.obp = (t.atBats + t.walks) > 0 ? (t.hits + t.walks) / (t.atBats + t.walks) : 0;
+    });
+
+    return Object.values(teams);
+  }
+
+  // ── IP helpers (baseball thirds format: 7.1 = 7⅓ innings) ──
+  function ipToDecimal(ip) {
+    const n = Number(ip) || 0;
+    const full   = Math.floor(n);
+    const thirds = Math.round((n - full) * 10); // .1 → 1, .2 → 2
+    return full + thirds / 3;
+  }
+  function decimalToIP(dec) {
+    if (!dec || dec <= 0) return '0.0';
+    const full   = Math.floor(dec);
+    const thirds = Math.round((dec - full) * 3);
+    return `${full}.${thirds}`;
+  }
+  function fmtERA(era) {
+    if (era === null || era === undefined || isNaN(era)) return '—';
+    return era.toFixed(2);
+  }
+
+  // ── Build pitching totals by team ─────────────────────
+  function buildPitchingByTeam(yearFilter, seasonFilter) {
+    const pitching = {}; // groupKey → { ipDec, ra }
+
+    allPlayers.forEach(player => {
+      if (!player.pitchingSeasons) return;
+      Object.entries(player.pitchingSeasons).forEach(([seasonId, pData]) => {
+        const sub = pData.sub || pData.Sub || '';
+        if (sub === 'Yes' || sub === 'yes' || sub === true) return;
+
+        const parts  = seasonId.split('-');
+        const year   = parts[0];
+        const season = parts[1];
+        if (!year || !season) return;
+
+        const teamRaw = pData.team ? pData.team : parts.slice(2).join('-');
+        if (!teamRaw) return;
+
+        const team = teamRaw.charAt(0).toUpperCase() + teamRaw.slice(1);
+        if (yearFilter   && year   !== yearFilter)   return;
+        if (seasonFilter && season !== seasonFilter)  return;
+
+        const groupKey = `${year}-${season}-${team.toLowerCase()}`;
+        if (!pitching[groupKey]) pitching[groupKey] = { ipDec: 0, ra: 0 };
+        pitching[groupKey].ipDec += ipToDecimal(pData.inningsPitched);
+        pitching[groupKey].ra    += Number(pData.runsAllowed) || 0;
+      });
+    });
+
+    return pitching;
+  }
+
+  // ── Populate year dropdown from actual data ───────────
+  function populateYears() {
+    const years = new Set();
+    allPlayers.forEach(p => {
+      if (!p.seasons) return;
+      Object.keys(p.seasons).forEach(sid => {
+        const y = sid.split('-')[0];
+        if (y && /^\d{4}$/.test(y)) years.add(y);
+      });
+    });
+    const yearSelect = document.getElementById('yearSelect');
+    [...years].sort((a,b) => b.localeCompare(a)).forEach(y => {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      yearSelect.appendChild(opt);
+    });
+
+    // Pre-select current season year
+    if (currentSeason?.id) {
+      const csYear = currentSeason.id.split('-')[0];
+      if (years.has(csYear)) yearSelect.value = csYear;
+      const csSeason = currentSeason.id.split('-')[1];
+      if (csSeason) document.getElementById('seasonSelect').value = csSeason;
+    }
+  }
+
+  // ── Render table ──────────────────────────────────────
+  function renderTable() {
+    const pg           = perGame; // snapshot for this render — must be first (TDZ guard)
+    const yearFilter   = document.getElementById('yearSelect').value;
+    const seasonFilter = document.getElementById('seasonSelect').value;
+    const rows        = buildTeamRows(yearFilter, seasonFilter);
+    const pitchingMap = buildPitchingByTeam(yearFilter, seasonFilter);
+
+    // Merge pitching into batting rows
+    rows.forEach(r => {
+      const p  = pitchingMap[r.groupKey] || { ipDec: 0, ra: 0 };
+      r.ip     = p.ipDec;   // stored as true decimal for math/sorting
+      r.ra     = p.ra;
+      r.era    = p.ipDec > 0 ? (p.ra / p.ipDec) * 7 : null; // 7-inning games
+    });
+
+    const wrap = document.getElementById('tableWrap');
+    const summaryBar = document.getElementById('summaryBar');
+
+    if (!rows.length) {
+      wrap.innerHTML = `<div class="state-box"><div class="icon">📊</div><p>No data for this season.</p></div>`;
+      summaryBar.style.display = 'none';
+      return;
+    }
+
+    // Sort — respect per-game mode for counting stat columns
+    const perGameCols = new Set(['atBats','hits','runs','walks','doubles','triples','homeRuns','rbis','ra','ip']);
+    rows.sort((a, b) => {
+      const dA = (pg && perGameCols.has(sortCol) && a.games > 0) ? a.games : 1;
+      const dB = (pg && perGameCols.has(sortCol) && b.games > 0) ? b.games : 1;
+      const av = (a[sortCol] ?? 0) / dA;
+      const bv = (b[sortCol] ?? 0) / dB;
+      return typeof av === 'string' ? av.localeCompare(bv) * sortDir : (bv - av) * -sortDir;
+    });
+
+    // Summary chips
+    const leagueAVG = rows.reduce((s,r) => s + r.atBats, 0) > 0
+      ? rows.reduce((s,r) => s + r.hits,0) / rows.reduce((s,r) => s + r.atBats,0) : 0;
+    const totalIPDec = rows.reduce((s,r) => s + (r.ip || 0), 0);
+    const totalRA    = rows.reduce((s,r) => s + (r.ra || 0), 0);
+    const leagueERA  = totalIPDec > 0 ? (totalRA / totalIPDec) * 7 : null;
+    const seasonLabel = rows[0] ? `${rows[0].year} ${rows[0].season}` : '';
+    summaryBar.innerHTML = `
+      <div class="summary-chip">Teams: <strong>${rows.length}</strong></div>
+      <div class="summary-chip">Season: <strong>${seasonLabel || 'All'}</strong></div>
+      <div class="summary-chip">League AVG: <strong>${fmtAvg(leagueAVG)}</strong></div>
+      ${leagueERA !== null ? `<div class="summary-chip">League ERA: <strong>${fmtERA(leagueERA)}</strong></div>` : ''}
+    `;
+    summaryBar.style.display = 'flex';
+
+    const sfx = pg ? '/G' : '';
+    const cols = [
+      { key: 'team',        label: 'Team',         align: 'left'  },
+      { key: 'playerCount', label: 'Players',       align: 'right' },
+      { key: 'games',       label: 'G',             align: 'right' },
+      { key: 'atBats',      label: `AB${sfx}`,      align: 'right', perGame: pg },
+      { key: 'hits',        label: `H${sfx}`,       align: 'right', perGame: pg },
+      { key: 'runs',        label: `R${sfx}`,       align: 'right', perGame: pg },
+      { key: 'walks',       label: `BB${sfx}`,      align: 'right', perGame: pg },
+      { key: 'doubles',     label: `2B${sfx}`,      align: 'right', perGame: pg },
+      { key: 'triples',     label: `3B${sfx}`,      align: 'right', perGame: pg },
+      { key: 'homeRuns',    label: `HR${sfx}`,      align: 'right', perGame: pg },
+      { key: 'rbis',        label: `RBI${sfx}`,     align: 'right', perGame: pg },
+      { key: 'avg',         label: 'AVG',           align: 'right', rate: true },
+      { key: 'obp',         label: 'OBP',           align: 'right', rate: true },
+      { key: 'ip',          label: `IP${sfx}`,      align: 'right', pitching: true, perGame: pg },
+      { key: 'ra',          label: `RA${sfx}`,      align: 'right', pitching: true, perGame: pg },
+      { key: 'era',         label: 'ERA',           align: 'right', pitching: true, era: true },
+    ];
+
+    const headers = cols.map(c => {
+      const cls = c.key === sortCol ? (sortDir === -1 ? 'sorted-desc' : 'sorted-asc') : '';
+      return `<th class="${cls}" data-key="${c.key}" style="text-align:${c.align}">${c.label}</th>`;
+    }).join('');
+
+    const tbody = rows.map((r, i) => {
+      const rank = i + 1;
+      const rankCls = rank === 1 ? 'r1' : rank === 2 ? 'r2' : rank === 3 ? 'r3' : '';
+      const cells = cols.map(c => {
+        if (c.key === 'team') {
+          return `<td>
+            <div class="team-cell">
+              <span class="rank-badge ${rankCls}">${rank}</span>
+              <span class="team-dot" style="background:${teamColor(r.team)}"></span>
+              <a href="team.html?team=${encodeURIComponent(r.team)}" style="color:var(--primary);font-weight:700;text-decoration:none;">${r.team}</a>
+            </div>
+          </td>`;
+        }
+        const rawVal = r[c.key] ?? 0;
+        let display;
+        if (c.era) {
+          // ERA: rate stat, lower is better, already calculated
+          display = r.ip > 0
+            ? `<span class="stat-rate">${fmtERA(rawVal)}</span>`
+            : '<span style="color:#aaa">—</span>';
+        } else if (c.rate) {
+          display = `<span class="stat-rate">${fmtAvg(rawVal)}</span>`;
+        } else if (c.key === 'ip') {
+          // IP: display in baseball thirds format
+          if (c.perGame && r.games > 0) {
+            display = `<span class="stat-rate">${(rawVal / r.games).toFixed(2)}</span>`;
+          } else {
+            display = r.ip > 0 ? decimalToIP(rawVal) : '—';
+          }
+        } else if (c.perGame && r.games > 0) {
+          const pgVal = rawVal / r.games;
+          display = `<span class="stat-rate">${pgVal.toFixed(1)}</span>`;
+        } else {
+          display = rawVal;
+        }
+        return `<td style="text-align:right">${display}</td>`;
+      }).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('');
+
+    wrap.innerHTML = `
+      <div class="table-card">
+        <div class="table-card-header">
+          <span>📊 Team Batting — ${rows[0]?.year || ''} ${rows[0]?.season || 'All'}${pg ? ' · Per Game' : ''}</span>
+          <button class="share-standings-btn" id="shareBtn">📤 Share</button>
+        </div>
+        <div class="table-scroll">
+          <table class="stats-table">
+            <thead><tr>${headers}</tr></thead>
+            <tbody>${tbody}</tbody>
+          </table>
+        </div>
+      </div>`;
+
+    // Sort click handlers
+    wrap.querySelectorAll('th[data-key]').forEach(th => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.key;
+        if (sortCol === key) sortDir *= -1;
+        else { sortCol = key; sortDir = -1; }
+        renderTable();
+      });
+    });
+
+    // Share button
+    const shareBtn = document.getElementById('shareBtn');
+    if (shareBtn) shareBtn.addEventListener('click', openShareModal);
+  }
+
+  // ── Share helpers ─────────────────────────────────────
+  function openShareModal()  { document.getElementById('shareModalOverlay').classList.add('active'); }
+  function closeShareModal() { document.getElementById('shareModalOverlay').classList.remove('active'); }
+
+  async function shareTeamStatsImage() {
+    closeShareModal();
+    const card = document.querySelector('.table-card');
+    if (!card) return;
+    try {
+      const canvas = await html2canvas(card, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const link = document.createElement('a');
+      const yearEl = document.querySelector('#yearSelect').value   || 'all';
+      const sznEl  = document.querySelector('#seasonSelect').value || 'seasons';
+      link.download = `aces-team-stats-${yearEl}-${sznEl}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch(e) {
+      console.error('Image share failed:', e);
+      alert('Could not capture image. Try the text option instead.');
+    }
+  }
+
+  function shareTeamStatsText() {
+    closeShareModal();
+    const table = document.querySelector('.stats-table');
+    if (!table) return;
+
+    const pad = (s, n, right = false) => {
+      const str = String(s ?? '');
+      return right ? str.padStart(n) : str.padEnd(n);
+    };
+
+    const headers = [...table.querySelectorAll('thead th')].map(th => th.textContent.trim().replace(/[▲▼]/g, '').trim());
+    const dataRows = [...table.querySelectorAll('tbody tr')].map(tr =>
+      [...tr.querySelectorAll('td')].map(td => td.textContent.trim())
+    );
+
+    const widths = headers.map((h, i) => Math.max(h.length, ...dataRows.map(r => (r[i] || '').length)));
+    const sep  = widths.map(w => '-'.repeat(w)).join('  ');
+    const head = headers.map((h, i) => pad(h, widths[i])).join('  ');
+    const body = dataRows.map(r => r.map((c, i) => pad(c, widths[i])).join('  ')).join('\n');
+
+    const yearVal = document.querySelector('#yearSelect').value;
+    const sznVal  = document.querySelector('#seasonSelect').value;
+    const label   = [yearVal, sznVal].filter(Boolean).join(' ') || 'All Seasons';
+    const text    = `📊 Aces Team Batting Stats — ${label}\n${sep}\n${head}\n${sep}\n${body}\n${sep}`;
+
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('shareBtn');
+      if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => { btn.textContent = '📤 Share'; }, 2000); }
+    }).catch(() => alert('Clipboard not available. Please copy manually.'));
+  }
+
+  // ── Running avg share helpers ────────────────────────
+  function openRunningShareModal()  { document.getElementById('shareRunningModalOverlay').classList.add('active'); }
+  function closeRunningShareModal() { document.getElementById('shareRunningModalOverlay').classList.remove('active'); }
+
+  async function shareRunningChartImage() {
+    closeRunningShareModal();
+    const card = document.querySelector('#tab-running .trends-card');
+    if (!card) return;
+    try {
+      const seasonSel = document.getElementById('runningSeasonSel');
+      const statSel   = document.getElementById('runningStatSel');
+      const seasonLabel = seasonSel.options[seasonSel.selectedIndex]?.text?.replace(/\s+/g, '-') || 'season';
+      const statLabel   = statSel.options[statSel.selectedIndex]?.text?.split('—')[0]?.trim().replace(/\//g, '') || 'stat';
+      const canvas = await html2canvas(card, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const link = document.createElement('a');
+      link.download = `aces-running-avg-${seasonLabel}-${statLabel}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch(e) {
+      console.error('Chart share failed:', e);
+      // Fallback: capture just the canvas element
+      const chartCanvas = document.getElementById('runningChart');
+      if (chartCanvas) {
+        const link = document.createElement('a');
+        link.download = 'aces-running-avg.png';
+        link.href = chartCanvas.toDataURL('image/png');
+        link.click();
+      } else {
+        alert('Could not capture chart image.');
+      }
+    }
+  }
+
+  const shareRunningBtn = document.getElementById('shareRunningBtn');
+  if (shareRunningBtn) shareRunningBtn.addEventListener('click', openRunningShareModal);
+
+  // Expose to global scope for modal button onclick attributes
+  window.closeShareModal        = closeShareModal;
+  window.shareTeamStatsImage    = shareTeamStatsImage;
+  window.shareTeamStatsText     = shareTeamStatsText;
+  window.closeRunningShareModal = closeRunningShareModal;
+  window.shareRunningChartImage = shareRunningChartImage;
+
+  // ── Init ─────────────────────────────────────────────
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    try {
+      [allPlayers, currentSeason] = await Promise.all([
+        getAllPlayerStatsOptimized(),
+        getCurrentSeason()
+      ]);
+      populateYears();
+      renderTable();
+    } catch(e) {
+      console.error(e);
+      document.getElementById('tableWrap').innerHTML =
+        `<div class="state-box"><div class="icon">⚠️</div><p>Failed to load stats.</p></div>`;
+    } finally {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+  });
+
+  document.getElementById('yearSelect').addEventListener('change', renderTable);
+  document.getElementById('seasonSelect').addEventListener('change', renderTable);
+  document.getElementById('perGameToggle').addEventListener('change', e => {
+    perGame = e.target.checked;
+    renderTable();
+  });
+
+  // Pre-select from URL params (?year=2025&season=fall)
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('year'))   document.getElementById('yearSelect').value   = params.get('year');
+  if (params.get('season')) document.getElementById('seasonSelect').value = params.get('season');
+
+  // ── TRENDS ───────────────────────────────────────────
+  let trendChart = null;
+
+  // ── RUNNING AVERAGES ─────────────────────────────────
+  let runningChart = null;
+  const runningDataCache = {}; // seasonId → { teamId → games[] }
+
+  // Derive the playerStats doc ID for a player.
+  // aggregatedPlayerStats uses Firebase UID for auth users, but playerStats uses the
+  // name-derived legacyId (e.g. "stephen_giordano"). Must match to find game docs.
+  function playerStatsId(p) {
+    if (p.isAuthUser) {
+      // For auth users whose display name differs from their legacy game-doc path,
+      // linkedPlayer stores the original player name (e.g. "Joe Patanella").
+      // Derive the ID from that the same way legacy IDs were created.
+      const nameSource = p.linkedPlayer || p.name || '';
+      return nameSource.toLowerCase().replace(/\./g, '').replace(/\s+/g, '_');
+    }
+    return p.id;
+  }
+
+  async function loadRunningAvgData(seasonId) {
+    if (runningDataCache[seasonId]) return runningDataCache[seasonId];
+
+    // ── Phase 1: playerStats sub-collections (PDF import + converted game tracker) ──
+    const seasonPlayers = allPlayers.filter(p => p.id && p.seasons && p.seasons[seasonId]);
+    console.log(`🎯 Running avg: querying game docs for ${seasonPlayers.length} players in ${seasonId}`);
+
+    const [battingSnaps, pitchingSnaps] = await Promise.all([
+      Promise.all(seasonPlayers.map(p =>
+        getDocs(query(collection(db, 'playerStats', playerStatsId(p), 'games'), where('seasonId', '==', seasonId)))
+          .catch(() => ({ forEach: () => {} }))
+      )),
+      Promise.all(seasonPlayers.map(p =>
+        getDocs(query(collection(db, 'pitchingStats', playerStatsId(p), 'games'), where('seasonId', '==', seasonId)))
+          .catch(() => ({ forEach: () => {} }))
+      ))
+    ]);
+
+    const byTeamGame = {};
+
+    function ensureGame(teamId, gid, date) {
+      if (!byTeamGame[teamId]) byTeamGame[teamId] = {};
+      if (!byTeamGame[teamId][gid]) byTeamGame[teamId][gid] = {
+        date: date || 0, hits:0, runs:0, walks:0, ab:0, doubles:0, triples:0, hr:0, rbi:0, ra:0,
+        fromPlayerStats: false
+      };
+      return byTeamGame[teamId][gid];
+    }
+
+    battingSnaps.forEach(snap => {
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const teamId = (d.teamId || 'unknown').toLowerCase();
+        const gid = d.gameDocId || docSnap.id;
+        const g = ensureGame(teamId, gid, d.gameDate?.toMillis?.() || 0);
+        g.fromPlayerStats = true;
+        g.hits    += Number(d.hits)     || 0;
+        g.runs    += Number(d.runs)     || 0;
+        g.walks   += Number(d.walks)    || 0;
+        g.ab      += Number(d.atBats)   || 0;
+        g.doubles += Number(d.doubles)  || 0;
+        g.triples += Number(d.triples)  || 0;
+        g.hr      += Number(d.homeRuns) || 0;
+        g.rbi     += Number(d.rbi)      || 0;
+      });
+    });
+
+    pitchingSnaps.forEach(snap => {
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const teamId = (d.teamId || 'unknown').toLowerCase();
+        const gid = d.gameDocId || docSnap.id;
+        ensureGame(teamId, gid, d.gameDate?.toMillis?.() || 0).ra += Number(d.runsAllowed) || 0;
+      });
+    });
+
+    // ── Phase 2: gameResults (unconverted game-tracker games not yet in playerStats) ──
+    const grSnap = await getDocs(
+      query(collection(db, 'gameResults'), where('seasonId', '==', seasonId))
+    ).catch(() => null);
+
+    if (grSnap) {
+      grSnap.forEach(docSnap => {
+        const d = docSnap.data();
+        const teamId = (d.teamId || 'unknown').toLowerCase();
+        // gameResults doc IDs are "{gameId}_{teamId}"; playerStats gameDocId is "{seasonId}_{gameId}"
+        const gid = d.gameId ? `${seasonId}_${d.gameId}` : docSnap.id;
+
+        // Only fill in if playerStats had nothing for this game (avoid double-counting)
+        if (byTeamGame[teamId]?.[gid]?.fromPlayerStats) return;
+
+        const stats = d.battingStats || [];
+        let hits=0, runs=0, walks=0, ab=0, doubles=0, triples=0, hr=0, rbi=0;
+        stats.forEach(p => {
+          hits    += Number(p.hits)     || 0;
+          runs    += Number(p.runs)     || 0;
+          walks   += Number(p.walks)    || 0;
+          ab      += Number(p.atBats)   || 0;
+          doubles += Number(p.doubles)  || 0;
+          triples += Number(p.triples)  || 0;
+          hr      += Number(p.homeRuns) || 0;
+          rbi     += Number(p.rbi)      || 0;
+        });
+        if (ab === 0) return; // skip games with no at-bats
+        const g = ensureGame(teamId, gid, d.completedAt?.toMillis?.() || 0);
+        g.hits = hits; g.runs = runs; g.walks = walks; g.ab = ab;
+        g.doubles = doubles; g.triples = triples; g.hr = hr; g.rbi = rbi;
+        g.ra = Number(d.finalScore?.opponent) || 0;
+      });
+    }
+
+    // ── Build sorted arrays per team ──
+    const byTeam = {};
+    for (const [teamId, gameMap] of Object.entries(byTeamGame)) {
+      const games = Object.values(gameMap)
+        .filter(g => g.ab > 0)
+        .sort((a, b) => a.date - b.date);
+      if (games.length > 0) byTeam[teamId] = games;
+    }
+
+    console.log(`🎯 Running avg loaded: ${Object.entries(byTeam).map(([t,g]) => `${t}:${g.length}`).join(', ')}`);
+
+    runningDataCache[seasonId] = byTeam;
+    return byTeam;
+  }
+
+  function buildRunningDataset(byTeam, statKey) {
+    const EXCLUDED_TEAMS = ['kings'];
+    const maxGames = Math.max(...Object.values(byTeam).map(g => g.length), 0);
+    if (maxGames === 0) return { labels: [], datasets: [] };
+
+    const labels = Array.from({ length: maxGames }, (_, i) => `Game ${i + 1}`);
+
+    const datasets = Object.entries(byTeam)
+      .filter(([team]) => !EXCLUDED_TEAMS.includes(team))
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([teamId, games]) => {
+        const data = [];
+        let cH=0,cR=0,cBB=0,cAB=0,c2B=0,c3B=0,cHR=0,cRBI=0,cRA=0;
+        for (let i = 0; i < maxGames; i++) {
+          if (i >= games.length) { data.push(null); continue; }
+          const g = games[i];
+          cH+=g.hits; cR+=g.runs; cBB+=g.walks; cAB+=g.ab;
+          c2B+=g.doubles; c3B+=g.triples; cHR+=g.hr; cRBI+=g.rbi; cRA+=g.ra;
+          const n = i + 1;
+          let val;
+          switch (statKey) {
+            case 'hits_pg':    val = cH / n; break;
+            case 'runs_pg':    val = cR / n; break;
+            case 'walks_pg':   val = cBB / n; break;
+            case 'hr_pg':      val = cHR / n; break;
+            case 'ab_pg':      val = cAB / n; break;
+            case 'avg':        val = cAB > 0 ? cH / cAB : null; break;
+            case 'obp':        val = (cAB + cBB) > 0 ? (cH + cBB) / (cAB + cBB) : null; break;
+            case 'doubles_pg': val = c2B / n; break;
+            case 'triples_pg': val = c3B / n; break;
+            case 'rbis_pg':    val = cRBI / n; break;
+            case 'ra_pg':      val = cRA / n; break;
+            case 'run_diff_pg': val = (cR - cRA) / n; break;
+            default:           val = null;
+          }
+          data.push(val !== null ? Math.round(val * 10000) / 10000 : null);
+        }
+        if (data.every(v => v === null)) return null;
+        const color = teamColor(teamId);
+        return {
+          label: teamId.charAt(0).toUpperCase() + teamId.slice(1),
+          data, spanGaps: false,
+          borderColor: color, backgroundColor: color + '20',
+          borderWidth: 2.5, tension: 0.3,
+          pointRadius: 4, pointHoverRadius: 6
+        };
+      })
+      .filter(Boolean);
+
+    return { labels, datasets };
+  }
+
+  async function renderRunningAvg() {
+    const seasonId = document.getElementById('runningSeasonSel').value;
+    const statKey  = document.getElementById('runningStatSel').value;
+    if (!seasonId) return;
+
+    const loadingEl = document.getElementById('runningLoading');
+    loadingEl.style.display = 'block';
+    try {
+      const byTeam = await loadRunningAvgData(seasonId);
+      const { labels, datasets } = buildRunningDataset(byTeam, statKey);
+
+      if (runningChart) { runningChart.destroy(); runningChart = null; }
+
+      const isRate   = statKey === 'avg' || statKey === 'obp';
+      const isDiff   = statKey === 'run_diff_pg';
+      const fmt = v => isRate
+        ? (v < 1 ? '.' + Math.round(v * 1000).toString().padStart(3, '0') : v.toFixed(3))
+        : isDiff
+          ? (v >= 0 ? '+' : '') + v.toFixed(2)
+          : v.toFixed(2);
+
+      const ctx = document.getElementById('runningChart').getContext('2d');
+      runningChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14, font: { size: 11 } } },
+            tooltip: { callbacks: { label: c => c.parsed.y === null ? null : ` ${c.dataset.label}: ${fmt(c.parsed.y)}` } }
+          },
+          scales: {
+            x: { grid: { color: '#f0f4f8' }, ticks: { font: { size: 11 } } },
+            y: { beginAtZero: false,
+                 grid: { color: ctx => isDiff && ctx.tick.value === 0 ? '#888' : '#f0f4f8',
+                         lineWidth: ctx => isDiff && ctx.tick.value === 0 ? 2 : 1 },
+                 ticks: { font: { size: 11 }, callback: v => isRate
+                   ? '.' + Math.round(v * 1000).toString().padStart(3, '0')
+                   : isDiff
+                     ? (v >= 0 ? '+' : '') + v.toFixed(1)
+                     : v.toFixed(1) } }
+          }
+        }
+      });
+    } finally {
+      loadingEl.style.display = 'none';
+    }
+  }
+
+  async function populateRunningSeasons() {
+    const seasons = await getAllSeasons();
+    const sel = document.getElementById('runningSeasonSel');
+    seasons.sort((a, b) => b.id.localeCompare(a.id)); // newest first
+    seasons.forEach(s => {
+      const year = s.year || s.id.split('-')[0];
+      const seas = s.season
+        ? (s.season.charAt(0).toUpperCase() + s.season.slice(1))
+        : (s.id.split('-')[1] || '').replace(/^\w/, c => c.toUpperCase());
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = `${year} ${seas}`;
+      if (s.id === '2026-summer') opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  function getAllSeasonKeys() {
+    const seen = new Set();
+    allPlayers.forEach(p => {
+      if (!p.seasons) return;
+      Object.keys(p.seasons).forEach(sid => {
+        const [year, season] = sid.split('-');
+        if (year && season && /^\d{4}$/.test(year) &&
+            (season === 'summer' || season === 'fall' || season === 'spring')) {
+          seen.add(`${year}-${season}`);
+        }
+      });
+    });
+    return [...seen].sort((a, b) => {
+      const [ay, as_] = a.split('-');
+      const [by, bs_] = b.split('-');
+      if (ay !== by) return ay.localeCompare(by);
+      const order = { spring: 0, summer: 1, fall: 2 };
+      return (order[as_] ?? 1) - (order[bs_] ?? 1);
+    });
+  }
+
+  function getStatValue(row, statKey) {
+    if (!row || row.games === 0) return null;
+    const g = row.games;
+    switch (statKey) {
+      case 'hits_pg':     return row.hits / g;
+      case 'runs_pg':     return row.runs / g;
+      case 'walks_pg':    return row.walks / g;
+      case 'homeRuns_pg': return row.homeRuns / g;
+      case 'atBats_pg':   return row.atBats / g;
+      case 'avg':         return row.avg;
+      case 'obp':         return row.obp;
+      case 'ra_pg':       return row.ra != null ? row.ra / g : null;
+      case 'ip_pg':       return row.ip != null ? row.ip / g : null;
+      // Partial stats — return null if zero (means no data recorded)
+      case 'doubles_pg':  return row.doubles > 0 ? row.doubles / g : null;
+      case 'triples_pg':  return row.triples > 0 ? row.triples / g : null;
+      case 'rbis_pg':     return row.rbis    > 0 ? row.rbis    / g : null;
+      default:            return null;
+    }
+  }
+
+  function buildTrendDataset(statKey) {
+    const seasonKeys = getAllSeasonKeys();
+    const labels = seasonKeys.map(sk => {
+      const [y, s] = sk.split('-');
+      return `${y} ${s.charAt(0).toUpperCase() + s.slice(1)}`;
+    });
+
+    // Build all rows with no year/season filter
+    const rows = buildTeamRows('', '');
+    const pitchingMap = buildPitchingByTeam('', '');
+    rows.forEach(r => {
+      const p = pitchingMap[r.groupKey] || { ipDec: 0, ra: 0 };
+      r.ip  = p.ipDec;
+      r.ra  = p.ra;
+    });
+
+    // Teams to exclude from trend charts
+    const EXCLUDED_TEAMS = ['Kings'];
+
+    // Group by team name → season key → row
+    const byTeam = {}; // teamName → { 'year-season': row }
+    rows.forEach(r => {
+      if (EXCLUDED_TEAMS.includes(r.team)) return;
+      const sk = `${r.year}-${r.season.toLowerCase()}`;
+      if (!byTeam[r.team]) byTeam[r.team] = {};
+      byTeam[r.team][sk] = r;
+    });
+
+    const datasets = Object.entries(byTeam)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([teamName, bySeasonKey]) => {
+        const data = seasonKeys.map(sk => {
+          const row = bySeasonKey[sk];
+          if (!row) return null;
+          const v = getStatValue(row, statKey);
+          return v !== null ? Math.round(v * 10000) / 10000 : null;
+        });
+
+        // Skip teams with no data points for this stat
+        if (data.every(d => d === null)) return null;
+
+        const color = teamColor(teamName);
+        return {
+          label: teamName,
+          data,
+          borderColor: color,
+          backgroundColor: color + '20',
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: color,
+          tension: 0.3,
+          spanGaps: true
+        };
+      })
+      .filter(Boolean);
+
+    return { labels, datasets };
+  }
+
+  function renderTrends() {
+    const statKey  = document.getElementById('trendStatSel').value;
+    const isPartial = ['doubles_pg', 'triples_pg', 'rbis_pg'].includes(statKey);
+    document.getElementById('partialNote').classList.toggle('show', isPartial);
+
+    const { labels, datasets } = buildTrendDataset(statKey);
+
+    if (trendChart) { trendChart.destroy(); trendChart = null; }
+
+    const isRate = statKey === 'avg' || statKey === 'obp';
+    const fmtTick = v => isRate
+      ? (v < 1 ? '.' + Math.round(v * 1000).toString().padStart(3, '0') : v.toFixed(3))
+      : v.toFixed(1);
+    const fmtTip = v => isRate
+      ? (v < 1 ? '.' + Math.round(v * 1000).toString().padStart(3, '0') : v.toFixed(3))
+      : v.toFixed(2);
+
+    const ctx = document.getElementById('trendsChart').getContext('2d');
+    trendChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 12, padding: 14, font: { size: 11 } }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                if (ctx.parsed.y === null) return null;
+                return ` ${ctx.dataset.label}: ${fmtTip(ctx.parsed.y)}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: '#f0f4f8' },
+            ticks: { font: { size: 11 } }
+          },
+          y: {
+            beginAtZero: false,
+            grid: { color: '#f0f4f8' },
+            ticks: { font: { size: 11 }, callback: fmtTick }
+          }
+        }
+      }
+    });
+  }
+
+  // Tab switching
+  let runningTabInitialized = false;
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const panel = document.getElementById(`tab-${btn.dataset.tab}`);
+      if (panel) panel.classList.add('active');
+      if (btn.dataset.tab === 'trends') renderTrends();
+      if (btn.dataset.tab === 'running') {
+        if (!runningTabInitialized) {
+          runningTabInitialized = true;
+          populateRunningSeasons().then(() => renderRunningAvg());
+        } else {
+          renderRunningAvg();
+        }
+      }
+    });
+  });
+
+  document.getElementById('trendStatSel').addEventListener('change', renderTrends);
+  document.getElementById('runningSeasonSel').addEventListener('change', renderRunningAvg);
+  document.getElementById('runningStatSel').addEventListener('change', renderRunningAvg);
+</script>
+
+<!-- Running avg share modal -->
+<div class="share-modal-overlay" id="shareRunningModalOverlay" onclick="if(event.target===this)closeRunningShareModal()">
+  <div class="share-modal">
+    <h3>📤 Share Running Averages</h3>
+    <p>Download a PNG of the current chart.</p>
+    <div class="share-modal-options">
+      <button class="share-option-btn" onclick="shareRunningChartImage()">
+        <span class="share-option-icon">🖼️</span>
+        <div>
+          <div class="share-option-title">Save as Image</div>
+          <div class="share-option-desc">Download a PNG of the chart</div>
+        </div>
+      </button>
+    </div>
+    <button class="share-modal-cancel" onclick="closeRunningShareModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- Share modal -->
+<div class="share-modal-overlay" id="shareModalOverlay" onclick="if(event.target===this)closeShareModal()">
+  <div class="share-modal">
+    <h3>📤 Share Team Stats</h3>
+    <p>Choose how you'd like to share this table.</p>
+    <div class="share-modal-options">
+      <button class="share-option-btn" onclick="shareTeamStatsImage()">
+        <span class="share-option-icon">🖼️</span>
+        <div>
+          <div class="share-option-title">Save as Image</div>
+          <div class="share-option-desc">Download a PNG of the table</div>
+        </div>
+      </button>
+      <button class="share-option-btn" onclick="shareTeamStatsText()">
+        <span class="share-option-icon">📋</span>
+        <div>
+          <div class="share-option-title">Copy as Text</div>
+          <div class="share-option-desc">Copy a plain-text table to clipboard</div>
+        </div>
+      </button>
+    </div>
+    <button class="share-modal-cancel" onclick="closeShareModal()">Cancel</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

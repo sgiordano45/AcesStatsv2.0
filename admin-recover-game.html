@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recover Tracked Game - Mountainside Aces Admin</title>
+<meta name="theme-color" content="#6b21a8">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+  :root {
+    --admin-color: #6b21a8;
+    --admin-secondary: #7c3aed;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --success-color: #22c55e;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --info-color: #3b82f6;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+  .loading-overlay {
+    position: fixed; inset: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999; transition: opacity 0.4s ease;
+    font-weight: 600; color: var(--text-light);
+  }
+  .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+  .auth-gate {
+    display: none; max-width: 480px; margin: 4rem auto; padding: 2rem;
+    background: var(--card-bg); border-radius: 12px; text-align: center; box-shadow: var(--shadow-sm);
+  }
+  .auth-gate a {
+    display: inline-block; margin: 0.25rem; padding: 0.6rem 1.2rem; color: #fff;
+    background: var(--admin-color); border-radius: 8px; text-decoration: none; font-weight: 600;
+  }
+  .main-content { display: none; }
+  .main-content.visible { display: block; }
+  .header {
+    background: linear-gradient(135deg, var(--admin-color), var(--admin-secondary));
+    color: #fff; padding: 1.5rem 1rem;
+  }
+  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
+  .header h1 { margin: 0 0 0.25rem; font-size: 1.6rem; }
+  .header p { margin: 0; opacity: 0.9; }
+  .header a.nav-btn {
+    color: #fff; text-decoration: none; background: rgba(255,255,255,0.18);
+    padding: 0.5rem 0.9rem; border-radius: 8px; font-weight: 600; font-size: 0.875rem; margin-left: 0.4rem;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+  .card {
+    background: var(--card-bg); border-radius: 12px; padding: 1.25rem;
+    box-shadow: var(--shadow-sm); margin-bottom: 1.25rem;
+  }
+  .card h2 { margin: 0 0 0.75rem; font-size: 1.15rem; }
+  label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); display: block; margin-bottom: 0.25rem; }
+  select, input[type="number"] {
+    width: 100%; padding: 0.55rem 0.7rem; border: 1px solid var(--border-color);
+    border-radius: 8px; font-size: 0.95rem; background: #fff;
+  }
+  .row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .row > div { flex: 1 1 140px; }
+  .btn {
+    padding: 0.65rem 1.25rem; border: none; border-radius: 8px; font-weight: 700;
+    font-size: 0.9rem; cursor: pointer; color: #fff; background: var(--admin-color);
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-success { background: var(--success-color); }
+  .btn-secondary { background: var(--text-light); }
+  .msg { padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem; display: none; }
+  .msg.show { display: block; }
+  .msg.info { background: #ebf8ff; color: #2c5282; }
+  .msg.success { background: #f0fff4; color: #22543d; }
+  .msg.error { background: #fff5f5; color: #9b2c2c; }
+  .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; margin-left: 0.35rem; }
+  .badge.ok { background: #c6f6d5; color: #22543d; }
+  .badge.warn { background: #fefcbf; color: #744210; }
+  .badge.bad { background: #fed7d7; color: #742a2a; }
+  .badge.gray { background: #e2e8f0; color: #4a5568; }
+  .team-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; }
+  .team-head h3 { margin: 0; font-size: 1.05rem; }
+  .meta-line { font-size: 0.82rem; color: var(--text-light); margin-bottom: 0.75rem; }
+  .warnings { background: #fffaf0; border-left: 4px solid var(--warning-color); padding: 0.6rem 0.9rem; border-radius: 6px; margin: 0.75rem 0; font-size: 0.85rem; }
+  .warnings ul { margin: 0.25rem 0 0 1.1rem; padding: 0; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th, td { padding: 0.4rem 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--text-light); font-size: 0.75rem; text-transform: uppercase; }
+  .checks { margin: 0.75rem 0; font-size: 0.88rem; }
+  .checks label { display: flex; align-items: center; gap: 0.5rem; font-weight: 500; color: var(--text-dark); margin: 0.3rem 0; font-size: 0.88rem; }
+  .empty { text-align: center; color: var(--text-light); padding: 1.5rem; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">Loading...</div>
+
+<div class="auth-gate" id="authGate">
+  <h2>Admin Access Required</h2>
+  <p>You must be signed in as an administrator to access this page.</p>
+  <a href="signin.html">Sign In</a>
+  <a href="index.html" style="background: var(--text-light);">Back to Home</a>
+</div>
+
+<div class="main-content" id="mainContent">
+  <nav-component></nav-component>
+
+  <header class="header">
+    <div class="header-inner">
+      <div>
+        <h1>Recover Tracked Game</h1>
+        <p>Rebuild a gameResults record from saved live game state</p>
+      </div>
+      <div>
+        <a href="admin-game-tracker-review.html" class="nav-btn">Tracker Review</a>
+        <a href="admin-pages.html" class="nav-btn">Admin Pages</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="msg" class="msg"></div>
+
+    <div class="card">
+      <h2>1. Pick the game</h2>
+      <div class="row">
+        <div>
+          <label for="seasonLabel">Season</label>
+          <input type="text" id="seasonLabel" disabled>
+        </div>
+        <div style="flex: 3 1 300px;">
+          <label for="gameSelect">Game (newest first)</label>
+          <select id="gameSelect"><option value="">Loading games...</option></select>
+        </div>
+      </div>
+      <p class="meta-line" style="margin-top:0.75rem;">
+        Reads <code>seasons/{season}/games/{game}/gameState/*</code> and <code>metadata/current</code>.
+        Nothing is written until you click a Write button below.
+      </p>
+    </div>
+
+    <div id="gameInfo"></div>
+    <div id="teamCards"></div>
+  </div>
+</div>
+
+<script type="module">
+import { db, getCurrentSeason } from './firebase-data.js';
+import { onAuthChange, getUserProfile } from './firebase-auth.js';
+import { getTeamRosterForTracker } from './firebase_game_tracker.js';
+import {
+  collection, getDocs, getDoc, doc, setDoc, updateDoc, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+let currentUser = null;
+let userProfile = null;
+let currentSeason = null;
+let games = [];
+let selected = null;   // { game, meta, teams: [ { teamId, state, existing, built } ] }
+
+// ------------------------------------------------------------
+// Helpers
+// ------------------------------------------------------------
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function cap(n) { return n ? n.charAt(0).toUpperCase() + n.slice(1).toLowerCase() : ''; }
+function toMs(d) {
+  if (!d) return 0;
+  if (d.toMillis) return d.toMillis();
+  if (d.seconds) return d.seconds * 1000;
+  const t = Date.parse(d);
+  return isNaN(t) ? 0 : t;
+}
+function fmtDate(d) {
+  const ms = toMs(d);
+  return ms ? new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No date';
+}
+function showMsg(type, text) {
+  const el = document.getElementById('msg');
+  el.className = 'msg show ' + type;
+  el.textContent = text;
+  if (type !== 'error') setTimeout(() => { if (el.textContent === text) el.className = 'msg'; }, 8000);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function fmtRate(v) { return v ? v.toFixed(3).replace(/^0/, '') : '.000'; }
+
+// ------------------------------------------------------------
+// Same math as game-tracker.html calculateBattingStats
+// ------------------------------------------------------------
+function calculateBattingStats(playHistory, battingOrder) {
+  const playerStats = {};
+  battingOrder.forEach(player => {
+    playerStats[player.id] = {
+      playerId: player.id, playerName: player.name,
+      atBats: 0, hits: 0, singles: 0, doubles: 0, triples: 0, homeRuns: 0,
+      walks: 0, strikeouts: 0, rbi: 0, runs: 0,
+      battingAverage: 0, onBasePercentage: 0, sluggingPercentage: 0
+    };
+  });
+
+  playHistory.forEach(play => {
+    const playerId = battingOrder.find(p => p.name === play.batter)?.id;
+    if (!playerId || !playerStats[playerId]) return;
+    const stats = playerStats[playerId];
+
+    if (play.playType !== 'walk' && play.playType !== 'sacfly') stats.atBats++;
+
+    if (play.playType === 'single') { stats.hits++; stats.singles++; }
+    else if (play.playType === 'double') { stats.hits++; stats.doubles++; }
+    else if (play.playType === 'triple') { stats.hits++; stats.triples++; }
+    else if (play.playType === 'homerun') { stats.hits++; stats.homeRuns++; }
+    else if (play.playType === 'walk') { stats.walks++; }
+    else if (play.playType === 'strikeout') { stats.strikeouts++; }
+
+    if (play.runsScored > 0) stats.rbi += play.runsScored;
+
+    if (play.runnersScored && Array.isArray(play.runnersScored)) {
+      play.runnersScored.forEach(runnerName => {
+        const runnerId = battingOrder.find(p => p.name === runnerName)?.id;
+        if (runnerId && playerStats[runnerId]) playerStats[runnerId].runs++;
+      });
+    }
+  });
+
+  Object.values(playerStats).forEach(stats => {
+    if (stats.atBats > 0) stats.battingAverage = stats.hits / stats.atBats;
+    const pa = stats.atBats + stats.walks;
+    if (pa > 0) stats.onBasePercentage = (stats.hits + stats.walks) / pa;
+    if (stats.atBats > 0) {
+      const tb = stats.singles + (stats.doubles * 2) + (stats.triples * 3) + (stats.homeRuns * 4);
+      stats.sluggingPercentage = tb / stats.atBats;
+    }
+  });
+  return Object.values(playerStats);
+}
+
+// Same derivation as the tracker's end-of-game linescore step
+function deriveLineScore(plays, isHome, innings) {
+  const yourRuns = {}, oppRuns = {};
+  for (const play of plays) {
+    const inning = play.inning;
+    if (!inning) continue;
+    let runs = 0;
+    if (play.type === 'manual-run-adjustment') runs = typeof play.adjustment === 'number' ? play.adjustment : 0;
+    else runs = play.runsScored || 0;
+    if (runs === 0) continue;
+    if (play.isYourTeam !== false) yourRuns[inning] = (yourRuns[inning] || 0) + runs;
+    else oppRuns[inning] = (oppRuns[inning] || 0) + runs;
+  }
+  const maxInning = Math.max(
+    innings, ...Object.keys(yourRuns).map(Number), ...Object.keys(oppRuns).map(Number), 1
+  );
+  const yourArr = Array.from({ length: maxInning }, (_, i) => yourRuns[i + 1] || 0);
+  const oppArr = Array.from({ length: maxInning }, (_, i) => oppRuns[i + 1] || 0);
+  return { home: isHome ? yourArr : oppArr, away: isHome ? oppArr : yourArr, innings: maxInning };
+}
+
+function sumYourRuns(plays) {
+  let total = 0;
+  for (const play of plays) {
+    if (play.isYourTeam === false) continue;
+    if (play.type === 'manual-run-adjustment') total += typeof play.adjustment === 'number' ? play.adjustment : 0;
+    else total += play.runsScored || 0;
+  }
+  return total;
+}
+
+// ------------------------------------------------------------
+// Init
+// ------------------------------------------------------------
+async function init(user) {
+  if (!user) return gate();
+  try {
+    currentUser = user;
+    const prof = await getUserProfile(user.uid);
+    if (!prof.success) throw new Error('Could not load user profile');
+    userProfile = prof.data;
+
+    const isAdmin = userProfile.isAdmin ||
+      userProfile.userRole === 'admin' ||
+      userProfile.userType === 'league-staff' ||
+      userProfile.userRole === 'staff';
+    if (!isAdmin) return gate();
+
+    currentSeason = await getCurrentSeason();
+    if (!currentSeason) throw new Error('No active season found');
+    document.getElementById('seasonLabel').value = currentSeason.id;
+
+    const snap = await getDocs(collection(db, 'seasons', currentSeason.id, 'games'));
+    games = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    games.sort((a, b) => toMs(b.date) - toMs(a.date));
+
+    const sel = document.getElementById('gameSelect');
+    sel.innerHTML = '<option value="">Select a game...</option>' + games.map(g => {
+      const home = cap(g.homeTeam || g.homeTeamId);
+      const away = cap(g.awayTeam || g.awayTeamId);
+      return `<option value="${esc(g.id)}">${esc(fmtDate(g.date))} - ${esc(away)} @ ${esc(home)}</option>`;
+    }).join('');
+    sel.addEventListener('change', () => selectGame(sel.value));
+
+    document.getElementById('mainContent').classList.add('visible');
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  } catch (err) {
+    console.error('Init error:', err);
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('mainContent').classList.add('visible');
+    showMsg('error', 'Error loading page: ' + err.message);
+  }
+}
+function gate() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  document.getElementById('authGate').style.display = 'block';
+}
+
+// ------------------------------------------------------------
+// Load a game's saved state
+// ------------------------------------------------------------
+async function selectGame(gameId) {
+  const info = document.getElementById('gameInfo');
+  const cards = document.getElementById('teamCards');
+  info.innerHTML = ''; cards.innerHTML = '';
+  selected = null;
+  if (!gameId) return;
+
+  const game = games.find(g => g.id === gameId);
+  cards.innerHTML = '<div class="card empty">Loading saved state...</div>';
+
+  try {
+    const sid = currentSeason.id;
+    const [stateSnap, metaSnap] = await Promise.all([
+      getDocs(collection(db, 'seasons', sid, 'games', gameId, 'gameState')),
+      getDoc(doc(db, 'seasons', sid, 'games', gameId, 'metadata', 'current'))
+    ]);
+    const meta = metaSnap.exists() ? metaSnap.data() : null;
+
+    const teams = [];
+    for (const d of stateSnap.docs) {
+      const state = d.data();
+      const existingSnap = await getDoc(doc(db, 'gameResults', `${gameId}_${d.id}`));
+      const t = { teamId: d.id, state, existing: existingSnap.exists() ? existingSnap.data() : null };
+      t.built = await buildResult(game, meta, t);
+      teams.push(t);
+    }
+    selected = { game, meta, teams };
+    renderGame();
+  } catch (err) {
+    console.error(err);
+    cards.innerHTML = '';
+    showMsg('error', 'Could not load saved state: ' + err.message);
+  }
+}
+
+// ------------------------------------------------------------
+// Rebuild the result for one team from its gameState doc
+// ------------------------------------------------------------
+async function buildResult(game, meta, t) {
+  const sid = currentSeason.id;
+  const st = t.state;
+  const teamId = t.teamId;
+  const teamName = st.teamName || teamId;
+  const warnings = [];
+
+  const isHome = (game.homeTeam || game.homeTeamId || '').toLowerCase() === teamName.toLowerCase() ||
+                 (game.homeTeamId || '').toLowerCase() === teamId.toLowerCase();
+  const opponentName = isHome ? cap(game.awayTeam || game.awayTeamId) : cap(game.homeTeam || game.homeTeamId);
+
+  const plays = Array.isArray(st.plays) ? st.plays : [];
+  if (plays.length === 0) warnings.push('This team has no plays saved, so batting stats will be empty.');
+
+  // Resolve batting order ids to names using the roster
+  const roster = await getTeamRosterForTracker(teamName, sid);
+  if (roster.length === 0) warnings.push(`No roster found for "${teamName}" in season ${sid}; names may not match plays.`);
+
+  const orderIds = Array.isArray(st.battingOrder) ? st.battingOrder : [];
+  const battingOrder = orderIds.map(id => {
+    const r = roster.find(p => p.id === id);
+    if (r) return { id: r.id, name: r.name };
+    warnings.push(`Batting order id "${id}" is not on the roster; using a guessed name.`);
+    return { id, name: String(id).replace(/_/g, ' ') };
+  });
+
+  // Anyone who batted but is no longer in the order (left the game early / substitutes)
+  const removedPlayers = [];
+  const unmatched = {};
+  plays.forEach(p => {
+    if (p.isYourTeam === false || !p.batter || !p.playType) return;
+    if (battingOrder.some(b => b.name === p.batter)) return;
+    if (removedPlayers.some(r => r.name === p.batter)) return;
+    const r = roster.find(x => x.name === p.batter);
+    if (r) removedPlayers.push({ id: r.id, name: r.name });
+    else unmatched[p.batter] = (unmatched[p.batter] || 0) + 1;
+  });
+  if (removedPlayers.length) {
+    warnings.push('Batted but not in the saved batting order (marked leftGameEarly): ' + removedPlayers.map(r => r.name).join(', '));
+  }
+  const unmatchedNames = Object.keys(unmatched);
+  if (unmatchedNames.length) {
+    warnings.push('Batters not found on the roster, so their stats are NOT included: ' +
+      unmatchedNames.map(n => `${n} (${unmatched[n]} plays)`).join(', '));
+  }
+
+  const battingStats = calculateBattingStats(plays, [...battingOrder, ...removedPlayers]);
+  battingStats.forEach(s => {
+    if (removedPlayers.find(p => p.id === s.playerId)) s.leftGameEarly = true;
+  });
+
+  // Scores
+  const stateScore = (typeof st.score === 'object' && st.score !== null) ? st.score.yourTeam : st.score;
+  const metaYour = meta ? (isHome ? meta.homeScore : meta.awayScore) : undefined;
+  const metaOpp = meta ? (isHome ? meta.awayScore : meta.homeScore) : undefined;
+  const yourScore = Number.isFinite(stateScore) ? stateScore : (Number.isFinite(metaYour) ? metaYour : 0);
+  const oppScore = Number.isFinite(metaOpp) ? metaOpp : 0;
+  const playRuns = sumYourRuns(plays);
+  if (Number.isFinite(stateScore) && Number.isFinite(metaYour) && stateScore !== metaYour) {
+    warnings.push(`Saved team score (${stateScore}) differs from metadata (${metaYour}). Check before writing.`);
+  }
+  if (playRuns !== yourScore) {
+    warnings.push(`Runs summed from plays (${playRuns}) differ from the score (${yourScore}). Manual edits or undo may explain it.`);
+  }
+  if (!meta) warnings.push('No metadata/current doc found; opponent score defaults to 0 - enter it manually.');
+
+  const innings = Math.max(Number(st.inning) || 0, Number(meta?.inning) || 0, 1);
+
+  return {
+    teamId, teamName, isHome, opponentName, plays, battingStats,
+    yourScore, oppScore, innings, playRuns, warnings
+  };
+}
+
+// ------------------------------------------------------------
+// Render
+// ------------------------------------------------------------
+function renderGame() {
+  const { game, meta, teams } = selected;
+  const home = cap(game.homeTeam || game.homeTeamId);
+  const away = cap(game.awayTeam || game.awayTeamId);
+  const hasLine = !!game.lineScore;
+
+  document.getElementById('gameInfo').innerHTML = `
+    <div class="card">
+      <h2>${esc(away)} @ ${esc(home)} <span class="badge gray">${esc(fmtDate(game.date))}</span></h2>
+      <div class="meta-line">
+        Game ID: ${esc(game.id)} &middot;
+        Metadata: ${meta ? `${esc(away)} ${esc(meta.awayScore ?? '?')} - ${esc(home)} ${esc(meta.homeScore ?? '?')}, inning ${esc(meta.inning ?? '?')}` : 'none saved'}
+        ${meta?.gameCompleted ? '<span class="badge ok">metadata marked complete</span>' : ''}
+        &middot; Official score on game doc: ${game.homeScore !== undefined || game.awayScore !== undefined
+          ? `${esc(away)} ${esc(game.awayScore ?? '?')} - ${esc(home)} ${esc(game.homeScore ?? '?')}` : 'not submitted'}
+        &middot; Linescore: ${hasLine ? 'already on game doc' : 'none'}
+      </div>
+    </div>`;
+
+  const cards = document.getElementById('teamCards');
+  if (teams.length === 0) {
+    cards.innerHTML = '<div class="card empty">No gameState documents were saved for this game. Nothing to recover.</div>';
+    return;
+  }
+
+  cards.innerHTML = teams.map((t, i) => {
+    const b = t.built;
+    const st = t.state;
+    const updated = toMs(st.lastUpdated || st.updatedAt || st.metadata?.lastUpdatedAt);
+    const rows = b.battingStats.map(s => `
+      <tr>
+        <td>${esc(s.playerName)}${s.leftGameEarly ? ' <span class="badge warn">left early</span>' : ''}</td>
+        <td>${s.atBats}</td><td>${s.hits}</td><td>${s.doubles}</td><td>${s.triples}</td><td>${s.homeRuns}</td>
+        <td>${s.walks}</td><td>${s.strikeouts}</td><td>${s.rbi}</td><td>${s.runs}</td>
+        <td>${fmtRate(s.battingAverage)}</td>
+      </tr>`).join('');
+
+    return `
+    <div class="card" id="team-${i}">
+      <div class="team-head">
+        <h3>${esc(cap(b.teamName))} <span class="badge gray">${b.isHome ? 'home' : 'away'}</span>
+          ${st.cleared ? '<span class="badge ok">End Game ran (state cleared)</span>' : '<span class="badge warn">state still active</span>'}
+          ${t.existing ? '<span class="badge bad">gameResults already exists</span>' : '<span class="badge ok">no gameResults yet</span>'}
+        </h3>
+      </div>
+      <div class="meta-line">
+        ${b.plays.length} plays saved &middot; ${b.battingStats.length} players &middot; inning ${esc(st.inning ?? '?')}
+        ${updated ? '&middot; last updated ' + esc(new Date(updated).toLocaleString()) : ''}
+        &middot; opponent: ${esc(b.opponentName)}
+      </div>
+
+      ${b.warnings.length ? `<div class="warnings"><strong>Check these:</strong><ul>${b.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></div>` : ''}
+
+      <div class="row">
+        <div><label>${esc(cap(b.teamName))} runs</label><input type="number" min="0" id="your-${i}" value="${b.yourScore}"></div>
+        <div><label>${esc(b.opponentName)} runs</label><input type="number" min="0" id="opp-${i}" value="${b.oppScore}"></div>
+        <div><label>Innings</label><input type="number" min="1" id="inn-${i}" value="${b.innings}"></div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:0.9rem;">
+        <table>
+          <thead><tr><th>Player</th><th>AB</th><th>H</th><th>2B</th><th>3B</th><th>HR</th><th>BB</th><th>K</th><th>RBI</th><th>R</th><th>AVG</th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="11" class="empty">No players</td></tr>'}</tbody>
+        </table>
+      </div>
+
+      <div class="checks">
+        <label><input type="checkbox" id="ls-${i}" ${hasLine ? '' : 'checked'}> Write linescore to the game doc ${hasLine ? '(one already exists - leave unchecked unless it is wrong)' : ''}</label>
+        <label><input type="checkbox" id="clr-${i}" ${st.cleared ? '' : 'checked'}> Mark this team's gameState complete (keeps the plays)</label>
+        <label><input type="checkbox" id="meta-${i}" ${meta?.gameCompleted ? '' : 'checked'}> Mark game metadata complete (keeps final scores)</label>
+      </div>
+
+      <button class="btn btn-success" id="write-${i}" onclick="writeResult(${i})">
+        ${t.existing ? 'Overwrite gameResults' : 'Write gameResults'} for ${esc(cap(b.teamName))}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+// ------------------------------------------------------------
+// Write
+// ------------------------------------------------------------
+window.writeResult = async function(i) {
+  const t = selected.teams[i];
+  const b = t.built;
+  const game = selected.game;
+  const sid = currentSeason.id;
+  const btn = document.getElementById('write-' + i);
+
+  const yourScore = parseInt(document.getElementById('your-' + i).value, 10);
+  const oppScore = parseInt(document.getElementById('opp-' + i).value, 10);
+  const innings = parseInt(document.getElementById('inn-' + i).value, 10);
+  if (![yourScore, oppScore, innings].every(Number.isFinite) || innings < 1) {
+    return showMsg('error', 'Scores and innings must be valid numbers.');
+  }
+
+  const docId = `${game.id}_${t.teamId}`;
+  const confirmText = (t.existing
+    ? `A gameResults doc already exists at ${docId}. Overwrite it?\n\n`
+    : `Create gameResults/${docId}?\n\n`) +
+    `${cap(b.teamName)} ${yourScore} - ${b.opponentName} ${oppScore}, ${innings} innings, ${b.battingStats.length} players, ${b.plays.length} plays.`;
+  if (!window.confirm(confirmText)) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Writing...';
+
+  try {
+    // 1. gameResults (same shape the tracker writes, plus recovery markers)
+    await setDoc(doc(db, 'gameResults', docId), {
+      gameId: game.id,
+      teamId: t.teamId,
+      seasonId: sid,
+      opponentName: b.opponentName,
+      isHome: b.isHome,
+      finalScore: { yourTeam: yourScore, opponent: oppScore },
+      innings,
+      battingStats: b.battingStats,
+      playByPlay: b.plays,
+      completedAt: serverTimestamp(),
+      recoveredFromGameState: true,
+      recoveredBy: currentUser.uid,
+      recoveredByName: currentUser.displayName || currentUser.email || '',
+      recoveredAt: serverTimestamp()
+    });
+
+    const notes = ['gameResults written'];
+
+    // 2. Optional linescore
+    if (document.getElementById('ls-' + i).checked) {
+      try {
+        const lineScore = deriveLineScore(b.plays, b.isHome, innings);
+        await updateDoc(doc(db, 'seasons', sid, 'games', game.id), { lineScore });
+        game.lineScore = lineScore;
+        notes.push('linescore saved');
+      } catch (e) {
+        console.warn('Linescore failed:', e);
+        notes.push('linescore FAILED: ' + e.message);
+      }
+    }
+
+    // 3. Optional: mark state / metadata complete (merge only; plays are kept)
+    if (document.getElementById('clr-' + i).checked) {
+      try {
+        await setDoc(doc(db, 'seasons', sid, 'games', game.id, 'gameState', t.teamId), {
+          gameActive: false, cleared: true, clearedAt: serverTimestamp()
+        }, { merge: true });
+        notes.push('gameState marked complete');
+      } catch (e) { notes.push('gameState update FAILED: ' + e.message); }
+    }
+    if (document.getElementById('meta-' + i).checked) {
+      try {
+        await setDoc(doc(db, 'seasons', sid, 'games', game.id, 'metadata', 'current'), {
+          gameActive: false, gameCompleted: true,
+          completedAt: serverTimestamp(), lastUpdated: serverTimestamp()
+        }, { merge: true });
+        notes.push('metadata marked complete');
+      } catch (e) { notes.push('metadata update FAILED: ' + e.message); }
+    }
+
+    showMsg('success', `${cap(b.teamName)}: ${notes.join(', ')}. Open Tracker Review to convert it to official stats.`);
+    btn.textContent = 'Written - click to write again';
+    btn.disabled = false;
+    t.existing = { recovered: true };
+  } catch (err) {
+    console.error('Write failed:', err);
+    showMsg('error', 'Write failed: ' + err.message);
+    btn.textContent = 'Retry write';
+    btn.disabled = false;
+  }
+};
+
+onAuthChange(user => { if (user) init(user); else gate(); });
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="mobile-enhancements.js"></script>
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week Standings - Aces DFS - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #3b82f6;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0; padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+.loading-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 9999; transition: opacity 0.5s ease;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.spinner {
+  width: 48px; height: 48px; border: 4px solid var(--border-color);
+  border-top-color: var(--primary-color); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white; text-align: center; padding: 2rem 1.5rem 1.5rem; box-shadow: var(--shadow-lg);
+  position: relative; overflow: hidden;
+}
+.header h1 { margin: 0 0 0.25rem; font-size: 1.7rem; }
+.header p { margin: 0; opacity: 0.9; font-size: 0.95rem; }
+.back-link { color: white; opacity: 0.85; text-decoration: none; font-size: 0.9rem; display: inline-block; margin-bottom: 0.75rem; }
+.back-link:hover { opacity: 1; text-decoration: underline; }
+
+.page-container { max-width: 900px; margin: 0 auto; padding: 1.25rem; }
+
+.auth-gate {
+  display: none; max-width: 480px; margin: 4rem auto; text-align: center;
+  background: var(--card-bg); padding: 2.5rem; border-radius: 16px; box-shadow: var(--shadow-md);
+}
+
+.card {
+  background: var(--card-bg); border-radius: 16px; box-shadow: var(--shadow-md);
+  padding: 1.5rem; margin-bottom: 1.25rem;
+}
+.card h2 { margin: 0 0 0.25rem; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem; }
+.card .subtitle { color: var(--text-light); font-size: 0.85rem; margin: 0 0 1rem; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.2rem;
+  border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700;
+  cursor: pointer; transition: transform 0.15s ease; text-decoration: none;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { background: var(--primary-color); color: white; }
+
+.week-select-row {
+  display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.25rem; flex-wrap: wrap;
+}
+.week-select-row label { font-size: 0.85rem; font-weight: 700; color: var(--text-light); }
+.week-select-row select {
+  padding: 0.55rem 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9rem;
+  background: white; color: var(--text-dark); flex: 1; min-width: 160px;
+}
+
+.lock-banner {
+  border-radius: 12px; padding: 0.9rem 1.1rem; margin-bottom: 1.25rem;
+  font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+}
+.lock-banner.open { background: #dcfce7; color: #15803d; }
+.lock-banner.locked { background: #fef3c7; color: #92400e; }
+.lock-banner.scored { background: #dbeafe; color: #1e40af; }
+
+.alert { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.85rem; margin-bottom: 0.85rem; }
+.alert-info { background: #dbeafe; color: #1e40af; }
+
+.entry-card {
+  border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;
+}
+.entry-card.me { border-color: var(--secondary-color); background: #f0fdf4; }
+.entry-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.15rem; }
+.entry-header .rank { font-size: 1.15rem; width: 1.75rem; text-align: center; flex-shrink: 0; }
+.entry-header .name { flex: 1; font-weight: 800; font-size: 1rem; }
+.entry-header .total { font-weight: 800; font-size: 1.15rem; color: var(--primary-color); white-space: nowrap; }
+.entry-meta { font-size: 0.75rem; color: var(--text-light); margin: 0 0 0.6rem 2.5rem; }
+
+.pick-row {
+  display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.25rem;
+  border-bottom: 1px dashed var(--border-color); font-size: 0.85rem;
+}
+.pick-row:last-child { border-bottom: none; }
+.pick-slot {
+  font-size: 0.65rem; font-weight: 800; color: var(--text-light); text-transform: uppercase;
+  min-width: 2.6rem; flex-shrink: 0;
+}
+.pick-name { flex: 1; font-weight: 600; }
+.pick-note { font-size: 0.72rem; color: var(--text-light); font-weight: 400; }
+.pick-pts { font-weight: 800; color: var(--primary-color); min-width: 2.4rem; text-align: right; flex-shrink: 0; }
+
+.empty-state { text-align: center; color: var(--text-light); padding: 2rem 1rem; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="margin-top:1rem;color:var(--text-light);">Loading Week Standings...</p>
+</div>
+
+<div class="header">
+  <a href="dfs.html" class="back-link">&larr; Aces DFS</a>
+  <h1>&#128202; Week Standings</h1>
+  <p>Everyone's lineup, unlocked after that week's lineups lock</p>
+</div>
+
+<div class="page-container">
+
+  <div class="auth-gate" id="authGate">
+    <h2>&#128274; Sign In Required</h2>
+    <p>Week standings are visible to any signed-in Aces account.</p>
+    <a href="signin.html" class="btn btn-primary">Sign In</a>
+  </div>
+
+  <div id="mainContent" style="display:none;">
+    <div class="filters-nav"></div>
+
+    <div id="noWeekState" class="card" style="display:none;">
+      <div class="empty-state">
+        &#128683; No DFS week has been published yet.
+      </div>
+    </div>
+
+    <div id="weekPicker" class="week-select-row" style="display:none;">
+      <label for="weekSelect">Week:</label>
+      <select id="weekSelect"></select>
+    </div>
+
+    <div id="lockBanner" class="lock-banner" style="display:none;"></div>
+
+    <div id="openState" class="card" style="display:none;">
+      <div class="empty-state" id="openStateText"></div>
+    </div>
+
+    <div class="card" id="standingsCard" style="display:none;">
+      <h2>&#127942; <span id="weekLabel"></span></h2>
+      <p class="subtitle" id="standingsSubtitle"></p>
+      <div id="standingsBody"></div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { onAuthChange } from './firebase-auth.js';
+  import { getCurrentSeason } from './firebase-data.js';
+  import { db, collection, doc, getDoc, getDocs, query, where } from './firebase-config.js';
+  import { NavigationComponent } from './nav-component.js';
+  import { scoreBattingGame, scorePitchingGame, lineupTotalPoints } from './dfs-scoring.js';
+
+  // ============================================================
+  // STATE
+  // ============================================================
+  let currentUser = null;
+  let season = null;
+  let weeks = [];           // dfsWeeks docs for this season, sorted newest-first
+  let weekDoc = null;       // the currently-selected week's dfsWeeks data
+  let weekDocId = null;
+  let salaryPool = {};      // playerId -> { name, team, position, salary, legacyId } for the selected week
+
+  const el = (id) => document.getElementById(id);
+  const loadingOverlay = el('loadingOverlay');
+
+  // ============================================================
+  // AUTH
+  // ============================================================
+  onAuthChange(async (user) => {
+    if (!user) {
+      el('authGate').style.display = 'block';
+      loadingOverlay.classList.add('hidden');
+      return;
+    }
+    currentUser = user;
+    el('mainContent').style.display = 'block';
+    await init();
+    loadingOverlay.classList.add('hidden');
+  });
+
+  async function init() {
+    season = await getCurrentSeason();
+    if (!season) {
+      el('noWeekState').style.display = 'block';
+      return;
+    }
+
+    const weeksSnap = await getDocs(query(collection(db, 'dfsWeeks'), where('seasonId', '==', season.id)));
+    if (weeksSnap.empty) {
+      el('noWeekState').style.display = 'block';
+      return;
+    }
+
+    weeks = weeksSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.weekId || '').localeCompare(a.weekId || ''));
+
+    el('weekPicker').style.display = 'flex';
+    el('weekSelect').innerHTML = weeks.map(w => `
+      <option value="${w.id}">${w.label || w.weekId}${w.status === 'scored' ? ' — Final' : ''}</option>
+    `).join('');
+    el('weekSelect').addEventListener('change', () => loadWeek(el('weekSelect').value));
+
+    await loadWeek(weeks[0].id);
+  }
+
+  // ============================================================
+  // WEEK LOADING
+  // ============================================================
+  function isWeekLocked(w) {
+    if (w.status !== 'open') return true;
+    const lockAtMs = w.lockAt?.toMillis ? w.lockAt.toMillis() : null;
+    if (lockAtMs && Date.now() >= lockAtMs) return true;
+    return false;
+  }
+
+  function renderLockBanner(w, locked) {
+    const banner = el('lockBanner');
+    banner.style.display = 'flex';
+    if (w.status === 'scored') {
+      banner.className = 'lock-banner scored';
+      banner.innerHTML = `&#127942; This week is scored &mdash; standings below are final.`;
+      return;
+    }
+    if (locked) {
+      banner.className = 'lock-banner locked';
+      banner.innerHTML = `&#128274; Lineups are locked. Standings below update live as stats are entered &mdash; not official until the week is scored.`;
+      return;
+    }
+    banner.className = 'lock-banner open';
+    const lockAtMs = w.lockAt?.toMillis ? w.lockAt.toMillis() : null;
+    banner.innerHTML = lockAtMs
+      ? `&#9203; Lineups are still open &mdash; standings unlock once they lock at ${new Date(lockAtMs).toLocaleString()}.`
+      : `&#9203; Lineups are still open for this week.`;
+  }
+
+  async function loadWeek(wDocId) {
+    el('lockBanner').style.display = 'none';
+    el('openState').style.display = 'none';
+    el('standingsCard').style.display = 'none';
+
+    weekDocId = wDocId;
+    weekDoc = weeks.find(w => w.id === wDocId);
+    if (!weekDoc) return;
+
+    el('weekSelect').value = wDocId;
+    el('weekLabel').textContent = weekDoc.label || weekDoc.weekId || '';
+
+    const locked = isWeekLocked(weekDoc);
+    renderLockBanner(weekDoc, locked);
+
+    if (!locked) {
+      el('openState').style.display = 'block';
+      el('openStateText').innerHTML = `&#9203; Lineups are still open for this week &mdash; check back after they lock to see everyone's picks.`;
+      return;
+    }
+
+    const [salariesSnap, entriesSnap] = await Promise.all([
+      getDoc(doc(db, 'dfsSalaries', wDocId)),
+      getDocs(collection(db, 'dfsLineups', wDocId, 'entries'))
+    ]);
+    salaryPool = salariesSnap.exists() ? (salariesSnap.data().players || {}) : {};
+    const entries = entriesSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
+
+    el('standingsCard').style.display = 'block';
+
+    if (entries.length === 0) {
+      el('standingsSubtitle').textContent = '';
+      el('standingsBody').innerHTML = `<div class="empty-state">No lineups were submitted this week.</div>`;
+      return;
+    }
+
+    let scoreMap;
+    let final;
+    if (weekDoc.status === 'scored') {
+      const scoresSnap = await getDoc(doc(db, 'dfsScores', wDocId));
+      scoreMap = scoresSnap.exists() ? (scoresSnap.data().players || {}) : {};
+      final = true;
+    } else {
+      el('standingsSubtitle').textContent = 'Computing live standings…';
+      scoreMap = await computeLiveScores(weekDoc, entries);
+      final = false;
+    }
+
+    renderStandings(entries, scoreMap, final);
+  }
+
+  // ============================================================
+  // LIVE SCORING (before the week is officially scored)
+  //
+  // Mirrors admin-dfs.html's scoreWeek() pass, but read-only: it never
+  // writes to dfsScores, and it only pulls stats for players who were
+  // actually drafted this week (not the whole salary pool), since that's
+  // all a standings page needs. Uses the exact same scoreBattingGame /
+  // scorePitchingGame math from dfs-scoring.js as the official pass, so
+  // these numbers become identical (not just similar) once the admin
+  // finalizes the week.
+  // ============================================================
+  function chunk(arr, size) {
+    const out = [];
+    for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+    return out;
+  }
+
+  async function computeLiveScores(w, entries) {
+    const results = {};
+    const gameIds = w.gameIds || [];
+    if (gameIds.length === 0) return results;
+
+    const playerIds = new Set();
+    entries.forEach(e => (e.picks || []).forEach(p => playerIds.add(p.playerId)));
+
+    const gameIdChunks = chunk(gameIds, 10);
+
+    await Promise.all([...playerIds].map(async (playerId) => {
+      const legacyId = salaryPool[playerId]?.legacyId || playerId;
+      let battingLines = [];
+      let pitchingLines = [];
+
+      for (const idsChunk of gameIdChunks) {
+        try {
+          const bq = query(collection(db, 'playerStats', legacyId, 'games'), where('gameId', 'in', idsChunk));
+          const bSnap = await getDocs(bq);
+          bSnap.forEach(d => battingLines.push(d.data()));
+        } catch (e) { /* player may have no playerStats subcollection at all */ }
+
+        try {
+          const pq = query(collection(db, 'pitchingStats', legacyId, 'games'), where('gameId', 'in', idsChunk));
+          const pSnap = await getDocs(pq);
+          pSnap.forEach(d => pitchingLines.push(d.data()));
+        } catch (e) { /* fine — most players never pitched */ }
+      }
+
+      const battingPoints = battingLines.reduce((sum, s) => sum + scoreBattingGame(s), 0);
+      const pitchingPoints = pitchingLines.reduce((sum, s) => sum + scorePitchingGame(s), 0);
+
+      results[playerId] = {
+        battingPoints: Math.round(battingPoints * 10) / 10,
+        pitchingPoints: pitchingLines.length ? Math.round(pitchingPoints * 10) / 10 : null,
+        gamesBatted: battingLines.length,
+        gamesPitched: pitchingLines.length
+      };
+    }));
+
+    return results;
+  }
+
+  // ============================================================
+  // RENDER STANDINGS
+  // ============================================================
+  const SLOT_ORDER = { IF: 0, OF: 1, C: 2, P: 3, UTIL: 4 };
+  const MEDALS = ['\u{1F947}', '\u{1F948}', '\u{1F949}'];
+
+  function renderStandings(entries, scoreMap, final) {
+    el('standingsSubtitle').textContent = final
+      ? 'Total fantasy points, officially scored.'
+      : "Live totals based on stats entered so far — not all games may be recorded yet, and this isn't official until the week is scored.";
+
+    const ranked = entries.map(entry => {
+      const { total, missingPitchLine } = lineupTotalPoints(entry.picks, scoreMap);
+      return { entry, total, missingPitchLine };
+    }).sort((a, b) => b.total - a.total);
+
+    el('standingsBody').innerHTML = ranked.map((r, i) => {
+      const isMe = currentUser && r.entry.uid === currentUser.uid;
+      const picks = (r.entry.picks || []).slice().sort((a, b) =>
+        (SLOT_ORDER[a.slot] ?? 5) - (SLOT_ORDER[b.slot] ?? 5) || Number(a.slotIndex) - Number(b.slotIndex)
+      );
+
+      const picksHtml = picks.map(pick => {
+        const s = scoreMap[pick.playerId];
+        let ptsDisplay = '&mdash;';
+        let note = '';
+
+        if (pick.slot === 'P') {
+          if (s && s.pitchingPoints !== null && s.pitchingPoints !== undefined) {
+            ptsDisplay = s.pitchingPoints;
+          } else if (s && s.gamesPitched === 0) {
+            note = 'no stats yet';
+          }
+        } else if (s) {
+          ptsDisplay = s.battingPoints ?? 0;
+          if (s.gamesBatted === 0) note = 'no stats yet';
+        }
+
+        return `
+          <div class="pick-row">
+            <span class="pick-slot">${pick.slot}</span>
+            <span class="pick-name">${pick.name}${note ? ` <span class="pick-note">(${note})</span>` : ''}</span>
+            <span class="pick-pts">${ptsDisplay}</span>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="entry-card${isMe ? ' me' : ''}">
+          <div class="entry-header">
+            <span class="rank">${MEDALS[i] || `#${i + 1}`}</span>
+            <span class="name">${r.entry.displayName || 'Player'}</span>
+            <span class="total">${r.total} pts</span>
+          </div>
+          <div class="entry-meta">
+            $${(r.entry.totalSalary || 0).toLocaleString()} of cap used${r.missingPitchLine ? ' &middot; pitching line not recorded yet' : ''}
+          </div>
+          ${picksHtml}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // NavigationComponent self-initializes on DOMContentLoaded.
+</script>
+</body>
+</html>

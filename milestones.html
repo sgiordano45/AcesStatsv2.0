@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Batting Milestones - Aces Stats</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    line-height: 1.6;
+    color: var(--text-dark);
+  }
+  
+  .page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  /* Loading Spinner */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .softball-spinner::before {
+    content: '⚾';
+    font-size: 80px;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    0%, 100% { 
+      transform: rotate(0deg) scale(1); 
+    }
+    50% { 
+      transform: rotate(180deg) scale(1.1); 
+    }
+  }
+  
+  /* Page Header */
+  .page-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    text-align: center;
+    padding: 4rem 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-header::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .page-header::after {
+    content: '🎯';
+    position: absolute;
+    bottom: -30px;
+    left: -30px;
+    font-size: 200px;
+    opacity: 0.08;
+    transform: rotate(-15deg);
+  }
+  
+  .page-header h1 {
+    margin: 0;
+    font-size: 3rem;
+    font-weight: 800;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 1;
+  }
+  
+  .page-header p {
+    margin: 1rem 0 0 0;
+    font-size: 1.1rem;
+    opacity: 0.95;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Navigation */
+  .filters-nav {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+  }
+  
+  .nav-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-link {
+    padding: 1rem 1.75rem;
+    border: 2px solid var(--primary-color);
+    background: white;
+    color: var(--primary-color);
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: -1;
+  }
+
+  .nav-link:hover::before {
+    transform: translateX(0);
+  }
+
+  .nav-link:hover {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--secondary-color);
+  }
+  
+  .nav-link.batting {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+  
+  .nav-link.pitching {
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+  }
+  
+  .nav-link.pitching::before {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  }
+  
+  /* Summary Section */
+  .summary {
+    background: var(--card-bg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .summary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  }
+  
+  .summary p {
+    margin: 0 0 1rem 0;
+    color: var(--text-dark);
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  
+  .summary p:last-child {
+    margin-bottom: 0;
+    color: var(--text-light);
+    font-size: 1rem;
+    font-weight: 500;
+  }
+  
+  /* Milestones Container */
+  .milestones-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .milestone-category {
+    background: var(--card-bg);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .milestone-category:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .milestone-category::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  }
+  
+  .milestone-category h2 {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    margin: 0;
+    padding: 2rem;
+    font-size: 1.8em;
+    font-weight: 800;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+  }
+
+  .milestone-category h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--accent-color);
+  }
+  
+  .milestone-tables {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+  }
+  
+  .milestone-table-container {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+  }
+
+  .milestone-table-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .milestone-table-container:hover::before {
+    opacity: 1;
+  }
+
+  .milestone-table-container::after {
+    content: '⚾';
+    position: absolute;
+    bottom: -15px;
+    right: -15px;
+    font-size: 100px;
+    opacity: 0;
+    color: var(--primary-color);
+    transition: all 0.4s ease;
+  }
+  
+  .milestone-table-container:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .milestone-table-container:hover::after {
+    opacity: 0.03;
+    bottom: -10px;
+    right: -10px;
+  }
+  
+  .milestone-table-container h3 {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    margin: 0;
+    padding: 1.25rem;
+    font-size: 1.2em;
+    font-weight: 700;
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+  }
+  
+  .milestone-table {
+    width: 100%;
+    margin: 0;
+    background: white;
+  }
+  
+  .milestone-table th,
+  .milestone-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+  }
+  
+  .milestone-table th {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    font-weight: 700;
+    color: var(--text-dark);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+  }
+  
+  .milestone-table tr:nth-child(even) {
+    background-color: #fafbfc;
+  }
+  
+  .milestone-table tr:hover {
+    background: linear-gradient(135deg, #f0f4f8 0%, #e9f0f7 100%);
+  }
+  
+  .milestone-table a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+  
+  .milestone-table a:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+  }
+  
+  .rank {
+    text-align: center;
+    font-weight: 700;
+    color: var(--text-light);
+    width: 60px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  }
+  
+  .stat-value {
+    text-align: center;
+    font-weight: 800;
+    min-width: 80px;
+    color: var(--text-dark);
+  }
+  
+  .empty-milestone {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-light);
+    font-style: italic;
+    background: white;
+    font-size: 1.1rem;
+  }
+  
+  .empty-milestone::before {
+    content: "🎯";
+    display: block;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+  }
+  
+  /* Loading state */
+  .loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    font-size: 1.1rem;
+  }
+  
+  .loading::before {
+    content: "⚾";
+    display: block;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+  
+  /* Achievement badges for top performers */
+  .rank-1 .rank {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #333;
+    font-weight: 800;
+  }
+  
+  .rank-1 .rank::after {
+    content: " 🥇";
+  }
+  
+  .rank-2 .rank {
+    background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+    color: #333;
+    font-weight: 800;
+  }
+  
+  .rank-2 .rank::after {
+    content: " 🥈";
+  }
+  
+  .rank-3 .rank {
+    background: linear-gradient(135deg, #cd7f32 0%, #daa560 100%);
+    color: white;
+    font-weight: 800;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+  }
+  
+  .rank-3 .rank::after {
+    content: " 🥉";
+  }
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    .page-container {
+      padding: 1rem;
+    }
+    
+    .page-header {
+      padding: 2.5rem 1.5rem;
+    }
+    
+    .page-header h1 {
+      font-size: 2rem;
+    }
+
+    .page-header::after {
+      font-size: 150px;
+      bottom: -20px;
+      left: -20px;
+    }
+    
+    .nav-container {
+      justify-content: center;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .nav-link {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      text-align: center;
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .milestone-tables {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      padding: 1.5rem;
+    }
+    
+    .milestone-category h2 {
+      padding: 1.5rem 1rem;
+      font-size: 1.5em;
+    }
+    
+    .milestone-table th,
+    .milestone-table td {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.9em;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .milestone-table th,
+    .milestone-table td {
+      padding: 0.5rem 0.25rem;
+      font-size: 0.85em;
+    }
+    
+    .milestone-category h2 {
+      font-size: 1.3em;
+      padding: 1rem;
+    }
+    
+    .milestone-table-container h3 {
+      font-size: 1.1em;
+      padding: 0.75rem;
+    }
+
+    .page-header h1 {
+      font-size: 1.75rem;
+    }
+  }
+</style>
+<link rel="stylesheet" href="mobile-enhancements.css">
+</head>
+<body>
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<div class="page-container">
+  <div class="page-header">
+    <h1>Batting Milestones</h1>
+    <p>Career milestone achievements for batting statistics across all players</p>
+  </div>
+
+  <div class="filters-nav">
+
+  </div>
+
+  <div id="summary" class="summary">
+    <p>Career milestone achievements for batting statistics</p>
+    <p id="milestoneSummary">Loading milestone data from optimized collection...</p>
+  </div>
+
+  <div id="milestones-container" class="milestones-container">
+    <div class="loading">Loading milestone data from optimized collection...</div>
+  </div>
+</div>
+
+<script type="module">
+// Hide loading overlay when page loads
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  }, 800);
+});
+
+import { getAllPlayerStatsOptimized, seasonsObjectToArray } from './firebase-data.js';
+
+let allData = [];
+
+function formatPlayerName(name) {
+  if (!name) return "";
+  
+  // If name already has spaces, capitalize each word properly
+  if (name.includes(' ')) {
+    return name.split(' ')
+      .map(word => {
+        // Handle special cases like DelleDonne, McDonald, etc.
+        if (word.toLowerCase() === 'delledonne') return 'DelleDonne';
+        if (word.toLowerCase() === 'mcdonald') return 'McDonald';
+        if (word.toLowerCase() === 'mccarthy') return 'McCarthy';
+		if (word.toLowerCase() === 'lacasse') return 'LaCasse';
+		if (word.toLowerCase() === 'mccabe') return 'McCabe';
+		if (word.toLowerCase() === "o'grady") return "O'Grady";
+		if (word.toLowerCase() === 'mcmahon') return 'McMahon';
+		if (word.toLowerCase() === 'mccorkell') return 'McCorkell';
+		if (word.toLowerCase() === 'denoble') return 'DeNoble';
+		if (word.toLowerCase() === 'digiacomo') return 'DiGiacomo';
+		if (word.toLowerCase() === 'deanna') return 'DeAnna';
+        // Add more special cases as needed
+        
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(' ');
+  }
+  
+  // If name has underscores, replace with spaces and capitalize
+  if (name.includes('_')) {
+    return name.split('_')
+      .map(word => {
+        // Handle special cases
+        if (word.toLowerCase() === 'delledonne') return 'DelleDonne';
+        if (word.toLowerCase() === 'mcdonald') return 'McDonald';
+        if (word.toLowerCase() === 'mccarthy') return 'McCarthy';
+        if (word.toLowerCase() === 'mccabe') return 'McCabe';
+		if (word.toLowerCase() === 'lacasse') return 'LaCasse';
+		        if (word.toLowerCase() === "o'grady") return "O'Grady";
+		if (word.toLowerCase() === 'mcmahon') return 'McMahon';
+				if (word.toLowerCase() === 'mccorkell') return 'McCorkell';
+		if (word.toLowerCase() === 'denoble') return 'DeNoble';
+		if (word.toLowerCase() === 'digiacomo') return 'DiGiacomo';
+		if (word.toLowerCase() === 'deanna') return 'DeAnna';
+		
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(' ');
+  }
+  
+  // Handle special cases for single words
+  if (name.toLowerCase() === 'delledonne') return 'DelleDonne';
+  if (name.toLowerCase() === 'mcdonald') return 'McDonald';
+  if (name.toLowerCase() === 'mccarthy') return 'McCarthy';
+  if (name.toLowerCase() === 'mccabe') return 'McCabe';
+  if (name.toLowerCase() === 'lacasse') return 'LaCasse';
+  if (name.toLowerCase() === "o'grady") return "O'Grady";
+  if (name.toLowerCase() === 'mcmahon') return 'McMahon';
+  		if (name.toLowerCase() === 'mccorkell') return 'McCorkell';
+		if (name.toLowerCase() === 'denoble') return 'DeNoble';
+		if (name.toLowerCase() === 'digiacomo') return 'DiGiacomo';
+		if (name.toLowerCase() === 'deanna') return 'DeAnna';
+  
+  
+  // Otherwise just capitalize the single name
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+}
+async function loadData() {
+  const loadStartTime = performance.now();
+  console.log('🎯 Loading milestone data from aggregated collection...');
+  
+  try {
+    console.time('Fetch Aggregated Data');
+    const players = await getAllPlayerStatsOptimized();
+    console.timeEnd('Fetch Aggregated Data');
+    
+    console.log(`✅ Loaded ${players?.length || 0} players from aggregated collection`);
+    
+    if (!players || players.length === 0) {
+      console.warn('⚠️ No player data found');
+      document.getElementById("milestones-container").innerHTML = 
+        '<div class="loading">No player data available.</div>';
+      return;
+    }
+    
+    allData = players;
+    
+    const loadEndTime = performance.now();
+    console.log(`✅ Total load time: ${(loadEndTime - loadStartTime).toFixed(0)}ms`);
+    
+    generateMilestones();
+    
+  } catch (error) {
+    console.error("❌ Error loading data:", error);
+    document.getElementById("milestones-container").innerHTML = 
+      '<div class="loading">Error loading milestone data. Please try again.</div>';
+  }
+}
+
+function aggregatePlayerStats() {
+  const playerStats = {};
+  
+  allData.forEach(player => {
+    // CRITICAL: Skip migrated legacy profiles to prevent duplicates
+    if (player.migrated === true) {
+      return;
+    }
+    
+    const playerName = formatPlayerName(player.name || player.displayName || player.userId);
+    if (!playerName) return;
+    
+    // Use player ID as the unique key instead of name
+    const playerId = player.id || player.userId || player.playerId;
+    
+    if (!playerStats[playerId]) {
+      playerStats[playerId] = {
+        id: playerId,
+        playerId: playerId,
+        name: playerName,
+        totalHits: 0,
+        totalRuns: 0,
+        totalWalks: 0
+      };
+    }
+    
+    // NEW: Check if seasons is an object (object-keyed) instead of array
+    if (player.seasons && typeof player.seasons === 'object') {
+      // Convert object-keyed seasons to array for iteration
+      const seasonsArray = seasonsObjectToArray(player);
+      
+      seasonsArray.forEach(season => {
+        playerStats[playerId].totalHits += Number(season.hits) || 0;
+        playerStats[playerId].totalRuns += Number(season.runs) || 0;
+        playerStats[playerId].totalWalks += Number(season.walks) || 0;
+      });
+    }
+  });
+  
+  return Object.values(playerStats);
+}
+
+function generateMilestones() {
+  const players = aggregatePlayerStats();
+  const container = document.getElementById("milestones-container");
+  
+  // Define milestone categories and thresholds
+  const milestoneCategories = [
+    {
+      title: "Career Hits Milestones",
+      stat: "totalHits",
+      thresholds: [100, 200, 300],
+      format: (val) => val.toString(),
+      icon: "🎯"
+    },
+    {
+      title: "Career Runs Milestones", 
+      stat: "totalRuns",
+      thresholds: [50, 100, 150, 200],
+      format: (val) => val.toString(),
+      icon: "🏃"
+    },
+    {
+      title: "Career Walks Milestones",
+      stat: "totalWalks", 
+      thresholds: [10, 20, 30],
+      format: (val) => val.toString(),
+      icon: "🚶"
+    }
+  ];
+  
+  let totalMilestones = 0;
+  let html = '';
+  
+  milestoneCategories.forEach(category => {
+    const categoryHTML = generateMilestoneCategory(players, category);
+    html += categoryHTML.html;
+    totalMilestones += categoryHTML.count;
+  });
+  
+  container.innerHTML = html;
+  
+  // Update summary
+  document.getElementById("milestoneSummary").textContent = 
+    `${totalMilestones} total milestone achievements across all categories`;
+}
+
+function generateMilestoneCategory(players, category) {
+  let categoryHTML = `
+    <div class="milestone-category">
+      <h2>${category.icon} ${category.title}</h2>
+      <div class="milestone-tables">
+  `;
+  
+  let milestoneCount = 0;
+  
+  category.thresholds.forEach(threshold => {
+    const achievers = players
+      .filter(p => p[category.stat] >= threshold)
+      .sort((a, b) => b[category.stat] - a[category.stat]); // Sort by stat value descending
+    
+    milestoneCount += achievers.length;
+    
+    categoryHTML += `
+      <div class="milestone-table-container">
+        <h3>${threshold}+ ${category.title.split(' ')[1]}</h3>
+    `;
+    
+    if (achievers.length === 0) {
+      categoryHTML += `
+        <div class="empty-milestone">
+          No players have reached this milestone yet
+        </div>
+      `;
+    } else {
+      categoryHTML += `
+        <table class="milestone-table">
+          <thead>
+            <tr>
+              <th class="rank">Rank</th>
+              <th>Player</th>
+              <th class="stat-value">${category.title.split(' ')[1]}</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      achievers.forEach((player, index) => {
+        const rank = index + 1;
+        const statValue = category.format(player[category.stat]);
+        const rankClass = rank <= 3 ? `rank-${rank}` : '';
+        
+        categoryHTML += `
+          <tr class="${rankClass}">
+            <td class="rank">${rank}</td>
+            <td><a href="player.html?id=${encodeURIComponent(player.playerId || player.id)}">${player.name}</a></td>
+            <td class="stat-value">${statValue}</td>
+          </tr>
+        `;
+      });
+      
+      categoryHTML += `
+          </tbody>
+        </table>
+      `;
+    }
+    
+    categoryHTML += `</div>`;
+  });
+  
+  categoryHTML += `
+      </div>
+    </div>
+  `;
+  
+  return {
+    html: categoryHTML,
+    count: milestoneCount
+  };
+}
+
+// Initialize on page load
+loadData();
+</script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="team-colors.js"></script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

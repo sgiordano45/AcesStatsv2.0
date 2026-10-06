@@ -1,0 +1,119 @@
+
+/* ================================================
+   Desktop Navigation Styles
+   ================================================ */
+
+.filters-nav {
+  background: var(--bg-elevated, white);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm, 0 4px 6px rgba(0,0,0,0.07));
+  border: 1px solid var(--border-color, #e1e5e9);
+}
+
+.nav-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-link {
+  padding: 0.8rem 1.5rem;
+  border: 2px solid var(--primary-color, #667eea);
+  background: var(--bg-elevated, white);
+  color: var(--primary-color, #667eea);
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.nav-link.active {
+  background: #667eea;
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Specialized navigation link styles */
+.nav-link.pitching {
+  border-color: #11998e;
+  color: #11998e;
+}
+
+.nav-link.pitching:hover,
+.nav-link.pitching.active {
+  background: #11998e;
+  color: white;
+  box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3);
+}
+
+.nav-link.batting {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.nav-link.batting:hover,
+.nav-link.batting.active {
+  background: #667eea;
+  color: white;
+}
+
+/* Mobile responsive design */
+@media (max-width: 768px) {
+  .filters-nav {
+    padding: 1rem;
+  }
+  
+  .nav-container {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .nav-link {
+    padding: 0.7rem 1.2rem;
+    font-size: 14px;
+    text-align: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .filters-nav {
+    padding: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  
+  .nav-link {
+    padding: 0.6rem 1rem;
+    font-size: 13px;
+    gap: 0.3rem;
+  }
+  
+  .nav-link:hover {
+    transform: none; /* Disable hover transform on small screens */
+  }
+}
+
+/* Print styles */
+@media print {
+  .filters-nav {
+    display: none;
+  }
+}

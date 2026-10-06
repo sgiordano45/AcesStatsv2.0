@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bWAR Explorer — Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+  :root {
+    --primary: #2d5016;
+    --accent: #ffd700;
+    --admin: #6b21a8;
+    --admin2: #7c3aed;
+    --bg: #f7fafc;
+    --card: #ffffff;
+    --text: #2d3748;
+    --muted: #718096;
+    --border: #e2e8f0;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0; padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    color: var(--text);
+  }
+  .page-header {
+    background: linear-gradient(135deg, var(--admin) 0%, var(--admin2) 100%);
+    color: white;
+    padding: 1.5rem 1.5rem 1rem;
+  }
+  .page-header h1 { margin: 0 0 0.25rem; font-size: 1.5rem; }
+  .page-header p { margin: 0; opacity: 0.85; font-size: 0.85rem; }
+  .beta-badge {
+    background: var(--accent);
+    color: #1a1a1a;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    vertical-align: middle;
+    margin-left: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .card h2 { margin: 0 0 1rem; font-size: 1rem; color: var(--text); }
+  .hidden { display: none !important; }
+
+  /* Season selector */
+  .load-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+  .load-row select {
+    padding: 0.5rem 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+    color: var(--text);
+    min-width: 180px;
+  }
+  .btn {
+    padding: 0.5rem 1.25rem;
+    border: none; border-radius: 8px;
+    font-size: 0.875rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn-primary { background: var(--admin); color: white; }
+  .btn-primary:hover { background: var(--admin2); }
+  .btn-ghost {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-ghost:hover { border-color: var(--admin); color: var(--admin); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* League context */
+  .context-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .ctx-stat {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+  }
+  .ctx-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.25rem; }
+  .ctx-value { font-size: 1.25rem; font-weight: 700; color: var(--text); }
+  .ctx-value.highlight { color: var(--admin); }
+
+  .data-note {
+    font-size: 0.8rem;
+    color: var(--muted);
+    padding: 0.5rem 0.75rem;
+    background: #f0fdf4;
+    border-left: 3px solid var(--green);
+    border-radius: 0 6px 6px 0;
+  }
+
+  /* Weight controls */
+  .controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .weight-group label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.35rem;
+  }
+  .weight-group input[type="range"] {
+    width: 100%;
+    accent-color: var(--admin);
+    height: 4px;
+    cursor: pointer;
+  }
+  .val-badge {
+    background: var(--admin);
+    color: white;
+    font-size: 0.7rem;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-weight: 700;
+    min-width: 42px;
+    text-align: center;
+  }
+  .controls-footer { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+  .controls-footer label { font-size: 0.8rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+
+  /* Player table */
+  .table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .toolbar-title { font-size: 1rem; font-weight: 700; margin: 0; }
+  .toolbar-toggles { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+  .toolbar-toggles label { font-size: 0.8rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th {
+    background: #f8f6ff;
+    color: var(--admin);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.6rem 0.6rem;
+    text-align: right;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 2px solid #e9d5ff;
+    position: sticky;
+    top: 0;
+  }
+  th:first-child, th:nth-child(2), th:nth-child(3) { text-align: left; }
+  th:hover { background: #ede9fe; }
+  th.sorted { color: #4c1d95; }
+  th .sort-arrow { margin-left: 3px; opacity: 0.5; }
+  th.sorted .sort-arrow { opacity: 1; }
+
+  td {
+    padding: 0.55rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    text-align: right;
+    color: var(--text);
+  }
+  td:first-child, td:nth-child(2), td:nth-child(3) { text-align: left; }
+  tr:hover td { background: #faf5ff; }
+  tr.unqualified td { opacity: 0.45; }
+  tr.unqualified:hover td { opacity: 0.65; }
+
+  .rank-cell { font-weight: 700; color: var(--muted); font-size: 0.75rem; min-width: 28px; }
+  .name-cell { font-weight: 600; }
+  .team-cell { color: var(--muted); font-size: 0.8rem; }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 999px;
+    letter-spacing: 0.03em;
+  }
+  .badge-full { background: #dcfce7; color: #15803d; }
+  .badge-imputed { background: #fef3c7; color: #92400e; }
+  .badge-simp { background: #f3f4f6; color: #6b7280; }
+  .badge-low { background: #fee2e2; color: #dc2626; }
+
+  .war-cell { font-weight: 700; font-size: 0.9rem; }
+  .war-pos { color: #15803d; }
+  .war-neg { color: #dc2626; }
+  .war-zero { color: var(--muted); }
+
+  .divider-col { border-left: 2px solid #e9d5ff; }
+
+  .rpw-info {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .controls-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--admin);
+    margin: 1.25rem 0 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .controls-hint {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0 0 0.75rem;
+    line-height: 1.5;
+  }
+  .team-selector { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .team-check {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 500;
+    user-select: none;
+    transition: all 0.15s;
+    background: white;
+  }
+  .team-check:hover { border-color: var(--admin); }
+  .team-check input { accent-color: var(--admin); cursor: pointer; }
+  .team-check.selected { border-color: var(--admin); background: #f5f3ff; color: var(--admin); }
+
+  .section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--admin);
+    padding: 0.25rem 0.6rem;
+    background: #f8f6ff;
+    border-bottom: 1px solid #e9d5ff;
+  }
+
+  /* Empty / loading states */
+  .state-msg {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .spinner { font-size: 2rem; animation: spin 1s linear infinite; display: block; margin: 0 auto 0.5rem; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  .explanation {
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: #f8f6ff;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    line-height: 1.6;
+  }
+  .explanation strong { color: var(--text); }
+
+  @media (max-width: 640px) {
+    .container { padding: 1rem; }
+    .controls-grid { grid-template-columns: 1fr 1fr; }
+    .context-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>⚾ bWAR Explorer <span class="beta-badge">BETA</span></h1>
+  <p>Calibration tool — tune batting WAR weights before publishing to player pages</p>
+</div>
+
+<div id="navPlaceholder"></div>
+
+<div class="container">
+
+  <!-- Season selector -->
+  <div class="card">
+    <div class="load-row">
+      <select id="seasonSel"><option value="">Loading seasons…</option></select>
+      <button class="btn btn-primary" id="loadBtn" onclick="loadData()">Load Season</button>
+    </div>
+  </div>
+
+  <!-- Explanation -->
+  <div class="card explanation">
+    <strong>How this works:</strong>
+    bWAR = Batting Wins Above Replacement. Each player's production is measured by wOBA
+    (weighted on-base average, using configurable run values), compared to a replacement-level
+    baseline (% of league average), scaled to runs and then converted to wins using the league's
+    actual run environment.<br><br>
+    <strong>All players</strong> have AB, H, R, BB, and HR — HR always uses its real weight (wHR).<br>
+    <strong>Full data teams</strong> also have 2B and 3B tracked; those use exact weights.<br>
+    <strong>Imputed</strong> — 2B and 3B estimated from full-data teams' rates among non-HR hits.<br>
+    <strong>Simplified</strong> — non-HR hits (1B/2B/3B combined) use a flat weight; HR still real.<br><br>
+    Adjust the sliders and click <strong>Recalculate</strong> (or it updates live). Save your preferred
+    weights at end of season once you're happy with how the rankings look.
+  </div>
+
+  <!-- League context -->
+  <div id="leagueCard" class="card hidden">
+    <h2>📊 League Context</h2>
+    <div class="context-grid">
+      <div class="ctx-stat">
+        <div class="ctx-label">Completed Games</div>
+        <div class="ctx-value" id="ctxGames">--</div>
+      </div>
+      <div class="ctx-stat">
+        <div class="ctx-label">Total League Runs</div>
+        <div class="ctx-value" id="ctxRuns">--</div>
+      </div>
+      <div class="ctx-stat">
+        <div class="ctx-label">R/G (combined)</div>
+        <div class="ctx-value highlight" id="ctxRPG">--</div>
+      </div>
+      <div class="ctx-stat">
+        <div class="ctx-label">Total PA</div>
+        <div class="ctx-value" id="ctxPA">--</div>
+      </div>
+      <div class="ctx-stat">
+        <div class="ctx-label">League avg wOBA</div>
+        <div class="ctx-value highlight" id="ctxWOBA">--</div>
+      </div>
+      <div class="ctx-stat">
+        <div class="ctx-label">Replacement Level</div>
+        <div class="ctx-value" id="ctxRepl">--</div>
+      </div>
+      <div class="ctx-stat">
+        <div class="ctx-label">RPW</div>
+        <div class="ctx-value" id="ctxRPW">--</div>
+      </div>
+      <div class="ctx-stat">
+        <div class="ctx-label">Qualified Players</div>
+        <div class="ctx-value" id="ctxQual">--</div>
+      </div>
+    </div>
+    <div class="data-note" id="dataNoteEl">—</div>
+  </div>
+
+  <!-- Weight controls -->
+  <div id="controlsCard" class="card hidden">
+    <h2>🎛️ Weight Controls</h2>
+    <div class="controls-grid" id="sliderGrid"></div>
+    <div class="controls-section-title">📋 Teams with Full Hit Type Data</div>
+    <p class="controls-hint">
+      Check teams whose 2B/3B/HR were actually tracked (game tracker or PDF import with hit types).
+      Unchecked teams will have XBH imputed from league-average rates.
+    </p>
+    <div class="team-selector" id="teamSelector">
+      <span style="color:var(--muted);font-size:0.8rem;">Load a season to see teams</span>
+    </div>
+
+    <div class="controls-footer" style="margin-top:1.25rem;">
+      <button class="btn btn-ghost" onclick="resetWeights()">Reset to Defaults</button>
+      <button class="btn btn-primary" onclick="recalc()">Recalculate</button>
+      <label>
+        <input type="checkbox" id="autoRecalc" checked>
+        Auto-recalculate on slider change
+      </label>
+    </div>
+  </div>
+
+  <!-- Player table -->
+  <div id="tableCard" class="card hidden">
+    <div class="table-toolbar">
+      <div class="toolbar-title">Player bWAR Results</div>
+      <div class="toolbar-toggles">
+        <label>
+          <input type="checkbox" id="showUnqualified" onchange="renderTable()">
+          Show unqualified (&lt;min PA)
+        </label>
+        <label>
+          <input type="checkbox" id="showRawStats" onchange="renderTable()">
+          Show raw stats
+        </label>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table id="bwarTable">
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="rpw-info" id="rpwInfo"></div>
+  </div>
+
+  <div id="statusMsg" class="state-msg hidden"></div>
+
+</div>
+
+<script type="module">
+import { getAllSeasons, getSeasonGames, getSeasonPlayerStatsOptimized } from './firebase-data.js';
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let rawPlayers = [];
+let completedGames = [];
+let calcResults = [];
+let sortKey = 'bwarFull';
+let sortAsc = false;
+
+// ─── Defaults ─────────────────────────────────────────────────────────────────
+const DEFAULTS = {
+  wBB:    { val: 0.30, min: 0,   max: 1.0, step: 0.01, label: 'wBB  (walk)',    fmt: v => v.toFixed(2) },
+  w1B:    { val: 0.46, min: 0,   max: 1.5, step: 0.01, label: 'w1B  (single)',  fmt: v => v.toFixed(2) },
+  w2B:    { val: 0.75, min: 0,   max: 2.0, step: 0.01, label: 'w2B  (double)',  fmt: v => v.toFixed(2) },
+  w3B:    { val: 1.02, min: 0,   max: 2.5, step: 0.01, label: 'w3B  (triple)',  fmt: v => v.toFixed(2) },
+  wHR:    { val: 1.40, min: 0,   max: 3.0, step: 0.01, label: 'wHR  (home run)',fmt: v => v.toFixed(2) },
+  wFlat:  { val: 0.70, min: 0,   max: 1.5, step: 0.01, label: 'Flat 1B/2B/3B weight (simplified)', fmt: v => v.toFixed(2) },
+  replPct:{ val: 50,   min: 10,  max: 90,  step: 1,    label: 'Replacement level %',          fmt: v => v + '%' },
+  minPA:  { val: 20,   min: 0,   max: 100, step: 5,    label: 'Min PA to qualify',             fmt: v => v + ' PA' },
+  rpwMul: { val: 0.5,  min: 0.3, max: 3.0, step: 0.1,  label: 'RPW multiplier  (× R/G)',      fmt: v => v.toFixed(1) + '×' },
+};
+
+// ─── Bootstrap ────────────────────────────────────────────────────────────────
+(async () => {
+  buildSliders();
+  await populateSeasons();
+})();
+
+async function populateSeasons() {
+  const sel = document.getElementById('seasonSel');
+  try {
+    const seasons = await getAllSeasons();
+    seasons.sort((a, b) => b.id.localeCompare(a.id));
+    sel.innerHTML = seasons.map(s =>
+      `<option value="${s.id}">${s.name || s.id}</option>`
+    ).join('');
+    if (seasons.some(s => s.id === '2026-summer')) {
+      sel.value = '2026-summer';
+    }
+  } catch (e) {
+    sel.innerHTML = '<option value="">Failed to load seasons</option>';
+  }
+}
+
+// ─── Sliders ──────────────────────────────────────────────────────────────────
+function buildSliders() {
+  const grid = document.getElementById('sliderGrid');
+  grid.innerHTML = Object.entries(DEFAULTS).map(([key, cfg]) => `
+    <div class="weight-group">
+      <label>
+        <span>${cfg.label}</span>
+        <span class="val-badge" id="val_${key}">${cfg.fmt(cfg.val)}</span>
+      </label>
+      <input type="range" id="sl_${key}"
+        min="${cfg.min}" max="${cfg.max}" step="${cfg.step}" value="${cfg.val}"
+        oninput="onSlider('${key}', this.value)">
+    </div>
+  `).join('');
+}
+
+window.onSlider = function(key, rawVal) {
+  const val = parseFloat(rawVal);
+  document.getElementById(`val_${key}`).textContent = DEFAULTS[key].fmt(val);
+  if (document.getElementById('autoRecalc').checked && rawPlayers.length) recalc();
+};
+
+function getWeights() {
+  const w = {};
+  Object.keys(DEFAULTS).forEach(k => {
+    w[k] = parseFloat(document.getElementById(`sl_${k}`).value);
+  });
+  return w;
+}
+
+window.resetWeights = function() {
+  Object.entries(DEFAULTS).forEach(([k, cfg]) => {
+    const sl = document.getElementById(`sl_${k}`);
+    sl.value = cfg.val;
+    document.getElementById(`val_${k}`).textContent = cfg.fmt(cfg.val);
+  });
+  if (rawPlayers.length) recalc();
+};
+
+// ─── Load Data ────────────────────────────────────────────────────────────────
+window.loadData = async function() {
+  const seasonId = document.getElementById('seasonSel').value;
+  if (!seasonId) return;
+
+  setStatus('⚾ Loading season data…', true);
+  hide('leagueCard'); hide('controlsCard'); hide('tableCard');
+
+  try {
+    const [games, players] = await Promise.all([
+      getSeasonGames(seasonId),
+      getSeasonPlayerStatsOptimized(seasonId)
+    ]);
+
+    completedGames = games.filter(g =>
+      g.winner && g.winner.trim() !== '' &&
+      (Number(g.homeScore) > 0 || Number(g.awayScore) > 0 ||
+       g["home score"] !== null || g["away score"] !== null)
+    );
+
+    // Normalize score fields
+    completedGames = completedGames.map(g => ({
+      ...g,
+      homeScore: Number(g.homeScore ?? g["home score"] ?? 0) || 0,
+      awayScore: Number(g.awayScore ?? g["away score"] ?? 0) || 0,
+    }));
+
+    rawPlayers = players.filter(p => (p.games || 0) > 0 && (p.atBats || 0) > 0);
+
+    // Build team selector from loaded player data
+    const teams = [...new Set(rawPlayers.map(p => p.team).filter(Boolean))].sort();
+    buildTeamSelector(teams);
+
+    hideStatus();
+    show('controlsCard');
+    recalc();
+
+  } catch (e) {
+    setStatus('❌ Error loading data: ' + e.message, false);
+    console.error(e);
+  }
+};
+
+// ─── Team Selector ────────────────────────────────────────────────────────────
+function buildTeamSelector(teams) {
+  const container = document.getElementById('teamSelector');
+  if (!teams.length) {
+    container.innerHTML = '<span style="color:var(--muted);font-size:0.8rem;">No teams found</span>';
+    return;
+  }
+  container.innerHTML = teams.map(t => `
+    <label class="team-check" id="teamLabel_${CSS.escape(t)}">
+      <input type="checkbox" value="${t}"
+        onchange="toggleTeamLabel('${t}', this.checked); if(document.getElementById('autoRecalc').checked) recalc();">
+      <span>${t}</span>
+    </label>
+  `).join('');
+}
+
+window.toggleTeamLabel = function(team, checked) {
+  const label = document.getElementById(`teamLabel_${CSS.escape(team)}`);
+  if (label) label.classList.toggle('selected', checked);
+};
+
+function getFullDataTeams() {
+  const checked = document.querySelectorAll('#teamSelector input:checked');
+  return new Set([...checked].map(el => el.value));
+}
+
+// ─── Core Calculation ─────────────────────────────────────────────────────────
+window.recalc = function() {
+  if (!rawPlayers.length) return;
+  const w = getWeights();
+
+  // ── League run environment ──────────────────────────────────────────────────
+  const totalRuns = completedGames.reduce((s, g) => s + g.homeScore + g.awayScore, 0);
+  const numGames  = completedGames.length;
+  const leagueRPG = numGames > 0 ? totalRuns / numGames : 10;
+  const RPW       = leagueRPG * w.rpwMul;
+
+  // ── Identify full-data (2B+3B known) vs partial-data players ──────────────────
+  // HR is real for ALL players. Full-data teams also have 2B and 3B.
+  // Non-full-data teams: HR is real, 2B and 3B are imputed from league rates.
+  const fullDataTeams = getFullDataTeams();
+  const enriched = rawPlayers.map(p => {
+    const has2B3B = fullDataTeams.has(p.team);  // only these teams have 2B/3B
+    const ab  = Number(p.atBats)   || 0;
+    const h   = Number(p.hits)     || 0;
+    const bb  = Number(p.walks)    || 0;
+    const hr  = Number(p.homeRuns) || 0;  // REAL for all players
+    const dbl = has2B3B ? (Number(p.doubles) || 0) : null;
+    const tri = has2B3B ? (Number(p.triples) || 0) : null;
+    const pa  = ab + bb;
+    return { ...p, ab, h, bb, hr, dbl, tri, pa, has2B3B };
+  });
+
+  // ── Compute 2B/3B rates from full-data players (as % of non-HR hits) ──────────
+  let fullNonHR = 0, full2B = 0, full3B = 0;
+  enriched.forEach(p => {
+    if (p.has2B3B && p.h > 0) {
+      const nonHR = Math.max(0, p.h - p.hr);
+      fullNonHR += nonHR;
+      full2B    += p.dbl;
+      full3B    += p.tri;
+    }
+  });
+  // Default rates if no full-data teams are checked
+  const rate2B = fullNonHR > 0 ? full2B / fullNonHR : 0.22;
+  const rate3B = fullNonHR > 0 ? full3B / fullNonHR : 0.05;
+
+  // ── Per-player wOBA variants ──────────────────────────────────────────────────
+  const withWOBA = enriched.map(p => {
+    if (p.pa === 0) return { ...p, woba: 0, wobaSimp: 0, dataType: 'full', d1b: 0, d2b: 0, d3b: 0, dhr: p.hr || 0 };
+
+    const dhr = p.hr;  // Always real
+    const nonHR = Math.max(0, p.h - dhr);
+
+    let d2b, d3b, dataType;
+    if (p.has2B3B) {
+      d2b = p.dbl;
+      d3b = p.tri;
+      dataType = 'full';
+    } else {
+      // Impute 2B and 3B from league rates of non-HR hits; HR stays real
+      d2b = Math.round(nonHR * rate2B);
+      d3b = Math.round(nonHR * rate3B);
+      // Clamp so 2B + 3B ≤ non-HR hits
+      if (d2b + d3b > nonHR) {
+        const scale = nonHR / (d2b + d3b);
+        d2b = Math.round(d2b * scale);
+        d3b = Math.round(d3b * scale);
+      }
+      dataType = 'imputed';
+    }
+    const d1b = Math.max(0, p.h - d2b - d3b - dhr);
+
+    // Full/imputed wOBA: uses real HR + real or imputed 2B/3B
+    const woba = (w.wBB * p.bb + w.w1B * d1b + w.w2B * d2b + w.w3B * d3b + w.wHR * dhr) / p.pa;
+
+    // Simplified wOBA: real HR gets wHR, all other hits get flat weight
+    const wobaSimp = (w.wBB * p.bb + w.wFlat * nonHR + w.wHR * dhr) / p.pa;
+
+    return { ...p, d1b, d2b, d3b, dhr, woba, wobaSimp, dataType };
+  });
+
+  // ── League average wOBA (PA-weighted, all players) ────────────────────────────
+  const totalPA    = withWOBA.reduce((s, p) => s + p.pa, 0);
+  const leagueWOBA = totalPA > 0
+    ? withWOBA.reduce((s, p) => s + p.woba * p.pa, 0) / totalPA
+    : 0;
+  const leagueWOBASimp = totalPA > 0
+    ? withWOBA.reduce((s, p) => s + p.wobaSimp * p.pa, 0) / totalPA
+    : 0;
+
+  const replWOBA     = leagueWOBA * (w.replPct / 100);
+  const replWOBASimp = leagueWOBASimp * (w.replPct / 100);
+
+  // ── Per-player RAR and bWAR ───────────────────────────────────────────────────
+  calcResults = withWOBA.map(p => {
+    const rar      = (p.woba - replWOBA) * p.pa;
+    const rarSimp  = (p.wobaSimp - replWOBASimp) * p.pa;
+    const bwar     = Math.max(0, RPW > 0 ? rar / RPW : 0);
+    const bwarSimp = Math.max(0, RPW > 0 ? rarSimp / RPW : 0);
+    const qualified = p.pa >= w.minPA;
+    return { ...p, rar, rarSimp, bwar, bwarSimp, qualified };
+  });
+
+  // ── Update league context display ─────────────────────────────────────────────
+  const fullCount    = calcResults.filter(p => p.hasHitType).length;
+  const imputedCount = calcResults.filter(p => !p.hasHitType).length;
+  const qualCount    = calcResults.filter(p => p.qualified).length;
+
+  setText('ctxGames', numGames);
+  setText('ctxRuns',  totalRuns);
+  setText('ctxRPG',   leagueRPG.toFixed(1));
+  setText('ctxPA',    totalPA);
+  setText('ctxWOBA',  leagueWOBA.toFixed(3));
+  setText('ctxRepl',  replWOBA.toFixed(3));
+  setText('ctxRPW',   RPW.toFixed(1));
+  setText('ctxQual',  `${qualCount} / ${calcResults.length}`);
+  const fullTeamNames = [...getFullDataTeams()].join(', ') || 'none selected';
+  setText('dataNoteEl',
+    `HR is real for all players · ` +
+    `${fullCount} players on full-data teams (${fullTeamNames || 'none'}) have real 2B/3B · ` +
+    `${imputedCount} players have imputed 2B/3B ` +
+    `(${Math.round(rate2B*100)}% 2B / ${Math.round(rate3B*100)}% 3B of non-HR hits)`
+  );
+
+  setText('rpwInfo',
+    `RPW = ${leagueRPG.toFixed(1)} R/G × ${w.rpwMul.toFixed(1)} multiplier = ${RPW.toFixed(1)} runs per win`
+  );
+
+  show('leagueCard');
+  show('controlsCard');
+  show('tableCard');
+  renderTable();
+};
+
+// ─── Table Rendering ──────────────────────────────────────────────────────────
+const COLS_BASE = [
+  { key: '_rank',     label: '#',         align: 'l', hidden: false },
+  { key: 'name',      label: 'Player',    align: 'l', hidden: false },
+  { key: 'team',      label: 'Team',      align: 'l', hidden: false },
+  { key: 'dataType',  label: 'Data',      align: 'l', hidden: false },
+  { key: 'pa',        label: 'PA',        align: 'r', hidden: false },
+];
+const COLS_RAW = [
+  { key: 'ab',   label: 'AB',  align: 'r', raw: true },
+  { key: 'h',    label: 'H',   align: 'r', raw: true },
+  { key: 'd2b',  label: '2B',  align: 'r', raw: true },
+  { key: 'd3b',  label: '3B',  align: 'r', raw: true },
+  { key: 'dhr',  label: 'HR',  align: 'r', raw: true },
+  { key: 'bb',   label: 'BB',  align: 'r', raw: true },
+];
+const COLS_RESULTS = [
+  { key: 'woba',     label: 'wOBA (full)', align: 'r', fmt: v => v.toFixed(3), divider: true },
+  { key: 'wobaSimp', label: 'wOBA (simp)', align: 'r', fmt: v => v.toFixed(3) },
+  { key: 'rar',      label: 'RAR (full)',  align: 'r', fmt: v => v.toFixed(1), divider: true },
+  { key: 'rarSimp',  label: 'RAR (simp)', align: 'r', fmt: v => v.toFixed(1) },
+  { key: 'bwar',     label: 'bWAR (full)', align: 'r', fmt: v => v.toFixed(2), war: true, divider: true },
+  { key: 'bwarSimp', label: 'bWAR (simp)', align: 'r', fmt: v => v.toFixed(2), war: true },
+];
+
+window.renderTable = function() {
+  const showUnqual  = document.getElementById('showUnqualified').checked;
+  const showRaw     = document.getElementById('showRawStats').checked;
+
+  let rows = [...calcResults];
+  // Sort
+  rows.sort((a, b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (typeof av === 'string') av = av.toLowerCase();
+    if (typeof bv === 'string') bv = bv.toLowerCase();
+    if (av < bv) return sortAsc ? -1 : 1;
+    if (av > bv) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  // Rank qualified players by bWAR (full)
+  const ranked = [...rows].filter(p => p.qualified).sort((a, b) => b.bwar - a.bwar);
+  const rankMap = {};
+  ranked.forEach((p, i) => rankMap[p.id || p.name] = i + 1);
+
+  const allCols = [
+    ...COLS_BASE,
+    ...(showRaw ? COLS_RAW : []),
+    ...COLS_RESULTS
+  ];
+
+  // Header
+  const thead = document.getElementById('tableHead');
+  thead.innerHTML = `<tr>${allCols.map(c => {
+    const isSorted = sortKey === c.key;
+    const arrow = isSorted ? (sortAsc ? '▲' : '▼') : '▲';
+    return `<th class="${isSorted ? 'sorted' : ''} ${c.divider ? 'divider-col' : ''}"
+      onclick="setSort('${c.key}')"
+      style="text-align: ${c.align === 'l' ? 'left' : 'right'}">
+      ${c.label}<span class="sort-arrow">${arrow}</span>
+    </th>`;
+  }).join('')}</tr>`;
+
+  // Body
+  const tbody = document.getElementById('tableBody');
+  const displayRows = showUnqual ? rows : rows.filter(p => p.qualified);
+
+  if (displayRows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${allCols.length}" style="text-align:center;padding:2rem;color:#718096;">No qualified players found — lower the min PA threshold</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = displayRows.map(p => {
+    const rank = rankMap[p.id || p.name] || '–';
+    const rowClass = p.qualified ? '' : 'unqualified';
+
+    const dataBadge = p.hasHitType
+      ? `<span class="badge badge-full">Full</span>`
+      : `<span class="badge badge-imputed">Imputed</span>`;
+
+    const paDisplay = p.qualified
+      ? p.pa
+      : `<span style="color:#dc2626">${p.pa}</span>`;
+
+    const cells = allCols.map(c => {
+      let val = '';
+      if (c.key === '_rank') return `<td class="rank-cell">${rank}</td>`;
+      if (c.key === 'name') return `<td class="name-cell">${p.name || p.playerName || '—'}</td>`;
+      if (c.key === 'team') return `<td class="team-cell">${p.team || '—'}</td>`;
+      if (c.key === 'dataType') return `<td>${dataBadge}</td>`;
+      if (c.key === 'pa') return `<td style="text-align:right">${paDisplay}</td>`;
+
+      const raw = p[c.key];
+      if (raw === undefined || raw === null) return `<td class="${c.divider ? 'divider-col' : ''}" style="text-align:right">—</td>`;
+
+      if (c.war) {
+        const cls = raw > 0.05 ? 'war-pos' : raw < -0.05 ? 'war-neg' : 'war-zero';
+        val = `<span class="war-cell ${cls}">${c.fmt(raw)}</span>`;
+      } else if (c.fmt) {
+        val = c.fmt(raw);
+      } else {
+        val = raw;
+      }
+      return `<td class="${c.divider ? 'divider-col' : ''}" style="text-align:right">${val}</td>`;
+    });
+
+    return `<tr class="${rowClass}">${cells.join('')}</tr>`;
+  }).join('');
+};
+
+window.setSort = function(key) {
+  if (sortKey === key) {
+    sortAsc = !sortAsc;
+  } else {
+    sortKey = key;
+    sortAsc = key === 'name' || key === 'team';
+  }
+  renderTable();
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function show(id)  { document.getElementById(id)?.classList.remove('hidden'); }
+function hide(id)  { document.getElementById(id)?.classList.add('hidden'); }
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+function setStatus(msg, loading) {
+  const el = document.getElementById('statusMsg');
+  el.innerHTML = loading
+    ? `<span class="spinner">⚾</span>${msg}`
+    : msg;
+  show('statusMsg');
+}
+function hideStatus() { hide('statusMsg'); }
+
+</script>
+
+<script src="nav-loader.js"></script>
+</body>
+</html>

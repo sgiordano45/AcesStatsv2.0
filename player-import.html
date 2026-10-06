@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Player Import | Mountainside Aces</title>
+  <meta name="theme-color" content="#2d5016">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="nav-styles.css" />
+  <link rel="stylesheet" href="mobile-enhancements.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --secondary-color: #1a6b4a;
+      --accent-color: #ffd700;
+      --card-bg: #ffffff;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+      --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0; padding: 0;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      min-height: 100vh;
+      color: var(--text-dark);
+    }
+
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.95);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; flex-direction: column; gap: 1rem;
+      transition: opacity 0.3s;
+    }
+    .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    .softball-spinner::before {
+      content: '⚾'; font-size: 60px;
+      display: block;
+      animation: spin 1.5s ease-in-out infinite;
+    }
+    @keyframes spin {
+      0%,100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.1); }
+    }
+
+    .page-container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+
+    .page-header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white; text-align: center;
+      padding: 3rem 2rem; border-radius: 16px;
+      margin-bottom: 2rem; box-shadow: var(--shadow-lg);
+    }
+    .page-header h1 { margin: 0; font-size: 2.5rem; font-weight: 800; }
+    .page-header p { margin: 0.75rem 0 0; opacity: 0.9; font-size: 1rem; }
+
+    /* Upload Zone */
+    .upload-zone {
+      border: 2px dashed #b0c4a0;
+      border-radius: 16px; padding: 50px 30px;
+      text-align: center; cursor: pointer;
+      background: white; margin-bottom: 1.5rem;
+      transition: border-color 0.2s, background 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--primary-color);
+      background: #f0f7ea;
+    }
+    .upload-zone .upload-icon { font-size: 3rem; margin-bottom: 12px; }
+    .upload-zone p { color: var(--text-light); margin: 4px 0; }
+    .upload-zone strong { color: var(--primary-color); }
+    #fileInput { display: none; }
+
+    /* Column Picker Card */
+    .config-card {
+      background: white; border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 1.5rem 2rem;
+      margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);
+      display: none;
+    }
+    .config-card h3 { margin: 0 0 1rem; font-size: 1rem; color: var(--text-dark); }
+    .config-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .config-row label { font-weight: 600; color: var(--text-dark); font-size: 0.9rem; min-width: 110px; }
+    .config-row select {
+      border: 1px solid var(--border-color); border-radius: 8px;
+      padding: 7px 12px; font-size: 0.9rem; color: var(--text-dark);
+      background: white;
+    }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-light); }
+    .checkbox-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--primary-color); }
+
+    .btn {
+      padding: 10px 20px; border-radius: 10px; border: none;
+      cursor: pointer; font-size: 0.9rem; font-weight: 600;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: var(--primary-color); color: white; }
+    .btn-success { background: #276843; color: white; }
+    .btn-secondary { background: #e2e8f0; color: var(--text-dark); }
+    .btn-danger { background: #c53030; color: white; }
+    .btn-gold { background: var(--accent-color); color: #1a1a1a; }
+
+    /* Stats Pills */
+    .stats-bar {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 1.25rem; display: none;
+    }
+    .stat-pill {
+      padding: 6px 16px; border-radius: 20px;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.4px;
+    }
+    .pill-total     { background: #edf2f7; color: #4a5568; }
+    .pill-confirmed { background: #c6f6d5; color: #276843; }
+    .pill-pending   { background: #fefcbf; color: #975a16; }
+    .pill-new       { background: #bee3f8; color: #2c5282; }
+    .pill-skipped   { background: #fed7d7; color: #9b2c2c; }
+
+    /* Actions Bar */
+    .actions-bar {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 1.25rem; display: none;
+    }
+
+    /* Match Cards */
+    .match-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .match-card {
+      background: white; border: 1px solid var(--border-color);
+      border-radius: 12px; padding: 14px 18px;
+      box-shadow: var(--shadow-sm);
+      border-left: 5px solid #cbd5e0;
+      transition: box-shadow 0.15s;
+    }
+    .match-card:hover { box-shadow: var(--shadow-md); }
+    .match-card.status-confirmed { border-left-color: #276843; }
+    .match-card.status-new       { border-left-color: #2b6cb0; }
+    .match-card.status-skipped   { border-left-color: #c53030; opacity: 0.6; }
+    .match-card.status-pending   { border-left-color: #d69e2e; }
+
+    .match-top {
+      display: flex; align-items: center;
+      gap: 10px; flex-wrap: wrap; margin-bottom: 8px;
+    }
+    .import-name {
+      font-size: 1rem; font-weight: 700;
+      color: var(--text-dark); min-width: 150px;
+    }
+    .match-arrow { color: var(--text-light); }
+    .matched-name { font-weight: 600; color: #276843; }
+    .matched-id   { font-size: 0.75rem; color: var(--text-light); }
+
+    .status-badge {
+      margin-left: auto; font-size: 0.75rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .badge-confirmed { background: #c6f6d5; color: #276843; }
+    .badge-new       { background: #bee3f8; color: #2c5282; }
+    .badge-skipped   { background: #fed7d7; color: #9b2c2c; }
+    .badge-pending   { background: #fefcbf; color: #975a16; }
+
+    /* Candidates */
+    .candidates { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+
+    .candidate-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #f7fafc; color: var(--text-dark);
+      cursor: pointer; font-size: 0.82rem;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .candidate-btn:hover { background: #edf2f7; border-color: #a0aec0; }
+
+    .conf-badge {
+      font-size: 0.7rem; font-weight: 700;
+      padding: 2px 6px; border-radius: 4px; color: white;
+    }
+    .conf-high { background: #276843; }
+    .conf-med  { background: #975a16; }
+    .conf-low  { background: #9b2c2c; }
+
+    .cand-meta { font-size: 0.72rem; color: var(--text-light); }
+
+    /* Row action buttons */
+    .row-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+    .btn-sm {
+      padding: 5px 12px; font-size: 0.78rem; border-radius: 6px;
+      border: none; cursor: pointer; font-weight: 600;
+    }
+    .btn-sm-confirm { background: #c6f6d5; color: #276843; }
+    .btn-sm-new     { background: #bee3f8; color: #2c5282; }
+    .btn-sm-skip    { background: #fed7d7; color: #9b2c2c; }
+    .btn-sm-undo    { background: #edf2f7; color: #4a5568; }
+
+    /* Live search */
+    .search-wrap { position: relative; }
+    .search-wrap input {
+      border: 1px solid var(--border-color); border-radius: 6px;
+      padding: 5px 10px; font-size: 0.82rem;
+      color: var(--text-dark); width: 180px;
+      background: white;
+    }
+    .search-wrap input:focus { outline: none; border-color: var(--primary-color); }
+    .search-drop {
+      position: absolute; top: 100%; left: 0;
+      background: white; border: 1px solid var(--border-color);
+      border-radius: 8px; z-index: 100; min-width: 220px;
+      max-height: 200px; overflow-y: auto;
+      box-shadow: var(--shadow-md);
+    }
+    .search-item {
+      padding: 8px 12px; cursor: pointer; font-size: 0.82rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-dark);
+    }
+    .search-item:hover { background: #f0f7ea; }
+    .search-item:last-child { border-bottom: none; }
+    .search-sub { font-size: 0.72rem; color: var(--text-light); }
+
+    .no-candidates { font-size: 0.82rem; color: #e53e3e; margin: 6px 0; }
+
+    /* Export Section */
+    .export-section {
+      background: white; border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 1.5rem 2rem;
+      margin-top: 2rem; box-shadow: var(--shadow-sm);
+      display: none;
+    }
+    .export-section h3 { margin: 0 0 1rem; }
+    .export-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 10px; margin-bottom: 1rem;
+    }
+    @media (max-width: 600px) { .export-grid { grid-template-columns: repeat(2,1fr); } }
+    .export-box {
+      border: 1px solid var(--border-color); border-radius: 10px;
+      padding: 12px 16px; text-align: center;
+    }
+    .export-box p { margin: 0; font-size: 1.6rem; font-weight: 800; }
+    .export-box span { font-size: 0.78rem; color: var(--text-light); }
+    .export-preview {
+      background: #f7fafc; border: 1px solid var(--border-color);
+      border-radius: 8px; padding: 12px 16px;
+      font-size: 0.8rem; color: #4a5568; line-height: 1.8;
+      max-height: 220px; overflow-y: auto;
+      white-space: pre-wrap; font-family: monospace;
+      margin-bottom: 1rem;
+    }
+    .export-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-light); }
+    .empty-state .big-icon { font-size: 3.5rem; margin-bottom: 12px; }
+
+    .processing-bar {
+      text-align: center; padding: 40px;
+      display: none;
+    }
+    .processing-bar .spinner {
+      display: inline-block; width: 32px; height: 32px;
+      border: 3px solid #e2e8f0; border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: rotate 0.8s linear infinite;
+      margin-bottom: 10px;
+    }
+    @keyframes rotate { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="softball-spinner"></div>
+    <p style="color:#4a5568; font-weight:600">Loading Player Import…</p>
+  </div>
+
+  <div id="nav-placeholder"></div>
+
+  <div class="page-container">
+
+    <div class="page-header">
+      <h1>📋 Player Import Tool</h1>
+      <p>Upload a roster Excel file · Match incoming players against existing league members · Review &amp; confirm</p>
+      <a href="offseason-roster.html" style="display:inline-block; margin-top:1rem; padding:8px 20px; background:rgba(255,255,255,0.15); color:white; border-radius:8px; text-decoration:none; font-size:0.88rem; font-weight:600; border:1px solid rgba(255,255,255,0.3);">→ Go to Offseason Roster</a>
+    </div>
+
+    <!-- Upload Zone -->
+    <div class="upload-zone" id="uploadZone">
+      <div class="upload-icon">📂</div>
+      <p><strong>Drop your Excel file here</strong></p>
+      <p>or click to browse</p>
+      <p style="font-size:0.78rem; margin-top:12px;">Accepts .xlsx · .xls · .csv</p>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
+    </div>
+
+    <!-- Column Config -->
+    <div class="config-card" id="configCard">
+      <h3>⚙️ Configure Import</h3>
+      <div class="config-row">
+        <label>Name Column:</label>
+        <select id="columnSelect"></select>
+      </div>
+      <div class="config-row">
+        <label></label>
+        <div class="checkbox-row">
+          <input type="checkbox" id="hasHeader" checked />
+          <label for="hasHeader">First row is a header — skip it</label>
+        </div>
+      </div>
+      <div class="config-row" style="margin-top:0.5rem">
+        <label></label>
+        <button class="btn btn-primary" onclick="runMatching()">▶ Run Matching</button>
+        <span id="namePreview" style="font-size:0.8rem; color:#718096; margin-left:8px;"></span>
+      </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar" id="statsBar">
+      <span class="stat-pill pill-total"    id="pillTotal">0 Total</span>
+      <span class="stat-pill pill-confirmed" id="pillConfirmed">0 Confirmed</span>
+      <span class="stat-pill pill-pending"  id="pillPending">0 Pending</span>
+      <span class="stat-pill pill-new"      id="pillNew">0 New</span>
+      <span class="stat-pill pill-skipped"  id="pillSkipped">0 Skipped</span>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="actions-bar" id="actionsBar">
+      <button class="btn btn-gold" onclick="confirmAllHigh()">⚡ Confirm All ≥85%</button>
+      <button class="btn btn-secondary" onclick="setFilter('all')"       id="fAll">All</button>
+      <button class="btn btn-secondary" onclick="setFilter('pending')"   id="fPending">Pending</button>
+      <button class="btn btn-secondary" onclick="setFilter('confirmed')" id="fConfirmed">Confirmed</button>
+      <button class="btn btn-secondary" onclick="setFilter('new')"       id="fNew">New</button>
+      <button class="btn btn-secondary" onclick="setFilter('skipped')"   id="fSkipped">Skipped</button>
+      <button class="btn btn-danger"    onclick="resetAll()" style="margin-left:auto">🗑 Reset</button>
+    </div>
+
+    <!-- Processing indicator -->
+    <div class="processing-bar" id="processingBar">
+      <div class="spinner"></div>
+      <p id="processingMsg" style="color:#4a5568; font-weight:600">Loading…</p>
+    </div>
+
+    <!-- Match List -->
+    <div class="match-list" id="matchList"></div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState">
+      <div class="big-icon">📋</div>
+      <p>Upload a roster Excel file to begin matching players</p>
+    </div>
+
+    <!-- Export -->
+    <div class="export-section" id="exportSection">
+      <h3>📤 Export Results</h3>
+      <div class="export-grid">
+        <div class="export-box">
+          <p id="expConf" style="color:#276843">0</p>
+          <span>Confirmed</span>
+        </div>
+        <div class="export-box">
+          <p id="expNew" style="color:#2b6cb0">0</p>
+          <span>New Players</span>
+        </div>
+        <div class="export-box">
+          <p id="expSkip" style="color:#9b2c2c">0</p>
+          <span>Skipped</span>
+        </div>
+        <div class="export-box">
+          <p id="expPend" style="color:#975a16">0</p>
+          <span>Still Pending</span>
+        </div>
+      </div>
+      <div class="export-preview" id="exportPreview"></div>
+      <div class="export-btns">
+        <button class="btn btn-success" id="pushBtn" onclick="pushToOffseasonRoster()">🚀 Push to Offseason Roster</button>
+        <button class="btn btn-primary" onclick="exportJSON()">💾 Export JSON</button>
+        <button class="btn btn-secondary" onclick="exportCSV()">📄 Export CSV</button>
+        <button class="btn btn-secondary" onclick="copyClipboard()">📋 Copy Text</button>
+      </div>
+      <p id="pushStatus" style="margin-top:10px; font-size:0.85rem; font-weight:600; display:none;"></p>
+    </div>
+
+  </div><!-- /page-container -->
+
+  <script type="module">
+    import { NavigationComponent } from './nav-component.js';
+  </script>
+  <script src="team-colors.js"></script>
+  <script src="mobile-enhancements.js"></script>
+
+  <script type="module">
+    import { getAllPlayerStatsOptimized } from './firebase-data.js';
+    import { db } from './firebase-data.js';
+    import {
+      doc, getDoc, updateDoc, setDoc
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { onAuthChange } from './firebase-auth.js';
+
+    const OFFSEASON_DOC_ID = 'current';
+    let currentUser = null;
+
+    onAuthChange((user) => {
+      currentUser = user || null;
+    });
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    let leaguePlayers  = [];
+    let importedNames  = [];
+    let results        = [];   // { importName, status, selected, candidates }
+    let currentFilter  = 'all';
+    let rawSheet       = [];
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    window.addEventListener('load', () => {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    });
+
+    // ── Upload / File Handling ────────────────────────────────────────────────
+    const zone  = document.getElementById('uploadZone');
+    const input = document.getElementById('fileInput');
+
+    zone.addEventListener('click',     ()  => input.click());
+    zone.addEventListener('dragover',  e   => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', ()  => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop',      e   => { e.preventDefault(); zone.classList.remove('drag-over'); if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
+    input.addEventListener('change',   e   => { if (e.target.files[0]) readFile(e.target.files[0]); });
+
+    function readFile(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const wb   = XLSX.read(e.target.result, { type: 'array' });
+        const ws   = wb.Sheets[wb.SheetNames[0]];
+        rawSheet   = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+        const colSel = document.getElementById('columnSelect');
+        colSel.innerHTML = '';
+        (rawSheet[0] || []).forEach((cell, i) => {
+          const letter = String.fromCharCode(65 + i);
+          const opt    = document.createElement('option');
+          opt.value    = i;
+          opt.textContent = `Column ${letter}${cell ? ` — "${cell}"` : ''}`;
+          colSel.appendChild(opt);
+        });
+
+        // Preview count
+        updatePreview();
+        colSel.addEventListener('change', updatePreview);
+        document.getElementById('hasHeader').addEventListener('change', updatePreview);
+
+        document.getElementById('configCard').style.display = 'block';
+        document.getElementById('emptyState').style.display = 'none';
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function updatePreview() {
+      const colIdx    = parseInt(document.getElementById('columnSelect').value) || 0;
+      const hasHeader = document.getElementById('hasHeader').checked;
+      const rows      = hasHeader ? rawSheet.slice(1) : rawSheet;
+      const names     = rows.map(r => (r[colIdx] || '').toString().trim()).filter(n => n);
+      document.getElementById('namePreview').textContent = `${names.length} names found`;
+    }
+
+    // ── Run Matching ──────────────────────────────────────────────────────────
+    window.runMatching = async function() {
+      const colIdx    = parseInt(document.getElementById('columnSelect').value) || 0;
+      const hasHeader = document.getElementById('hasHeader').checked;
+      const rows      = hasHeader ? rawSheet.slice(1) : rawSheet;
+
+      importedNames = rows.map(r => (r[colIdx] || '').toString().trim()).filter(n => n);
+      // Capture OOT flag from column B ('yes' = OOT)
+      window._ootMap = {};
+      rows.forEach(r => {
+        var name = (r[colIdx] || '').toString().trim();
+        if (name) window._ootMap[name] = (r[1] || '').toString().trim().toLowerCase() === 'yes';
+      });
+      if (!importedNames.length) { alert('No names found. Check your column selection.'); return; }
+
+      document.getElementById('configCard').style.display = 'none';
+
+      const pb = document.getElementById('processingBar');
+      pb.style.display = 'block';
+      document.getElementById('processingMsg').textContent = 'Loading league players from Firebase…';
+
+      if (!leaguePlayers.length) {
+        try {
+          leaguePlayers = await getAllPlayerStatsOptimized();
+          console.log(`✅ ${leaguePlayers.length} league players loaded`);
+        } catch (err) {
+          alert('Error loading players from Firebase.');
+          pb.style.display = 'none';
+          return;
+        }
+      }
+
+      document.getElementById('processingMsg').textContent = `Matching ${importedNames.length} names…`;
+
+      results = importedNames.map(name => {
+        const candidates = findCandidates(name);
+        const autoConfirm = candidates.length > 0 && candidates[0].confidence === 100;
+        return {
+          importName: name,
+          oot:        !!(window._ootMap && window._ootMap[name]),
+          status:     autoConfirm ? 'confirmed' : 'pending',
+          selected:   autoConfirm ? candidates[0] : null,
+          candidates
+        };
+      });
+
+      pb.style.display = 'none';
+      document.getElementById('statsBar').style.display   = 'flex';
+      document.getElementById('actionsBar').style.display = 'flex';
+
+      renderAll();
+      updateStats();
+    };
+
+    // ── Fuzzy Matching ────────────────────────────────────────────────────────
+    function norm(s) { return s.toLowerCase().trim().replace(/\s+/g, ' '); }
+
+    function stripMiddle(s) {
+      const p = s.trim().split(/\s+/);
+      return p.length >= 3 ? `${p[0]} ${p[p.length-1]}` : s;
+    }
+
+    function levenshtein(a, b) {
+      const m = a.length, n = b.length;
+      const dp = Array.from({length: m+1}, (_,i) => [i]);
+      for (let j = 1; j <= n; j++) dp[0][j] = j;
+      for (let i = 1; i <= m; i++)
+        for (let j = 1; j <= n; j++)
+          dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1]
+            : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+      return dp[m][n];
+    }
+
+    function levScore(a, b) {
+      const dist = levenshtein(a, b);
+      return Math.max(0, Math.round((1 - dist / Math.max(a.length, b.length)) * 100));
+    }
+
+    function findCandidates(importName) {
+      const ni    = norm(importName);
+      const si    = norm(stripMiddle(importName));
+      const parts = ni.split(' ');
+      const fi    = parts[0]?.[0] || '';
+      const last  = parts[parts.length - 1] || '';
+
+      return leaguePlayers
+        .map(p => {
+          const rawName = p.name || p.playerName || p.displayName || (p.id || '').replace(/_/g, ' ');
+          const np   = norm(rawName);
+          const sp   = norm(stripMiddle(rawName));
+          const pp   = np.split(' ');
+          const fip  = pp[0]?.[0] || '';
+          const lastp = pp[pp.length - 1] || '';
+
+          let conf = 0;
+          if (ni === np)                                         conf = 100;
+          else if (si === sp && si.length > 3)                  conf = 95;
+          else if (last === lastp && fi === fip && last.length >= 3) conf = 85;
+          else if (last === lastp && last.length >= 4)          conf = 70;
+          else conf = Math.max(levScore(ni, np), levScore(si, sp));
+
+          const seasons = p.seasons ? Object.keys(p.seasons) : [];
+          return {
+            id: p.id || p.playerId,
+            name: rawName,
+            confidence: conf,
+            currentTeam: p.currentTeam || '',
+            seasons
+          };
+        })
+        .filter(c => c.confidence >= 50)
+        .sort((a, b) => b.confidence - a.confidence)
+        .slice(0, 5);
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    function renderAll() {
+      const list = document.getElementById('matchList');
+      list.innerHTML = '';
+
+      const visible = currentFilter === 'all'
+        ? results
+        : results.filter(r => r.status === currentFilter);
+
+      if (!visible.length) {
+        list.innerHTML = `<div class="empty-state"><div class="big-icon">🔍</div><p>No players match this filter</p></div>`;
+        return;
+      }
+
+      visible.forEach(r => list.appendChild(buildCard(r, results.indexOf(r))));
+      updateExport();
+    }
+
+    function buildCard(r, idx) {
+      const div = document.createElement('div');
+      div.className = `match-card status-${r.status}`;
+      div.id = `card-${idx}`;
+
+      const badges = {
+        confirmed: `<span class="status-badge badge-confirmed">✅ Confirmed</span>`,
+        new:       `<span class="status-badge badge-new">🆕 New Player</span>`,
+        skipped:   `<span class="status-badge badge-skipped">⏭ Skipped</span>`,
+        pending:   `<span class="status-badge badge-pending">⏳ Pending</span>`
+      };
+
+      let matchedHTML = '';
+      if (r.status === 'confirmed' && r.selected) {
+        matchedHTML = `<span class="match-arrow">→</span>
+          <span class="matched-name">${esc(r.selected.name)}</span>
+          <span class="matched-id">&nbsp;(${esc(r.selected.id)})</span>`;
+      } else if (r.status === 'new') {
+        matchedHTML = `<span class="match-arrow">→</span>
+          <span style="color:#2b6cb0; font-weight:600">New player — no existing match</span>`;
+      }
+
+      // Candidates
+      let candidatesHTML = '';
+      if (r.status === 'pending') {
+        if (r.candidates.length) {
+          const cands = r.candidates.map(c => {
+            const cls  = c.confidence >= 85 ? 'conf-high' : c.confidence >= 65 ? 'conf-med' : 'conf-low';
+            const team = c.currentTeam ? ` · ${c.currentTeam}` : '';
+            const seas = c.seasons.length ? `${c.seasons.length} season${c.seasons.length > 1 ? 's' : ''}` : 'no seasons';
+            return `<button class="candidate-btn" onclick="selectPlayer(${idx},'${c.id}')">
+              <span class="conf-badge ${cls}">${c.confidence}%</span>
+              <span>${esc(c.name)}</span>
+              <span class="cand-meta">${seas}${team}</span>
+            </button>`;
+          }).join('');
+          candidatesHTML = `<div class="candidates">${cands}</div>`;
+        } else {
+          candidatesHTML = `<p class="no-candidates">⚠️ No close matches found in database</p>`;
+        }
+      }
+
+      // Actions
+      let actHTML = '';
+      if (r.status === 'pending') {
+        actHTML = `<div class="row-actions">
+          <button class="btn-sm btn-sm-new"  onclick="markNew(${idx})">🆕 Mark as New</button>
+          <button class="btn-sm btn-sm-skip" onclick="markSkip(${idx})">⏭ Skip</button>
+          <div class="search-wrap">
+            <input type="text" placeholder="Search player…" oninput="liveSearch(${idx},this.value)" id="srch-${idx}" autocomplete="off" />
+            <div class="search-drop" id="drop-${idx}"></div>
+          </div>
+        </div>`;
+      } else {
+        actHTML = `<div class="row-actions">
+          <button class="btn-sm btn-sm-undo" onclick="markPending(${idx})">↩ Undo</button>
+        </div>`;
+      }
+
+      div.innerHTML = `
+        <div class="match-top">
+          <span class="import-name">📋 ${esc(r.importName)}${r.oot ? ' <span style="background:#c53030;color:white;font-size:0.65rem;font-weight:700;padding:2px 6px;border-radius:3px;margin-left:4px;vertical-align:middle;">OOT</span>' : ''}</span>
+          ${matchedHTML}
+          ${badges[r.status]}
+        </div>
+        ${candidatesHTML}
+        ${actHTML}
+      `;
+      return div;
+    }
+
+    function refreshCard(idx) {
+      const existing = document.getElementById(`card-${idx}`);
+      if (existing) existing.replaceWith(buildCard(results[idx], idx));
+      else renderAll();
+    }
+
+    // ── Actions ───────────────────────────────────────────────────────────────
+    window.selectPlayer = function(idx, playerId) {
+      const p    = leaguePlayers.find(x => (x.id || x.playerId) === playerId);
+      if (!p) return;
+      const name = p.name || p.playerName || p.displayName || playerId.replace(/_/g, ' ');
+      results[idx].status   = 'confirmed';
+      results[idx].selected = {
+        id: playerId, name,
+        currentTeam: p.currentTeam || '',
+        seasons: p.seasons ? Object.keys(p.seasons) : []
+      };
+      refreshCard(idx); updateStats();
+    };
+
+    window.markNew     = function(idx) { results[idx].status = 'new';     results[idx].selected = null; refreshCard(idx); updateStats(); };
+    window.markSkip    = function(idx) { results[idx].status = 'skipped'; results[idx].selected = null; refreshCard(idx); updateStats(); };
+    window.markPending = function(idx) { results[idx].status = 'pending'; results[idx].selected = null; refreshCard(idx); updateStats(); };
+
+    window.confirmAllHigh = function() {
+      results.forEach((r, idx) => {
+        if (r.status === 'pending' && r.candidates.length && r.candidates[0].confidence >= 85)
+          window.selectPlayer(idx, r.candidates[0].id);
+      });
+    };
+
+    window.setFilter = function(f) {
+      currentFilter = f;
+      ['all','pending','confirmed','new','skipped'].forEach(k => {
+        const id = `f${k.charAt(0).toUpperCase()+k.slice(1)}`;
+        const el = document.getElementById(id);
+        if (el) el.style.background = k === f ? '#c6f6d5' : '#e2e8f0';
+      });
+      renderAll();
+    };
+
+    window.resetAll = function() {
+      if (!confirm('Reset all import data and start over?')) return;
+      importedNames = []; results = []; rawSheet = [];
+      ['statsBar','actionsBar','exportSection'].forEach(id => document.getElementById(id).style.display = 'none');
+      document.getElementById('matchList').innerHTML = '';
+      document.getElementById('configCard').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'block';
+      document.getElementById('fileInput').value = '';
+    };
+
+    // ── Live Search ───────────────────────────────────────────────────────────
+    window.liveSearch = function(idx, q) {
+      const drop = document.getElementById(`drop-${idx}`);
+      if (!q || q.length < 2) { drop.innerHTML = ''; return; }
+      const hits = leaguePlayers
+        .filter(p => (p.name || p.playerName || '').toLowerCase().includes(q.toLowerCase()))
+        .slice(0, 8);
+      if (!hits.length) { drop.innerHTML = ''; return; }
+      drop.innerHTML = hits.map(p => {
+        const name = p.name || p.playerName || (p.id || '').replace(/_/g, ' ');
+        const id   = p.id || p.playerId || '';
+        return `<div class="search-item" onclick="selectPlayer(${idx},'${id}')">
+          ${esc(name)} <span class="search-sub">${id}</span>
+        </div>`;
+      }).join('');
+    };
+
+    // Close dropdowns on outside click
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.search-wrap')) {
+        document.querySelectorAll('.search-drop').forEach(d => d.innerHTML = '');
+      }
+    });
+
+    // ── Stats & Export ────────────────────────────────────────────────────────
+    function updateStats() {
+      const tot  = results.length;
+      const conf = results.filter(r => r.status === 'confirmed').length;
+      const pend = results.filter(r => r.status === 'pending').length;
+      const newP = results.filter(r => r.status === 'new').length;
+      const skip = results.filter(r => r.status === 'skipped').length;
+
+      document.getElementById('pillTotal').textContent     = `${tot} Total`;
+      document.getElementById('pillConfirmed').textContent = `${conf} Confirmed`;
+      document.getElementById('pillPending').textContent   = `${pend} Pending`;
+      document.getElementById('pillNew').textContent       = `${newP} New`;
+      document.getElementById('pillSkipped').textContent   = `${skip} Skipped`;
+
+      updateExport();
+    }
+
+    function updateExport() {
+      if (!results.length) return;
+      const conf = results.filter(r => r.status === 'confirmed');
+      const newP = results.filter(r => r.status === 'new');
+      const skip = results.filter(r => r.status === 'skipped');
+      const pend = results.filter(r => r.status === 'pending');
+
+      document.getElementById('exportSection').style.display = 'block';
+      document.getElementById('expConf').textContent = conf.length;
+      document.getElementById('expNew').textContent  = newP.length;
+      document.getElementById('expSkip').textContent = skip.length;
+      document.getElementById('expPend').textContent = pend.length;
+
+      const lines = [
+        '=== CONFIRMED RETURNING ===',
+        ...conf.map(r => `  ${r.importName}  →  ${r.selected?.name} (${r.selected?.id})`),
+        '',
+        '=== NEW PLAYERS ===',
+        ...newP.map(r => `  ${r.importName}`),
+        ...(skip.length ? ['', '=== SKIPPED ===', ...skip.map(r => `  ${r.importName}`)] : []),
+        ...(pend.length ? ['', '=== STILL PENDING ===', ...pend.map(r => `  ${r.importName}`)] : [])
+      ];
+      document.getElementById('exportPreview').textContent = lines.join('\n');
+    }
+
+    window.exportJSON = function() {
+      const confirmed = results.filter(r => r.status === 'confirmed');
+      const newP      = results.filter(r => r.status === 'new');
+      const out = {
+        generatedAt: new Date().toISOString(),
+        returning: confirmed.map(r => ({
+          importName:  r.importName,
+          playerId:    r.selected.id,
+          playerName:  r.selected.name,
+          lastTeam:    r.selected.currentTeam || null,
+          seasons:     r.selected.seasons || []
+        })),
+        newPlayers: newP.map(r => ({ importName: r.importName })),
+        skipped:    results.filter(r => r.status === 'skipped').map(r => r.importName),
+        pending:    results.filter(r => r.status === 'pending').map(r => r.importName)
+      };
+      dl(JSON.stringify(out, null, 2), `roster-import-${today()}.json`, 'application/json');
+    };
+
+    window.exportCSV = function() {
+      const rows = [['Import Name','Status','Player ID','Player Name','Last Team']];
+      results.forEach(r => rows.push([
+        r.importName, r.status,
+        r.selected?.id || '', r.selected?.name || '', r.selected?.currentTeam || ''
+      ]));
+      dl(rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n'),
+        `roster-import-${today()}.csv`, 'text/csv');
+    };
+
+    window.copyClipboard = function() {
+      navigator.clipboard.writeText(document.getElementById('exportPreview').textContent)
+        .then(() => alert('Copied to clipboard!'));
+    };
+
+    // ── Push to Offseason Roster ──────────────────────────────────────────────
+    window.pushToOffseasonRoster = async function() {
+      if (!currentUser) {
+        alert('You must be signed in to push to Offseason Roster.\n\nPlease sign in and try again.');
+        return;
+      }
+      const confirmed = results.filter(r => r.status === 'confirmed');
+      const newPlayers = results.filter(r => r.status === 'new');
+      const total = confirmed.length + newPlayers.length;
+
+      if (total === 0) {
+        alert('No confirmed or new players to push. Confirm some matches first.');
+        return;
+      }
+
+      const pending = results.filter(r => r.status === 'pending').length;
+      const msg = pending > 0
+        ? `Push ${total} players to Offseason Roster?\n\n⚠️ ${pending} players are still pending and will NOT be pushed.\n\nThey can be added later by re-running the import.`
+        : `Push ${total} players to Offseason Roster?`;
+
+      if (!confirm(msg)) return;
+
+      const btn = document.getElementById('pushBtn');
+      const status = document.getElementById('pushStatus');
+      btn.disabled = true;
+      btn.textContent = '⏳ Pushing…';
+      status.style.display = 'block';
+      status.style.color = '#975a16';
+      status.textContent = 'Connecting to Firebase…';
+
+      try {
+        const offseasonRef = doc(db, 'offseasonRosters', OFFSEASON_DOC_ID);
+        const snap = await getDoc(offseasonRef);
+
+        // Build player objects matching offseason-roster's expected shape
+        const now = new Date().toISOString();
+
+        const playersToAdd = [
+          ...confirmed.map(r => ({
+            id: r.selected.id,
+            name: r.selected.name,
+            ba: '.000',         // offseason-roster will enrich from Firebase stats
+            acesBPI: '0.0',
+            lastTeam: r.selected.currentTeam || null,
+            importedAt: now,
+            isNew: false,
+            oot: r.oot || false
+          })),
+          ...newPlayers.map(r => ({
+            id: r.importName.toLowerCase().replace(/\s+/g, '_'),
+            name: r.importName,
+            ba: '.000',
+            acesBPI: '0.0',
+            lastTeam: null,
+            importedAt: now,
+            isNew: true,
+            oot: r.oot || false
+          }))
+        ];
+
+        // Deduplicate against existing unassigned players and team rosters
+        // Must check BOTH id AND name because legacy profiles use snake_case id
+        // while authenticated profiles may use a different id but same display name
+        let existingIds   = new Set();
+        let existingNames = new Set(); // normalized lowercase for name-based dedup
+
+        if (snap.exists()) {
+          const data = snap.data();
+
+          // Collect from unassignedPlayers
+          (data.unassignedPlayers || []).forEach(p => {
+            existingIds.add(p.id);
+            if (p.name) existingNames.add(p.name.toLowerCase().trim());
+          });
+
+          // Collect from all team rosters
+          Object.values(data.teams || {}).forEach(team => {
+            (team.players || []).forEach(p => {
+              existingIds.add(p.id);
+              if (p.name) existingNames.add(p.name.toLowerCase().trim());
+            });
+          });
+        }
+
+        const newEntries  = playersToAdd.filter(p =>
+          !existingIds.has(p.id) &&
+          !existingNames.has(p.name.toLowerCase().trim())
+        );
+        const dupeCount   = playersToAdd.length - newEntries.length;
+
+        if (newEntries.length === 0) {
+          status.style.color = '#975a16';
+          status.textContent = `⚠️ All ${dupeCount} players already exist in Offseason Roster — nothing pushed.`;
+          btn.disabled = false;
+          btn.textContent = '🚀 Push to Offseason Roster';
+          return;
+        }
+
+        status.textContent = `Writing ${newEntries.length} players…`;
+
+        if (snap.exists()) {
+          // Append to existing unassignedPlayers array
+          const existing = snap.data().unassignedPlayers || [];
+          await updateDoc(offseasonRef, {
+            unassignedPlayers: [...existing, ...newEntries]
+          });
+        } else {
+          // Doc doesn't exist yet — create minimal shell so offseason-roster can expand it
+          await setDoc(offseasonRef, {
+            teams: {},
+            unassignedPlayers: newEntries,
+            unavailablePlayers: [],
+            seasonType: 'fall-to-summer'
+          });
+        }
+
+        status.style.color = '#276843';
+        let msg2 = `✅ ${newEntries.length} player${newEntries.length > 1 ? 's' : ''} pushed to Offseason Roster!`;
+        if (dupeCount > 0) msg2 += ` (${dupeCount} skipped — already present)`;
+        status.textContent = msg2;
+
+        btn.textContent = '✅ Pushed!';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = '🚀 Push to Offseason Roster';
+        }, 3000);
+
+      } catch (err) {
+        console.error('❌ Push error:', err);
+        status.style.color = '#9b2c2c';
+        status.textContent = `❌ Error: ${err.message}`;
+        btn.disabled = false;
+        btn.textContent = '🚀 Push to Offseason Roster';
+      }
+    };
+
+    function dl(content, filename, type) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([content], { type }));
+      a.download = filename; a.click();
+    }
+    function today() { return new Date().toISOString().slice(0,10); }
+    function esc(s) {
+      return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+</body>
+</html>

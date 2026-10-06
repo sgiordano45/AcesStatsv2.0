@@ -1,0 +1,491 @@
+/**
+ * dark-mode.css
+ * Centralized dark mode overrides for AcesStats.
+ * All rules are scoped to [data-theme="dark"] — zero impact on light mode.
+ * Self-contained: defines all required CSS variables so pages don't need style.css.
+ *
+ * Load order: after any page :root definitions, before page-specific inline styles.
+ *
+ * Categories:
+ *   0. CSS Variable Definitions (self-contained fallback)
+ *   1. Navigation
+ *   2. Modals & Overlays
+ *   3. Forms & Inputs
+ *   4. Buttons
+ *   5. Cards & Content Blocks
+ *   6. Tables
+ *   7. Player / Stats Pages
+ *   8. Misc UI Elements
+ */
+
+/* ============================================================
+   0. CSS VARIABLE DEFINITIONS
+   Defines all dark theme variables so this file works on any page,
+   even those that don't import style.css.
+   ============================================================ */
+
+[data-theme="dark"] {
+  --primary-color: #4a9d3f;
+  --secondary-color: #2d8a6e;
+
+  --bg-primary:    #0f172a;
+  --bg-secondary:  #1e293b;
+  --bg-elevated:   #334155;
+  --card-bg:       #1e293b;
+
+  --text-dark:     #f1f5f9;
+  --text-light:    #94a3b8;
+  --text-muted:    #64748b;
+
+  --border-color:  #334155;
+  --border-light:  #475569;
+
+  --hover-bg:      #334155;
+
+  --input-bg:      #1e293b;
+  --input-border:  #475569;
+
+  --table-header-bg:    #334155;
+  --table-header-hover: #475569;
+  --table-border:       #475569;
+  --table-row-hover:    #334155;
+
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.5);
+
+  --overlay-bg: rgba(15,23,42,0.95);
+}
+
+/* ============================================================
+   1. NAVIGATION
+   ============================================================ */
+
+[data-theme="dark"] .nav-link {
+  background: transparent;
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .nav-link:hover,
+[data-theme="dark"] .nav-link.active {
+  background: var(--hover-bg);
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .nav-btn {
+  background: var(--bg-secondary);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .nav-btn:hover {
+  background: var(--hover-bg);
+}
+
+[data-theme="dark"] .nav-tabs,
+[data-theme="dark"] .nav-container,
+[data-theme="dark"] .tab-nav,
+[data-theme="dark"] .filters-nav,
+[data-theme="dark"] .filter-bar,
+[data-theme="dark"] .splits-filter-bar {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .tab-btn,
+[data-theme="dark"] .tab-section {
+  background: var(--bg-secondary);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .tab-btn:hover {
+  background: var(--hover-bg);
+}
+
+[data-theme="dark"] .tab-btn.active,
+[data-theme="dark"] .tab-section.active {
+  background: var(--bg-elevated);
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .tab-content {
+  background: var(--bg-primary);
+}
+
+/* ============================================================
+   2. MODALS & OVERLAYS
+   ============================================================ */
+
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .modal-box,
+[data-theme="dark"] .badge-modal-content,
+[data-theme="dark"] .calendar-modal-content {
+  background: var(--bg-elevated);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-header {
+  background: var(--bg-elevated);
+  color: var(--text-dark);
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-overlay {
+  background: var(--overlay-bg);
+}
+
+[data-theme="dark"] .autocomplete-dropdown {
+  background: var(--bg-elevated);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .autocomplete-dropdown li:hover,
+[data-theme="dark"] .autocomplete-dropdown .active {
+  background: var(--hover-bg);
+}
+
+/* ============================================================
+   3. FORMS & INPUTS
+   ============================================================ */
+
+[data-theme="dark"] input,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="password"],
+[data-theme="dark"] input[type="search"],
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="time"],
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: var(--input-bg);
+  color: var(--text-dark);
+  border-color: var(--input-border);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: var(--primary-color);
+  outline-color: var(--primary-color);
+}
+
+[data-theme="dark"] .filter-select,
+[data-theme="dark"] .filters-section select,
+[data-theme="dark"] .filters-section input {
+  background: var(--input-bg);
+  color: var(--text-dark);
+  border-color: var(--input-border);
+}
+
+[data-theme="dark"] .filters-section label {
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .controls {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+/* ============================================================
+   4. BUTTONS
+   ============================================================ */
+
+[data-theme="dark"] .btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background: var(--hover-bg);
+}
+
+[data-theme="dark"] .filter-btn,
+[data-theme="dark"] .action-btn,
+[data-theme="dark"] .toggle-btn,
+[data-theme="dark"] .back-button,
+[data-theme="dark"] .desktop-home-btn,
+[data-theme="dark"] .cal-strip-btn {
+  background: var(--bg-secondary);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .filter-btn:hover,
+[data-theme="dark"] .action-btn:hover,
+[data-theme="dark"] .toggle-btn:hover,
+[data-theme="dark"] .back-button:hover,
+[data-theme="dark"] .cal-strip-btn:hover {
+  background: var(--hover-bg);
+}
+
+[data-theme="dark"] .filter-btn.active,
+[data-theme="dark"] .toggle-btn.active {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .guide-nav {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-dark);
+}
+
+/* ============================================================
+   5. CARDS & CONTENT BLOCKS
+   ============================================================ */
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .content-card,
+[data-theme="dark"] .stat-box,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .info-card,
+[data-theme="dark"] .season-card,
+[data-theme="dark"] .game-card,
+[data-theme="dark"] .player-card,
+[data-theme="dark"] .favorite-card,
+[data-theme="dark"] .split-card,
+[data-theme="dark"] .user-card,
+[data-theme="dark"] .step,
+[data-theme="dark"] .section,
+[data-theme="dark"] .info-box {
+  background: var(--card-bg);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .section-header,
+[data-theme="dark"] .section-title {
+  color: var(--text-dark);
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .section-content {
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .container {
+  background: var(--bg-primary);
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .main-content,
+[data-theme="dark"] .page-container,
+[data-theme="dark"] .dashboard-container {
+  background: var(--bg-primary);
+}
+
+[data-theme="dark"] .auth-gate {
+  background: var(--card-bg);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .empty-state,
+[data-theme="dark"] .splits-no-data {
+  background: var(--bg-secondary);
+  color: var(--text-light);
+}
+
+[data-theme="dark"] .summary {
+  background: var(--bg-secondary);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+/* ============================================================
+   6. TABLES
+   ============================================================ */
+
+[data-theme="dark"] table {
+  background: var(--bg-secondary);
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] th {
+  background: var(--table-header-bg);
+  color: var(--text-dark);
+  border-color: var(--table-border);
+}
+
+[data-theme="dark"] td {
+  background: var(--bg-secondary);
+  color: var(--text-dark);
+  border-color: var(--table-border);
+}
+
+[data-theme="dark"] tr:nth-child(even) td {
+  background: var(--bg-elevated);
+}
+
+[data-theme="dark"] tr:hover td {
+  background: var(--table-row-hover);
+}
+
+[data-theme="dark"] .stats-table,
+[data-theme="dark"] .table-container {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .stats-table th {
+  background: var(--table-header-bg);
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .stats-table td {
+  border-color: var(--table-border);
+}
+
+[data-theme="dark"] .leader-category {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .leader-category h4 {
+  color: var(--text-dark);
+  border-bottom-color: var(--border-color);
+}
+
+/* ============================================================
+   7. PLAYER / STATS PAGES
+   ============================================================ */
+
+[data-theme="dark"] .player-stats,
+[data-theme="dark"] .stats-section,
+[data-theme="dark"] .stats-grid,
+[data-theme="dark"] .stats-summary {
+  background: var(--bg-secondary);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .player-tabs,
+[data-theme="dark"] .player-tabs-mobile {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .player-item,
+[data-theme="dark"] .player-cell,
+[data-theme="dark"] .selection-item {
+  background: var(--bg-secondary);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .player-item:hover,
+[data-theme="dark"] .selection-item:hover {
+  background: var(--hover-bg);
+}
+
+[data-theme="dark"] .opponent-section,
+[data-theme="dark"] .game-log-section {
+  background: var(--card-bg);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .category-pill {
+  background: var(--bg-elevated);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .category-pill.active {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+[data-theme="dark"] .view-selector {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .import-section {
+  background: var(--card-bg);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+/* ============================================================
+   8. PAGE-SPECIFIC OVERRIDES
+   ============================================================ */
+
+/* weekend-preview.html — weather forecast blocks */
+[data-theme="dark"] .forecast-item {
+  background: var(--bg-elevated);
+  border-color: var(--border-color);
+  color: var(--text-dark);
+}
+
+/* weekend-preview.html — key player name pills */
+[data-theme="dark"] .player-name {
+  background: var(--bg-elevated);
+  color: var(--text-dark);
+}
+
+/* ============================================================
+   9. MISC UI
+   ============================================================ */
+
+[data-theme="dark"] .badge {
+  background: var(--bg-elevated);
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .badge-card-item {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .awards-section {
+  background: var(--bg-secondary);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .tier-link {
+  background: var(--bg-secondary);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .tier-link:hover {
+  background: var(--hover-bg);
+}
+
+[data-theme="dark"] .access-denied {
+  background: var(--card-bg);
+  color: var(--text-dark);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .alert {
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .team-logo {
+  background: var(--bg-elevated);
+}
+
+[data-theme="dark"] .toast {
+  background: var(--bg-elevated);
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .loading-overlay {
+  background: var(--overlay-bg);
+  color: var(--text-dark);
+}

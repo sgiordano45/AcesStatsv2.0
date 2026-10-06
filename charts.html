@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Charts - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+    <style>
+        :root {
+            --primary-color: #2d5016;
+            --secondary-color: #1a6b4a;
+            --accent-color: #ffd700;
+            --card-bg: #ffffff;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            min-height: 100vh;
+        }
+
+        .page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+            border-radius: 16px;
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        
+        .page-header::after {
+            content: '⚾';
+            position: absolute;
+            bottom: -30px;
+            left: -30px;
+            font-size: 200px;
+            opacity: 0.05;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 3rem;
+            font-weight: 800;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-header p {
+            margin: 1rem 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .filters-nav {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .filters-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 160px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .chart-section-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: #f8f9fa;
+            margin-bottom: 1rem;
+        }
+
+        .chart-section-controls .control-group {
+            margin: 0;
+        }
+
+        select, button {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: white;
+            font-size: 1rem;
+            color: var(--text-dark);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 44px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: 2px solid var(--primary-color);
+            cursor: pointer;
+            font-weight: 600;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .chart-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+
+        .chart-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 2rem 0 1rem 0;
+            text-align: center;
+            padding: 0 2rem;
+        }
+
+        #team-charts-container {
+            height: 400px;
+            position: relative;
+            margin: 0 2rem 2rem 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: calc(100% - 4rem);
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .chart-tooltip {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bar {
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem;
+            margin-top: 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f0fe 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 12px;
+            margin: 2rem;
+            border: 1px solid #f5c6cb;
+            text-align: center;
+        }
+
+        .nav-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-link {
+            padding: 1rem 1.75rem;
+            border: 2px solid var(--primary-color);
+            background: white;
+            color: var(--primary-color);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-color);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: -1;
+        }
+
+        .nav-link:hover::before {
+            transform: translateX(0);
+        }
+
+        .nav-link:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-link.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 1rem;
+            }
+
+            .page-header {
+                padding: 2.5rem 1.5rem;
+            }
+
+            .page-header h1 {
+                font-size: 2.5rem;
+            }
+
+            .filters-section {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .control-group {
+                min-width: auto;
+            }
+
+            .chart-section-controls {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            select, button {
+                width: 100%;
+                text-align: center;
+            }
+
+            .chart-title {
+                font-size: 1.3rem;
+                margin: 1.5rem 0 1rem 0;
+            }
+
+            #team-charts-container {
+                margin: 0 1rem 1rem 1rem;
+                width: calc(100% - 2rem);
+                height: 300px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                margin: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .filters-nav {
+                padding: 1rem;
+            }
+
+            .chart-title {
+                font-size: 1.2rem;
+                padding: 0 1rem;
+            }
+
+            #team-charts-container {
+                height: 250px;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .stat-label {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page-container">
+    <div class="page-header">
+        <h1>⚾ Performance Charts</h1>
+        <p>Interactive Analytics for Mountainside Aces Softball League</p>
+    </div>
+
+    <div class="filters-nav">
+        <div class="filters-section">
+
+        </div>
+
+
+
+        <div class="control-group">
+            <label for="seasonSelect">Season</label>
+            <select id="seasonSelect">
+                <option value="">Loading seasons...</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="chartSection">Chart Type</label>
+            <select id="chartSection">
+                <option value="team">Team Charts</option>
+                <option value="player">Player Charts</option>
+            </select>
+        </div>
+        
+        <!-- Team Chart Controls -->
+        <div id="teamControls" class="chart-section-controls">
+            <div class="control-group">
+                <label for="teamChartType">Team Chart Type</label>
+                <select id="teamChartType">
+                    <option value="wins">Wins Comparison</option>
+                    <option value="batting">Batting Average</option>
+                    <option value="runs">Runs Scored</option>
+                    <option value="standings">Win Percentage</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Player Chart Controls -->
+        <div id="playerControls" class="chart-section-controls" style="display: none;">
+            <div class="control-group">
+                <label for="teamSelect">Team</label>
+                <select id="teamSelect">
+                    <option value="">Select a team...</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="playerChartType">Player Chart Type</label>
+                <select id="playerChartType">
+                    <option value="player-batting">Batting Average</option>
+                    <option value="player-obp">On-Base Percentage</option>
+                    <option value="player-runs">Runs Scored</option>
+                    <option value="player-acesbpi">AcesBPI</option>
+                    <option value="player-radial-season">Radial (Season)</option>
+                    <option value="player-radial-career">Radial (Career)</option>
+                </select>
+            </div>
+            
+            <div class="control-group" id="playerSelectGroup" style="display: none;">
+                <label for="playerSelect">Player</label>
+                <select id="playerSelect">
+                    <option value="">Select a player...</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button onclick="updateChartFromControls()">📊 Update Chart</button>
+            <button onclick="exportChartData()">💾 Export Data</button>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title" id="chartTitle">Team Performance Chart</div>
+        <div id="team-charts-container">
+            <div class="loading">Loading chart data...</div>
+        </div>
+        
+        <div class="stats-grid" id="statsGrid">
+            <!-- Stats cards will be populated here -->
+        </div>
+    </div>
+</div>
+
+<script src="team-colors.js"></script>
+<script src="team-charts.js"></script>
+
+<script type="module">
+// ========================================
+// CHARTS - CONVERTED TO FIREBASE
+// ========================================
+import {
+    getAllPlayerStatsOptimized,
+    seasonsObjectToArray,
+    getAllSeasons,
+    getSeasonGames
+} from './firebase-data.js';
+
+let teamCharts;
+let allTeamData = {};
+let allPlayerData = {};
+let currentSeason = '';
+
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await initializeCharts();
+        setupTeamSelectHandler();
+    } catch (error) {
+        console.error('Failed to initialize charts:', error);
+        showError('Failed to load chart data. Please check your connection.');
+    }
+});
+
+function setupTeamSelectHandler() {
+    const chartSection = document.getElementById('chartSection');
+    const teamControls = document.getElementById('teamControls');
+    const playerControls = document.getElementById('playerControls');
+    const teamSelect = document.getElementById('teamSelect');
+    const playerSelectGroup = document.getElementById('playerSelectGroup');
+    
+    chartSection.addEventListener('change', () => {
+        const section = chartSection.value;
+        if (section === 'team') {
+            teamControls.style.display = 'flex';
+            playerControls.style.display = 'none';
+            playerSelectGroup.style.display = 'none';
+        } else {
+            teamControls.style.display = 'none';
+            playerControls.style.display = 'flex';
+            updatePlayerChartControls();
+        }
+    });
+    
+    teamSelect.addEventListener('change', () => {
+        updatePlayerChartControls();
+    });
+    
+    playerControls.addEventListener('change', (event) => {
+        if (event.target.id === 'playerChartType') {
+            updatePlayerChartControls();
+        }
+    });
+}
+
+function updatePlayerChartControls() {
+    const teamSelect = document.getElementById('teamSelect');
+    const playerChartType = document.getElementById('playerChartType');
+    const playerSelectGroup = document.getElementById('playerSelectGroup');
+    const selectedTeam = teamSelect.value;
+    const currentChartType = playerChartType.value;
+    
+    if (selectedTeam === 'all') {
+        playerChartType.innerHTML = `
+            <option value="player-radial-career">Radial (Career)</option>
+        `;
+    } else if (selectedTeam) {
+        playerChartType.innerHTML = `
+            <option value="player-batting">Batting Average</option>
+            <option value="player-obp">On-Base Percentage</option>
+            <option value="player-runs">Runs Scored</option>
+            <option value="player-acesbpi">AcesBPI</option>
+            <option value="player-radial-season">Radial (Season)</option>
+            <option value="player-radial-career">Radial (Career)</option>
+        `;
+        
+        if (currentChartType && Array.from(playerChartType.options).some(option => option.value === currentChartType)) {
+            playerChartType.value = currentChartType;
+        }
+    }
+    
+    const chartType = playerChartType.value;
+    
+    if ((chartType === 'player-radial-season' || chartType === 'player-radial-career') && selectedTeam) {
+        playerSelectGroup.style.display = 'flex';
+        updatePlayerDropdown(selectedTeam, chartType);
+    } else {
+        playerSelectGroup.style.display = 'none';
+    }
+}
+
+function updateTeamSelector(availableTeams) {
+    const teamSelect = document.getElementById('teamSelect');
+    if (!teamSelect) return;
+    
+    teamSelect.innerHTML = '<option value="">Select a team...</option>';
+    
+    const allTeamsOption = document.createElement('option');
+    allTeamsOption.value = "all";
+    allTeamsOption.textContent = "All Teams";
+    teamSelect.appendChild(allTeamsOption);
+    
+    const acesTeamNames = [
+        'Black', 'Blue', 'Green', 'Red', 'White', 'Orange', 
+        'Silver', 'Purple', 'Gold', 'Carolina', 'Army'
+    ];
+    
+    const acesTeamsWithData = acesTeamNames.filter(teamName => 
+        availableTeams.includes(teamName)
+    );
+    
+    acesTeamsWithData.forEach(teamName => {
+        const option = document.createElement('option');
+        option.value = teamName;
+        option.textContent = 'Aces ' + teamName;
+        teamSelect.appendChild(option);
+    });
+    
+    console.log('✅ Updated team selector with Aces teams:', acesTeamsWithData);
+}
+
+function isSubstitutePlayer(player) {
+    const subValue = player.Sub || player.sub || "";
+    return subValue.toString().trim().toLowerCase() === "yes";
+}
+
+function updatePlayerDropdown(selectedTeam, chartType) {
+    const playerSelect = document.getElementById('playerSelect');
+    const currentSeason = document.getElementById('seasonSelect').value;
+    
+    playerSelect.innerHTML = '<option value="">Select a player...</option>';
+    
+    let availablePlayers = [];
+    
+    if (selectedTeam === 'all') {
+        availablePlayers = getAllNonSubPlayers();
+    } else if (chartType === 'player-radial-career') {
+        availablePlayers = getAllNonSubPlayersForTeam(selectedTeam);
+    } else {
+        availablePlayers = getPlayersForTeam(currentSeason, selectedTeam);
+    }
+    
+    availablePlayers.sort((a, b) => a.name.localeCompare(b.name));
+    
+    const uniquePlayers = [];
+    const seenNames = new Set();
+    
+    availablePlayers.forEach(player => {
+        if (!seenNames.has(player.name)) {
+            seenNames.add(player.name);
+            uniquePlayers.push(player);
+        }
+    });
+    
+    uniquePlayers.forEach(player => {
+        const option = document.createElement('option');
+        option.value = player.name;
+        option.textContent = player.name;
+        playerSelect.appendChild(option);
+    });
+    
+    console.log(`✅ Updated player dropdown with ${uniquePlayers.length} players for team: ${selectedTeam}`);
+}
+
+function getAllNonSubPlayersForTeam(teamName) {
+    const teamPlayers = [];
+    
+    Object.keys(allPlayerData).forEach(seasonKey => {
+        const [year] = seasonKey.split('-');
+        if (parseInt(year) >= 2022) {
+            if (allPlayerData[seasonKey][teamName]) {
+                const seasonPlayers = allPlayerData[seasonKey][teamName];
+                seasonPlayers.forEach(player => {
+                    if (!isSubstitutePlayer(player)) {
+                        teamPlayers.push(player);
+                    }
+                });
+            }
+        }
+    });
+    
+    return teamPlayers;
+}
+
+function getAllNonSubPlayers() {
+    const allPlayers = [];
+    
+    Object.keys(allPlayerData).forEach(seasonKey => {
+        const [year] = seasonKey.split('-');
+        if (parseInt(year) >= 2022) {
+            Object.keys(allPlayerData[seasonKey]).forEach(teamName => {
+                const teamPlayers = allPlayerData[seasonKey][teamName];
+                teamPlayers.forEach(player => {
+                    if (!isSubstitutePlayer(player)) {
+                        allPlayers.push(player);
+                    }
+                });
+            });
+        }
+    });
+    
+    return allPlayers;
+}
+
+function calculateStatMaximums(chartType, season = null) {
+    let relevantPlayers = [];
+    
+    if (chartType === 'player-radial-career') {
+        relevantPlayers = getAllNonSubPlayers();
+    } else {
+        if (season && allPlayerData[season]) {
+            Object.keys(allPlayerData[season]).forEach(teamName => {
+                const teamPlayers = allPlayerData[season][teamName];
+                teamPlayers.forEach(player => {
+                    if (!isSubstitutePlayer(player)) {
+                        relevantPlayers.push(player);
+                    }
+                });
+            });
+        }
+    }
+    
+    if (relevantPlayers.length === 0) {
+        return {
+            battingAvg: 1.0,
+            obp: 1.0,
+            runs: 50,
+            acesBPI: 100,
+            games: 25
+        };
+    }
+    
+    const maxStats = {
+        battingAvg: Math.max(...relevantPlayers.map(p => p.battingAvg || 0), 0.1),
+        obp: Math.max(...relevantPlayers.map(p => p.obp || 0), 0.1),
+        runs: Math.max(...relevantPlayers.map(p => p.runs || 0), 1),
+        acesBPI: Math.max(...relevantPlayers.map(p => p.acesBPI || 0), 1),
+        games: Math.max(...relevantPlayers.map(p => p.games || 0), 1)
+    };
+    
+    console.log('📊 Calculated stat maximums:', maxStats);
+    return maxStats;
+}
+
+function getPlayersForTeam(season, teamName) {
+    if (!allPlayerData[season] || !allPlayerData[season][teamName]) {
+        return [];
+    }
+    
+    const allPlayers = allPlayerData[season][teamName];
+    const nonSubPlayers = allPlayers.filter(player => !isSubstitutePlayer(player));
+    
+    console.log(`Team ${teamName} ${season}: ${allPlayers.length} total players, ${nonSubPlayers.length} non-sub players`);
+    
+    return nonSubPlayers;
+}
+
+async function initializeCharts() {
+    try {
+        const container = document.getElementById('team-charts-container');
+        if (!container) {
+            console.error('team-charts-container element not found!');
+            return;
+        }
+        
+        container.innerHTML = '<div class="loading">Loading chart data...</div>';
+        
+        console.log('🔍 Loading data from Firebase...');
+        
+        const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+        
+        // Load all seasons (2022+)
+        const allSeasons = await getAllSeasons();
+        const seasons2022Plus = allSeasons.filter(s => s.year >= 2022);
+        console.log(`✅ Found ${seasons2022Plus.length} seasons (2022+)`);
+        
+        // Load all player stats
+        const playerStats = await getAllPlayerStatsOptimized();
+        console.log(`✅ Loaded ${playerStats.length} players from Firebase`);
+        
+        // Load games from all seasons
+        console.log('🎮 Loading games from all seasons...');
+        const gamePromises = seasons2022Plus.map(async (season) => {
+            try {
+                const seasonGames = await getSeasonGames(season.id);
+                return seasonGames.map(g => {
+                    let dateString = "";
+                    try {
+                        if (g.date && g.date.seconds) {
+                            const dateObj = new Date(g.date.seconds * 1000);
+                            const month = dateObj.getMonth() + 1;
+                            const day = dateObj.getDate();
+                            const year = dateObj.getFullYear();
+                            dateString = `${month}/${day}/${year}`;
+                        } else if (g.date) {
+                            dateString = g.date;
+                        }
+                    } catch (dateError) {
+                        console.warn('Date parsing error:', dateError);
+                        dateString = "";
+                    }
+                    
+                    return {
+                        "home team": g.homeTeamName || capitalize(g.homeTeamId) || "",
+                        "away team": g.awayTeamName || capitalize(g.awayTeamId) || "",
+                        "home score": g.homeScore !== undefined ? g.homeScore : null,
+                        "away score": g.awayScore !== undefined ? g.awayScore : null,
+                        winner: capitalize(g.winner || ""),
+                        game_type: g.gameType || "Regular",
+                        date: dateString,
+                        year: season.year.toString(),
+                        season: capitalize(season.season || "")
+                    };
+                });
+            } catch (err) {
+                console.warn(`Could not load games for season ${season.id}:`, err);
+                return [];
+            }
+        });
+        
+        const allSeasonGames = await Promise.all(gamePromises);
+        const allGames = allSeasonGames.flat();
+        console.log(`✅ Loaded ${allGames.length} games (2022+)`);
+        
+        // Process player data
+        const battingData = [];
+        playerStats.forEach(player => {
+            const seasonArray = seasonsObjectToArray(player);
+            
+            seasonArray.forEach(season => {
+                const parts = season.seasonId.split('-');
+                const year = parseInt(parts[0]);
+                
+                if (year >= 2022) {
+                    const seasonName = parts[1] ? parts[1].charAt(0).toUpperCase() + parts[1].slice(1) : '';
+                    
+                    battingData.push({
+                        name: player.name || player.playerName || player.id,
+                        team: season.team || player.currentTeam || player.team || '',
+                        season: seasonName,
+                        year: year.toString(),
+                        games: Number(season.games || 0),
+                        atBats: Number(season.atBats || 0),
+                        hits: Number(season.hits || 0),
+                        runs: Number(season.runs || 0),
+                        walks: Number(season.walks || 0),
+                        acesBPI: Number(season.acesBPI || 0),
+                        Sub: season.Sub || season.sub || ""
+                    });
+                }
+            });
+        });
+        
+        console.log(`✅ Processed ${battingData.length} player-season records (2022+)`);
+        
+        // Process into team summaries
+        if (battingData.length > 0 || allGames.length > 0) {
+            allTeamData = processRealData(battingData, allGames, seasons2022Plus);
+        } else {
+            console.log('No data found, using sample data');
+            allTeamData = getSampleData();
+        }
+        
+        // Initialize TeamCharts
+        console.log('📊 Initializing TeamCharts...');
+        if (typeof TeamCharts === 'undefined') {
+            console.error('TeamCharts class not available');
+            showError('Chart library not loaded. Please check that team-charts.js is available.');
+            return;
+        }
+        
+        teamCharts = new TeamCharts('team-charts-container', {
+            width: 800,
+            height: 400,
+            animation: true,
+            responsive: true
+        });
+        
+        console.log('✅ TeamCharts initialized');
+        
+        // Set current season to most recent
+        const sortedSeasons = seasons2022Plus.sort((a, b) => {
+            if (b.year !== a.year) return b.year - a.year;
+            const seasonOrder = { 'fall': 3, 'summer': 2, 'spring': 1 };
+            return (seasonOrder[b.season] || 0) - (seasonOrder[a.season] || 0);
+        });
+        
+        if (sortedSeasons.length > 0) {
+            currentSeason = sortedSeasons[0].id;
+        }
+        
+        // Create initial chart
+        const teams = getTeamsForSeason(currentSeason);
+        console.log('📊 Teams for current season:', teams);
+        
+        if (teams && teams.length > 0) {
+            console.log('📊 Creating wins chart with', teams.length, 'teams');
+            teamCharts.createWinsChart(teams);
+            updateStatsGrid(teams);
+            updateChartTitle('wins', currentSeason);
+        } else {
+            showError('No team data available for the selected season.');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error during initialization:', error);
+        console.error('Error stack:', error.stack);
+        showError('Failed to initialize charts: ' + error.message);
+    }
+}
+
+function processRealData(battingData, gamesData, seasons) {
+    console.log('🔄 Processing real data...');
+    
+    const teamStats = {};
+    const playerData = {};
+    const seasonsFound = new Set();
+    const teamsFound = new Set();
+    const today = new Date();
+    
+    // Process batting data
+    if (battingData && battingData.length > 0) {
+        console.log('📊 Processing batting data from', battingData.length, 'records');
+        
+        battingData.forEach((player, index) => {
+            if (!player.team || !player.name) return;
+            
+            const teamName = player.team.trim();
+            const playerName = player.name.trim();
+            const year = player.year || '2025';
+            const season = player.season || 'Fall';
+            const seasonKey = `${year}-${season.toLowerCase()}`;
+            
+            seasonsFound.add(seasonKey);
+            teamsFound.add(teamName);
+            
+            if (!playerData[seasonKey]) {
+                playerData[seasonKey] = {};
+            }
+            if (!playerData[seasonKey][teamName]) {
+                playerData[seasonKey][teamName] = [];
+            }
+            
+            const atBats = parseInt(player.atBats) || 0;
+            const hits = parseInt(player.hits) || 0;
+            const runs = parseInt(player.runs) || 0;
+            const walks = parseInt(player.walks) || 0;
+            const games = parseInt(player.games) || 0;
+            
+            const battingAvg = atBats > 0 ? hits / atBats : 0;
+            const plateAppearances = atBats + walks;
+            const obp = plateAppearances > 0 ? (hits + walks) / plateAppearances : 0;
+            
+            // DIAGNOSTIC: Log acesBPI for first few players
+            if (index < 3) {
+                console.log(`🔍 AcesBPI check #${index + 1}:`, {
+                    name: playerName,
+                    acesBPI: player.acesBPI,
+                    typeof: typeof player.acesBPI,
+                    Sub: player.Sub
+                });
+            }
+            
+            playerData[seasonKey][teamName].push({
+                name: playerName,
+                team: teamName,
+                games: games,
+                atBats: atBats,
+                hits: hits,
+                runs: runs,
+                walks: walks,
+                battingAvg: battingAvg,
+                obp: obp,
+                acesBPI: player.acesBPI || player.acesWar || player.AcesWar || 0,
+                Sub: player.Sub || player.sub || ""
+            });
+            
+            const isSubPlayer = isSubstitutePlayer(player);
+            if (!isSubPlayer) {
+                if (!teamStats[seasonKey]) {
+                    teamStats[seasonKey] = {};
+                }
+                
+                if (!teamStats[seasonKey][teamName]) {
+                    teamStats[seasonKey][teamName] = {
+                        name: teamName,
+                        wins: 0,
+                        losses: 0,
+                        ties: 0,
+                        runs: 0,
+                        hits: 0,
+                        atBats: 0,
+                        players: 0,
+                        totalGames: 0
+                    };
+                }
+                
+                const team = teamStats[seasonKey][teamName];
+                team.runs += runs;
+                team.hits += hits;
+                team.atBats += atBats;
+                team.players++;
+            }
+        });
+    }
+    
+    // Process games data
+    if (gamesData && gamesData.length > 0) {
+        console.log('🎮 Processing games data from', gamesData.length, 'total games');
+        
+        let completedGames = 0;
+        let futureGames = 0;
+        
+        gamesData.forEach(game => {
+            if (!game["home team"] || !game["away team"]) return;
+            
+            const hasWinner = game.winner && game.winner.trim() !== '' && game.winner.trim() !== 'null';
+            
+            let isFutureGame = false;
+            if (game.date && game.date !== 'n/a') {
+                const gameDate = new Date(game.date);
+                if (!isNaN(gameDate.getTime())) {
+                    isFutureGame = gameDate > today;
+                }
+            }
+            
+            if (!hasWinner || isFutureGame) {
+                futureGames++;
+                return;
+            }
+            
+            completedGames++;
+            
+            const homeTeam = game["home team"].trim();
+            const awayTeam = game["away team"].trim();
+            const winner = game.winner.trim();
+            
+            teamsFound.add(homeTeam);
+            teamsFound.add(awayTeam);
+            
+            const year = game.year || '2025';
+            const season = game.season ? game.season.toLowerCase() : 'fall';
+            const seasonKey = `${year}-${season}`;
+            
+            seasonsFound.add(seasonKey);
+            
+            if (!teamStats[seasonKey]) {
+                teamStats[seasonKey] = {};
+            }
+            
+            [homeTeam, awayTeam].forEach(teamName => {
+                if (!teamStats[seasonKey][teamName]) {
+                    teamStats[seasonKey][teamName] = {
+                        name: teamName,
+                        wins: 0,
+                        losses: 0,
+                        ties: 0,
+                        runs: 0,
+                        hits: 0,
+                        atBats: 0,
+                        players: 0,
+                        totalGames: 0
+                    };
+                }
+            });
+            
+            const homeTeamStats = teamStats[seasonKey][homeTeam];
+            const awayTeamStats = teamStats[seasonKey][awayTeam];
+            
+            if (winner === "Tie") {
+                homeTeamStats.ties++;
+                awayTeamStats.ties++;
+            } else if (winner === homeTeam) {
+                homeTeamStats.wins++;
+                awayTeamStats.losses++;
+            } else if (winner === awayTeam) {
+                awayTeamStats.wins++;
+                homeTeamStats.losses++;
+            }
+            
+            homeTeamStats.totalGames++;
+            awayTeamStats.totalGames++;
+        });
+        
+        console.log(`✅ Processed ${completedGames} completed games, skipped ${futureGames} future games`);
+    }
+    
+    // Sort seasons
+    const sortedSeasons = Array.from(seasonsFound).sort((a, b) => {
+        const [yearA, seasonA] = a.split('-');
+        const [yearB, seasonB] = b.split('-');
+        
+        if (yearA !== yearB) return yearB - yearA;
+        
+        const seasonOrder = { 'fall': 3, 'summer': 2, 'spring': 1 };
+        return (seasonOrder[seasonB] || 0) - (seasonOrder[seasonA] || 0);
+    });
+    
+    console.log('📅 Seasons found:', sortedSeasons);
+    console.log('🏆 Teams found:', Array.from(teamsFound).sort());
+    
+    // Convert to final format
+    const result = {};
+    
+    sortedSeasons.forEach(seasonKey => {
+        result[seasonKey] = { teams: [] };
+    });
+    
+    Object.keys(teamStats).forEach(seasonKey => {
+        if (result[seasonKey]) {
+            result[seasonKey].teams = Object.values(teamStats[seasonKey])
+                .filter(team => team.totalGames > 0 || team.players > 0)
+                .map(team => ({
+                    ...team,
+                    batting_avg: team.atBats > 0 ? team.hits / team.atBats : 0,
+                    winPct: team.totalGames > 0 ? team.wins / team.totalGames : 0
+                }));
+        }
+    });
+    
+    allPlayerData = playerData;
+    
+    updateSeasonSelector(sortedSeasons);
+    updateTeamSelector(Array.from(teamsFound).sort());
+    
+    return result;
+}
+
+function updateSeasonSelector(availableSeasons) {
+    const seasonSelect = document.getElementById('seasonSelect');
+    if (!seasonSelect) return;
+    
+    seasonSelect.innerHTML = '';
+    
+    availableSeasons.forEach(seasonKey => {
+        const option = document.createElement('option');
+        option.value = seasonKey;
+        
+        const [year, season] = seasonKey.split('-');
+        const seasonDisplay = season.charAt(0).toUpperCase() + season.slice(1);
+        option.textContent = `${year} ${seasonDisplay}`;
+        
+        seasonSelect.appendChild(option);
+    });
+    
+    if (availableSeasons.length > 0) {
+        currentSeason = availableSeasons[0];
+        seasonSelect.value = currentSeason;
+    }
+    
+    console.log('✅ Updated season selector with:', availableSeasons);
+}
+
+function getSampleData() {
+    return {
+        '2025-fall': {
+            teams: [
+                { name: 'Aces Black', wins: 8, losses: 2, ties: 0, batting_avg: 0.425, runs: 89, totalGames: 10 },
+                { name: 'Aces Green', wins: 7, losses: 3, ties: 0, batting_avg: 0.398, runs: 95, totalGames: 10 },
+                { name: 'Aces Blue', wins: 6, losses: 4, ties: 0, batting_avg: 0.387, runs: 78, totalGames: 10 }
+            ]
+        }
+    };
+}
+
+function getTeamsForSeason(season) {
+    return allTeamData[season] ? allTeamData[season].teams : [];
+}
+
+function updateChartFromControls() {
+    const season = document.getElementById('seasonSelect').value;
+    const chartSection = document.getElementById('chartSection').value;
+    
+    currentSeason = season;
+    
+    if (chartSection === 'team') {
+        const teamChartType = document.getElementById('teamChartType').value;
+        const teams = getTeamsForSeason(season);
+        
+        if (!teams || teams.length === 0) {
+            showError(`No team data available for ${season}`);
+            return;
+        }
+
+        try {
+            console.log('📊 Creating team chart with type:', teamChartType);
+            
+            switch(teamChartType) {
+                case 'wins':
+                    teamCharts.createWinsChart(teams);
+                    break;
+                case 'batting':
+                    teamCharts.createBattingChart(teams);
+                    break;
+                case 'runs':
+                    teamCharts.createRunsChart(teams);
+                    break;
+                case 'standings':
+                    teamCharts.createStandingsChart(teams);
+                    break;
+                default:
+                    console.warn('Unknown team chart type:', teamChartType);
+                    return;
+            }
+            
+            updateStatsGrid(teams);
+            updateChartTitle(teamChartType, season, 'all');
+            
+        } catch (error) {
+            console.error('❌ Error updating team chart:', error);
+            showError('Failed to update chart: ' + error.message);
+        }
+    } else {
+        const team = document.getElementById('teamSelect').value;
+        const playerChartType = document.getElementById('playerChartType').value;
+        
+        if (!team) {
+            showError('Please select a team for player charts.');
+            return;
+        }
+        
+        if (team === 'all') {
+            if (playerChartType !== 'player-radial-career') {
+                showError('Only Career Radial charts are available when "All Teams" is selected.');
+                return;
+            }
+            
+            const selectedPlayer = document.getElementById('playerSelect').value;
+            if (!selectedPlayer) {
+                showError('Please select a player from the dropdown for career radial charts.');
+                return;
+            }
+            
+            try {
+                createPlayerRadialCharts(selectedPlayer, season, 'All Teams', 'career');
+                const careerPlayer = { name: selectedPlayer };
+                updatePlayerStatsGrid([careerPlayer], selectedPlayer + ' Career');
+            } catch (error) {
+                console.error('❌ Error updating career radial chart:', error);
+                showError('Failed to update career radial chart: ' + error.message);
+            }
+            return;
+        }
+        
+        const players = getPlayersForTeam(season, team);
+        
+        if (!players || players.length === 0) {
+            showError(`No non-substitute player data available for Aces ${team} in ${season}`);
+            return;
+        }
+
+        try {
+            switch(playerChartType) {
+                case 'player-batting':
+                    teamCharts.createPlayerChart(players, 'battingAvg', 'Player Batting Average');
+                    updatePlayerStatsGrid(players, 'Aces ' + team);
+                    updateChartTitle(playerChartType, season, 'Aces ' + team);
+                    break;
+                case 'player-obp':
+                    teamCharts.createPlayerChart(players, 'obp', 'Player On-Base Percentage');
+                    updatePlayerStatsGrid(players, 'Aces ' + team);
+                    updateChartTitle(playerChartType, season, 'Aces ' + team);
+                    break;
+                case 'player-runs':
+                    teamCharts.createPlayerChart(players, 'runs', 'Player Runs Scored');
+                    updatePlayerStatsGrid(players, 'Aces ' + team);
+                    updateChartTitle(playerChartType, season, 'Aces ' + team);
+                    break;
+                case 'player-acesbpi':
+                    teamCharts.createPlayerChart(players, 'acesBPI', 'Player AcesBPI');
+                    updatePlayerStatsGrid(players, 'Aces ' + team);
+                    updateChartTitle(playerChartType, season, 'Aces ' + team);
+                    break;
+                case 'player-radial-season':
+                    const selectedPlayerSeason = document.getElementById('playerSelect').value;
+                    if (!selectedPlayerSeason) {
+                        showError('Please select a player from the dropdown for radial charts.');
+                        return;
+                    }
+                    createPlayerRadialCharts(selectedPlayerSeason, season, team, 'season');
+                    updatePlayerStatsGrid([players.find(p => p.name === selectedPlayerSeason)].filter(Boolean), 'Aces ' + team);
+                    break;
+                case 'player-radial-career':
+                    const selectedPlayerCareer = document.getElementById('playerSelect').value;
+                    if (!selectedPlayerCareer) {
+                        showError('Please select a player from the dropdown for radial charts.');
+                        return;
+                    }
+                    createPlayerRadialCharts(selectedPlayerCareer, season, team, 'career');
+                    const careerPlayer = { name: selectedPlayerCareer };
+                    updatePlayerStatsGrid([careerPlayer], selectedPlayerCareer + ' Career');
+                    break;
+                default:
+                    console.warn('Unknown player chart type:', playerChartType);
+                    return;
+            }
+            
+        } catch (error) {
+            console.error('❌ Error updating player chart:', error);
+            showError('Failed to update player chart: ' + error.message);
+        }
+    }
+}
+
+function updateChartTitle(chartType, season, team) {
+    const titles = {
+        wins: 'Team Wins Comparison',
+        batting: 'Team Batting Averages',
+        runs: 'Runs Scored by Team',
+        standings: 'Team Win Percentage',
+        'player-batting': 'Player Batting Averages',
+        'player-obp': 'Player On-Base Percentage',
+        'player-runs': 'Player Runs Scored',
+        'player-acesbpi': 'Player AcesBPI'
+    };
+    
+    const title = titles[chartType] || 'Performance Chart';
+    const seasonFormatted = season.replace('-', ' ').toUpperCase();
+    
+    if (team === 'all') {
+        document.getElementById('chartTitle').textContent = `${title} - ${seasonFormatted}`;
+    } else {
+        document.getElementById('chartTitle').textContent = `${title} - ${team} (${seasonFormatted})`;
+    }
+}
+
+function updatePlayerStatsGrid(players, teamName) {
+    if (!players || players.length === 0) {
+        document.getElementById('statsGrid').innerHTML = '<div class="error">No non-substitute player data available</div>';
+        return;
+    }
+
+    const totalAtBats = players.reduce((sum, player) => sum + (player.atBats || 0), 0);
+    const totalHits = players.reduce((sum, player) => sum + (player.hits || 0), 0);
+    const totalRuns = players.reduce((sum, player) => sum + (player.runs || 0), 0);
+    const avgBattingAvg = players.reduce((sum, player) => sum + (player.battingAvg || 0), 0) / players.length;
+    const avgOBP = players.reduce((sum, player) => sum + (player.obp || 0), 0) / players.length;
+    const topPlayer = players.reduce((prev, curr) => (curr.battingAvg || 0) > (prev.battingAvg || 0) ? curr : prev, players[0]);
+    
+    const statsHtml = `
+        <div class="stat-card">
+            <div class="stat-value">${players.length}</div>
+            <div class="stat-label">Non-Sub Players</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${totalAtBats}</div>
+            <div class="stat-label">Total At-Bats</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${totalRuns}</div>
+            <div class="stat-label">Total Runs</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">.${Math.round(avgBattingAvg * 1000).toString().padStart(3, '0')}</div>
+            <div class="stat-label">Team Avg. BA</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">.${Math.round(avgOBP * 1000).toString().padStart(3, '0')}</div>
+            <div class="stat-label">Team Avg. OBP</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${topPlayer.name.split(' ').pop()}</div>
+            <div class="stat-label">Top BA (.${Math.round(topPlayer.battingAvg * 1000).toString().padStart(3, '0')})</div>
+        </div>
+    `;
+    
+    document.getElementById('statsGrid').innerHTML = statsHtml;
+}
+
+function updateStatsGrid(teams) {
+    if (!teams || teams.length === 0) {
+        document.getElementById('statsGrid').innerHTML = '<div class="error">No team data available</div>';
+        return;
+    }
+
+    const totalGames = teams.reduce((sum, team) => sum + (team.totalGames || team.wins + team.losses + team.ties), 0);
+    const totalRuns = teams.reduce((sum, team) => sum + (team.runs || 0), 0);
+    const avgBattingAvg = teams.reduce((sum, team) => sum + (team.batting_avg || 0), 0) / teams.length;
+    const topTeam = teams.reduce((prev, curr) => (curr.wins || 0) > (prev.wins || 0) ? curr : prev, teams[0]);
+    
+    const statsHtml = `
+        <div class="stat-card">
+            <div class="stat-value">${teams.length}</div>
+            <div class="stat-label">Active Teams</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${totalGames}</div>
+            <div class="stat-label">Total Games Played</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${totalRuns}</div>
+            <div class="stat-label">Total Runs Scored</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">.${Math.round(avgBattingAvg * 1000).toString().padStart(3, '0')}</div>
+            <div class="stat-label">League Avg. BA (Non-Sub)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${topTeam.name.replace('Aces ', '')}</div>
+            <div class="stat-label">Most Wins (${topTeam.wins || 0})</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${totalGames > 0 ? (totalRuns / totalGames * 2).toFixed(1) : '0.0'}</div>
+            <div class="stat-label">Runs Per Game</div>
+        </div>
+    `;
+    
+    document.getElementById('statsGrid').innerHTML = statsHtml;
+}
+
+function exportChartData() {
+    try {
+        const season = document.getElementById('seasonSelect').value;
+        const teams = getTeamsForSeason(season);
+        
+        if (!teams || teams.length === 0) {
+            alert('No data available to export for the selected season.');
+            return;
+        }
+
+        const headers = ['Team', 'Wins', 'Losses', 'Ties', 'Batting Avg', 'Runs Scored', 'Games Played'];
+        const csvContent = [
+            headers.join(','),
+            ...teams.map(team => [
+                `"${team.name || ''}"`,
+                team.wins || 0,
+                team.losses || 0,
+                team.ties || 0,
+                (team.batting_avg || 0).toFixed(3),
+                team.runs || 0,
+                team.totalGames || (team.wins + team.losses + team.ties)
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `team-stats-${season}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+    } catch (error) {
+        console.error('❌ Error exporting data:', error);
+        alert('Failed to export data: ' + error.message);
+    }
+}
+
+function showError(message) {
+    const container = document.getElementById('team-charts-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="error">
+                <strong>Error:</strong> ${message}
+            </div>
+        `;
+    } else {
+        console.error('Cannot show error - container not found:', message);
+    }
+}
+
+function createPlayerRadialCharts(selectedPlayerName, season, team, viewType) {
+    if (!selectedPlayerName) {
+        showError('Please select a player for the radial chart.');
+        return;
+    }
+    
+    let playerData;
+    let maxStats;
+    
+    if (viewType === 'career') {
+        playerData = calculateCareerStats(selectedPlayerName);
+        maxStats = calculateStatMaximums('player-radial-career');
+        
+        teamCharts.createPlayerRadialChart(playerData, selectedPlayerName, 'career', { maxStats });
+        updateChartTitle('player-radial-career', 'Career', `${selectedPlayerName} Career Stats`);
+    } else {
+        const players = getPlayersForTeam(season, team);
+        playerData = players.find(p => p.name === selectedPlayerName);
+        
+        if (!playerData) {
+            showError(`Player ${selectedPlayerName} not found in ${team} for ${season}.`);
+            return;
+        }
+        
+        maxStats = calculateStatMaximums('player-radial-season', season);
+        
+        teamCharts.createPlayerRadialChart(playerData, selectedPlayerName, 'season', { maxStats });
+        updateChartTitle('player-radial-season', season, `Aces ${team} - ${selectedPlayerName}`);
+    }
+}
+
+function calculateCareerStats(playerName) {
+    let totalGames = 0;
+    let totalAtBats = 0;
+    let totalHits = 0;
+    let totalRuns = 0;
+    let totalWalks = 0;
+    let totalAcesBPI = 0;
+    let seasonsPlayed = 0;
+
+    Object.keys(allPlayerData).forEach(seasonKey => {
+        Object.keys(allPlayerData[seasonKey]).forEach(teamName => {
+            const teamPlayers = allPlayerData[seasonKey][teamName];
+            const player = teamPlayers.find(p => p.name === playerName);
+            
+            if (player && !isSubstitutePlayer(player)) {
+                totalGames += player.games || 0;
+                totalAtBats += player.atBats || 0;
+                totalHits += player.hits || 0;
+                totalRuns += player.runs || 0;
+                totalWalks += player.walks || 0;
+                totalAcesBPI += player.acesBPI || 0;
+                seasonsPlayed++;
+            }
+        });
+    });
+
+    const battingAvg = totalAtBats > 0 ? totalHits / totalAtBats : 0;
+    const plateAppearances = totalAtBats + totalWalks;
+    const obp = plateAppearances > 0 ? (totalHits + totalWalks) / plateAppearances : 0;
+    const avgAcesBPI = seasonsPlayed > 0 ? totalAcesBPI / seasonsPlayed : 0;
+
+    return {
+        name: playerName,
+        games: totalGames,
+        atBats: totalAtBats,
+        hits: totalHits,
+        runs: totalRuns,
+        walks: totalWalks,
+        battingAvg: battingAvg,
+        obp: obp,
+        acesBPI: avgAcesBPI
+    };
+}
+
+// Make functions available globally
+window.updateChartFromControls = updateChartFromControls;
+window.exportChartData = exportChartData;
+window.toggleMobileMenu = toggleMobileMenu;
+</script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

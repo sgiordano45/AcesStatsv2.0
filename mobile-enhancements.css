@@ -1,0 +1,1260 @@
+/**
+ * Mobile Enhancements CSS - Mountainside Aces Style
+ * Shared styles for mobile-responsive improvements
+ * Include this after nav-styles.css
+ * @version 2.3.0 - Added Toast notifications and Floating Share Button
+ */
+
+/* ========================================
+   CSS VARIABLES (Match Style Guide)
+   Note: These are fallbacks. Primary theme variables
+   are defined in style.css with [data-theme="dark"] support
+   ======================================== */
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  --bg-elevated: #ffffff;
+  --hover-bg: #f8f9fa;
+}
+
+/* ========================================
+   BACK TO TOP BUTTON
+   ======================================== */
+
+.back-to-top-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 16px;
+  padding: 10px 14px;
+  border-radius: 20px;
+  background: var(--primary-color, #2d5016);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.back-to-top-btn.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.back-to-top-btn:hover {
+  background: var(--secondary-color, #1a6b4a);
+  transform: translateY(-2px);
+}
+
+.back-to-top-btn:active {
+  transform: scale(0.95);
+}
+
+/* Adjust position when PWA banner is visible */
+.pwa-install-banner.visible ~ .back-to-top-btn,
+body:has(.pwa-install-banner.visible) .back-to-top-btn {
+  bottom: 90px;
+}
+
+/* Safe area for notched devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .back-to-top-btn {
+    bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+  
+  body:has(.pwa-install-banner.visible) .back-to-top-btn {
+    bottom: calc(90px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ========================================
+   PWA INSTALL BANNER
+   ======================================== */
+
+.pwa-install-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-elevated, white);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 9500;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.pwa-install-banner.visible {
+  transform: translateY(0);
+}
+
+.pwa-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.pwa-banner-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.pwa-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.pwa-banner-text strong {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  margin-bottom: 2px;
+}
+
+.pwa-banner-text span {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pwa-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pwa-install-btn {
+  background: var(--primary-color, #2d5016);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.pwa-install-btn:hover {
+  background: var(--secondary-color, #1a6b4a);
+}
+
+.pwa-install-btn:active {
+  transform: scale(0.95);
+}
+
+.pwa-dismiss-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.pwa-dismiss-btn:hover {
+  color: var(--text-dark);
+}
+
+/* ========================================
+   PWA INSTALL MODAL
+   ======================================== */
+
+.pwa-install-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.pwa-install-modal.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.pwa-modal-content {
+  background: var(--bg-elevated, white);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 340px;
+  width: 100%;
+  position: relative;
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+  box-shadow: var(--shadow-lg);
+}
+
+.pwa-install-modal.visible .pwa-modal-content {
+  transform: scale(1);
+}
+
+.pwa-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.pwa-modal-close:hover {
+  color: var(--text-dark);
+}
+
+.pwa-modal-content h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.25rem;
+  color: var(--text-dark);
+  padding-right: 30px;
+}
+
+.pwa-install-steps {
+  margin: 0 0 16px 0;
+  padding-left: 24px;
+  color: var(--text-dark);
+}
+
+.pwa-install-steps li {
+  margin-bottom: 12px;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.pwa-install-steps li:last-child {
+  margin-bottom: 0;
+}
+
+.ios-share-icon {
+  display: inline-block;
+  font-size: 1.1rem;
+}
+
+.pwa-install-note {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin: 16px 0;
+  padding: 12px;
+  background: var(--hover-bg, #f8f9fa);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.pwa-modal-btn {
+  width: 100%;
+  background: var(--primary-color, #2d5016);
+  color: white;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.pwa-modal-btn:hover {
+  background: var(--secondary-color, #1a6b4a);
+}
+
+/* ========================================
+   MOBILE NAV INSTALL APP LINK
+   ======================================== */
+
+.mobile-nav-item.install-app-link {
+  color: var(--primary-color, #2d5016);
+  font-weight: 600;
+}
+
+.mobile-nav-item.install-app-link:hover {
+  background-color: rgba(45, 80, 22, 0.1);
+}
+
+/* Hide install link when app is installed */
+body.pwa-installed .install-app-link {
+  display: none !important;
+}
+
+/* ========================================
+   MOBILE NAVIGATION
+   REMOVED - Now handled by nav-styles.css
+   ======================================== */
+
+/* Mobile Navigation Styles */
+@media (max-width: 768px) {
+  /* Hide desktop navigation on mobile */
+  .back-nav {
+    display: none !important;
+  }
+  
+  /* Keep filter sections visible on mobile */
+  .filters-nav .filters-section {
+    display: flex !important;
+  }
+  
+  /* Touch Target Improvements */
+  .card {
+    padding: 2rem 1.5rem !important;
+    margin-bottom: 1rem;
+  }
+  
+  .card-link {
+    min-height: 120px;
+  }
+  
+  /* Visual feedback on touch */
+  .card:active {
+    transform: scale(0.98) !important;
+    opacity: 0.9;
+  }
+  
+  /* Ensure card hover doesn't interfere on mobile */
+  .card:hover {
+    transform: translateY(0) !important;
+  }
+ 
+  /* News Banner Optimization */
+  .news-banner {
+    font-size: 0.9rem !important;
+  }
+  
+  .news-content {
+    animation-duration: 60s !important;
+    will-change: transform;
+  }
+  
+  /* Pause on tap, not just hover */
+  .news-banner:active .news-content {
+    animation-play-state: paused;
+  }
+
+  /* Sticky Search Bar */
+  .global-search-container {
+    position: sticky;
+    top: 60px; /* Account for fixed mobile nav */
+    z-index: 90;
+    margin: 0 !important;
+    border-radius: 0;
+    box-shadow: var(--shadow-md);
+    background: var(--bg-elevated, white);
+  }
+  
+  .search-wrapper {
+    border-radius: 0;
+  }
+  
+  .search-results {
+    max-height: 60vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Card Grid Optimization */
+  .cards-grid {
+    gap: 1rem !important;
+    padding: 0.5rem;
+  }
+  
+  /* Simplify card decorations */
+  .card::before {
+    height: 3px !important;
+  }
+  
+  .card-icon {
+    font-size: 2rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+  
+  .card-title {
+    font-size: 1.2rem !important;
+    font-weight: 700 !important;
+  }
+  
+  .card-description {
+    font-size: 0.9rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0.75rem !important;
+    color: var(--text-light);
+  }
+  
+  .card-stats {
+    font-size: 0.8rem !important;
+  }
+  
+  .card-stats div {
+    margin-bottom: 0.25rem;
+  }
+
+  /* Quick Access Mobile Layout */
+  .quick-access {
+    padding: 1.5rem 1rem !important;
+    margin: 1rem !important;
+  }
+  
+  .quick-access h3 {
+    margin-bottom: 1rem !important;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+  }
+  
+  .quick-nav {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .nav-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 1rem !important;
+    font-size: 0.95rem !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    font-weight: 600 !important;
+  }
+
+  /* Section Title Optimization */
+  .section-title {
+    font-size: 1.4rem !important;
+    margin-bottom: 0.75rem !important;
+    padding-bottom: 0.4rem !important;
+    font-weight: 700 !important;
+  }
+  
+  .section-title::before {
+    width: 4px !important;
+    height: 24px !important;
+    margin-right: 0.75rem !important;
+  }
+
+  /* Safe Area Insets for Notched Devices */
+  .header,
+  .global-search-container,
+  .dashboard-container {
+    padding-left: max(1rem, env(safe-area-inset-left)) !important;
+    padding-right: max(1rem, env(safe-area-inset-right)) !important;
+  }
+  
+  .header {
+    padding-top: max(3rem, calc(3rem + env(safe-area-inset-top))) !important;
+  }
+}
+
+/* ========================================
+   RESPONSIVE TABLES
+   ======================================== */
+
+/* Swipe indicator for mobile tables */
+.swipe-indicator {
+  text-align: center;
+  padding: 0.5rem;
+  background: #fff3cd;
+  color: #856404;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #ffeaa7;
+  display: none;
+  border-radius: 8px 8px 0 0;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  /* Show swipe indicators on mobile */
+  .swipe-indicator {
+    display: block;
+  }
+
+  /* Make tables horizontally scrollable */
+  .responsive-table-wrapper,
+  .standings-table,
+  .schedule-table,
+  .bracket-table,
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0 0 8px 8px;
+  }
+
+  /* Smaller font sizes for mobile tables */
+  .standings-table,
+  .schedule-table,
+  .bracket-table {
+    font-size: 0.75rem;
+  }
+
+  .standings-table th,
+  .schedule-table th,
+  .bracket-table th,
+  .standings-table td,
+  .schedule-table td,
+  .bracket-table td {
+    padding: 6px 4px;
+    font-size: 0.75rem;
+  }
+
+  /* Ensure minimum column widths on mobile */
+  .standings-table th,
+  .standings-table td {
+    min-width: 40px;
+  }
+
+  .team-name {
+    min-width: 80px;
+    font-weight: 600;
+  }
+
+  /* ----------------------------------------
+     FREEZE FIRST COLUMN ON MOBILE TABLES
+     Keeps player/team names visible while scrolling
+     ---------------------------------------- */
+  
+  /* Override border-collapse to enable sticky positioning */
+  table,
+  .standings-table,
+  .schedule-table,
+  .leader-table,
+  .leaders-table,
+  .h2h-grid,
+  .split-table,
+  .opponent-table,
+  .game-log-table,
+  #statsTable,
+  #pitchingTable,
+  #seasonStatsTable,
+  #regularStatsTable,
+  #subStatsTable,
+  #careerStatsTable {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  /* Sticky first column */
+  table th:first-child,
+  table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: white;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Header row first cell needs higher z-index */
+  table thead th:first-child {
+    z-index: 4;
+    /* Background inherited from page's thead/th styles */
+  }
+
+  /* Ensure sticky header stays above frozen column */
+  table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+  }
+
+  /* Alternating row backgrounds for frozen column */
+  table tbody tr:nth-child(even) td:first-child {
+    background: #f8fafc;
+  }
+
+  table tbody tr:nth-child(odd) td:first-child {
+    background: white;
+  }
+
+  /* Hover state for frozen column */
+  table tbody tr:hover td:first-child {
+    background: #f0fdf4;
+  }
+
+  /* Dark themed tables (playoffs, etc) */
+  .bracket-table th:first-child,
+  .bracket-table td:first-child {
+    background: #1a1a1a;
+  }
+
+  .bracket-table tbody tr:nth-child(even) td:first-child {
+    background: #2a2a2a;
+  }
+
+  .bracket-table tbody tr:nth-child(odd) td:first-child {
+    background: #1a1a1a;
+  }
+}
+
+/* ========================================
+   MOBILE LAYOUT ADJUSTMENTS
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Header adjustments */
+  .header h1 {
+    font-size: 2.5rem !important;
+    font-weight: 800 !important;
+  }
+
+  .header p {
+    font-size: 0.95rem !important;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem !important;
+    font-weight: 800 !important;
+  }
+
+  /* Container padding */
+  .container,
+  .dashboard-container {
+    padding: 1rem !important;
+  }
+
+  /* Section adjustments */
+  .section,
+  .section-content {
+    padding: 1rem !important;
+  }
+
+  .section-header {
+    padding: 1rem !important;
+    font-size: 1.2rem !important;
+    font-weight: 700 !important;
+  }
+
+  /* Card grids - stack to 1 column */
+  .cards-grid,
+  .leaders-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Stats summary - 2 columns then 1 */
+  .stats-summary {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .stat-card {
+    padding: 0.75rem !important;
+  }
+
+  .stat-number {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+  }
+
+  .stat-label {
+    font-size: 0.8rem !important;
+    color: var(--text-light);
+  }
+
+  /* Bracket visual - stack vertically */
+  .bracket-visual {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .bracket-round {
+    padding: 0.75rem !important;
+  }
+
+  .bracket-title {
+    font-size: 1rem !important;
+    padding: 0.6rem 0.75rem !important;
+    font-weight: 700 !important;
+  }
+
+  /* Leader list adjustments */
+  .leader-list li {
+    font-size: 0.85rem !important;
+    flex-wrap: wrap;
+  }
+
+  .leader-team {
+    width: 100%;
+    margin-left: 2rem;
+    margin-top: 0.25rem;
+    color: var(--text-light);
+  }
+
+  /* Comparison grids */
+  .comparison-container,
+  .career-comparison {
+    grid-template-columns: 1fr !important;
+  }
+
+  .comparison-divider {
+    display: none !important;
+  }
+
+  /* Milestone tables */
+  .milestone-tables {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+  }
+
+  /* Season containers */
+  .seasons-container {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+}
+
+/* ========================================
+   EXTRA SMALL DEVICES (< 480px)
+   ======================================== */
+
+@media (max-width: 480px) {
+  /* Further reduce text sizes */
+  .header h1 {
+    font-size: 2rem !important;
+  }
+
+  .page-header h1 {
+    font-size: 2rem !important;
+  }
+
+  /* Single column for all grids */
+  .stats-summary {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Smaller table text */
+  .standings-table,
+  .schedule-table,
+  .bracket-table {
+    font-size: 0.7rem !important;
+  }
+
+  .standings-table th,
+  .schedule-table th,
+  .bracket-table th,
+  .standings-table td,
+  .schedule-table td,
+  .bracket-table td {
+    padding: 4px 2px !important;
+    font-size: 0.7rem !important;
+  }
+  
+  /* PWA banner adjustments for small screens */
+  .pwa-banner-content {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  
+  .pwa-banner-icon {
+    font-size: 1.5rem;
+  }
+  
+  .pwa-banner-text strong {
+    font-size: 0.85rem;
+  }
+  
+  .pwa-banner-text span {
+    font-size: 0.75rem;
+  }
+  
+  .pwa-install-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+}
+
+/* ========================================
+   TOUCH-FRIENDLY INTERACTIONS
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Ensure all interactive elements are touch-friendly */
+  button,
+  .nav-btn,
+  .mobile-button,
+  a.card-link,
+  .filter-select,
+  input[type="text"],
+  input[type="search"],
+  select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Remove hover effects on mobile, use active states */
+  .card:hover,
+  .nav-link:hover {
+    transform: none;
+  }
+
+  .card:active {
+    opacity: 0.8;
+  }
+
+  /* Better tap highlighting - use brand color */
+  * {
+    -webkit-tap-highlight-color: rgba(45, 80, 22, 0.2);
+  }
+
+  /* Prevent double-tap zoom on interactive elements */
+  button,
+  a,
+  .card,
+  .card-link,
+  .nav-btn,
+  .nav-link,
+  .mobile-nav-item,
+  input,
+  select,
+  label {
+    touch-action: manipulation;
+  }
+}
+
+/* ========================================
+   LOADING STATES
+   ======================================== */
+
+@media (max-width: 768px) {
+  .loading {
+    padding: 2rem 1rem !important;
+    font-size: 0.9rem !important;
+    color: var(--text-light);
+  }
+
+  .no-data {
+    padding: 1.5rem 1rem !important;
+    font-size: 0.9rem !important;
+    color: var(--text-light);
+  }
+}
+
+/* ========================================
+   SEARCH BAR MOBILE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .global-search-container,
+  .mobile-search-container {
+    margin: 1rem !important;
+  }
+
+  .global-search-input,
+  .mobile-search-input {
+    font-size: 1rem !important;
+    padding: 1rem 3rem 1rem 3rem !important;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY & PERFORMANCE
+   ======================================== */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  /* Special handling for news banner */
+  .news-content {
+    animation: none !important;
+    display: block;
+    overflow-x: auto;
+    white-space: normal;
+    padding: 12px 20px;
+  }
+  
+  .news-banner {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Remove transform effects */
+  .card:hover,
+  .card:active {
+    transform: none !important;
+  }
+  
+  .nav-btn:hover {
+    transform: none !important;
+  }
+  
+  /* Keep essential functionality, remove decorative animations */
+  .mobile-nav-menu {
+    transition: none !important;
+  }
+  
+  /* PWA elements without animation */
+  .pwa-install-banner,
+  .pwa-install-modal,
+  .pwa-modal-content,
+  .back-to-top-btn {
+    transition: none !important;
+  }
+}
+
+/* Dark mode support - uses data-theme attribute set by theme-toggle.js */
+[data-theme="dark"] .swipe-indicator {
+  background: #4a5568;
+  color: #e2e8f0;
+  border-bottom-color: var(--text-light);
+}
+
+[data-theme="dark"] .pwa-install-banner {
+  background: #1a202c;
+  border-top: 1px solid #2d3748;
+}
+
+[data-theme="dark"] .pwa-banner-text strong {
+  color: #f7fafc;
+}
+
+[data-theme="dark"] .pwa-banner-text span {
+  color: #a0aec0;
+}
+
+[data-theme="dark"] .pwa-modal-content {
+  background: #1a202c;
+}
+
+[data-theme="dark"] .pwa-modal-content h3,
+[data-theme="dark"] .pwa-install-steps {
+  color: #f7fafc;
+}
+
+[data-theme="dark"] .pwa-install-note {
+  background: #2d3748;
+  color: #a0aec0;
+}
+
+/* Also support prefers-color-scheme for users without saved preference */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .swipe-indicator {
+    background: #4a5568;
+    color: #e2e8f0;
+    border-bottom-color: var(--text-light);
+  }
+  
+  :root:not([data-theme="light"]) .pwa-install-banner {
+    background: #1a202c;
+    border-top: 1px solid #2d3748;
+  }
+  
+  :root:not([data-theme="light"]) .pwa-banner-text strong {
+    color: #f7fafc;
+  }
+  
+  :root:not([data-theme="light"]) .pwa-banner-text span {
+    color: #a0aec0;
+  }
+  
+  :root:not([data-theme="light"]) .pwa-modal-content {
+    background: #1a202c;
+  }
+  
+  :root:not([data-theme="light"]) .pwa-modal-content h3,
+  :root:not([data-theme="light"]) .pwa-install-steps {
+    color: #f7fafc;
+  }
+  
+  :root:not([data-theme="light"]) .pwa-install-note {
+    background: #2d3748;
+    color: #a0aec0;
+  }
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+/* Hide on mobile */
+.hide-mobile {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Show only on mobile */
+.show-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .show-mobile {
+    display: block !important;
+  }
+}
+
+/* Mobile text sizes */
+@media (max-width: 768px) {
+  .mobile-text-sm {
+    font-size: 0.875rem !important;
+  }
+
+  .mobile-text-xs {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* Mobile padding utilities */
+@media (max-width: 768px) {
+  .mobile-p-0 {
+    padding: 0 !important;
+  }
+
+  .mobile-p-1 {
+    padding: 0.5rem !important;
+  }
+
+  .mobile-p-2 {
+    padding: 1rem !important;
+  }
+
+  .mobile-m-0 {
+    margin: 0 !important;
+  }
+
+  .mobile-m-1 {
+    margin: 0.5rem !important;
+  }
+
+  .mobile-m-2 {
+    margin: 1rem !important;
+  }
+}
+
+/* Screen reader only (for accessibility) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ========================================
+   TOAST NOTIFICATIONS
+   ======================================== */
+
+.share-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--text-dark, #2d3748);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg, 0 12px 32px rgba(0,0,0,0.16));
+  z-index: 10000;
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  max-width: calc(100vw - 40px);
+}
+
+.share-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.share-toast-success {
+  background: var(--secondary-color, #1a6b4a);
+}
+
+.share-toast-error {
+  background: #dc2626;
+}
+
+.share-toast-info {
+  background: #2563eb;
+}
+
+.toast-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  flex: 1;
+}
+
+/* ========================================
+   FLOATING SHARE BUTTON
+   ======================================== */
+
+.floating-share-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--primary-color, #2d5016);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.8);
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease, background 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 8999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floating-share-btn.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+}
+
+.floating-share-btn:hover {
+  background: var(--secondary-color, #1a6b4a);
+  transform: scale(1.1);
+}
+
+.floating-share-btn:active {
+  transform: scale(0.95);
+}
+
+.floating-share-btn .share-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Adjust position when Back to Top is visible */
+.back-to-top-btn.visible ~ .floating-share-btn,
+body:has(.back-to-top-btn.visible) .floating-share-btn {
+  /* Share stays on right, Back to Top on left - no conflict */
+}
+
+/* Adjust when PWA banner is visible */
+.pwa-install-banner.visible ~ .floating-share-btn,
+body:has(.pwa-install-banner.visible) .floating-share-btn {
+  bottom: 90px;
+}
+
+/* Safe area for notched devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .floating-share-btn {
+    bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+  
+  body:has(.pwa-install-banner.visible) .floating-share-btn {
+    bottom: calc(90px + env(safe-area-inset-bottom));
+  }
+  
+  .share-toast {
+    bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Hide share button when scrolling quickly (optional enhancement) */
+@media (max-width: 768px) {
+  .share-toast {
+    bottom: 80px;
+    font-size: 0.9rem;
+    padding: 10px 16px;
+  }
+}
+
+/* Dark mode support */
+[data-theme="dark"] .share-toast {
+  background: #374151;
+}
+
+[data-theme="dark"] .share-toast-success {
+  background: var(--secondary-color, #1a6b4a);
+}
+
+[data-theme="dark"] .floating-share-btn {
+  background: var(--primary-color, #2d5016);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+  .mobile-nav-container,
+  .hamburger-menu,
+  .back-nav,
+  .swipe-indicator,
+  .back-to-top-btn,
+  .pwa-install-banner,
+  .pwa-install-modal,
+  .floating-share-btn,
+  .share-toast {
+    display: none !important;
+  }
+
+  .mobile-nav-menu {
+    display: none !important;
+  }
+
+  /* Ensure tables print properly */
+  .standings-table,
+  .schedule-table,
+  .bracket-table {
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+}

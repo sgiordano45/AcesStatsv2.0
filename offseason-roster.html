@@ -1,0 +1,2786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2d5016">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mountainside Aces">
+  <title>Offseason Roster Planning | Mountainside Aces</title>
+  
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --secondary-color: #1a6b4a;
+      --accent-color: #ffd700;
+      --card-bg: #ffffff;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+      --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      min-height: 100vh;
+      color: var(--text-dark);
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      gap: 1rem;
+    }
+
+    .loading-overlay.hidden {
+      display: none;
+    }
+
+    .softball-spinner::before {
+      content: '⚾';
+      font-size: 80px;
+      animation: spin 1.5s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.1); }
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      box-shadow: var(--shadow-lg);
+      border-bottom: 3px solid var(--accent-color);
+    }
+
+    .header-content {
+      max-width: 2000px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .back-btn {
+      color: white;
+      text-decoration: none;
+      padding: 0.75rem;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .back-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateX(-4px);
+    }
+
+    .header-title h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 0.25rem;
+    }
+
+    .header-title p {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-toggle {
+      background: #9333ea;
+      color: white;
+    }
+
+    .btn-toggle:hover {
+      background: #7e22ce;
+    }
+
+    .btn-save {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-save:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-changelog {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .btn-changelog:hover {
+      background: #d97706;
+    }
+
+    /* Live Editors Badge */
+    .live-editors {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(255,255,255,0.2);
+      border-radius: 12px;
+      color: white;
+      font-size: 0.85rem;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .editor-avatars {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .editor-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: white;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    /* Main Layout */
+    .main-layout {
+      display: flex;
+      max-width: 2000px;
+      margin: 0 auto;
+      gap: 1.5rem;
+      padding: 2rem;
+    }
+
+    .roster-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .changelog-sidebar {
+      width: 320px;
+      flex-shrink: 0;
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      max-height: calc(100vh - 200px);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 2rem;
+    }
+
+    .changelog-sidebar.mobile-hidden {
+      display: none;
+    }
+
+    .changelog-header {
+      padding: 1.5rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .changelog-header h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .changelog-header p {
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+
+    .changelog-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
+    .changelog-item {
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+      background: #f9fafb;
+      border-radius: 8px;
+      border-left: 3px solid #6366f1;
+      font-size: 0.85rem;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .changelog-item .user {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .changelog-item .time {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-top: 0.25rem;
+    }
+
+    .changelog-empty {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-light);
+    }
+
+    /* Past Player Add Section */
+    .add-player-section {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .add-player-section h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 1rem;
+    }
+
+    .add-player-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    .add-player-tab {
+      padding: 0.75rem 1.25rem;
+      border: none;
+      background: transparent;
+      color: var(--text-light);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border-radius: 8px 8px 0 0;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .add-player-tab:hover {
+      background: #f1f5f9;
+      color: var(--text-dark);
+    }
+
+    .add-player-tab.active {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .add-player-form {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+
+    .form-group {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 0.9rem;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      background: white;
+      color: var(--text-dark);
+      transition: all 0.3s ease;
+    }
+
+    .form-group select:focus,
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+    }
+
+    .form-group input::placeholder {
+      color: #a0aec0;
+    }
+
+    .btn-add {
+      background: #16a34a;
+      color: white;
+    }
+
+    .btn-add:hover {
+      background: #15803d;
+    }
+
+    .btn-create {
+      background: #8b5cf6;
+      color: white;
+    }
+
+    .btn-create:hover {
+      background: #7c3aed;
+    }
+
+    .player-preview {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border: 2px solid #60a5fa;
+      border-radius: 12px;
+    }
+
+    .player-preview p {
+      font-size: 0.85rem;
+      color: #1e3a8a;
+    }
+
+    .new-player-info {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+      border: 2px solid #c4b5fd;
+      border-radius: 12px;
+    }
+
+    .new-player-info p {
+      font-size: 0.85rem;
+      color: #5b21b6;
+      margin: 0;
+    }
+
+    /* New player badge on player cards */
+    .player-card.new-player {
+      background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+      border: 2px solid #c4b5fd;
+    }
+
+    .new-badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      background: #8b5cf6;
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      border-radius: 4px;
+      margin-left: 0.5rem;
+      text-transform: uppercase;
+    }
+
+    .oot-badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      background: #c53030;
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      border-radius: 4px;
+      margin-left: 0.3rem;
+      text-transform: uppercase;
+    }
+
+    .player-card.oot-player {
+      border-left: 3px solid #c53030;
+    }
+
+    .u30-badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      background: #2b6cb0;
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      border-radius: 4px;
+      margin-left: 0.3rem;
+      text-transform: uppercase;
+    }
+
+    .player-card.u30-player {
+      border-right: 3px solid #2b6cb0;
+    }
+
+    /* Teams Grid */
+    .teams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .team-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .team-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .team-header {
+      background: linear-gradient(135deg, var(--text-dark) 0%, #1a202c 100%);
+      padding: 1rem;
+      color: white;
+    }
+
+    .team-header h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .team-header p {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .team-players {
+      padding: 1rem;
+      min-height: 200px;
+    }
+
+    .player-card {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border: 2px solid #86efac;
+      border-radius: 12px;
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+      cursor: move;
+      transition: all 0.3s ease;
+    }
+
+    .player-card:hover {
+      transform: translateX(4px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .player-card.dragging {
+      opacity: 0.5;
+    }
+
+    .player-name {
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 0.25rem;
+    }
+
+    .player-stats {
+      display: flex;
+      gap: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+
+    .empty-slot {
+      background: #f9fafb;
+      border: 2px dashed #d1d5db;
+      border-radius: 12px;
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+      text-align: center;
+      color: var(--text-light);
+      font-size: 0.85rem;
+    }
+
+    .add-player-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      transition: all 0.3s ease;
+    }
+
+    .add-player-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Unavailable Zone */
+    .unavailable-zone {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border: 2px dashed #ef4444;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .unavailable-zone h3 {
+      color: #991b1b;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .unavailable-players-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .unavailable-player {
+      background: white;
+      border: 2px solid #fca5a5;
+    }
+
+    .empty-unavailable {
+      text-align: center;
+      padding: 2rem;
+      color: #991b1b;
+      font-style: italic;
+    }
+
+    /* Unassigned Players Zone */
+    .unassigned-zone {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border: 2px dashed #3b82f6;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .unassigned-zone h3 {
+      color: #1e40af;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .unassigned-zone .zone-subtitle {
+      color: #3b82f6;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .unassigned-players-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .unassigned-player {
+      background: white;
+      border: 2px solid #93c5fd;
+    }
+
+    .unassigned-player .player-name {
+      color: #1e40af;
+    }
+
+    .unassigned-player .import-badge {
+      display: inline-block;
+      background: #3b82f6;
+      color: white;
+      font-size: 0.65rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      margin-left: 0.5rem;
+      font-weight: 600;
+    }
+
+    .unassigned-zone.drag-over {
+      border-color: #2b6cb0 !important;
+      background: #ebf8ff !important;
+    }
+
+    .empty-unassigned {
+      text-align: center;
+      padding: 2rem;
+      color: #1e40af;
+      font-style: italic;
+    }
+
+    /* Instructions */
+    .instructions {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border: 2px solid #60a5fa;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .instructions h3 {
+      color: #1e3a8a;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .instructions ul {
+      margin-left: 1.5rem;
+      color: #1e40af;
+    }
+
+    .instructions li {
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    /* Create Team Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .modal-body .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .modal-body label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-dark);
+    }
+
+    .modal-body input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s ease;
+    }
+
+    .modal-body input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    .modal-info {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.85rem;
+      color: #166534;
+      margin-bottom: 1.25rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+
+    .modal-actions .btn {
+      padding: 0.75rem 1.5rem;
+    }
+
+    .btn-create-team {
+      background: #9333ea;
+      color: white;
+    }
+
+    .btn-create-team:hover {
+      background: #7e22ce;
+    }
+
+    /* Load Season Dropdown */
+    .load-season-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .load-season-select {
+      appearance: none;
+      background: #f59e0b;
+      color: white;
+      border: none;
+      padding: 0.75rem 2.5rem 0.75rem 1rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .load-season-select:hover {
+      background: #d97706;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .load-season-select:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+    }
+
+    .load-season-wrapper::after {
+      content: '▼';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: white;
+      font-size: 0.7rem;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .main-layout {
+        flex-direction: column;
+      }
+
+      .changelog-sidebar {
+        width: 100%;
+        max-height: 400px;
+        position: static;
+      }
+
+      .changelog-sidebar.mobile-hidden {
+        display: flex;
+      }
+
+      .teams-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header-content {
+        padding: 1rem;
+      }
+
+      .header-title h1 {
+        font-size: 1.5rem;
+      }
+
+      .btn {
+        font-size: 0.85rem;
+        padding: 0.6rem 1rem;
+      }
+    }
+
+    /* Permission Denied */
+    .permission-denied {
+      max-width: 600px;
+      margin: 4rem auto;
+      padding: 2rem;
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+    }
+
+    .permission-denied h2 {
+      color: #dc2626;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .permission-denied p {
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+    }
+  </style>
+  <link rel="stylesheet" href="mobile-enhancements.css">
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="softball-spinner"></div>
+    <p style="font-size: 1.1rem; font-weight: 600; color: var(--primary-color);">Loading Offseason Planning...</p>
+  </div>
+
+  <!-- Main Content (will be filled by JavaScript) -->
+  <div id="appContent"></div>
+
+  <!-- Create Team Modal -->
+  <div class="modal-overlay" id="createTeamModal">
+    <div class="modal-content">
+      <div class="modal-header">➕ Create New Team</div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="newTeamName">Team Name</label>
+          <input type="text" id="newTeamName" placeholder="e.g., Army, Navy, Carolina" maxlength="30">
+        </div>
+        <div class="modal-info" id="rosterSizeInfo">
+          Max roster will be set to <strong>16 players</strong> (Fall → Summer)
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="hideCreateTeamModal()">Cancel</button>
+        <button class="btn btn-create-team" onclick="createNewTeam()">Create Team</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Player Context Menu -->
+  <div id="playerContextMenu" style="display:none; position:fixed; z-index:9999; background:#fff; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.15); min-width:160px; overflow:hidden;">
+    <div id="ctxToggleOOT" style="padding:10px 16px; cursor:pointer; font-size:14px; font-weight:500; color:#2d3748;" onmouseenter="this.style.background='#f7fafc'" onmouseleave="this.style.background='#fff'">Mark as OOT</div>
+    <div id="ctxToggleU30" style="padding:10px 16px; cursor:pointer; font-size:14px; font-weight:500; color:#2b6cb0;" onmouseenter="this.style.background='#ebf8ff'" onmouseleave="this.style.background='#fff'">Mark as U30</div>
+    <div id="ctxRemove" style="padding:10px 16px; cursor:pointer; font-size:14px; color:#e53e3e; border-top:1px solid #f0f0f0;" onmouseenter="this.style.background='#fff5f5'" onmouseleave="this.style.background='#fff'">Remove player</div>
+  </div>
+
+  <script type="module">
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { 
+      doc, 
+      getDoc, 
+      getDocs,
+      setDoc, 
+      updateDoc, 
+      deleteDoc,
+      addDoc,
+      onSnapshot,
+      collection,
+      query,
+      where,
+      orderBy,
+      limit,
+      serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { db } from './firebase-data.js';
+    import { getCurrentSeason, getAllPlayerStatsOptimized, getSeasonPlayerStatsOptimized } from './firebase-data.js';
+    
+    const auth = getAuth();
+    
+    // Global state
+    let currentUser = null;
+    let userProfile = null;
+    let hasPermission = false;
+    let teams = {};
+    let unavailablePlayers = [];
+    let pastPlayers = []; // Players not in current season
+    let unassignedPlayers = []; // Players imported but not yet assigned to teams
+    let seasonType = 'fall-to-summer'; // or 'summer-to-fall'
+    let leagueMaxRoster = null; // null = use seasonType fallback
+    let draggedPlayer = null;
+    let changeLog = [];
+    let activeEditors = [];
+    let availableSeasons = []; // For load from season dropdown
+    let unsubscribeRoster = null;
+    let unsubscribeChangelog = null;
+    let unsubscribePresence = null;
+    let changelogVisible = true;
+
+    const OFFSEASON_DOC_ID = 'current'; // Use 'current' as the active offseason planning doc
+    
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    
+    onAuthStateChanged(auth, async (user) => {
+      console.log('🔐 Auth state changed, user:', user ? user.email : 'none');
+      
+      if (user) {
+        currentUser = user;
+        console.log('👤 Loading user profile for:', user.uid);
+        await loadUserProfile();
+        
+        console.log('🔒 Permission check result:', hasPermission);
+        
+        if (hasPermission) {
+          console.log('✅ User has permission, initializing offseason planning...');
+          await loadAvailableSeasons();
+          await initializeOffseasonPlanning();
+          await setupPresenceTracking();
+        } else {
+          console.log('❌ User does not have permission');
+          showPermissionDenied();
+        }
+      } else {
+        console.log('❌ No user, redirecting to signin');
+        window.location.href = 'signin.html';
+      }
+    });
+    
+    async function loadUserProfile() {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        if (userDoc.exists()) {
+          userProfile = userDoc.data();
+          
+          // Check permissions: Captain, League Staff, or Admin
+          hasPermission = userProfile.isCaptain || 
+                         userProfile.isLeagueStaff === true ||
+                         userProfile.isAdmin === true ||
+                         userProfile.userRole === 'staff' || 
+                         userProfile.userRole === 'admin' ||
+                         userProfile.role === 'admin' ||
+                         userProfile.role === 'staff';
+          
+          console.log('✅ User profile loaded:', userProfile);
+          console.log('🔒 Has permission:', hasPermission);
+        }
+      } catch (error) {
+        console.error('❌ Error loading user profile:', error);
+      }
+    }
+    
+    function showPermissionDenied() {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      document.getElementById('appContent').innerHTML = `
+        <div class="permission-denied">
+          <h2>🔒 Access Restricted</h2>
+          <p>This page is only accessible to team captains, league staff, and administrators.</p>
+          <p>If you believe you should have access, please contact a league administrator.</p>
+          <a href="index.html" class="btn btn-save" style="display: inline-flex; text-decoration: none; margin-top: 1rem;">
+            ← Return to Home
+          </a>
+        </div>
+      `;
+    }
+    
+    // ========================================
+    // FIREBASE OFFSEASON PLANNING
+    // ========================================
+    
+    async function loadPastPlayers() {
+      try {
+        console.log('🔍 Loading past players list...');
+        
+        // Get current season to identify current players
+        const currentSeason = await getCurrentSeason();
+        if (!currentSeason) {
+          console.log('⚠️ No current season found, cannot determine past players');
+          pastPlayers = [];
+          return;
+        }
+        
+        // Get current season players
+        const seasonPlayers = await getSeasonPlayerStatsOptimized(currentSeason.id);
+        const currentSeasonPlayerNames = new Set();
+        seasonPlayers.forEach(player => {
+          const name = player.playerName || player.name || player.id;
+          currentSeasonPlayerNames.add(name);
+        });
+        
+        console.log(`📊 Current season has ${currentSeasonPlayerNames.size} active players`);
+        
+        // Get all player stats
+        const allPlayerStats = await getAllPlayerStatsOptimized();
+        console.log(`📊 Total players in system: ${allPlayerStats.length}`);
+        
+        // Identify past players (not in current season)
+        pastPlayers = allPlayerStats
+          .filter(player => !currentSeasonPlayerNames.has(player.name))
+          .map(player => {
+            // Find the most recent season they played
+            let lastSeason = 'Unknown';
+            let lastTeam = 'Unknown';
+            
+            if (player.seasons && typeof player.seasons === 'object') {
+              const seasonKeys = Object.keys(player.seasons).sort().reverse();
+              if (seasonKeys.length > 0) {
+                const recentSeasonKey = seasonKeys[0];
+                lastSeason = recentSeasonKey;
+                lastTeam = player.seasons[recentSeasonKey].team || 'Unknown';
+              }
+            }
+            
+            return {
+              id: player.name.toLowerCase().replace(/\s+/g, '_'),
+              name: player.name,
+              ba: player.career?.battingAverage?.toFixed(3) || '.000',
+              acesBPI: player.career?.acesBPI?.toFixed(1) || '0.0',
+              lastSeason: lastSeason,
+              lastTeam: lastTeam
+            };
+          })
+          .sort((a, b) => b.lastSeason.localeCompare(a.lastSeason)); // Sort by most recent
+        
+        console.log(`✅ Found ${pastPlayers.length} past players not in current season`);
+      } catch (error) {
+        console.error('❌ Error loading past players:', error);
+        pastPlayers = [];
+      }
+    }
+    
+    async function initializeOffseasonPlanning() {
+      console.log('🚀 Starting initializeOffseasonPlanning...');
+      const offseasonRef = doc(db, 'offseasonRosters', OFFSEASON_DOC_ID);
+      console.log('📄 Offseason document reference:', OFFSEASON_DOC_ID);
+      
+      // Check if offseason planning document exists
+      console.log('🔍 Checking if offseason document exists...');
+      const offseasonDoc = await getDoc(offseasonRef);
+      console.log('📊 Document exists:', offseasonDoc.exists());
+      
+      if (!offseasonDoc.exists()) {
+        // Create initial document from current season rosters
+        console.log('📝 Creating new offseason planning document...');
+        await createInitialOffseasonDoc();
+      } else {
+        // Document exists, but we still need to load past players
+        console.log('📋 Document exists, loading past players list...');
+        await loadPastPlayers();
+      }
+      
+      // Subscribe to real-time updates
+      unsubscribeRoster = onSnapshot(offseasonRef, (doc) => {
+        console.log('📡 Snapshot received, exists:', doc.exists());
+        if (doc.exists()) {
+          const data = doc.data();
+          console.log('📊 Offseason document data:', data);
+          console.log('📊 Teams in document:', Object.keys(data.teams || {}));
+          console.log('📊 First team example:', Object.keys(data.teams || {})[0], data.teams[Object.keys(data.teams || {})[0]]);
+          
+          teams = data.teams || {};
+          unavailablePlayers = data.unavailablePlayers || [];
+          unassignedPlayers = data.unassignedPlayers || [];
+          seasonType = data.seasonType || 'fall-to-summer';
+          leagueMaxRoster = data.leagueMaxRoster || null;
+          
+          console.log('🎯 Loaded into memory - teams:', Object.keys(teams).length);
+          renderApp();
+        } else {
+          console.log('⚠️ Document snapshot says it does not exist');
+        }
+      });
+      
+      // Subscribe to changelog
+      const changelogQuery = query(
+        collection(db, 'offseasonRosters', OFFSEASON_DOC_ID, 'changelog'),
+        orderBy('timestamp', 'desc'),
+        limit(50)
+      );
+      
+      unsubscribeChangelog = onSnapshot(changelogQuery, (snapshot) => {
+        console.log('📋 Changelog snapshot received');
+        console.log('📊 Number of changelog docs:', snapshot.docs.length);
+        console.log('📊 Snapshot empty?', snapshot.empty);
+        
+        changeLog = snapshot.docs.map(doc => {
+          const data = doc.data();
+          console.log('  📝 Changelog entry:', doc.id, data);
+          return {
+            id: doc.id,
+            ...data
+          };
+        });
+        
+        console.log('📋 Final changeLog array length:', changeLog.length);
+        renderChangelog();
+      });
+      
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+    
+    async function createInitialOffseasonDoc() {
+      try {
+        console.log('📝 Creating initial offseason document from current season...');
+        
+        // Get current season
+        console.log('🔍 Calling getCurrentSeason()...');
+        const currentSeason = await getCurrentSeason();
+        console.log('📊 Current season result:', currentSeason);
+        
+        const initialTeams = {};
+        
+        if (currentSeason) {
+          console.log('✅ Found current season:', currentSeason.id);
+          
+          // Get player stats for this season - this is how we know who's on each team
+          console.log('🔍 Loading season player stats...');
+          const seasonPlayers = await getSeasonPlayerStatsOptimized(currentSeason.id);
+          console.log(`✅ Loaded ${seasonPlayers.length} players for season ${currentSeason.id}`);
+          
+          // Get career stats for BA and AcesBPI
+          console.log('🔍 Loading career stats for BA and AcesBPI...');
+          const allPlayerStats = await getAllPlayerStatsOptimized();
+          const playerStatsMap = {};
+          allPlayerStats.forEach(player => {
+            playerStatsMap[player.name] = {
+              ba: player.career?.battingAverage?.toFixed(3) || '.000',
+              acesBPI: player.career?.acesBPI?.toFixed(1) || '0.0'
+            };
+          });
+          console.log(`📊 Created stats map with ${Object.keys(playerStatsMap).length} players`);
+          
+          // Group players by team
+          const teamRosters = {};
+          seasonPlayers.forEach(player => {
+            const playerName = player.playerName || player.name || player.id;
+            const teamName = player.team || player.teamId || player.currentTeam || 'Unknown';
+            
+            if (!teamName || teamName === 'Unknown' || teamName.trim() === '') {
+              console.log(`⚠️ Player ${playerName} has no team assignment, skipping`);
+              return;
+            }
+            
+            if (!teamRosters[teamName]) {
+              teamRosters[teamName] = [];
+            }
+            
+            // Get stats from career data
+            const stats = playerStatsMap[playerName] || { ba: '.000', acesBPI: '0.0' };
+            
+            teamRosters[teamName].push({
+              id: playerName.toLowerCase().replace(/\s+/g, '_'),
+              name: playerName,
+              ba: stats.ba,
+              acesBPI: stats.acesBPI
+            });
+          });
+          
+          console.log(`📊 Built rosters for ${Object.keys(teamRosters).length} teams`);
+          Object.keys(teamRosters).forEach(teamName => {
+            console.log(`  ${teamName}: ${teamRosters[teamName].length} players`);
+          });
+          
+          // Convert to offseason format
+          Object.keys(teamRosters).forEach(teamName => {
+            initialTeams[teamName] = {
+              maxRoster: 16, // Default to fall-to-summer
+              players: teamRosters[teamName]
+            };
+          });
+          
+          // Identify past players (not in current season)
+          console.log('🔍 Identifying past players...');
+          const currentSeasonPlayerNames = new Set();
+          seasonPlayers.forEach(player => {
+            const name = player.playerName || player.name || player.id;
+            currentSeasonPlayerNames.add(name);
+          });
+          
+          pastPlayers = allPlayerStats
+            .filter(player => !currentSeasonPlayerNames.has(player.name))
+            .map(player => {
+              // Find the most recent season they played
+              let lastSeason = 'Unknown';
+              let lastTeam = 'Unknown';
+              
+              if (player.seasons && typeof player.seasons === 'object') {
+                const seasonKeys = Object.keys(player.seasons).sort().reverse();
+                if (seasonKeys.length > 0) {
+                  const recentSeasonKey = seasonKeys[0];
+                  lastSeason = recentSeasonKey;
+                  lastTeam = player.seasons[recentSeasonKey].team || 'Unknown';
+                }
+              }
+              
+              return {
+                id: player.name.toLowerCase().replace(/\s+/g, '_'),
+                name: player.name,
+                ba: player.career?.battingAverage?.toFixed(3) || '.000',
+                acesBPI: player.career?.acesBPI?.toFixed(1) || '0.0',
+                lastSeason: lastSeason,
+                lastTeam: lastTeam
+              };
+            })
+            .sort((a, b) => b.lastSeason.localeCompare(a.lastSeason)); // Sort by most recent
+          
+          console.log(`✅ Found ${pastPlayers.length} past players not in current season`);
+          
+          // If no teams found, create defaults
+          if (Object.keys(initialTeams).length === 0) {
+            console.log('⚠️ No teams found in player stats, creating defaults');
+            ['Team A', 'Team B', 'Team C', 'Team D', 'Team E', 'Team F'].forEach(name => {
+              initialTeams[name] = { maxRoster: 16, players: [] };
+            });
+          } else {
+            console.log(`✅ Successfully built ${Object.keys(initialTeams).length} teams with rosters`);
+          }
+          
+        } else {
+          // Default teams if no season exists
+          console.log('⚠️ No current season found, creating default teams');
+          ['Team A', 'Team B', 'Team C', 'Team D', 'Team E', 'Team F'].forEach(name => {
+            initialTeams[name] = { maxRoster: 16, players: [] };
+          });
+        }
+        
+        console.log('💾 Saving to Firestore...');
+        console.log('📊 Final teams structure:', initialTeams);
+        
+        const offseasonRef = doc(db, 'offseasonRosters', OFFSEASON_DOC_ID);
+        await setDoc(offseasonRef, {
+          teams: initialTeams,
+          unavailablePlayers: [],
+          seasonType: 'fall-to-summer',
+          createdAt: serverTimestamp(),
+          createdBy: currentUser.uid,
+          createdByName: userProfile.displayName || currentUser.email,
+          lastModified: serverTimestamp(),
+          lastModifiedBy: currentUser.uid,
+          lastModifiedByName: userProfile.displayName || currentUser.email
+        });
+        
+        console.log('✅ Initial offseason document created successfully');
+      } catch (error) {
+        console.error('❌ Error creating initial offseason doc:', error);
+        console.error('❌ Error stack:', error.stack);
+        
+        // Create minimal fallback structure
+        console.log('⚠️ Creating fallback structure...');
+        const offseasonRef = doc(db, 'offseasonRosters', OFFSEASON_DOC_ID);
+        await setDoc(offseasonRef, {
+          teams: {
+            'Team A': { maxRoster: 16, players: [] },
+            'Team B': { maxRoster: 16, players: [] },
+            'Team C': { maxRoster: 16, players: [] },
+            'Team D': { maxRoster: 16, players: [] },
+            'Team E': { maxRoster: 16, players: [] },
+            'Team F': { maxRoster: 16, players: [] }
+          },
+          unavailablePlayers: [],
+          seasonType: 'fall-to-summer',
+          createdAt: serverTimestamp(),
+          createdBy: currentUser.uid,
+          createdByName: userProfile.displayName || currentUser.email,
+          lastModified: serverTimestamp(),
+          lastModifiedBy: currentUser.uid,
+          lastModifiedByName: userProfile.displayName || currentUser.email
+        });
+        console.log('✅ Fallback structure created');
+      }
+    }
+    
+    async function saveRosterChanges() {
+      try {
+        const offseasonRef = doc(db, 'offseasonRosters', OFFSEASON_DOC_ID);
+        await updateDoc(offseasonRef, {
+          teams: teams,
+          unavailablePlayers: unavailablePlayers,
+          unassignedPlayers: unassignedPlayers,
+          seasonType: seasonType,
+          leagueMaxRoster: leagueMaxRoster || (seasonType === 'fall-to-summer' ? 16 : 14),
+          lastModified: serverTimestamp(),
+          lastModifiedBy: currentUser.uid,
+          lastModifiedByName: userProfile.displayName || currentUser.email
+        });
+        
+        console.log('✅ Roster changes saved to Firebase');
+        showToast('Changes saved successfully! ✅', 'success');
+      } catch (error) {
+        console.error('❌ Error saving roster changes:', error);
+        showToast('Error saving changes. Please try again.', 'error');
+      }
+    }
+    
+    async function logChange(action, details) {
+      try {
+        const changelogRef = collection(db, 'offseasonRosters', OFFSEASON_DOC_ID, 'changelog');
+        await addDoc(changelogRef, {
+          userId: currentUser.uid,
+          userName: userProfile.displayName || currentUser.email,
+          action: action,
+          details: details,
+          timestamp: serverTimestamp()
+        });
+      } catch (error) {
+        console.error('❌ Error logging change:', error);
+      }
+    }
+    
+    // ========================================
+    // PRESENCE TRACKING
+    // ========================================
+    
+    async function setupPresenceTracking() {
+      const presenceRef = doc(db, 'offseasonRosters', OFFSEASON_DOC_ID, 'presence', currentUser.uid);
+      
+      // Set presence
+      await setDoc(presenceRef, {
+        userId: currentUser.uid,
+        userName: userProfile.displayName || currentUser.email,
+        lastSeen: serverTimestamp(),
+        isActive: true
+      });
+      
+      // Update presence every 30 seconds
+      setInterval(async () => {
+        await updateDoc(presenceRef, {
+          lastSeen: serverTimestamp()
+        });
+      }, 30000);
+      
+      // Clean up on page unload
+      window.addEventListener('beforeunload', async () => {
+        await updateDoc(presenceRef, {
+          isActive: false
+        });
+      });
+      
+      // Subscribe to active editors
+      const presenceQuery = query(
+        collection(db, 'offseasonRosters', OFFSEASON_DOC_ID, 'presence'),
+        where('isActive', '==', true)
+      );
+      
+      unsubscribePresence = onSnapshot(presenceQuery, (snapshot) => {
+        activeEditors = snapshot.docs
+          .map(doc => doc.data())
+          .filter(editor => editor.userId !== currentUser.uid);
+        renderActiveEditors();
+      });
+    }
+    
+    function renderActiveEditors() {
+      const container = document.getElementById('activeEditors');
+      if (!container) return;
+      
+      if (activeEditors.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      
+      container.innerHTML = `
+        <div class="live-editors">
+          <div class="live-dot"></div>
+          <span>${activeEditors.length} other${activeEditors.length > 1 ? 's' : ''} editing</span>
+          <div class="editor-avatars">
+            ${activeEditors.slice(0, 3).map(editor => `
+              <div class="editor-avatar" title="${editor.userName}">
+                ${editor.userName.charAt(0).toUpperCase()}
+              </div>
+            `).join('')}
+            ${activeEditors.length > 3 ? `<div class="editor-avatar">+${activeEditors.length - 3}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+    
+    // ========================================
+    // DRAG AND DROP
+    // ========================================
+    
+    function handleDrop(toTeam) {
+      if (!draggedPlayer) return;
+      
+      const { player, fromTeam } = draggedPlayer;
+      let changeDescription = '';
+      
+      // Handle drop to unavailable
+      if (toTeam === 'unavailable') {
+        if (fromTeam === 'unassigned') {
+          unassignedPlayers = unassignedPlayers.filter(p => p.id !== player.id);
+          unavailablePlayers.push(player);
+          changeDescription = `moved ${player.name} from Unassigned to Unavailable`;
+        } else if (fromTeam !== 'unavailable') {
+          teams[fromTeam].players = teams[fromTeam].players.filter(p => p.id !== player.id);
+          unavailablePlayers.push(player);
+          changeDescription = `moved ${player.name} from ${fromTeam} to Unavailable`;
+        }
+      }
+      // Handle drop from unassigned to team
+      else if (fromTeam === 'unassigned') {
+        if (teams[toTeam] && teams[toTeam].players.length < teams[toTeam].maxRoster) {
+          unassignedPlayers = unassignedPlayers.filter(p => p.id !== player.id);
+          // Add default stats for imported player
+          const playerWithStats = {
+            ...player,
+            ba: player.ba || '.000',
+            acesBPI: player.acesBPI || '0.0'
+          };
+          teams[toTeam].players.push(playerWithStats);
+          changeDescription = `assigned ${player.name} to ${toTeam} (new player)`;
+        }
+      }
+      // Handle drop from unavailable
+      else if (fromTeam === 'unavailable') {
+        if (teams[toTeam].players.length < teams[toTeam].maxRoster) {
+          unavailablePlayers = unavailablePlayers.filter(p => p.id !== player.id);
+          teams[toTeam].players.push(player);
+          changeDescription = `moved ${player.name} from Unavailable to ${toTeam}`;
+        }
+      }
+      // Handle drop from team to unassigned
+      else if (toTeam === 'unassigned' && fromTeam !== 'unassigned') {
+        if (teams[fromTeam]) {
+          teams[fromTeam].players = teams[fromTeam].players.filter(p => p.id !== player.id);
+        }
+        unassignedPlayers.push({ ...player, importedAt: player.importedAt || new Date().toISOString() });
+        changeDescription = `moved ${player.name} from ${fromTeam} to Unassigned`;
+      }
+      // Handle drop between teams
+      else if (fromTeam !== toTeam && teams[toTeam] && teams[toTeam].players.length < teams[toTeam].maxRoster) {
+        teams[fromTeam].players = teams[fromTeam].players.filter(p => p.id !== player.id);
+        teams[toTeam].players.push(player);
+        changeDescription = `moved ${player.name} from ${fromTeam} to ${toTeam}`;
+      }
+      
+      if (changeDescription) {
+        saveRosterChanges();
+        logChange('player_moved', changeDescription);
+      }
+      
+      draggedPlayer = null;
+    }
+    
+    // ========================================
+    // RENDERING
+    // ========================================
+    
+    function renderApp() {
+      document.getElementById('appContent').innerHTML = `
+        <header>
+          <div class="header-content">
+            <div class="header-left">
+              <a href="offseason.html" class="back-btn">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+              </a>
+              <div class="header-title">
+                <h1>🏆 Offseason Roster Planning</h1>
+                <p>Collaborative draft planning for next season</p>
+              </div>
+            </div>
+            <div class="header-actions">
+              <div id="activeEditors"></div>
+              <div style="display:flex;align-items:center;gap:0.4rem;background:rgba(255,255,255,0.15);border-radius:8px;padding:0.35rem 0.65rem;" title="Max roster size for this season">
+                <label for="maxRosterInput" style="color:white;font-size:0.78rem;font-weight:600;white-space:nowrap;margin:0;">Max Roster</label>
+                <input type="number" id="maxRosterInput" min="10" max="25" step="1"
+                  style="width:48px;padding:0.2rem 0.35rem;border-radius:5px;border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.9);font-size:0.85rem;font-weight:700;text-align:center;color:#1a1a1a;"
+                  value="${leagueMaxRoster || (seasonType === 'fall-to-summer' ? 16 : 14)}"
+                  title="Max roster size per team this season">
+              </div>
+              <button class="btn btn-toggle" id="toggleSeasonBtn">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 8h18M3 4h18M3 12h18M3 16h18"/>
+                </svg>
+                <span id="seasonTypeText">${seasonType === 'fall-to-summer' ? 'Fall → Summer' : 'Summer → Fall'} (${leagueMaxRoster || (seasonType === 'fall-to-summer' ? 16 : 14)} spots)</span>
+              </button>
+              <button class="btn btn-changelog" id="toggleChangelogBtn">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span class="hide-mobile">Change Log</span>
+              </button>
+              <button class="btn btn-create-team" id="createTeamBtn" onclick="showCreateTeamModal()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                <span class="hide-mobile">New Team</span>
+              </button>
+              <button class="btn btn-save" id="saveBtn">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                Save
+              </button>
+              <button class="btn" id="resetBtn" style="background: #dc2626; color: white;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 4v6h6M23 20v-6h-6"/>
+                  <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                </svg>
+                Reset from Current Season
+              </button>
+              <div class="load-season-wrapper">
+                <select class="load-season-select" id="loadSeasonSelect" onchange="handleLoadSeasonChange(this.value)">
+                  <option value="">📅 Load from Season...</option>
+                </select>
+              </div>
+              <a href="draft.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:var(--accent-color);color:#1a1a1a;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.88rem;white-space:nowrap;transition:opacity 0.15s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🏆 Go to Draft</a>
+              <button onclick="refreshAllStats()" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:rgba(255,255,255,0.12);color:white;border-radius:10px;border:1px solid rgba(255,255,255,0.25);font-weight:700;font-size:0.88rem;white-space:nowrap;cursor:pointer;">🔄 Refresh Stats</button>
+            </div>
+          </div>
+        </header>
+
+        <div class="main-layout">
+          <div class="roster-content">
+            <div class="instructions">
+              <h3>📋 How to Use</h3>
+              <ul>
+                <li><strong>Drag & Drop:</strong> Move players between teams</li>
+                <li><strong>Toggle Season Type:</strong> Switch between Fall→Summer (16 spots) and Summer→Fall (14 spots)</li>
+                <li id="unavailableInstruction" style="${seasonType === 'summer-to-fall' ? 'display: list-item;' : 'display: none;'}"><strong>Unavailable Players:</strong> Drag players here who won't play next season</li>
+                <li><strong>Save Changes:</strong> All captains/staff see updates in real-time</li>
+                <li><strong>Load from Season:</strong> Kickstart planning by loading rosters from a previous season (keeps unassigned pool)</li>
+                <li><strong>Add Past Players:</strong> Bring back players from previous seasons</li>
+                <li><strong>Create New Players:</strong> Add placeholder entries for new recruits (user accounts will be created when they register)</li>
+                <li><strong>Create New Teams:</strong> Add teams like Army (summer only) or special teams</li>
+              </ul>
+            </div>
+
+            <!-- Add Past Player Section -->
+            <div class="add-player-section">
+              <h3>➕ Add Player to Roster</h3>
+              
+              <div class="add-player-tabs">
+                <button class="add-player-tab active" data-tab="past-player">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Add Past Player
+                </button>
+                <button class="add-player-tab" data-tab="new-player">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M8.5 3a4 4 0 100 8 4 4 0 000-8zM20 8v6M23 11h-6"/>
+                  </svg>
+                  Create New Player
+                </button>
+              </div>
+              
+              <!-- Past Player Tab -->
+              <div id="pastPlayerTab" class="tab-content active">
+                <div class="add-player-form">
+                  <div class="form-group">
+                    <label for="pastPlayerSelect">Past Player (not in current season)</label>
+                    <select id="pastPlayerSelect">
+                      <option value="">Select a player...</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="teamSelect">Add to Team</label>
+                    <select id="teamSelect">
+                      <option value="">Select a team...</option>
+                      <option value="__NEW_TEAM__">➕ Create New Team</option>
+                    </select>
+                  </div>
+                  <button class="btn btn-add" id="addPastPlayerBtn" disabled>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Add Player
+                  </button>
+                </div>
+                <div id="playerPreview" class="player-preview" style="display: none;">
+                  <p><strong>Preview:</strong></p>
+                  <p>Player: <strong id="previewName"></strong></p>
+                  <p>BA: <strong id="previewBA"></strong> | AcesBPI: <strong id="previewBPI"></strong></p>
+                  <p>Last Seen: <strong id="previewSeason"></strong> with <strong id="previewTeam"></strong></p>
+                </div>
+              </div>
+              
+              <!-- New Player Tab -->
+              <div id="newPlayerTab" class="tab-content">
+                <div class="add-player-form">
+                  <div class="form-group">
+                    <label for="newPlayerName">Player Name</label>
+                    <input type="text" id="newPlayerName" placeholder="Enter full name (e.g., John Smith)">
+                  </div>
+                  <div class="form-group">
+                    <label for="newPlayerTeamSelect">Add to Team</label>
+                    <select id="newPlayerTeamSelect">
+                      <option value="">Select a team...</option>
+                      <option value="__NEW_TEAM__">➕ Create New Team</option>
+                    </select>
+                  </div>
+                  <button class="btn btn-create" id="createNewPlayerBtn" disabled>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M8.5 3a4 4 0 100 8 4 4 0 000-8zM20 8v6M23 11h-6"/>
+                    </svg>
+                    Create Player
+                  </button>
+                </div>
+                <div class="new-player-info">
+                  <p>💡 <strong>Note:</strong> New players are placeholders for roster planning. Their actual user accounts will be created when they register or when stats are entered for them.</p>
+                </div>
+              </div>
+            </div>
+
+            <div id="unavailableZone" class="unavailable-zone" style="${seasonType === 'summer-to-fall' ? 'display: block;' : 'display: none;'}" data-team="unavailable">
+              <h3>❌ Unavailable for Fall Season</h3>
+              <div id="unavailableEmpty" class="empty-unavailable" style="${unavailablePlayers.length === 0 ? 'display: block;' : 'display: none;'}">
+                No players marked as unavailable yet
+              </div>
+              <div id="unavailablePlayersGrid" class="unavailable-players-grid" style="${unavailablePlayers.length > 0 ? 'display: grid;' : 'display: none;'}"></div>
+            </div>
+
+            <!-- Unassigned Players Zone (from roster import) -->
+            <div id="unassignedZone" class="unassigned-zone" style="display: block;" data-team="unassigned">
+              <h3>📋 Unassigned Players</h3>
+              <p class="zone-subtitle">New players from roster import - drag to assign to teams</p>
+              <div id="unassignedEmpty" class="empty-unassigned" style="${unassignedPlayers.length === 0 ? 'display: block;' : 'display: none;'}">
+                No unassigned players. Use League Staff Admin → Roster Import to add new players.
+              </div>
+              <div id="unassignedPlayersGrid" class="unassigned-players-grid" style="${unassignedPlayers.length > 0 ? 'display: grid;' : 'display: none;'}"></div>
+            </div>
+
+            <div class="teams-grid" id="teamsGrid"></div>
+          </div>
+
+          <div class="changelog-sidebar ${changelogVisible ? '' : 'mobile-hidden'}" id="changelogSidebar">
+            <div class="changelog-header">
+              <h3>📝 Change Log</h3>
+              <p>Recent roster updates</p>
+            </div>
+            <div class="changelog-list" id="changelogList">
+              <div class="changelog-empty">No changes yet</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      renderTeams();
+      renderUnavailable();
+      renderUnassigned();
+      renderActiveEditors();
+      populatePastPlayersDropdown();
+      populateTeamSelectDropdown();
+      populateSeasonDropdown();
+      setupEventListeners();
+    }
+    
+    function renderTeams() {
+      const grid = document.getElementById('teamsGrid');
+      grid.innerHTML = '';
+      
+      Object.keys(teams).forEach(teamName => {
+        const teamData = teams[teamName];
+        const emptySlots = Math.max(0, teamData.maxRoster - teamData.players.length);
+        
+        const teamCard = document.createElement('div');
+        teamCard.className = 'team-card';
+        teamCard.dataset.team = teamName;
+        
+        teamCard.innerHTML = `
+          <div class="team-header">
+            <h2>${teamName}</h2>
+            <p>${teamData.players.length}/${teamData.maxRoster}</p>
+          </div>
+          <div class="team-players">
+            ${teamData.players.map(player => `
+              <div class="player-card ${player.isNew ? 'new-player' : ''} ${player.oot ? 'oot-player' : ''} ${player.u30 ? 'u30-player' : ''}" draggable="true" data-player-id="${player.id}">
+                <div class="player-name">${player.name}${player.isNew ? '<span class="new-badge">NEW</span>' : ''}${player.oot ? '<span class="oot-badge">OOT</span>' : ''}${player.u30 ? '<span class="u30-badge">U30</span>' : ''}</div>
+                <div class="player-stats">
+                  <span>BA: ${player.ba}</span>
+                  <span>AcesBPI: ${player.acesBPI}</span>
+                </div>
+              </div>
+            `).join('')}
+            ${Array.from({ length: emptySlots }, (_, i) => `<div class="empty-slot">Empty</div>`).join('')}
+          </div>
+        `;
+        
+        grid.appendChild(teamCard);
+      });
+      
+      setupDragAndDrop();
+    }
+    
+    function renderUnavailable() {
+      const grid = document.getElementById('unavailablePlayersGrid');
+      if (!grid) return;
+      
+      grid.innerHTML = unavailablePlayers.map(player => `
+        <div class="unavailable-player player-card ${player.isNew ? 'new-player' : ''} ${player.oot ? 'oot-player' : ''} ${player.u30 ? 'u30-player' : ''}" draggable="true" data-player-id="${player.id}">
+          <div class="player-name">${player.name}${player.isNew ? '<span class="new-badge">NEW</span>' : ''}${player.oot ? '<span class="oot-badge">OOT</span>' : ''}${player.u30 ? '<span class="u30-badge">U30</span>' : ''}</div>
+          <div class="player-stats">
+            <span>BA: ${player.ba}</span>
+            <span>BPI: ${player.acesBPI}</span>
+          </div>
+        </div>
+      `).join('');
+      
+      setupUnavailableDrag();
+    }
+    
+    function renderUnassigned() {
+      const zone = document.getElementById('unassignedZone');
+      const grid = document.getElementById('unassignedPlayersGrid');
+      const empty = document.getElementById('unassignedEmpty');
+      
+      if (!zone || !grid) return;
+      
+      // Show/hide zone based on whether there are unassigned players
+      if (unassignedPlayers.length > 0) {
+        zone.style.display = 'block';
+        grid.style.display = 'grid';
+        empty.style.display = 'none';
+      } else {
+        zone.style.display = 'none';
+        return;
+      }
+      
+      grid.innerHTML = unassignedPlayers.map(player => `
+        <div class="unassigned-player player-card" draggable="true" data-player-id="${player.id}">
+          <div class="player-name">
+            ${player.name}
+            <span class="import-badge">IMPORTED</span>
+            ${player.oot ? '<span class="oot-badge">OOT</span>' : ''}
+            ${player.u30 ? '<span class="u30-badge">U30</span>' : ''}
+          </div>
+          <div class="player-stats">
+            <span>New Player</span>
+            ${player.importedAt ? `<span>Added: ${new Date(player.importedAt).toLocaleDateString()}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+      
+      setupUnassignedDrag();
+    }
+    
+    function setupUnassignedDrag() {
+      var unassignedZone = document.getElementById('unassignedZone');
+      if (unassignedZone) {
+        unassignedZone.addEventListener('dragover', function(e) {
+          e.preventDefault();
+          unassignedZone.classList.add('drag-over');
+        });
+        unassignedZone.addEventListener('dragleave', function(e) {
+          if (!unassignedZone.contains(e.relatedTarget)) {
+            unassignedZone.classList.remove('drag-over');
+          }
+        });
+        unassignedZone.addEventListener('drop', function(e) {
+          e.preventDefault();
+          unassignedZone.classList.remove('drag-over');
+          handleDrop('unassigned');
+          renderTeams();
+          renderUnassigned();
+        });
+      }
+      document.querySelectorAll('#unassignedPlayersGrid .player-card').forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+          const playerId = e.target.dataset.playerId;
+          const player = unassignedPlayers.find(p => p.id === playerId);
+          
+          draggedPlayer = { player, fromTeam: 'unassigned' };
+          e.target.classList.add('dragging');
+        });
+        
+        card.addEventListener('dragend', (e) => {
+          e.target.classList.remove('dragging');
+        });
+      });
+    }
+    
+    function renderChangelog() {
+      const list = document.getElementById('changelogList');
+      console.log('🎨 renderChangelog called');
+      console.log('📋 changeLog array:', changeLog);
+      console.log('📋 changeLog.length:', changeLog.length);
+      console.log('📍 changelogList element:', list);
+      
+      if (!list) {
+        console.log('⚠️ changelogList element not found!');
+        return;
+      }
+      
+      if (changeLog.length === 0) {
+        console.log('ℹ️ No changelog entries, showing empty state');
+        list.innerHTML = '<div class="changelog-empty">No changes yet</div>';
+        return;
+      }
+      
+      console.log('✅ Rendering', changeLog.length, 'changelog entries');
+      list.innerHTML = changeLog.map(entry => {
+        const timestamp = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date();
+        const timeStr = formatRelativeTime(timestamp);
+        
+        return `
+          <div class="changelog-item">
+            <div><span class="user">${entry.userName}</span> ${entry.details}</div>
+            <div class="time">${timeStr}</div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function formatRelativeTime(date) {
+      const seconds = Math.floor((new Date() - date) / 1000);
+      
+      if (seconds < 60) return 'Just now';
+      if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+      return `${Math.floor(seconds / 86400)}d ago`;
+    }
+    
+    function populatePastPlayersDropdown() {
+      const select = document.getElementById('pastPlayerSelect');
+      if (!select) return;
+      
+      // Clear existing options except the first one
+      select.innerHTML = '<option value="">Select a player...</option>';
+      
+      // Add past players sorted by most recent season
+      pastPlayers.forEach(player => {
+        const option = document.createElement('option');
+        option.value = player.id;
+        option.textContent = `${player.name} - ${player.lastTeam} (${player.lastSeason})`;
+        option.dataset.playerData = JSON.stringify(player);
+        select.appendChild(option);
+      });
+      
+      console.log(`✅ Populated dropdown with ${pastPlayers.length} past players`);
+    }
+    
+    function populateTeamSelectDropdown() {
+      const select = document.getElementById('teamSelect');
+      const newPlayerSelect = document.getElementById('newPlayerTeamSelect');
+      
+      // Populate both dropdowns
+      [select, newPlayerSelect].forEach(dropdown => {
+        if (!dropdown) return;
+        
+        // Clear and rebuild
+        dropdown.innerHTML = '<option value="">Select a team...</option>';
+        
+        // Add existing teams
+        Object.keys(teams).sort().forEach(teamName => {
+          const option = document.createElement('option');
+          option.value = teamName;
+          option.textContent = `${teamName} (${teams[teamName].players.length}/${teams[teamName].maxRoster})`;
+          dropdown.appendChild(option);
+        });
+        
+        // Add "Create New Team" option
+        const newTeamOption = document.createElement('option');
+        newTeamOption.value = '__NEW_TEAM__';
+        newTeamOption.textContent = '➕ Create New Team';
+        dropdown.appendChild(newTeamOption);
+      });
+    }
+    
+    function setupDragAndDrop() {
+      // Player drag events
+      document.querySelectorAll('.player-card').forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+          const playerId = e.target.dataset.playerId;
+          const teamCard = e.target.closest('[data-team]');
+          const fromTeam = teamCard ? teamCard.dataset.team : 'unavailable';
+          
+          const player = fromTeam === 'unavailable' 
+            ? unavailablePlayers.find(p => p.id === playerId)
+            : teams[fromTeam].players.find(p => p.id === playerId);
+          
+          draggedPlayer = { player, fromTeam };
+          e.target.classList.add('dragging');
+        });
+        
+        card.addEventListener('dragend', (e) => {
+          e.target.classList.remove('dragging');
+        });
+      });
+      
+      // Team drop zones
+      document.querySelectorAll('.team-card').forEach(card => {
+        card.addEventListener('dragover', (e) => {
+          e.preventDefault();
+        });
+        
+        card.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const toTeam = e.currentTarget.dataset.team;
+          handleDrop(toTeam);
+          renderTeams();
+          renderUnassigned();
+        });
+      });
+    }
+    
+    function setupUnavailableDrag() {
+      const zone = document.getElementById('unavailableZone');
+      if (!zone) return;
+      
+      zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+      });
+      
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        handleDrop('unavailable');
+      });
+      
+      document.querySelectorAll('.unavailable-player').forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+          const playerId = e.target.dataset.playerId;
+          const player = unavailablePlayers.find(p => p.id === playerId);
+          draggedPlayer = { player, fromTeam: 'unavailable' };
+          e.target.classList.add('dragging');
+        });
+        
+        card.addEventListener('dragend', (e) => {
+          e.target.classList.remove('dragging');
+        });
+      });
+    }
+    
+    function setupEventListeners() {
+      // Tab switching
+      document.querySelectorAll('.add-player-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          // Remove active from all tabs
+          document.querySelectorAll('.add-player-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          
+          // Activate clicked tab
+          tab.classList.add('active');
+          const tabId = tab.dataset.tab === 'past-player' ? 'pastPlayerTab' : 'newPlayerTab';
+          document.getElementById(tabId).classList.add('active');
+        });
+      });
+      
+      // Past player selection
+      const pastPlayerSelect = document.getElementById('pastPlayerSelect');
+      const teamSelect = document.getElementById('teamSelect');
+      const addBtn = document.getElementById('addPastPlayerBtn');
+      const preview = document.getElementById('playerPreview');
+      
+      if (pastPlayerSelect) {
+        pastPlayerSelect.addEventListener('change', () => {
+          const playerId = pastPlayerSelect.value;
+          addBtn.disabled = !playerId || !teamSelect.value;
+          
+          if (playerId) {
+            const selectedOption = pastPlayerSelect.options[pastPlayerSelect.selectedIndex];
+            const player = JSON.parse(selectedOption.dataset.playerData);
+            
+            document.getElementById('previewName').textContent = player.name;
+            document.getElementById('previewBA').textContent = player.ba;
+            document.getElementById('previewBPI').textContent = player.acesBPI;
+            document.getElementById('previewSeason').textContent = player.lastSeason;
+            document.getElementById('previewTeam').textContent = player.lastTeam;
+            preview.style.display = 'block';
+          } else {
+            preview.style.display = 'none';
+          }
+        });
+      }
+      
+      if (teamSelect) {
+        teamSelect.addEventListener('change', () => {
+          addBtn.disabled = !pastPlayerSelect.value || !teamSelect.value;
+        });
+      }
+      
+      if (addBtn) {
+        addBtn.addEventListener('click', async () => {
+          const playerId = pastPlayerSelect.value;
+          let teamName = teamSelect.value;
+          
+          if (!playerId || !teamName) {
+            alert('Please select both a player and a team');
+            return;
+          }
+          
+          // Handle new team creation
+          if (teamName === '__NEW_TEAM__') {
+            const newTeamName = prompt('Enter new team name (e.g., "Army", "Special Team"):');
+            if (!newTeamName || !newTeamName.trim()) return;
+            
+            teamName = newTeamName.trim();
+            
+            // Create new team if it doesn't exist
+            if (!teams[teamName]) {
+              teams[teamName] = {
+                maxRoster: leagueMaxRoster || (seasonType === 'fall-to-summer' ? 16 : 14),
+                players: []
+              };
+              console.log(`✅ Created new team: ${teamName}`);
+            }
+          }
+          
+          // Find the player data
+          const selectedOption = pastPlayerSelect.options[pastPlayerSelect.selectedIndex];
+          const pastPlayer = JSON.parse(selectedOption.dataset.playerData);
+          
+          if (!pastPlayer) {
+            alert('Player data not found');
+            return;
+          }
+          
+          const team = teams[teamName];
+          if (!team) {
+            alert(`Team ${teamName} not found`);
+            return;
+          }
+          
+          if (team.players.length >= team.maxRoster) {
+            alert(`${teamName} roster is full (${team.maxRoster}/${team.maxRoster})`);
+            return;
+          }
+          
+          // Add player to team
+          team.players.push({
+            id: pastPlayer.id,
+            name: pastPlayer.name,
+            ba: pastPlayer.ba,
+            acesBPI: pastPlayer.acesBPI
+          });
+          
+          // Remove from past players list
+          pastPlayers = pastPlayers.filter(p => p.id !== pastPlayer.id);
+          
+          // Save and update UI
+          await saveRosterChanges();
+          await logChange('player_added', `added ${pastPlayer.name} to ${teamName}`);
+          
+          // Reset form
+          pastPlayerSelect.value = '';
+          teamSelect.value = '';
+          preview.style.display = 'none';
+          addBtn.disabled = true;
+          
+          showToast(`Added ${pastPlayer.name} to ${teamName}! ✅`, 'success');
+          renderApp();
+        });
+      }
+      
+      // New player creation
+      const newPlayerNameInput = document.getElementById('newPlayerName');
+      const newPlayerTeamSelect = document.getElementById('newPlayerTeamSelect');
+      const createBtn = document.getElementById('createNewPlayerBtn');
+      
+      if (newPlayerNameInput) {
+        newPlayerNameInput.addEventListener('input', () => {
+          const name = newPlayerNameInput.value.trim();
+          createBtn.disabled = !name || !newPlayerTeamSelect.value;
+        });
+      }
+      
+      if (newPlayerTeamSelect) {
+        newPlayerTeamSelect.addEventListener('change', () => {
+          const name = newPlayerNameInput.value.trim();
+          createBtn.disabled = !name || !newPlayerTeamSelect.value;
+        });
+      }
+      
+      if (createBtn) {
+        createBtn.addEventListener('click', async () => {
+          const playerName = newPlayerNameInput.value.trim();
+          let teamName = newPlayerTeamSelect.value;
+          
+          if (!playerName || !teamName) {
+            alert('Please enter a player name and select a team');
+            return;
+          }
+          
+          // Handle new team creation
+          if (teamName === '__NEW_TEAM__') {
+            const newTeamName = prompt('Enter new team name (e.g., "Army", "Special Team"):');
+            if (!newTeamName || !newTeamName.trim()) return;
+            
+            teamName = newTeamName.trim();
+            
+            // Create new team if it doesn't exist
+            if (!teams[teamName]) {
+              teams[teamName] = {
+                maxRoster: leagueMaxRoster || (seasonType === 'fall-to-summer' ? 16 : 14),
+                players: []
+              };
+              console.log(`✅ Created new team: ${teamName}`);
+            }
+          }
+          
+          const team = teams[teamName];
+          if (!team) {
+            alert(`Team ${teamName} not found`);
+            return;
+          }
+          
+          if (team.players.length >= team.maxRoster) {
+            alert(`${teamName} roster is full (${team.maxRoster}/${team.maxRoster})`);
+            return;
+          }
+          
+          // Check for duplicate names
+          const playerId = playerName.toLowerCase().replace(/\s+/g, '_') + '_new_' + Date.now();
+          const isDuplicate = Object.values(teams).some(t => 
+            t.players.some(p => p.name.toLowerCase() === playerName.toLowerCase())
+          );
+          
+          if (isDuplicate) {
+            if (!confirm(`A player named "${playerName}" already exists. Add anyway?`)) {
+              return;
+            }
+          }
+          
+          // Add new player to team
+          team.players.push({
+            id: playerId,
+            name: playerName,
+            ba: '.000',
+            acesBPI: '0.0',
+            isNew: true
+          });
+          
+          // Save and update UI
+          await saveRosterChanges();
+          await logChange('new_player_created', `created new player ${playerName} on ${teamName}`);
+          
+          // Reset form
+          newPlayerNameInput.value = '';
+          newPlayerTeamSelect.value = '';
+          createBtn.disabled = true;
+          
+          showToast(`Created ${playerName} on ${teamName}! ✅`, 'success');
+          renderApp();
+        });
+      }
+      
+      // Toggle season type
+      document.getElementById('toggleSeasonBtn').addEventListener('click', () => {
+        seasonType = seasonType === 'fall-to-summer' ? 'summer-to-fall' : 'fall-to-summer';
+        
+        // Only update team maxRoster from seasonType if no custom value is set
+        if (!leagueMaxRoster) {
+          const derived = seasonType === 'fall-to-summer' ? 16 : 14;
+          Object.keys(teams).forEach(team => { teams[team].maxRoster = derived; });
+          document.getElementById('maxRosterInput').value = derived;
+        }
+        
+        saveRosterChanges();
+        logChange('season_type_changed', `changed season type to ${seasonType}`);
+      });
+
+      // Max roster input handler
+      document.getElementById('maxRosterInput').addEventListener('change', () => {
+        const val = parseInt(document.getElementById('maxRosterInput').value);
+        if (isNaN(val) || val < 10 || val > 25) {
+          showToast('Max roster must be between 10 and 25', 'error');
+          document.getElementById('maxRosterInput').value = leagueMaxRoster || (seasonType === 'fall-to-summer' ? 16 : 14);
+          return;
+        }
+        leagueMaxRoster = val;
+        Object.keys(teams).forEach(team => { teams[team].maxRoster = val; });
+        saveRosterChanges();
+        logChange('max_roster_changed', `set max roster size to ${val}`);
+        showToast(`Max roster set to ${val} for all teams`, 'success');
+        renderTeams();
+      });
+      
+      // Save changes
+      document.getElementById('saveBtn').addEventListener('click', () => {
+        saveRosterChanges();
+      });
+      
+      // Reset from current season
+      document.getElementById('resetBtn').addEventListener('click', async () => {
+        if (confirm('⚠️ This will reset all changes and reload rosters from the current season. Are you sure?')) {
+          console.log('🔄 User requested reset from current season');
+          try {
+            // Delete the current offseason document
+            // Note: This orphans the changelog subcollection, but the new document 
+            // will have a fresh changelog subcollection, so old entries won't appear
+            const offseasonRef = doc(db, 'offseasonRosters', OFFSEASON_DOC_ID);
+            await deleteDoc(offseasonRef);
+            console.log('✅ Deleted existing offseason document');
+            
+            // Small delay to ensure Firestore processes the delete
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Recreate from current season (this will also reload past players)
+            console.log('📝 Recreating from current season...');
+            await createInitialOffseasonDoc();
+            
+            console.log('✅ Reset complete!');
+            showToast('Rosters reset from current season! 🔄', 'success');
+          } catch (error) {
+            console.error('❌ Error resetting:', error);
+            showToast('Error resetting rosters: ' + error.message, 'error');
+          }
+        }
+      });
+      
+      // Toggle changelog
+      document.getElementById('toggleChangelogBtn').addEventListener('click', () => {
+        changelogVisible = !changelogVisible;
+        const sidebar = document.getElementById('changelogSidebar');
+        sidebar.classList.toggle('mobile-hidden');
+      });
+    }
+    
+    // ========================================
+    // CREATE TEAM MODAL
+    // ========================================
+    
+    window.showCreateTeamModal = function() {
+      const modal = document.getElementById('createTeamModal');
+      const input = document.getElementById('newTeamName');
+      const info = document.getElementById('rosterSizeInfo');
+      
+      // Update roster size info based on current season type
+      const maxRoster = leagueMaxRoster || (seasonType === 'fall-to-summer' ? 16 : 14);
+      const seasonLabel = seasonType === 'fall-to-summer' ? 'Fall → Summer' : 'Summer → Fall';
+      info.innerHTML = `Max roster will be set to <strong>${maxRoster} players</strong> (${seasonLabel})`;
+      
+      input.value = '';
+      modal.classList.add('active');
+      input.focus();
+    };
+    
+    window.hideCreateTeamModal = function() {
+      document.getElementById('createTeamModal').classList.remove('active');
+    };
+    
+    window.createNewTeam = function() {
+      const input = document.getElementById('newTeamName');
+      const teamName = input.value.trim();
+      
+      if (!teamName) {
+        showToast('Please enter a team name', 'error');
+        return;
+      }
+      
+      // Check for duplicate (case-insensitive)
+      const existingNames = Object.keys(teams).map(n => n.toLowerCase());
+      if (existingNames.includes(teamName.toLowerCase())) {
+        showToast(`Team "${teamName}" already exists`, 'error');
+        return;
+      }
+      
+      // Create the team
+      const maxRoster = leagueMaxRoster || (seasonType === 'fall-to-summer' ? 16 : 14);
+      teams[teamName] = {
+        maxRoster: maxRoster,
+        players: []
+      };
+      
+      // Save and re-render
+      saveRosterChanges();
+      logChange('team_created', `created team "${teamName}" with ${maxRoster} roster spots`);
+      
+      hideCreateTeamModal();
+      renderTeams();
+      populateTeamSelectDropdown();
+      
+      showToast(`Team "${teamName}" created! ✅`, 'success');
+    };
+    
+    // Close modal on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        hideCreateTeamModal();
+      }
+    });
+    
+    // Close modal on backdrop click
+    document.getElementById('createTeamModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'createTeamModal') {
+        hideCreateTeamModal();
+      }
+    });
+    
+    // Enter key to submit
+    document.getElementById('newTeamName')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        createNewTeam();
+      }
+    });
+    
+    // ========================================
+    // LOAD FROM SEASON
+    // ========================================
+    
+    async function loadAvailableSeasons() {
+      try {
+        const seasonsSnapshot = await getDocs(collection(db, 'seasons'));
+        availableSeasons = seasonsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })).sort((a, b) => {
+          // Sort by year desc, then fall before summer
+          if (a.year !== b.year) return b.year - a.year;
+          return a.season === 'fall' ? -1 : 1;
+        });
+        
+        console.log(`📅 Loaded ${availableSeasons.length} seasons for dropdown`);
+      } catch (error) {
+        console.error('Error loading seasons:', error);
+        availableSeasons = [];
+      }
+    }
+    
+    function populateSeasonDropdown() {
+      const select = document.getElementById('loadSeasonSelect');
+      if (!select) return;
+      
+      select.innerHTML = '<option value="">📅 Load from Season...</option>';
+      
+      availableSeasons.forEach(season => {
+        const option = document.createElement('option');
+        option.value = season.id;
+        option.textContent = `${season.year} ${season.season.charAt(0).toUpperCase() + season.season.slice(1)}`;
+        select.appendChild(option);
+      });
+    }
+    
+    window.handleLoadSeasonChange = async function(seasonId) {
+      const select = document.getElementById('loadSeasonSelect');
+      
+      if (!seasonId) return;
+      
+      // Find selected season
+      const selectedSeason = availableSeasons.find(s => s.id === seasonId);
+      if (!selectedSeason) {
+        select.value = '';
+        return;
+      }
+      
+      const seasonLabel = `${selectedSeason.year} ${selectedSeason.season.charAt(0).toUpperCase() + selectedSeason.season.slice(1)}`;
+      
+      // Confirm the action
+      const confirmed = confirm(
+        `⚠️ Load rosters from ${seasonLabel}?\n\n` +
+        `This will:\n` +
+        `• Replace all current team rosters\n` +
+        `• Keep your unassigned players pool\n` +
+        `• Keep unavailable players list\n\n` +
+        `This is intended to kick off roster planning. Continue?`
+      );
+      
+      if (!confirmed) {
+        select.value = '';
+        return;
+      }
+      
+      // Show loading state
+      select.disabled = true;
+      const originalText = select.options[select.selectedIndex].text;
+      select.options[select.selectedIndex].text = '⏳ Loading...';
+      
+      try {
+        // Fetch players from that season
+        const seasonPlayers = await getSeasonPlayerStatsOptimized(seasonId);
+        console.log(`📊 Loaded ${seasonPlayers.length} players from ${seasonLabel}`);
+        
+        if (seasonPlayers.length === 0) {
+          showToast(`No players found in ${seasonLabel}`, 'error');
+          select.value = '';
+          select.disabled = false;
+          return;
+        }
+        
+        // Get career stats for BA and AcesBPI
+        const allPlayerStats = await getAllPlayerStatsOptimized();
+        const playerStatsMap = {};
+        allPlayerStats.forEach(player => {
+          playerStatsMap[player.name] = {
+            ba: player.career?.battingAverage?.toFixed(3) || '.000',
+            acesBPI: player.career?.acesBPI?.toFixed(1) || '0.0'
+          };
+        });
+        
+        // Group players by team
+        const newTeams = {};
+        const maxRoster = leagueMaxRoster || (seasonType === 'fall-to-summer' ? 16 : 14);
+        
+        seasonPlayers.forEach(player => {
+          const playerName = player.playerName || player.name || player.id;
+          const teamName = player.team || player.teamId || player.currentTeam;
+          
+          if (!teamName || teamName === 'Unknown' || teamName.trim() === '') {
+            console.log(`⚠️ Player ${playerName} has no team, skipping`);
+            return;
+          }
+          
+          if (!newTeams[teamName]) {
+            newTeams[teamName] = {
+              maxRoster: maxRoster,
+              players: []
+            };
+          }
+          
+          const stats = playerStatsMap[playerName] || { ba: '.000', acesBPI: '0.0' };
+          
+          newTeams[teamName].players.push({
+            id: playerName.toLowerCase().replace(/\s+/g, '_'),
+            name: playerName,
+            ba: stats.ba,
+            acesBPI: stats.acesBPI
+          });
+        });
+        
+        console.log(`✅ Built ${Object.keys(newTeams).length} teams from ${seasonLabel}`);
+        
+        // Cross-reference against unassigned pool (player-import confirmed list)
+        const confirmedNames = new Set(
+          unassignedPlayers.map(p => (p.name || '').toLowerCase().trim())
+        );
+        const hasImportData = confirmedNames.size > 0;
+        console.log('Import cross-ref: ' + confirmedNames.size + ' confirmed names in unassigned');
+
+        if (hasImportData) {
+          const notReturning = [];
+          Object.keys(newTeams).forEach(teamName => {
+            const keep = [];
+            newTeams[teamName].players.forEach(player => {
+              if (confirmedNames.has((player.name || '').toLowerCase().trim())) {
+                keep.push(player);
+              } else {
+                notReturning.push(player);
+              }
+            });
+            newTeams[teamName].players = keep;
+          });
+
+          // Move non-returners to unavailable (no dupes by name)
+          const existingUnavailNames = new Set(
+            unavailablePlayers.map(p => (p.name || '').toLowerCase().trim())
+          );
+          notReturning.forEach(p => {
+            if (!existingUnavailNames.has((p.name || '').toLowerCase().trim())) {
+              unavailablePlayers.push(p);
+            }
+          });
+          console.log(notReturning.length + ' non-returners moved to Unavailable');
+
+          // Remove placed returners from unassigned -- only new players remain
+          const placedNames = new Set();
+          Object.values(newTeams).forEach(team =>
+            team.players.forEach(p => placedNames.add((p.name || '').toLowerCase().trim()))
+          );
+          const beforeCount = unassignedPlayers.length;
+          unassignedPlayers = unassignedPlayers.filter(p =>
+            !placedNames.has((p.name || '').toLowerCase().trim())
+          );
+          console.log('Unassigned: ' + beforeCount + ' -> ' + unassignedPlayers.length);
+        }
+
+        // Replace teams
+        teams = newTeams;
+
+        // Save changes
+        await saveRosterChanges();
+        await logChange('season_loaded', 'loaded rosters from ' + seasonLabel + ' (' + seasonPlayers.length + ' players)' + (hasImportData ? ', cross-referenced imports' : ''));
+
+        // Re-render
+        renderTeams();
+        renderUnassigned();
+        populateTeamSelectDropdown();
+
+        const filterNote = hasImportData ? ' - ' + unassignedPlayers.length + ' new player(s) in Unassigned' : '';
+        showToast('Loaded ' + seasonPlayers.length + ' players from ' + seasonLabel + '!' + filterNote, 'success');
+        
+      } catch (error) {
+        console.error('Error loading season:', error);
+        showToast('Error loading season: ' + error.message, 'error');
+      } finally {
+        select.value = '';
+        select.disabled = false;
+        // Restore option text
+        const opt = Array.from(select.options).find(o => o.value === seasonId);
+        if (opt) opt.text = originalText;
+      }
+    };
+    
+    window.refreshAllStats = async function() {
+      var btn = event.currentTarget;
+      btn.disabled = true; btn.textContent = "⏳ Refreshing...";
+      try {
+        var all = await getAllPlayerStatsOptimized();
+        var map = {};
+        all.forEach(function(p) {
+          map[p.name] = {
+            ba:      (p.career && p.career.battingAverage != null) ? p.career.battingAverage.toFixed(3) : null,
+            acesBPI: (p.career && p.career.acesBPI != null) ? p.career.acesBPI.toFixed(1) : null
+          };
+        });
+        var n = 0;
+        var apply = function(arr) {
+          (arr||[]).forEach(function(p) {
+            var s = map[p.name]; if (!s) return;
+            if (s.ba !== null)      { p.ba = s.ba; n++; }
+            if (s.acesBPI !== null) { p.acesBPI = s.acesBPI; }
+          });
+        };
+        Object.values(teams).forEach(function(t){ apply(t.players); });
+        apply(unavailablePlayers); apply(unassignedPlayers);
+        await saveRosterChanges();
+        renderTeams(); renderUnassigned();
+        showToast(n + " players refreshed with latest career stats ✅", "success");
+      } catch(e) { showToast("Error: " + e.message, "error"); }
+      finally { btn.disabled = false; btn.textContent = "🔄 Refresh Stats"; }
+    };
+
+    function showToast(message, type = 'info') {
+      // Simple toast notification (you can enhance this)
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: ${type === 'success' ? '#10b981' : '#ef4444'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+      `;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    // ========================================
+    // CONTEXT MENU (right-click / long-press)
+    // ========================================
+    let ctxPlayer = null;
+    let ctxFromTeam = null;
+    let longPressTimer = null;
+    const contextMenu = document.getElementById('playerContextMenu');
+    const ctxToggleOOT = document.getElementById('ctxToggleOOT');
+    const ctxToggleU30 = document.getElementById('ctxToggleU30');
+    const ctxRemove = document.getElementById('ctxRemove');
+
+    function findPlayer(playerId) {
+      for (const teamName of Object.keys(teams)) {
+        const p = teams[teamName].players.find(p => p.id === playerId);
+        if (p) return { player: p, fromTeam: teamName };
+      }
+      const unavail = unavailablePlayers.find(p => p.id === playerId);
+      if (unavail) return { player: unavail, fromTeam: 'unavailable' };
+      const unassigned = unassignedPlayers.find(p => p.id === playerId);
+      if (unassigned) return { player: unassigned, fromTeam: 'unassigned' };
+      return null;
+    }
+
+    function showContextMenu(e, playerId) {
+      e.preventDefault();
+      const found = findPlayer(playerId);
+      if (!found) return;
+      ctxPlayer = found.player;
+      ctxFromTeam = found.fromTeam;
+      ctxToggleOOT.textContent = ctxPlayer.oot ? 'Remove OOT' : 'Mark as OOT';
+      ctxToggleU30.textContent = ctxPlayer.u30 ? 'Remove U30' : 'Mark as U30';
+      contextMenu.style.display = 'block';
+      const x = Math.min(e.clientX, window.innerWidth - 180);
+      const y = Math.min(e.clientY, window.innerHeight - 100);
+      contextMenu.style.left = x + 'px';
+      contextMenu.style.top = y + 'px';
+    }
+
+    function hideContextMenu() {
+      contextMenu.style.display = 'none';
+      ctxPlayer = null;
+      ctxFromTeam = null;
+    }
+
+    ctxToggleOOT.addEventListener('click', () => {
+      if (!ctxPlayer) return;
+      ctxPlayer.oot = !ctxPlayer.oot;
+      saveRosterChanges();
+      renderTeams();
+      renderUnavailable();
+      renderUnassigned();
+      hideContextMenu();
+    });
+
+    ctxToggleU30.addEventListener('click', () => {
+      if (!ctxPlayer) return;
+      ctxPlayer.u30 = !ctxPlayer.u30;
+      saveRosterChanges();
+      renderTeams();
+      renderUnavailable();
+      renderUnassigned();
+      hideContextMenu();
+    });
+
+    ctxRemove.addEventListener('click', () => {
+      if (!ctxPlayer || !ctxFromTeam) return;
+      if (ctxFromTeam === 'unavailable') {
+        unavailablePlayers = unavailablePlayers.filter(p => p.id !== ctxPlayer.id);
+      } else if (ctxFromTeam === 'unassigned') {
+        unassignedPlayers = unassignedPlayers.filter(p => p.id !== ctxPlayer.id);
+      } else {
+        teams[ctxFromTeam].players = teams[ctxFromTeam].players.filter(p => p.id !== ctxPlayer.id);
+      }
+      saveRosterChanges();
+      renderTeams();
+      renderUnavailable();
+      renderUnassigned();
+      hideContextMenu();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!contextMenu.contains(e.target)) hideContextMenu();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') hideContextMenu();
+    });
+
+    function addContextMenuListeners(card) {
+      const playerId = card.dataset.playerId;
+      if (!playerId) return;
+
+      card.addEventListener('contextmenu', (e) => showContextMenu(e, playerId));
+
+      // Long-press for mobile
+      card.addEventListener('touchstart', (e) => {
+        longPressTimer = setTimeout(() => {
+          const touch = e.touches[0];
+          showContextMenu({ preventDefault: () => {}, clientX: touch.clientX, clientY: touch.clientY }, playerId);
+        }, 500);
+      }, { passive: true });
+      card.addEventListener('touchend', () => clearTimeout(longPressTimer));
+      card.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+    }
+
+    // Patch render functions to wire context menu after each render
+    const _origSetupDnD = setupDragAndDrop;
+    setupDragAndDrop = function() {
+      _origSetupDnD();
+      document.querySelectorAll('.team-card .player-card').forEach(addContextMenuListeners);
+    };
+    const _origSetupUnavail = setupUnavailableDrag;
+    setupUnavailableDrag = function() {
+      _origSetupUnavail();
+      document.querySelectorAll('.unavailable-player.player-card').forEach(addContextMenuListeners);
+    };
+    const _origSetupUnassigned = setupUnassignedDrag;
+    setupUnassignedDrag = function() {
+      _origSetupUnassigned();
+      document.querySelectorAll('#unassignedPlayersGrid .player-card').forEach(addContextMenuListeners);
+    };
+
+    // Clean up on page unload
+    window.addEventListener('beforeunload', () => {
+      if (unsubscribeRoster) unsubscribeRoster();
+      if (unsubscribeChangelog) unsubscribeChangelog();
+      if (unsubscribePresence) unsubscribePresence();
+    });
+  </script>
+  <script src="mobile-enhancements.js"></script>
+</body>
+</html>

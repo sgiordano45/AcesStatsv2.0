@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playoff Eligibility - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<link rel="stylesheet" href="dark-mode.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  --eligible-color: #22c55e;
+  --ineligible-color: #f59e0b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0; padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+/* ── Nav ── */
+.filters-nav {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+.nav-container {
+  display: flex; flex-wrap: wrap; gap: 1rem;
+  align-items: center; justify-content: center;
+}
+.nav-link {
+  padding: 1rem 1.75rem;
+  border: 2px solid var(--primary-color);
+  background: white; color: var(--primary-color);
+  text-decoration: none; border-radius: 12px;
+  font-weight: 600; transition: all 0.3s ease;
+  display: flex; align-items: center; gap: 0.5rem;
+  white-space: nowrap; position: relative; overflow: hidden; z-index: 1;
+}
+.nav-link::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: var(--primary-color);
+  transform: translateX(-100%); transition: transform 0.3s ease; z-index: -1;
+}
+.nav-link:hover::before { transform: translateX(0); }
+.nav-link:hover { color: white; transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+/* ── Header ── */
+.header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white; text-align: center;
+  padding: 3rem 2rem;
+  box-shadow: var(--shadow-lg);
+  position: relative; overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute; top: -100px; right: -100px;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.header::after {
+  content: '🏅';
+  position: absolute; bottom: -40px; left: -20px;
+  font-size: 180px; opacity: 0.07;
+}
+.header h1 {
+  margin: 0; font-size: 3rem; font-weight: 800;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.header p {
+  margin: 0.5rem 0 0; font-size: 1.1rem; opacity: 0.85;
+}
+
+/* ── Container ── */
+.container {
+  max-width: 960px; margin: 0 auto; padding: 2rem 1rem;
+}
+
+/* ── Summary banner ── */
+.summary-banner {
+  display: flex; flex-wrap: wrap; gap: 1rem;
+  justify-content: center; margin-bottom: 2rem;
+}
+.summary-stat {
+  background: var(--card-bg);
+  border-radius: 12px; padding: 1rem 1.75rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  text-align: center; min-width: 120px;
+}
+.summary-stat .num {
+  font-size: 2rem; font-weight: 800; color: var(--primary-color);
+}
+.summary-stat .label {
+  font-size: 0.8rem; color: var(--text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+/* ── Team filter pills ── */
+.team-filter-bar {
+  display: flex; flex-wrap: wrap; gap: 0.6rem;
+  margin-bottom: 2rem; justify-content: center;
+}
+.filter-pill {
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  border: 2px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-dark);
+  font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s ease;
+}
+.filter-pill:hover { border-color: var(--primary-color); color: var(--primary-color); }
+.filter-pill.active {
+  background: var(--primary-color); color: white; border-color: var(--primary-color);
+}
+.filter-pill.team-pill.active { /* team color applied inline via JS */ }
+
+/* ── Team section ── */
+.team-section {
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+.team-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.5rem;
+  color: white !important; font-weight: 700; font-size: 1.1rem;
+}
+.team-header span { color: white !important; }
+.team-header .team-badge-count {
+  background: rgba(255,255,255,0.25);
+  border-radius: 999px; padding: 0.25rem 0.75rem;
+  font-size: 0.85rem; font-weight: 700;
+}
+
+/* ── Eligibility table ── */
+.elig-table {
+  width: 100%; border-collapse: collapse;
+}
+.elig-table th {
+  background: #f8fafc; color: var(--text-light);
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; padding: 0.75rem 1rem;
+  text-align: left; border-bottom: 1px solid var(--border-color);
+}
+.elig-table th.center, .elig-table td.center { text-align: center; }
+.elig-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.elig-table tr:last-child td { border-bottom: none; }
+.elig-table tr.eligible-row { background: #f0fdf4; }
+.elig-table tr:hover { background: #f8fafc; }
+.elig-table tr.eligible-row:hover { background: #dcfce7; }
+
+.player-link {
+  color: var(--text-dark); text-decoration: none; font-weight: 600;
+}
+.player-link:hover { color: var(--primary-color); text-decoration: underline; }
+
+/* ── Progress bar ── */
+.progress-wrap {
+  display: flex; gap: 3px; align-items: center;
+}
+.progress-pip {
+  width: 18px; height: 18px; border-radius: 4px;
+  background: #e2e8f0; flex-shrink: 0;
+  transition: background 0.2s;
+}
+.progress-pip.filled { background: var(--team-pip-color, var(--eligible-color)); }
+.progress-pip.over { background: var(--eligible-color); }
+
+/* ── Status badge ── */
+.status-badge {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem; font-weight: 700;
+  white-space: nowrap;
+}
+.status-eligible {
+  background: #dcfce7; color: #15803d;
+}
+.status-ineligible {
+  background: #fef3c7; color: #92400e;
+}
+.status-close {
+  background: #fff7ed; color: #c2410c;
+}
+.status-sub-used {
+  background: #e0f2fe; color: #0369a1;
+}
+.status-sub-over {
+  background: #fee2e2; color: #b91c1c;
+}
+.sub-none { color: var(--text-light); }
+.elig-table tr.sub-flag-row td:first-child { box-shadow: inset 4px 0 0 #0ea5e9; }
+.elig-table tr.sub-over-row td:first-child { box-shadow: inset 4px 0 0 #dc2626; }
+.sub-note { font-size: 0.75rem; color: var(--text-light); margin-top: 0.25rem; }
+.sub-rule-note {
+  text-align: center; color: var(--text-light); font-size: 0.85rem; margin: -1rem 0 1.5rem;
+}
+
+/* ── Loading / error ── */
+.loading-state {
+  text-align: center; padding: 4rem 2rem; color: var(--text-light);
+}
+.spinner { font-size: 3rem; display: block; margin-bottom: 1rem; animation: spin 2s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.games-count-cell { font-size: 1rem; font-weight: 700; color: var(--text-dark); }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .header h1 { font-size: 2rem; }
+  .elig-table th.hide-mobile,
+  .elig-table td.hide-mobile { display: none; }
+  .progress-pip { width: 14px; height: 14px; }
+}
+
+/* ── Dark mode ── */
+[data-theme="dark"] .filter-pill,
+[data-theme="dark"] .summary-stat {
+  background: var(--bg-elevated, #2d3748);
+  border-color: var(--border-color, #4a5568);
+  color: var(--text-dark, #e2e8f0);
+}
+[data-theme="dark"] .elig-table th { background: var(--bg-elevated, #2d3748); }
+[data-theme="dark"] .elig-table td { border-color: rgba(255,255,255,0.06); }
+[data-theme="dark"] .elig-table tr.eligible-row { background: rgba(34,197,94,0.08); }
+[data-theme="dark"] .team-section { background: var(--bg-elevated, #2d3748); border-color: rgba(255,255,255,0.1); }
+[data-theme="dark"] .progress-pip { background: #4a5568; }
+[data-theme="dark"] .status-sub-used { background: rgba(14,165,233,0.2); color: #7dd3fc; }
+[data-theme="dark"] .status-sub-over { background: rgba(220,38,38,0.25); color: #fca5a5; }
+</style>
+</head>
+<body>
+
+<div class="filters-nav"></div>
+
+<header class="header">
+  <h1>🏅 Playoff Eligibility</h1>
+  <p id="seasonSubtitle">Loading season data...</p>
+</header>
+
+<div class="container">
+  <div id="summaryBanner" class="summary-banner" style="display:none"></div>
+  <div id="subRuleNote" class="sub-rule-note"></div>
+  <div id="teamFilterBar" class="team-filter-bar"></div>
+  <div id="mainContent">
+    <div class="loading-state">
+      <span class="spinner">⚾</span>
+      <p>Loading eligibility data...</p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { db, doc, getDoc, getCurrentSeason, getSeasonGames } from './firebase-data.js';
+import {
+  collection,
+  getDocs,
+  doc as fsDoc
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+// Season-dependent rules (set once the active season is known)
+//   Fall:   4 games to qualify, 1 sub allowed all season
+//   Summer: 8 games to qualify, no subs allowed
+let GAMES_REQUIRED = 8;
+let SUBS_ALLOWED = 0;
+let seasonType = 'summer';
+
+function getSeasonType(season, seasonId) {
+  const raw = (season.season || (seasonId || '').split('-')[1] || '').toString().toLowerCase();
+  return raw;
+}
+
+// Team CSS color vars from team-colors.js
+const TEAM_COLORS = {
+  teal:     { bg: '#008080', text: '#fff', pip: '#008080' },
+  gold:     { bg: '#CFB53B', text: '#fff', pip: '#CFB53B' },
+  silver:   { bg: '#757575', text: '#fff', pip: '#757575' },
+  red:      { bg: '#d32f2f', text: '#fff', pip: '#d32f2f' },
+  army:     { bg: '#654321', text: '#fff', pip: '#654321' },
+  carolina: { bg: '#4b9cd3', text: '#fff', pip: '#4b9cd3' },
+  blue:     { bg: '#1976d2', text: '#fff', pip: '#1976d2' },
+  orange:   { bg: '#f57c00', text: '#fff', pip: '#f57c00' },
+  green:    { bg: '#2d7d32', text: '#fff', pip: '#2d7d32' },
+  purple:   { bg: '#7b1fa2', text: '#fff', pip: '#7b1fa2' },
+  black:    { bg: '#1a1a1a', text: '#fff', pip: '#1a1a1a' },
+};
+
+function teamColor(team) {
+  return TEAM_COLORS[team?.toLowerCase()] || { bg: '#2d5016', text: '#fff', pip: '#2d5016' };
+}
+
+function capitalize(s) {
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// ── Active filter state ──────────────────────────────────────────────────────
+let activeTeam = 'all';
+let allTeamSections = []; // { team, el }
+
+function applyFilter(team) {
+  activeTeam = team;
+  // Update pills
+  document.querySelectorAll('.filter-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.team === team);
+  });
+  // Show/hide team sections
+  allTeamSections.forEach(({ team: t, el }) => {
+    el.style.display = (team === 'all' || team === t) ? '' : 'none';
+  });
+}
+
+// ── Main ────────────────────────────────────────────────────────────────────
+async function loadEligibility() {
+  const mainEl = document.getElementById('mainContent');
+
+  try {
+    // 1. Current season
+    const season = await getCurrentSeason();
+    if (!season) {
+      mainEl.innerHTML = '<div class="loading-state"><p>No active season found.</p></div>';
+      return;
+    }
+    const seasonId = season.id;
+    seasonType = getSeasonType(season, seasonId);
+    if (seasonType === 'fall') {
+      GAMES_REQUIRED = 4;
+      SUBS_ALLOWED = 1;
+    } else {
+      GAMES_REQUIRED = 8;
+      SUBS_ALLOWED = 0;
+    }
+    const seasonLabel = `${season.year || ''} ${capitalize(season.season || '')} Season`.trim();
+    document.getElementById('seasonSubtitle').textContent =
+      `${seasonLabel} · ${GAMES_REQUIRED} games to qualify · ${SUBS_ALLOWED === 0 ? 'no subs allowed' : SUBS_ALLOWED + ' sub allowed per player'}`;
+    document.getElementById('subRuleNote').textContent = SUBS_ALLOWED === 0
+      ? 'Substitutes are not allowed this season. Any player who has subbed is flagged.'
+      : `Each player may sub ${SUBS_ALLOWED} time this season. Players who have subbed are flagged.`;
+    document.title = `Playoff Eligibility · ${seasonLabel} - Mountainside Aces`;
+
+    // 2. All season games → filter to completed (has winner)
+    const allGames = await getSeasonGames(seasonId);
+    const completedGames = allGames.filter(g => g.winner && g.winner.trim() !== '');
+    const completedGameDocIds = new Set(
+      completedGames.map(g => `${seasonId}_${g.id}`)
+    );
+    const totalCompleted = completedGames.length;
+
+    // 3. All aggregatedPlayerStats (skip migrated)
+    const [aggregatedSnap, usersSnap] = await Promise.all([
+      getDocs(collection(db, 'aggregatedPlayerStats')),
+      getDocs(collection(db, 'users'))
+    ]);
+
+    // Build uidToLegacyId: auth UID → legacyId (mergedFromProfile on users doc)
+    const uidToLegacyId = {};
+    usersSnap.docs.forEach(d => {
+      const mp = d.data().mergedFromProfile;
+      if (mp) uidToLegacyId[d.id] = mp;
+    });
+
+    // Build legacyToAuth for player links
+    const legacyToAuth = {};
+    usersSnap.docs.forEach(d => {
+      const mp = d.data().mergedFromProfile;
+      if (mp) legacyToAuth[mp] = d.id;
+    });
+
+    // Collect players with team assignments for this season
+    // Key: {id (aggregatedPlayerStats doc), name, team, statsId}
+    const players = [];
+    const subOnlyPlayers = [];
+    aggregatedSnap.docs.forEach(d => {
+      const data = d.data();
+      if (data.migrated === true) return;
+      if (!data.seasons) return;
+
+      // Find keys matching this season
+      const matchingKeys = Object.keys(data.seasons).filter(k => k.startsWith(seasonId) && !k.endsWith('-sub'));
+      const hasSubKey = Object.keys(data.seasons).some(k => k.startsWith(seasonId) && k.endsWith('-sub'));
+      if (matchingKeys.length === 0) {
+        // Player only has substitute appearances this season (not on a roster)
+        if (hasSubKey) {
+          subOnlyPlayers.push({
+            docId: d.id,
+            statsId: uidToLegacyId[d.id] || d.id,
+            name: data.name || data.displayName || d.id,
+            linkId: legacyToAuth[uidToLegacyId[d.id] || d.id] || (uidToLegacyId[d.id] || d.id),
+          });
+        }
+        return;
+      }
+
+      const seasonKey = matchingKeys[0];
+      const teamFromKey = seasonKey.split('-').slice(2).join('-'); // e.g. "2026-summer-teal" → "teal"
+      const team = (data.seasons[seasonKey]?.team || data.currentTeam || teamFromKey || '').toLowerCase();
+
+      // playerStats are stored under legacyId; for auth users, map from uidToLegacyId
+      const statsId = uidToLegacyId[d.id] || d.id;
+
+      players.push({
+        docId: d.id,
+        statsId,
+        name: data.name || data.displayName || d.id,
+        team,
+        linkId: legacyToAuth[statsId] || statsId,
+      });
+    });
+
+    if (players.length === 0) {
+      mainEl.innerHTML = '<div class="loading-state"><p>No players found for this season.</p></div>';
+      return;
+    }
+
+    // 4. Fetch each player's game docs from playerStats
+    const playerGameCounts = await Promise.all(
+      players.map(async player => {
+        try {
+          const gamesSnap = await getDocs(
+            collection(db, 'playerStats', player.statsId, 'games')
+          );
+          // Regular games count toward eligibility; sub games (isSub) do not
+          let count = 0;
+          const subTeams = [];
+          gamesSnap.docs.forEach(d => {
+            if (!completedGameDocIds.has(d.id)) return;
+            if (d.data().isSub === true) {
+              subTeams.push(d.data().teamId || '');
+            } else {
+              count++;
+            }
+          });
+          return { ...player, gamesPlayed: count, subCount: subTeams.length, subTeams };
+        } catch (e) {
+          return { ...player, gamesPlayed: 0, subCount: 0, subTeams: [] };
+        }
+      })
+    );
+
+    // 4b. Sub-only players (no roster spot this season)
+    const subOnlyResults = (await Promise.all(
+      subOnlyPlayers.map(async player => {
+        try {
+          const gamesSnap = await getDocs(collection(db, 'playerStats', player.statsId, 'games'));
+          const subTeams = [];
+          gamesSnap.docs.forEach(d => {
+            if (completedGameDocIds.has(d.id) && d.data().isSub === true) subTeams.push(d.data().teamId || '');
+          });
+          return { ...player, subCount: subTeams.length, subTeams };
+        } catch (e) {
+          return { ...player, subCount: 0, subTeams: [] };
+        }
+      })
+    )).filter(p => p.subCount > 0).sort((a, b) => a.name.localeCompare(b.name));
+
+    // Sub flag helpers
+    const subStatus = p => {
+      if (!p.subCount) return null;
+      const over = p.subCount > SUBS_ALLOWED;
+      const teams = p.subTeams.filter(Boolean).map(capitalize).join(', ');
+      let text;
+      if (SUBS_ALLOWED === 0) text = 'Subbed (not allowed)';
+      else if (over) text = `Over limit (${p.subCount}/${SUBS_ALLOWED})`;
+      else text = `Sub used (${p.subCount}/${SUBS_ALLOWED})`;
+      return { over, text, teams };
+    };
+
+    // 5. Group by team, sort each team alphabetically by name
+    const byTeam = {};
+    playerGameCounts.forEach(p => {
+      if (!byTeam[p.team]) byTeam[p.team] = [];
+      byTeam[p.team].push(p);
+    });
+    Object.keys(byTeam).forEach(t => {
+      byTeam[t].sort((a, b) => {
+        // eligible first, then by games desc, then name
+        if (a.gamesPlayed >= GAMES_REQUIRED && b.gamesPlayed < GAMES_REQUIRED) return -1;
+        if (b.gamesPlayed >= GAMES_REQUIRED && a.gamesPlayed < GAMES_REQUIRED) return 1;
+        if (b.gamesPlayed !== a.gamesPlayed) return b.gamesPlayed - a.gamesPlayed;
+        return a.name.localeCompare(b.name);
+      });
+    });
+
+    const sortedTeams = Object.keys(byTeam).sort();
+
+    // 6. Summary banner
+    const totalPlayers = playerGameCounts.length;
+    const eligiblePlayers = playerGameCounts.filter(p => p.gamesPlayed >= GAMES_REQUIRED).length;
+    const subbedPlayers = playerGameCounts.filter(p => p.subCount > 0).length + subOnlyResults.length;
+    const overLimitPlayers = playerGameCounts.filter(p => p.subCount > SUBS_ALLOWED).length
+      + subOnlyResults.filter(p => p.subCount > SUBS_ALLOWED).length;
+    const summaryEl = document.getElementById('summaryBanner');
+    summaryEl.style.display = '';
+    summaryEl.innerHTML = `
+      <div class="summary-stat">
+        <div class="num">${eligiblePlayers}</div>
+        <div class="label">Eligible</div>
+      </div>
+      <div class="summary-stat">
+        <div class="num">${totalPlayers - eligiblePlayers}</div>
+        <div class="label">Not Yet</div>
+      </div>
+      <div class="summary-stat">
+        <div class="num">${totalCompleted}</div>
+        <div class="label">Games Played</div>
+      </div>
+      <div class="summary-stat">
+        <div class="num">${GAMES_REQUIRED - totalCompleted > 0 ? GAMES_REQUIRED - totalCompleted : 0}</div>
+        <div class="label">Games Left</div>
+      </div>
+      <div class="summary-stat">
+        <div class="num">${subbedPlayers}</div>
+        <div class="label">Have Subbed</div>
+      </div>
+      ${overLimitPlayers > 0 ? `
+      <div class="summary-stat">
+        <div class="num" style="color:#b91c1c">${overLimitPlayers}</div>
+        <div class="label">Sub Violations</div>
+      </div>` : ''}
+    `;
+
+    // 7. Team filter pills
+    const filterBar = document.getElementById('teamFilterBar');
+    const allPill = document.createElement('button');
+    allPill.className = 'filter-pill active';
+    allPill.dataset.team = 'all';
+    allPill.textContent = `All Teams (${sortedTeams.length})`;
+    allPill.onclick = () => applyFilter('all');
+    filterBar.appendChild(allPill);
+
+    sortedTeams.forEach(team => {
+      const col = teamColor(team);
+      const pill = document.createElement('button');
+      pill.className = 'filter-pill team-pill';
+      pill.dataset.team = team;
+      const eligCount = byTeam[team].filter(p => p.gamesPlayed >= GAMES_REQUIRED).length;
+      pill.textContent = `${capitalize(team)} (${eligCount}/${byTeam[team].length})`;
+      pill.style.borderColor = col.bg;
+      pill.style.color = col.bg;
+      pill.onclick = () => {
+        applyFilter(team);
+        // Style active team pill
+        document.querySelectorAll('.filter-pill.team-pill').forEach(p => {
+          if (p.dataset.team === team) {
+            p.style.background = col.bg;
+            p.style.color = col.text;
+          } else {
+            const tc = teamColor(p.dataset.team);
+            p.style.background = '';
+            p.style.color = tc.bg;
+          }
+        });
+        allPill.classList.remove('active');
+      };
+      filterBar.appendChild(pill);
+    });
+
+    // 8. Render team sections
+    mainEl.innerHTML = '';
+    allTeamSections = [];
+
+    sortedTeams.forEach(team => {
+      const teamPlayers = byTeam[team];
+      const col = teamColor(team);
+      const eligCount = teamPlayers.filter(p => p.gamesPlayed >= GAMES_REQUIRED).length;
+
+      const section = document.createElement('div');
+      section.className = 'team-section';
+
+      section.innerHTML = `
+        <div class="team-header" style="background: linear-gradient(135deg, ${col.bg} 0%, ${col.bg}cc 100%);">
+          <span>${capitalize(team)}</span>
+          <span class="team-badge-count">✅ ${eligCount} / ${teamPlayers.length} eligible</span>
+        </div>
+        <table class="elig-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Player</th>
+              <th class="center">Games</th>
+              <th class="hide-mobile">Progress</th>
+              <th class="center">Status</th>
+              <th class="center">Subs</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${teamPlayers.map((p, i) => {
+              const eligible = p.gamesPlayed >= GAMES_REQUIRED;
+              const pips = Array.from({ length: GAMES_REQUIRED }, (_, idx) => {
+                const filled = idx < Math.min(p.gamesPlayed, GAMES_REQUIRED);
+                return `<div class="progress-pip ${filled ? 'filled' : ''}" style="${filled ? `background:${col.pip}` : ''}"></div>`;
+              }).join('');
+
+              let badgeClass = 'status-ineligible';
+              let badgeText = `${p.gamesPlayed}/${GAMES_REQUIRED}`;
+              if (eligible) {
+                badgeClass = 'status-eligible';
+                badgeText = '✅ Eligible';
+              } else if (p.gamesPlayed >= GAMES_REQUIRED - 2) {
+                badgeClass = 'status-close';
+              }
+
+              const sub = subStatus(p);
+              const rowClass = [eligible ? 'eligible-row' : '', sub ? (sub.over ? 'sub-over-row' : 'sub-flag-row') : ''].filter(Boolean).join(' ');
+              const subCell = sub
+                ? `<span class="status-badge ${sub.over ? 'status-sub-over' : 'status-sub-used'}">${sub.text}</span>${sub.teams ? `<div class="sub-note">for ${sub.teams}</div>` : ''}`
+                : '<span class="sub-none">&mdash;</span>';
+
+              return `
+                <tr class="${rowClass}">
+                  <td style="color:var(--text-light);font-size:0.85rem">${i + 1}</td>
+                  <td><a class="player-link" href="player.html?id=${encodeURIComponent(p.linkId)}">${p.name}</a></td>
+                  <td class="center games-count-cell">${p.gamesPlayed}${p.gamesPlayed > GAMES_REQUIRED ? `<span style="color:var(--text-light);font-size:0.8rem"> (+${p.gamesPlayed - GAMES_REQUIRED})</span>` : ''}</td>
+                  <td class="hide-mobile"><div class="progress-wrap">${pips}</div></td>
+                  <td class="center"><span class="status-badge ${badgeClass}">${badgeText}</span></td>
+                  <td class="center">${subCell}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+
+      mainEl.appendChild(section);
+      allTeamSections.push({ team, el: section });
+    });
+
+    // 9. Sub-only players (not on any roster this season)
+    if (subOnlyResults.length > 0) {
+      const subSection = document.createElement('div');
+      subSection.className = 'team-section';
+      subSection.innerHTML = `
+        <div class="team-header" style="background: linear-gradient(135deg, #0369a1 0%, #0369a1cc 100%);">
+          <span>Substitutes (not on a roster)</span>
+          <span class="team-badge-count">${subOnlyResults.length} player${subOnlyResults.length === 1 ? '' : 's'}</span>
+        </div>
+        <table class="elig-table">
+          <thead>
+            <tr><th>Player</th><th class="center">Subs</th></tr>
+          </thead>
+          <tbody>
+            ${subOnlyResults.map(p => {
+              const sub = subStatus(p);
+              return `
+                <tr class="${sub.over ? 'sub-over-row' : 'sub-flag-row'}">
+                  <td><a class="player-link" href="player.html?id=${encodeURIComponent(p.linkId)}">${p.name}</a></td>
+                  <td class="center"><span class="status-badge ${sub.over ? 'status-sub-over' : 'status-sub-used'}">${sub.text}</span>${sub.teams ? `<div class="sub-note">for ${sub.teams}</div>` : ''}</td>
+                </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+      mainEl.appendChild(subSection);
+      allTeamSections.push({ team: '__subs__', el: subSection });
+    }
+
+  } catch (err) {
+    console.error('Error loading eligibility:', err);
+    mainEl.innerHTML = `<div class="loading-state"><p>Error loading data: ${err.message}</p></div>`;
+  }
+}
+
+loadEligibility();
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="team-colors.js"></script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

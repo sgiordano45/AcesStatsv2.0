@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aces DFS - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #3b82f6;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0; padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+.loading-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 9999; transition: opacity 0.5s ease;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.spinner {
+  width: 48px; height: 48px; border: 4px solid var(--border-color);
+  border-top-color: var(--primary-color); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white; text-align: center; padding: 2rem 1.5rem 1.5rem; box-shadow: var(--shadow-lg);
+  position: relative; overflow: hidden;
+}
+.header h1 { margin: 0 0 0.25rem; font-size: 1.7rem; }
+.header p { margin: 0; opacity: 0.9; font-size: 0.95rem; }
+.back-link { color: white; opacity: 0.85; text-decoration: none; font-size: 0.9rem; display: inline-block; margin-bottom: 0.75rem; }
+.back-link:hover { opacity: 1; text-decoration: underline; }
+
+.page-container { max-width: 900px; margin: 0 auto; padding: 1.25rem; }
+
+.auth-gate {
+  display: none; max-width: 480px; margin: 4rem auto; text-align: center;
+  background: var(--card-bg); padding: 2.5rem; border-radius: 16px; box-shadow: var(--shadow-md);
+}
+
+.card {
+  background: var(--card-bg); border-radius: 16px; box-shadow: var(--shadow-md);
+  padding: 1.5rem; margin-bottom: 1.25rem;
+}
+.card h2 { margin: 0 0 0.25rem; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem; }
+.card .subtitle { color: var(--text-light); font-size: 0.85rem; margin: 0 0 1rem; }
+
+.lock-banner {
+  border-radius: 12px; padding: 0.9rem 1.1rem; margin-bottom: 1.25rem;
+  font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+}
+.lock-banner.open { background: #dcfce7; color: #15803d; }
+.lock-banner.locked { background: #fef3c7; color: #92400e; }
+.lock-banner.scored { background: #dbeafe; color: #1e40af; }
+.lock-banner .countdown { font-variant-numeric: tabular-nums; font-weight: 800; }
+
+.cap-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  background: #f8fafc; border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 1rem; flex-wrap: wrap;
+}
+.cap-bar .amount { font-size: 1.3rem; font-weight: 800; }
+.cap-bar .amount.over { color: var(--danger-color); }
+.cap-bar .amount.ok { color: var(--primary-color); }
+.cap-track { flex: 1; min-width: 140px; height: 10px; background: #e2e8f0; border-radius: 6px; overflow: hidden; }
+.cap-fill { height: 100%; background: var(--secondary-color); transition: width 0.2s ease; }
+.cap-fill.over { background: var(--danger-color); }
+
+.slots-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin-bottom: 1rem;
+}
+@media (min-width: 560px) { .slots-grid { grid-template-columns: repeat(5, 1fr); } }
+
+.slot {
+  border: 2px dashed var(--border-color); border-radius: 10px; padding: 0.6rem 0.5rem;
+  text-align: center; min-height: 78px; display: flex; flex-direction: column; justify-content: center;
+  cursor: default; position: relative;
+}
+.slot.filled { border-style: solid; border-color: var(--secondary-color); background: #f0fdf4; cursor: pointer; }
+.slot .slot-label { font-size: 0.68rem; font-weight: 800; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.2rem; }
+.slot .slot-name { font-size: 0.82rem; font-weight: 700; line-height: 1.2; }
+.slot .slot-salary { font-size: 0.75rem; color: var(--text-light); }
+.slot .slot-remove { position: absolute; top: 2px; right: 4px; font-size: 0.9rem; color: var(--danger-color); cursor: pointer; display: none; }
+.slot.filled:hover .slot-remove { display: block; }
+
+.filter-tabs { display: flex; gap: 0.4rem; margin-bottom: 0.85rem; flex-wrap: wrap; }
+.filter-tab {
+  padding: 0.4rem 0.9rem; border-radius: 20px; border: 1px solid var(--border-color);
+  background: white; color: var(--text-dark); font-size: 0.82rem; font-weight: 600; cursor: pointer;
+}
+.filter-tab.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+.search-box { margin-bottom: 0.85rem; }
+.search-box input {
+  width: 100%; padding: 0.6rem 0.85rem; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9rem;
+}
+
+.player-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  padding: 0.65rem 0.5rem; border-bottom: 1px solid var(--border-color);
+}
+.player-row:last-child { border-bottom: none; }
+.player-info { display: flex; align-items: center; gap: 0.6rem; }
+.pos-chip {
+  display: inline-block; min-width: 2rem; text-align: center; padding: 0.15rem 0.4rem; border-radius: 6px;
+  font-size: 0.7rem; font-weight: 800; background: #eef2ff; color: #4338ca;
+}
+.pos-chip.pitcher { background: #fff7ed; color: #c2410c; }
+.pos-chip.unassigned { background: #fef3c7; color: #92400e; }
+.player-name { font-weight: 600; font-size: 0.92rem; }
+.player-team { font-size: 0.75rem; color: var(--text-light); }
+.player-salary { font-weight: 700; color: var(--primary-color); font-size: 0.92rem; white-space: nowrap; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.2rem;
+  border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700;
+  cursor: pointer; transition: transform 0.15s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+.btn-primary { background: var(--primary-color); color: white; }
+.btn-add { background: var(--secondary-color); color: white; padding: 0.4rem 0.8rem; font-size: 0.78rem; }
+.btn-add:disabled { background: #cbd5e1; }
+.btn-block { width: 100%; justify-content: center; }
+
+.alert { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.85rem; margin-bottom: 0.85rem; }
+.alert-error { background: #fee2e2; color: #b91c1c; }
+.alert-info { background: #dbeafe; color: #1e40af; }
+.alert-success { background: #dcfce7; color: #15803d; }
+
+.leaderboard-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--border-color);
+}
+.leaderboard-row:last-child { border-bottom: none; }
+.leaderboard-row.me { background: #f0fdf4; border-radius: 8px; }
+.rank { font-weight: 800; color: var(--text-light); width: 1.75rem; text-align: center; }
+.lb-points { font-weight: 800; color: var(--primary-color); }
+
+.week-history-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  padding: 0.55rem 0.25rem; border-bottom: 1px solid var(--border-color); font-size: 0.85rem;
+}
+.week-history-row:last-child { border-bottom: none; }
+.week-pts { font-weight: 800; color: var(--primary-color); }
+
+.empty-state { text-align: center; color: var(--text-light); padding: 2rem 1rem; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="margin-top:1rem;color:var(--text-light);">Loading Aces DFS...</p>
+</div>
+
+<div class="header">
+  <a href="games.html" class="back-link">&larr; Daily Games</a>
+  <h1>&#128176; Aces DFS</h1>
+  <p>Draft a 10-man roster under the salary cap, powered by AcesBPI</p>
+</div>
+
+<div class="page-container">
+
+  <div class="auth-gate" id="authGate">
+    <h2>&#128274; Sign In Required</h2>
+    <p>Aces DFS is open to any signed-in Aces account.</p>
+    <a href="signin.html" class="btn btn-primary">Sign In</a>
+  </div>
+
+  <div id="mainContent" style="display:none;">
+    <div class="filters-nav"></div>
+
+    <div id="noWeekState" class="card" style="display:none;">
+      <div class="empty-state">
+        &#128683; No DFS week has been published yet &mdash; check back once this week's salaries are live.
+      </div>
+    </div>
+
+    <div id="weekContent" style="display:none;">
+
+      <div id="lockBanner" class="lock-banner"></div>
+
+      <div style="text-align:center;margin:-0.5rem 0 1.25rem;">
+        <a href="dfs-week.html" style="color:var(--secondary-color);font-weight:700;font-size:0.85rem;text-decoration:none;">
+          &#128202; See everyone's lineup for this week &rarr;
+        </a>
+      </div>
+
+      <div class="card" id="lineupCard">
+        <h2>Your Lineup &mdash; <span id="weekLabel"></span></h2>
+        <p class="subtitle">4 IF &middot; 3 OF &middot; 1 C &middot; 1 P &middot; 1 UTIL. Tap a filled slot to remove that player.</p>
+
+        <div class="cap-bar">
+          <div>
+            <div class="amount" id="capAmount">$0</div>
+            <div style="font-size:0.78rem;color:var(--text-light);">of $<span id="capTotal"></span> cap</div>
+          </div>
+          <div class="cap-track"><div class="cap-fill" id="capFill" style="width:0%;"></div></div>
+        </div>
+
+        <div class="slots-grid" id="slotsGrid"></div>
+
+        <div id="lineupAlert"></div>
+        <button class="btn btn-primary btn-block" id="saveLineupBtn">&#128190; Save Lineup</button>
+        <div id="saveStatus" style="text-align:center;font-size:0.8rem;color:var(--text-light);margin-top:0.5rem;"></div>
+      </div>
+
+      <div class="card" id="poolCard">
+        <h2>Player Pool</h2>
+        <p class="subtitle">Players tagged <strong>UTIL only</strong> don't have a position on the team roster yet &mdash; they'll unlock IF/OF/C/P eligibility automatically once one is set.</p>
+        <div class="filter-tabs" id="filterTabs"></div>
+        <div class="search-box"><input type="text" id="playerSearch" placeholder="Search players or teams&hellip;"></div>
+        <div id="playerList"></div>
+      </div>
+
+      <div class="card" id="resultsCard" style="display:none;">
+        <h2>&#127942; Your Results</h2>
+        <div id="resultsBody"></div>
+      </div>
+
+      <div class="card" id="weeklyLeaderboardCard" style="display:none;">
+        <h2>Weekly Leaderboard &mdash; <span id="weeklyLeaderboardLabel"></span></h2>
+        <div id="weeklyLeaderboardBody"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Season Leaderboard</h2>
+      <p class="subtitle">Total fantasy points across every scored week this season.</p>
+      <div id="seasonLeaderboardBody"><div class="empty-state">No scored weeks yet.</div></div>
+    </div>
+
+    <div class="card">
+      <h2>My Lineup History</h2>
+      <div id="historyBody"><div class="empty-state">No lineups saved yet this season.</div></div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { onAuthChange, getUserProfile } from './firebase-auth.js';
+  import { getCurrentSeason } from './firebase-data.js';
+  import { db, collection, doc, getDoc, getDocs, query, where } from './firebase-config.js';
+  import { setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { NavigationComponent } from './nav-component.js';
+  import {
+    DFS_SLOTS, SALARY_CAP, POSITION_GROUPS, eligibleSlotsForPosition, positionGroupsFor, validateLineup,
+    lineupTotalPoints
+  } from './dfs-scoring.js';
+
+  // ============================================================
+  // STATE
+  // ============================================================
+  let currentUser = null;
+  let userProfile = null;
+  let displayName = '';
+  let season = null;
+  let weekDoc = null;       // dfsWeeks/{seasonId}_{week}
+  let weekDocId = null;
+  let salaryPool = {};      // playerId -> { name, team, position, salary }
+  let scores = null;        // dfsScores players map, once scored
+  let myLineup = null;      // existing saved entry (if any)
+  let currentLineup = {};   // slotId -> playerId
+  let activeFilter = 'All';
+  let searchTerm = '';
+  let lockAtMs = null;
+  let countdownTimer = null;
+
+  const el = (id) => document.getElementById(id);
+  const loadingOverlay = el('loadingOverlay');
+
+  // Build the physical slot list: IF-1..4, OF-1..3, C-1, P-1, UTIL-1
+  const SLOT_IDS = [];
+  Object.entries(DFS_SLOTS).forEach(([group, count]) => {
+    for (let i = 1; i <= count; i++) SLOT_IDS.push(`${group}-${i}`);
+  });
+  const slotGroup = (slotId) => slotId.split('-')[0];
+
+  // ============================================================
+  // AUTH
+  // ============================================================
+  onAuthChange(async (user) => {
+    if (!user) {
+      el('authGate').style.display = 'block';
+      loadingOverlay.classList.add('hidden');
+      return;
+    }
+    currentUser = user;
+    const profileResult = await getUserProfile(user.uid);
+    userProfile = profileResult?.data || null;
+    displayName = userProfile?.displayName || userProfile?.linkedPlayer || currentUser.email;
+
+    el('mainContent').style.display = 'block';
+    await init();
+    loadingOverlay.classList.add('hidden');
+  });
+
+  async function init() {
+    season = await getCurrentSeason();
+    if (!season) {
+      el('noWeekState').style.display = 'block';
+      return;
+    }
+
+    const weeksSnap = await getDocs(query(collection(db, 'dfsWeeks'), where('seasonId', '==', season.id)));
+    if (weeksSnap.empty) {
+      el('noWeekState').style.display = 'block';
+      return;
+    }
+
+    const weeks = weeksSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.weekId || '').localeCompare(a.weekId || ''));
+    weekDoc = weeks[0];
+    weekDocId = weekDoc.id;
+
+    const salariesSnap = await getDoc(doc(db, 'dfsSalaries', weekDocId));
+    salaryPool = salariesSnap.exists() ? (salariesSnap.data().players || {}) : {};
+
+    if (weekDoc.status === 'scored') {
+      const scoresSnap = await getDoc(doc(db, 'dfsScores', weekDocId));
+      scores = scoresSnap.exists() ? (scoresSnap.data().players || {}) : {};
+    }
+
+    const myEntrySnap = await getDoc(doc(db, 'dfsLineups', weekDocId, 'entries', currentUser.uid));
+    myLineup = myEntrySnap.exists() ? myEntrySnap.data() : null;
+    if (myLineup) {
+      (myLineup.picks || []).forEach(p => { currentLineup[p.slot + '-' + p.slotIndex] = p.playerId; });
+    }
+
+    el('weekContent').style.display = 'block';
+    el('capTotal').textContent = SALARY_CAP.toLocaleString();
+    el('weekLabel').textContent = weekDoc.label || weekDoc.weekId || '';
+
+    lockAtMs = weekDoc.lockAt?.toMillis ? weekDoc.lockAt.toMillis() : null;
+    renderLockBanner();
+    if (weekDoc.status === 'open') {
+      countdownTimer = setInterval(renderLockBanner, 1000);
+    }
+
+    buildFilterTabs();
+    renderSlots();
+    renderPlayerList();
+
+    if (weekDoc.status === 'scored') {
+      renderMyResults();
+      await renderWeeklyLeaderboard();
+    }
+
+    await renderSeasonLeaderboard();
+    await renderHistory();
+
+    const locked = isLocked();
+    el('saveLineupBtn').style.display = locked ? 'none' : 'block';
+    el('poolCard').style.display = locked ? 'none' : 'block';
+  }
+
+  function isLocked() {
+    if (weekDoc.status !== 'open') return true;
+    if (lockAtMs && Date.now() >= lockAtMs) return true;
+    return false;
+  }
+
+  function renderLockBanner() {
+    const banner = el('lockBanner');
+    if (weekDoc.status === 'scored') {
+      banner.className = 'lock-banner scored';
+      banner.innerHTML = `&#127942; This week is scored &mdash; see your results below.`;
+      return;
+    }
+    if (isLocked()) {
+      banner.className = 'lock-banner locked';
+      banner.innerHTML = `&#128274; Lineups are locked for this week. Check back after games are scored.`;
+      if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+      el('saveLineupBtn').style.display = 'none';
+      el('poolCard').style.display = 'none';
+      return;
+    }
+    banner.className = 'lock-banner open';
+    const remaining = lockAtMs ? lockAtMs - Date.now() : null;
+    banner.innerHTML = remaining !== null
+      ? `&#9203; Lineups lock in <span class="countdown">${formatCountdown(remaining)}</span>`
+      : `&#9203; Lineups are open.`;
+  }
+
+  function formatCountdown(ms) {
+    const totalSec = Math.max(Math.floor(ms / 1000), 0);
+    const d = Math.floor(totalSec / 86400);
+    const h = Math.floor((totalSec % 86400) / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (d > 0) return `${d}d ${h}h`;
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m ${s}s`;
+  }
+
+  // ============================================================
+  // FILTER TABS + SEARCH
+  // ============================================================
+  function buildFilterTabs() {
+    const groups = ['All', ...Object.keys(DFS_SLOTS)];
+    el('filterTabs').innerHTML = groups.map(g =>
+      `<button class="filter-tab${g === activeFilter ? ' active' : ''}" data-group="${g}">${g}</button>`
+    ).join('');
+    el('filterTabs').querySelectorAll('.filter-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeFilter = btn.dataset.group;
+        buildFilterTabs();
+        renderPlayerList();
+      });
+    });
+  }
+
+  el('playerSearch').addEventListener('input', (e) => {
+    searchTerm = e.target.value.trim().toLowerCase();
+    renderPlayerList();
+  });
+
+  function playerMatchesFilter(p) {
+    if (activeFilter === 'All' || activeFilter === 'UTIL') return true; // everyone is UTIL-eligible
+    return positionGroupsFor(p.position).includes(activeFilter);
+  }
+
+  // ============================================================
+  // RENDER: PLAYER POOL
+  // ============================================================
+  function renderPlayerList() {
+    const rows = Object.entries(salaryPool)
+      .filter(([, p]) => playerMatchesFilter(p))
+      .filter(([, p]) => !searchTerm || p.name.toLowerCase().includes(searchTerm) || (p.team || '').toLowerCase().includes(searchTerm))
+      .sort((a, b) => b[1].salary - a[1].salary);
+
+    if (rows.length === 0) {
+      el('playerList').innerHTML = `<div class="empty-state">No players match.</div>`;
+      return;
+    }
+
+    const usedIds = new Set(Object.values(currentLineup).filter(Boolean));
+
+    el('playerList').innerHTML = rows.map(([playerId, p]) => {
+      const already = usedIds.has(playerId);
+      const hasRoom = canAddPlayer(p) !== null;
+      const noPosition = p.positionless === true || positionGroupsFor(p.position).length === 0;
+      return `
+        <div class="player-row">
+          <div class="player-info">
+            <span class="pos-chip${p.position === 'P' ? ' pitcher' : ''}${noPosition ? ' unassigned' : ''}" title="${noPosition ? 'No position on file yet \u2014 eligible for UTIL only until roster is updated' : ''}">${noPosition ? 'UTIL only' : p.position}</span>
+            <div>
+              <div class="player-name">${p.name}</div>
+              <div class="player-team">${p.team}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.6rem;">
+            <span class="player-salary">$${p.salary.toLocaleString()}</span>
+            <button class="btn btn-add" data-player-id="${playerId}" ${already || !hasRoom || isLocked() ? 'disabled' : ''}>
+              ${already ? 'Added' : (hasRoom ? '+ Add' : 'Full')}
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    el('playerList').querySelectorAll('.btn-add').forEach(btn => {
+      btn.addEventListener('click', () => addPlayerToLineup(btn.dataset.playerId));
+    });
+  }
+
+  // Returns the slotId to place this player in, or null if no room.
+  // Tries every specific group the player is eligible for (a dual-eligible
+  // 'IF/OF' player tries IF, then OF) before falling back to UTIL.
+  function canAddPlayer(p) {
+    const eligible = eligibleSlotsForPosition(p.position); // e.g. ['IF','OF','UTIL'] or ['UTIL']
+    for (const group of eligible) {
+      if (group === 'UTIL') continue;
+      const openSpecific = SLOT_IDS.find(id => slotGroup(id) === group && !currentLineup[id]);
+      if (openSpecific) return openSpecific;
+    }
+    const openUtil = SLOT_IDS.find(id => slotGroup(id) === 'UTIL' && !currentLineup[id]);
+    return openUtil || null;
+  }
+
+  function addPlayerToLineup(playerId) {
+    const p = salaryPool[playerId];
+    if (!p || isLocked()) return;
+    const slotId = canAddPlayer(p);
+    if (!slotId) return;
+    currentLineup[slotId] = playerId;
+    renderSlots();
+    renderPlayerList();
+  }
+
+  function removeFromSlot(slotId) {
+    if (isLocked()) return;
+    delete currentLineup[slotId];
+    renderSlots();
+    renderPlayerList();
+  }
+
+  // ============================================================
+  // RENDER: LINEUP SLOTS + CAP
+  // ============================================================
+  function renderSlots() {
+    el('slotsGrid').innerHTML = SLOT_IDS.map(slotId => {
+      const group = slotGroup(slotId);
+      const playerId = currentLineup[slotId];
+      const p = playerId ? salaryPool[playerId] : null;
+      if (!p) {
+        return `<div class="slot" data-slot="${slotId}"><div class="slot-label">${group}</div><div class="slot-name" style="color:var(--text-light);">Empty</div></div>`;
+      }
+      return `
+        <div class="slot filled" data-slot="${slotId}">
+          <span class="slot-remove" data-slot="${slotId}">&times;</span>
+          <div class="slot-label">${group}</div>
+          <div class="slot-name">${p.name}</div>
+          <div class="slot-salary">$${p.salary.toLocaleString()}</div>
+        </div>
+      `;
+    }).join('');
+
+    el('slotsGrid').querySelectorAll('.slot.filled').forEach(node => {
+      node.addEventListener('click', () => removeFromSlot(node.dataset.slot));
+    });
+
+    const total = Object.values(currentLineup)
+      .filter(Boolean)
+      .reduce((sum, playerId) => sum + (salaryPool[playerId]?.salary || 0), 0);
+
+    const over = total > SALARY_CAP;
+    el('capAmount').textContent = `$${total.toLocaleString()}`;
+    el('capAmount').className = `amount ${over ? 'over' : 'ok'}`;
+    el('capFill').style.width = `${Math.min((total / SALARY_CAP) * 100, 100)}%`;
+    el('capFill').className = `cap-fill${over ? ' over' : ''}`;
+  }
+
+  // ============================================================
+  // SAVE LINEUP
+  // ============================================================
+  el('saveLineupBtn').addEventListener('click', saveLineup);
+
+  async function saveLineup() {
+    if (isLocked()) return;
+
+    const picks = SLOT_IDS
+      .filter(slotId => currentLineup[slotId])
+      .map(slotId => {
+        const playerId = currentLineup[slotId];
+        const p = salaryPool[playerId];
+        const group = slotGroup(slotId);
+        return {
+          playerId, name: p.name, team: p.team, position: p.position,
+          salary: p.salary, slot: group, slotIndex: slotId.split('-')[1]
+        };
+      });
+
+    const { valid, errors, totalSalary } = validateLineup(picks);
+    const alertBox = el('lineupAlert');
+
+    if (!valid) {
+      alertBox.innerHTML = `<div class="alert alert-error">${errors.join('<br>')}</div>`;
+      return;
+    }
+    alertBox.innerHTML = '';
+
+    el('saveLineupBtn').disabled = true;
+    el('saveLineupBtn').textContent = '⏳ Saving…';
+
+    try {
+      await setDoc(doc(db, 'dfsLineups', weekDocId, 'entries', currentUser.uid), {
+        uid: currentUser.uid,
+        displayName,
+        seasonId: season.id,
+        weekId: weekDoc.weekId,
+        picks,
+        totalSalary,
+        submittedAt: serverTimestamp()
+      });
+      el('saveStatus').textContent = `✅ Saved ${new Date().toLocaleTimeString()}`;
+      myLineup = { picks, totalSalary };
+    } catch (e) {
+      console.error(e);
+      alertBox.innerHTML = `<div class="alert alert-error">Couldn't save: ${e.message}</div>`;
+    } finally {
+      el('saveLineupBtn').disabled = false;
+      el('saveLineupBtn').textContent = '💾 Save Lineup';
+    }
+  }
+
+  // ============================================================
+  // RESULTS (this week, mine)
+  // ============================================================
+  function renderMyResults() {
+    if (!myLineup || !scores) {
+      el('resultsCard').style.display = 'block';
+      el('resultsBody').innerHTML = `<div class="empty-state">You didn't submit a lineup for this week.</div>`;
+      return;
+    }
+    const { total, missingPitchLine } = lineupTotalPoints(myLineup.picks, scores);
+    const rows = myLineup.picks.map(pick => {
+      const s = scores[pick.playerId];
+      const pts = pick.slot === 'P' ? s?.pitchingPoints : s?.battingPoints;
+      return `
+        <div class="week-history-row">
+          <span>${pick.name} <span style="color:var(--text-light);">(${pick.slot})</span></span>
+          <span class="week-pts">${pts === null || pts === undefined ? '—' : pts}</span>
+        </div>
+      `;
+    }).join('');
+
+    el('resultsCard').style.display = 'block';
+    el('resultsBody').innerHTML = `
+      <div style="text-align:center;margin-bottom:1rem;">
+        <div style="font-size:2rem;font-weight:800;color:var(--primary-color);">${total}</div>
+        <div style="color:var(--text-light);font-size:0.85rem;">total fantasy points</div>
+      </div>
+      ${missingPitchLine ? `<div class="alert alert-info">Your P didn't have a recorded pitching line this week &mdash; scored as 0 for that slot.</div>` : ''}
+      ${rows}
+    `;
+  }
+
+  // ============================================================
+  // LEADERBOARDS
+  // ============================================================
+  async function computeWeekLeaderboard(seasonId, weekId) {
+    const wDocId = `${seasonId}_${weekId}`;
+    const scoresSnap = await getDoc(doc(db, 'dfsScores', wDocId));
+    if (!scoresSnap.exists()) return [];
+    const scoreMap = scoresSnap.data().players || {};
+
+    const entriesSnap = await getDocs(collection(db, 'dfsLineups', wDocId, 'entries'));
+    const results = [];
+    entriesSnap.forEach(d => {
+      const entry = d.data();
+      const { total } = lineupTotalPoints(entry.picks, scoreMap);
+      results.push({ uid: d.id, displayName: entry.displayName || 'Player', total });
+    });
+    return results.sort((a, b) => b.total - a.total);
+  }
+
+  async function renderWeeklyLeaderboard() {
+    el('weeklyLeaderboardLabel').textContent = weekDoc.label || weekDoc.weekId || '';
+    const results = await computeWeekLeaderboard(season.id, weekDoc.weekId);
+    el('weeklyLeaderboardCard').style.display = 'block';
+    if (results.length === 0) {
+      el('weeklyLeaderboardBody').innerHTML = `<div class="empty-state">No lineups were submitted this week.</div>`;
+      return;
+    }
+    el('weeklyLeaderboardBody').innerHTML = results.map((r, i) => `
+      <div class="leaderboard-row${r.uid === currentUser.uid ? ' me' : ''}">
+        <span class="rank">${i + 1}</span>
+        <span style="flex:1;">${r.displayName}</span>
+        <span class="lb-points">${r.total}</span>
+      </div>
+    `).join('');
+  }
+
+  async function renderSeasonLeaderboard() {
+    const weeksSnap = await getDocs(query(
+      collection(db, 'dfsWeeks'),
+      where('seasonId', '==', season.id),
+      where('status', '==', 'scored')
+    ));
+    if (weeksSnap.empty) return;
+
+    const totals = {}; // uid -> { displayName, total }
+    for (const d of weeksSnap.docs) {
+      const w = d.data();
+      const weekResults = await computeWeekLeaderboard(season.id, w.weekId);
+      weekResults.forEach(r => {
+        if (!totals[r.uid]) totals[r.uid] = { displayName: r.displayName, total: 0 };
+        totals[r.uid].total += r.total;
+      });
+    }
+
+    const ranked = Object.entries(totals)
+      .map(([uid, t]) => ({ uid, ...t, total: Math.round(t.total * 10) / 10 }))
+      .sort((a, b) => b.total - a.total);
+
+    if (ranked.length === 0) {
+      el('seasonLeaderboardBody').innerHTML = `<div class="empty-state">No scored weeks yet.</div>`;
+      return;
+    }
+
+    el('seasonLeaderboardBody').innerHTML = ranked.map((r, i) => `
+      <div class="leaderboard-row${r.uid === currentUser.uid ? ' me' : ''}">
+        <span class="rank">${i + 1}</span>
+        <span style="flex:1;">${r.displayName}</span>
+        <span class="lb-points">${r.total}</span>
+      </div>
+    `).join('');
+  }
+
+  // ============================================================
+  // MY HISTORY
+  // ============================================================
+  async function renderHistory() {
+    const weeksSnap = await getDocs(query(collection(db, 'dfsWeeks'), where('seasonId', '==', season.id)));
+    const weeks = weeksSnap.docs.map(d => d.data()).sort((a, b) => (b.weekId || '').localeCompare(a.weekId || ''));
+    if (weeks.length === 0) return;
+
+    const rows = [];
+    for (const w of weeks) {
+      const wDocId = `${season.id}_${w.weekId}`;
+      const entrySnap = await getDoc(doc(db, 'dfsLineups', wDocId, 'entries', currentUser.uid));
+      if (!entrySnap.exists()) continue;
+      const entry = entrySnap.data();
+
+      let pts = '—';
+      if (w.status === 'scored') {
+        const scoresSnap = await getDoc(doc(db, 'dfsScores', wDocId));
+        if (scoresSnap.exists()) {
+          pts = lineupTotalPoints(entry.picks, scoresSnap.data().players || {}).total;
+        }
+      }
+      rows.push(`
+        <div class="week-history-row">
+          <span>${w.label || w.weekId} <span style="color:var(--text-light);">($${(entry.totalSalary || 0).toLocaleString()})</span></span>
+          <span class="week-pts">${pts}</span>
+        </div>
+      `);
+    }
+
+    if (rows.length === 0) return;
+    el('historyBody').innerHTML = rows.join('');
+  }
+
+  // NavigationComponent self-initializes on DOMContentLoaded.
+</script>
+<script src="mobile-enhancements.js"></script>
+</body>
+</html>

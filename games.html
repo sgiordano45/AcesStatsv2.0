@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0e14">
+<title>Games - Mountainside Aces</title>
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<link rel="stylesheet" href="style.css">
+
+<style>
+  :root {
+    --bg-dark: #0a0e14;
+    --bg-card: #0f1419;
+    --bg-card-hover: #151c24;
+    --accent-cyan: #00d4ff;
+    --accent-cyan-dim: rgba(0, 212, 255, 0.15);
+    --accent-green: #00ff88;
+    --accent-gold: #ffd700;
+    --text-white: #ffffff;
+    --text-gray: #8899a6;
+    --text-muted: #5c6c7a;
+    --border-dark: #1e2a36;
+    --glow-cyan: 0 0 60px rgba(0, 212, 255, 0.3);
+    --glow-cyan-strong: 0 0 80px rgba(0, 212, 255, 0.4), 0 0 120px rgba(0, 212, 255, 0.2);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: var(--bg-dark);
+    min-height: 100vh;
+    color: var(--text-white);
+  }
+
+  /* Hero Section */
+  .hero {
+    position: relative;
+    text-align: center;
+    padding: 4rem 2rem 3rem;
+    overflow: hidden;
+  }
+
+  /* Glowing background effect */
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0, 212, 255, 0.15) 0%, rgba(0, 212, 255, 0.05) 40%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent-cyan-dim);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    color: var(--accent-cyan);
+    padding: 0.5rem 1.25rem;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-badge::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent-green);
+  }
+
+  .hero h1 {
+    margin: 0;
+    font-size: 3.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    line-height: 1.1;
+  }
+
+  .hero h1 span {
+    display: block;
+    color: var(--accent-cyan);
+    text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+  }
+
+  .hero p {
+    margin: 1.5rem auto 0;
+    font-size: 1.1rem;
+    color: var(--text-gray);
+    max-width: 500px;
+    line-height: 1.6;
+  }
+
+  /* Dashboard Container */
+  .dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 3rem;
+  }
+
+  /* Back Link */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-gray);
+    text-decoration: none;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    transition: color 0.2s;
+  }
+
+  .back-link:hover { color: var(--accent-cyan); }
+
+  /* Section Title */
+  .section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-white);
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border-dark) 0%, transparent 100%);
+  }
+
+  /* Your Stats Summary */
+  .stats-summary {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dark);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2.5rem;
+    display: none;
+  }
+
+  .stats-summary.visible { display: block; }
+
+  .stats-summary h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1rem;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-dark);
+    border-radius: 12px;
+    border: 1px solid var(--border-dark);
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .streak-fire { 
+    color: #ff6b35; 
+    font-size: 1.25rem;
+  }
+
+  /* Cards Grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  /* Card Base */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dark);
+    border-radius: 16px;
+    padding: 1.75rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-cyan), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .card:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(0, 212, 255, 0.3);
+    transform: translateY(-4px);
+    box-shadow: var(--glow-cyan);
+  }
+
+  .card:hover::before { opacity: 1; }
+
+  /* Completed indicator */
+  .completed-indicator {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 28px;
+    height: 28px;
+    background: rgba(0, 255, 136, 0.2);
+    border: 2px solid var(--accent-green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--accent-green);
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+    z-index: 5;
+  }
+
+  .card.completed .completed-indicator {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .card.completed {
+    border-color: rgba(0, 255, 136, 0.3);
+  }
+
+  .card.completed::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-green), transparent);
+  }
+
+  .card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  /* Game Badge */
+  .game-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+  }
+
+  .badge-daily {
+    background: rgba(0, 212, 255, 0.15);
+    color: var(--accent-cyan);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+  }
+
+  .badge-daily::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--accent-cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--accent-cyan);
+  }
+
+  .badge-active {
+    background: rgba(0, 255, 136, 0.15);
+    color: var(--accent-green);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+  }
+
+  .badge-active::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--accent-green);
+    animation: pulse 2s infinite;
+  }
+
+  .badge-seasonal {
+    background: rgba(255, 215, 0, 0.15);
+    color: var(--accent-gold);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+  }
+
+  .badge-coming {
+    background: rgba(92, 108, 122, 0.2);
+    color: var(--text-muted);
+    border: 1px solid var(--border-dark);
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .card-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-white);
+    margin-bottom: 0.5rem;
+  }
+
+  .card-description {
+    color: var(--text-gray);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+  }
+
+  .card-stats {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-dark);
+    font-size: 0.85rem;
+  }
+
+  .card-stats div {
+    color: var(--text-muted);
+    margin: 0.4rem 0;
+  }
+
+  /* Featured Card - Aces Grid */
+  .featured-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(0, 212, 255, 0.08) 100%);
+    border-color: rgba(0, 212, 255, 0.25);
+  }
+
+  .featured-card:hover {
+    border-color: var(--accent-cyan);
+    box-shadow: var(--glow-cyan-strong);
+  }
+
+  .featured-card::before {
+    opacity: 1;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+  }
+
+  .featured-card .card-title {
+    color: var(--accent-cyan);
+  }
+
+  /* Connections Card - Purple/Magenta theme */
+  .connections-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(168, 85, 247, 0.08) 100%);
+    border-color: rgba(168, 85, 247, 0.25);
+  }
+
+  .connections-card:hover {
+    border-color: rgba(168, 85, 247, 0.6);
+    box-shadow: 0 0 60px rgba(168, 85, 247, 0.3), 0 0 100px rgba(168, 85, 247, 0.15);
+  }
+
+  .connections-card::before {
+    opacity: 1;
+    background: linear-gradient(90deg, #a855f7, #ec4899);
+  }
+
+  .connections-card .card-title {
+    color: #a855f7;
+  }
+
+  /* Wordle Card - Green theme */
+  .wordle-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(106, 170, 100, 0.08) 100%);
+    border-color: rgba(106, 170, 100, 0.25);
+  }
+
+  .wordle-card:hover {
+    border-color: rgba(106, 170, 100, 0.6);
+    box-shadow: 0 0 60px rgba(106, 170, 100, 0.3), 0 0 100px rgba(106, 170, 100, 0.15);
+  }
+
+  .wordle-card::before {
+    opacity: 1;
+    background: linear-gradient(90deg, #6aaa64, #c9b458);
+  }
+
+  .wordle-card .card-title {
+    color: #6aaa64;
+  }
+
+  /* Higher Lower Card - Orange theme */
+  .higher-lower-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(249, 115, 22, 0.08) 100%);
+    border-color: rgba(249, 115, 22, 0.25);
+  }
+
+  .higher-lower-card:hover {
+    border-color: rgba(249, 115, 22, 0.6);
+    box-shadow: 0 0 60px rgba(249, 115, 22, 0.3), 0 0 100px rgba(249, 115, 22, 0.15);
+  }
+
+  .higher-lower-card::before {
+    opacity: 1;
+    background: linear-gradient(90deg, #f97316, #fbbf24);
+  }
+
+  .higher-lower-card .card-title {
+    color: #f97316;
+  }
+
+  /* Who Am I Card - Teal theme */
+  .who-am-i-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(13, 148, 136, 0.08) 100%);
+    border-color: rgba(13, 148, 136, 0.25);
+  }
+
+  .who-am-i-card:hover {
+    border-color: rgba(13, 148, 136, 0.6);
+    box-shadow: 0 0 60px rgba(13, 148, 136, 0.3), 0 0 100px rgba(13, 148, 136, 0.15);
+  }
+
+  .who-am-i-card::before {
+    opacity: 1;
+    background: linear-gradient(90deg, #0d9488, #06b6d4);
+  }
+
+  .who-am-i-card .card-title {
+    color: #0d9488;
+  }
+
+  /* Aces 23-0 Card - Gold/Slot theme */
+  .aces-23-0-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(255, 215, 0, 0.08) 100%);
+    border-color: rgba(255, 215, 0, 0.25);
+  }
+
+  .aces-23-0-card:hover {
+    border-color: rgba(255, 215, 0, 0.6);
+    box-shadow: 0 0 60px rgba(255, 215, 0, 0.3), 0 0 100px rgba(255, 215, 0, 0.15);
+  }
+
+  .aces-23-0-card::before {
+    opacity: 1;
+    background: linear-gradient(90deg, #ffd700, #ff6b35);
+  }
+
+  .aces-23-0-card .card-title {
+    color: #ffd700;
+  }
+
+  /* Roster Recall Card - Red/Orange theme */
+  .roster-recall-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(220, 38, 38, 0.08) 100%);
+    border-color: rgba(220, 38, 38, 0.25);
+  }
+
+  .roster-recall-card:hover {
+    border-color: rgba(220, 38, 38, 0.6);
+    box-shadow: 0 0 60px rgba(220, 38, 38, 0.3), 0 0 100px rgba(220, 38, 38, 0.15);
+  }
+
+  .roster-recall-card::before {
+    opacity: 1;
+    background: linear-gradient(90deg, #dc2626, #ea580c);
+  }
+
+  .roster-recall-card .card-title {
+    color: #dc2626;
+  }
+
+  /* Active Pool Card */
+  .pool-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(0, 255, 136, 0.05) 100%);
+  }
+
+  .pool-card:hover {
+    border-color: rgba(0, 255, 136, 0.4);
+    box-shadow: 0 0 60px rgba(0, 255, 136, 0.2);
+  }
+
+  /* Coming Soon Card */
+  .coming-soon-card {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .coming-soon-card:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--border-dark);
+    background: var(--bg-card);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hero { padding: 3rem 1.5rem 2rem; }
+    .hero h1 { font-size: 2.5rem; }
+    .hero::before { width: 400px; height: 400px; }
+    .dashboard-container { padding: 0 1.25rem 2rem; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .section-title { font-size: 1.25rem; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Leaderboard Styles */
+  .leaderboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .leaderboard-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+  }
+
+  .leaderboard-card:hover {
+    border-color: rgba(0, 212, 255, 0.3);
+    background: var(--bg-card-hover);
+  }
+
+  .leaderboard-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-dark);
+  }
+
+  .leaderboard-icon {
+    font-size: 1.5rem;
+  }
+
+  .leaderboard-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-white);
+    margin: 0;
+  }
+
+  .leaderboard-subtitle {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .leaderboard-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .leaderboard-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(30, 42, 54, 0.5);
+  }
+
+  .leaderboard-item:last-child {
+    border-bottom: none;
+  }
+
+  .leaderboard-rank {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-radius: 50%;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .rank-1 {
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    color: #1a1a1a;
+  }
+
+  .rank-2 {
+    background: linear-gradient(135deg, #c0c0c0, #e0e0e0);
+    color: #1a1a1a;
+  }
+
+  .rank-3 {
+    background: linear-gradient(135deg, #cd7f32, #daa06d);
+    color: #1a1a1a;
+  }
+
+  .rank-other {
+    background: var(--border-dark);
+    color: var(--text-gray);
+  }
+
+  .leaderboard-name {
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--text-white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .leaderboard-score {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    margin-left: 0.5rem;
+  }
+
+  .leaderboard-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: 1rem 0;
+    font-style: italic;
+  }
+
+  .leaderboard-loading {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: 1rem 0;
+  }
+
+  /* Game-specific accent colors for leaderboard cards */
+  .leaderboard-card.grid-lb { border-top: 3px solid var(--accent-cyan); }
+  .leaderboard-card.connections-lb { border-top: 3px solid #a855f7; }
+  .leaderboard-card.wordle-lb { border-top: 3px solid #22c55e; }
+  .leaderboard-card.higherlower-lb { border-top: 3px solid #f97316; }
+  .leaderboard-card.whoami-lb { border-top: 3px solid #14b8a6; }
+  .leaderboard-card.recall-lb { border-top: 3px solid #ef4444; }
+
+  .leaderboard-card.grid-lb .leaderboard-score { color: var(--accent-cyan); }
+  .leaderboard-card.connections-lb .leaderboard-score { color: #a855f7; }
+  .leaderboard-card.wordle-lb .leaderboard-score { color: #22c55e; }
+  .leaderboard-card.higherlower-lb .leaderboard-score { color: #f97316; }
+  .leaderboard-card.whoami-lb .leaderboard-score { color: #14b8a6; }
+  .leaderboard-card.recall-lb .leaderboard-score { color: #ef4444; }
+
+  @media (max-width: 768px) {
+    .leaderboard-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation Component -->
+<nav-component></nav-component>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">Games Now Live</div>
+    <h1>
+      PLAY
+      <span>ACES GAMES</span>
+    </h1>
+    <p>Daily puzzles, pools, and competitions for Mountainside Aces members</p>
+  </div>
+</section>
+
+<div class="dashboard-container">
+  
+  <a href="index.html" class="back-link">← Back to Home</a>
+
+  <!-- Your Gaming Stats (shown when signed in) -->
+  <div class="stats-summary" id="userGameStats">
+    <h3>📊 Your Stats</h3>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value" id="gridStreak">0 <span class="streak-fire">🔥</span></div>
+        <div class="stat-label">Current Streak</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="gridPlayed">0</div>
+        <div class="stat-label">Puzzles Played</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="gridPerfect">0</div>
+        <div class="stat-label">Perfect Games</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="poolsWon">0</div>
+        <div class="stat-label">Pool Wins</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily Games Section -->
+  <section class="section">
+    <h2 class="section-title">Daily Games</h2>
+    <div class="cards-grid">
+      
+      <!-- Aces Grid - Featured -->
+      <a href="immaculate-grid.html" class="card-link">
+        <div class="card featured-card" data-game="grid">
+          <span class="completed-indicator">✓</span>
+          <span class="game-badge badge-daily">Daily Puzzle</span>
+          <div class="card-icon">🎯</div>
+          <h3 class="card-title">Aces Grid</h3>
+          <p class="card-description">Test your league knowledge! Find players who match both row and column criteria in this Immaculate Grid-style daily puzzle.</p>
+          <div class="card-stats">
+            <div>🧩 New puzzle every day at midnight</div>
+            <div>🏆 Track your streak & rarity scores</div>
+            <div>📈 Compete with other Aces members</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Aces Connections -->
+      <a href="aces-connections.html" class="card-link">
+        <div class="card connections-card" data-game="connections">
+          <span class="completed-indicator">✓</span>
+          <span class="game-badge badge-daily">Daily Puzzle</span>
+          <div class="card-icon">🔗</div>
+          <h3 class="card-title">Aces Connections</h3>
+          <p class="card-description">Group 16 players into 4 categories. Find what connects them before you run out of guesses!</p>
+          <div class="card-stats">
+            <div>🧩 New puzzle every day</div>
+            <div>🎨 4 categories to discover</div>
+            <div>💡 4 mistakes allowed</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Aces Wordle -->
+      <a href="aces-wordle.html" class="card-link">
+        <div class="card wordle-card" data-game="wordle">
+          <span class="completed-indicator">✓</span>
+          <span class="game-badge badge-daily">Daily Puzzle</span>
+          <div class="card-icon">🔤</div>
+          <h3 class="card-title">Aces Wordle</h3>
+          <p class="card-description">Guess the player's last name in 6 tries. Green means correct, yellow means wrong spot!</p>
+          <div class="card-stats">
+            <div>🧩 New puzzle every day</div>
+            <div>💡 Hints after 4 guesses</div>
+            <div>📊 Track your win streak</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Higher or Lower -->
+      <a href="higher-lower.html" class="card-link">
+        <div class="card higher-lower-card" data-game="higherLower">
+          <span class="completed-indicator">✓</span>
+          <span class="game-badge badge-daily">Daily Puzzle</span>
+          <div class="card-icon">⬆️⬇️</div>
+          <h3 class="card-title">Higher or Lower</h3>
+          <p class="card-description">Compare two players - who has more? Guess career or season stats like hits, runs, walks, and more!</p>
+          <div class="card-stats">
+            <div>🧩 New matchups every day</div>
+            <div>🎯 How long can you streak?</div>
+            <div>📈 Learn player stats as you play</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Who Am I -->
+      <a href="who-am-i.html" class="card-link">
+        <div class="card who-am-i-card" data-game="whoAmI">
+          <span class="completed-indicator">✓</span>
+          <span class="game-badge badge-daily">Daily Puzzle</span>
+          <div class="card-icon">🎭</div>
+          <h3 class="card-title">Who Am I?</h3>
+          <p class="card-description">Reveal clues one at a time and guess the mystery player. Fewer clues = more points!</p>
+          <div class="card-stats">
+            <div>🔍 7 clues, getting easier</div>
+            <div>🎯 Guess early for max points</div>
+            <div>📊 Stats → Seasons → Teams</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Player Recall -->
+      <a href="roster-recall.html" class="card-link">
+        <div class="card roster-recall-card" data-game="recall">
+          <span class="completed-indicator">✓</span>
+          <span class="game-badge badge-daily">Daily Puzzle</span>
+          <div class="card-icon">⏱️</div>
+          <h3 class="card-title">Player Recall</h3>
+          <p class="card-description">Name everyone in the category before time runs out! Team rosters, stat leaders, and more.</p>
+          <div class="card-stats">
+            <div>⚡ Race against the clock</div>
+            <div>🎯 Bonus for 100% completion</div>
+            <div>🏆 Beat your high score</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Aces 23-0 -->
+      <a href="aces-23-0.html" class="card-link">
+        <div class="card aces-23-0-card">
+          <span class="game-badge badge-seasonal">Challenge</span>
+          <div class="card-icon">🎰</div>
+          <h3 class="card-title">Aces 23-0</h3>
+          <p class="card-description">Can you build the perfect roster and go undefeated? Spin for a season & team combo, draft your lineup, and simulate 23 games.</p>
+          <div class="card-stats">
+            <div>🎲 Spin to pick your season & team</div>
+            <div>⚾ Draft 4 hitters + 1 pitcher</div>
+            <div>🏆 Can you go 23-0?</div>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- Leaderboards Section -->
+  <section class="section">
+    <h2 class="section-title">🏆 Leaderboards</h2>
+    <div class="leaderboard-grid">
+      
+      <!-- Aces Grid Leaderboard -->
+      <div class="leaderboard-card grid-lb">
+        <div class="leaderboard-header">
+          <span class="leaderboard-icon">🎯</span>
+          <div>
+            <h3 class="leaderboard-title">Aces Grid</h3>
+            <div class="leaderboard-subtitle">Perfect Games</div>
+          </div>
+        </div>
+        <ul class="leaderboard-list" id="gridLeaderboard">
+          <li class="leaderboard-loading">Loading...</li>
+        </ul>
+      </div>
+
+      <!-- Connections Leaderboard -->
+      <div class="leaderboard-card connections-lb">
+        <div class="leaderboard-header">
+          <span class="leaderboard-icon">🔗</span>
+          <div>
+            <h3 class="leaderboard-title">Connections</h3>
+            <div class="leaderboard-subtitle">Wins</div>
+          </div>
+        </div>
+        <ul class="leaderboard-list" id="connectionsLeaderboard">
+          <li class="leaderboard-loading">Loading...</li>
+        </ul>
+      </div>
+
+      <!-- Wordle Leaderboard -->
+      <div class="leaderboard-card wordle-lb">
+        <div class="leaderboard-header">
+          <span class="leaderboard-icon">🔤</span>
+          <div>
+            <h3 class="leaderboard-title">Aces Wordle</h3>
+            <div class="leaderboard-subtitle">Current Streak</div>
+          </div>
+        </div>
+        <ul class="leaderboard-list" id="wordleLeaderboard">
+          <li class="leaderboard-loading">Loading...</li>
+        </ul>
+      </div>
+
+      <!-- Higher or Lower Leaderboard -->
+      <div class="leaderboard-card higherlower-lb">
+        <div class="leaderboard-header">
+          <span class="leaderboard-icon">📊</span>
+          <div>
+            <h3 class="leaderboard-title">Higher or Lower</h3>
+            <div class="leaderboard-subtitle">Perfect Games</div>
+          </div>
+        </div>
+        <ul class="leaderboard-list" id="higherLowerLeaderboard">
+          <li class="leaderboard-loading">Loading...</li>
+        </ul>
+      </div>
+
+      <!-- Who Am I Leaderboard -->
+      <div class="leaderboard-card whoami-lb">
+        <div class="leaderboard-header">
+          <span class="leaderboard-icon">🎭</span>
+          <div>
+            <h3 class="leaderboard-title">Who Am I?</h3>
+            <div class="leaderboard-subtitle">Wins</div>
+          </div>
+        </div>
+        <ul class="leaderboard-list" id="whoAmILeaderboard">
+          <li class="leaderboard-loading">Loading...</li>
+        </ul>
+      </div>
+
+      <!-- Player Recall Leaderboard -->
+      <div class="leaderboard-card recall-lb">
+        <div class="leaderboard-header">
+          <span class="leaderboard-icon">⏱️</span>
+          <div>
+            <h3 class="leaderboard-title">Player Recall</h3>
+            <div class="leaderboard-subtitle">Perfect Games</div>
+          </div>
+        </div>
+        <ul class="leaderboard-list" id="recallLeaderboard">
+          <li class="leaderboard-loading">Loading...</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Pools & Competitions Section -->
+  <section class="section">
+    <h2 class="section-title">Pools & Competitions</h2>
+    <div class="cards-grid">
+      
+      <!-- Boxes Pool -->
+      <a href="boxes-pool.html" class="card-link">
+        <div class="card pool-card">
+          <span class="game-badge badge-active">Active Pool</span>
+          <div class="card-icon">🏈</div>
+          <h3 class="card-title">NFL Boxes Pool</h3>
+          <p class="card-description">Classic football squares! Claim your boxes and win prizes based on the score at the end of each quarter.</p>
+          <div class="card-stats">
+            <div>📅 Thanksgiving & Super Bowl pools</div>
+            <div>💰 Prizes for quarter scores</div>
+            <div>🎲 Numbers drawn before kickoff</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Bracket Challenge -->
+      <a href="bracket.html" class="card-link">
+        <div class="card">
+          <span class="game-badge badge-seasonal">Playoffs</span>
+          <div class="card-icon">🏆</div>
+          <h3 class="card-title">Playoff Bracket Challenge</h3>
+          <p class="card-description">Fill out your predictions for who will win the championship. See how your picks compare!</p>
+          <div class="card-stats">
+            <div>📋 Make your playoff predictions</div>
+            <div>🔮 Compare with other members</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Aces DFS -->
+      <a href="dfs.html" class="card-link">
+        <div class="card">
+          <span class="game-badge badge-active">New</span>
+          <div class="card-icon">💰</div>
+          <h3 class="card-title">Aces DFS</h3>
+          <p class="card-description">Draft a 10-man roster under the salary cap every week — salaries set by AcesBPI, scored off real game stats.</p>
+          <div class="card-stats">
+            <div>🧢 4 IF · 3 OF · 1 C · 1 P · 1 UTIL</div>
+            <div>💵 $50,000 salary cap</div>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- Coming Soon Section -->
+  <section class="section">
+    <h2 class="section-title">Coming Soon</h2>
+    <div class="cards-grid">
+      
+      <!-- Trivia -->
+      <div class="card coming-soon-card">
+        <span class="game-badge badge-coming">Coming Soon</span>
+        <div class="card-icon">🧠</div>
+        <h3 class="card-title">Aces Trivia</h3>
+        <p class="card-description">Trivia challenges testing your knowledge of Mountainside Aces history and stats.</p>
+        <div class="card-stats">
+          <div>❓ Multiple choice & free response</div>
+          <div>📊 Questions from league history</div>
+        </div>
+      </div>
+
+      <!-- Pick 'Em -->
+      <div class="card coming-soon-card">
+        <span class="game-badge badge-coming">Coming Soon</span>
+        <div class="card-icon">🎰</div>
+        <h3 class="card-title">Weekly Pick 'Em</h3>
+        <p class="card-description">Predict game outcomes each week. Pick winners and margins for upcoming Aces matchups.</p>
+        <div class="card-stats">
+          <div>🎯 Pick game winners</div>
+          <div>📈 Season-long leaderboard</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<!-- Navigation Component Script -->
+<script src="nav-config.js"></script>
+<script src="nav-component.js"></script>
+
+<!-- Firebase -->
+<script src="firebase-config.js"></script>
+<script src="firebase-auth.js"></script>
+
+<!-- Page Visibility Control -->
+<script type="module">
+  import { loadPageVisibility, isPageVisible } from './nav-config.js';
+  
+  // Map of page IDs to their href values for cards we want to control
+  const PAGE_CARD_MAP = {
+    'bracket': 'bracket.html',
+    'boxes-pool': 'boxes-pool.html'
+    // Add more as needed
+  };
+  
+  window.addEventListener('DOMContentLoaded', async () => {
+    // Load visibility config from Firebase
+    await loadPageVisibility();
+    
+    // Find and hide cards for invisible pages
+    Object.entries(PAGE_CARD_MAP).forEach(([pageId, href]) => {
+      if (!isPageVisible(pageId)) {
+        const cardLinks = document.querySelectorAll(`a.card-link[href="${href}"]`);
+        cardLinks.forEach(link => {
+          console.log(`🚫 Hiding card for: ${pageId} (${href})`);
+          link.style.display = 'none';
+        });
+      }
+    });
+  });
+</script>
+
+<script>
+  // Show user gaming stats if signed in
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (typeof onAuthReady === 'function') {
+      onAuthReady(async (user) => {
+        if (user) {
+          const statsBox = document.getElementById('userGameStats');
+          statsBox.classList.add('visible');
+          
+          // Load Aces Grid stats
+          try {
+            const gridStats = JSON.parse(localStorage.getItem('acesGridStats') || '{}');
+            const streak = gridStats.currentStreak || 0;
+            document.getElementById('gridStreak').innerHTML = 
+              `${streak} ${streak > 0 ? '<span class="streak-fire">🔥</span>' : ''}`;
+            document.getElementById('gridPlayed').textContent = gridStats.gamesPlayed || 0;
+            document.getElementById('gridPerfect').textContent = gridStats.perfectGames || 0;
+          } catch (e) {
+            console.log('Could not load grid stats');
+          }
+        }
+      });
+    }
+  });
+</script>
+
+<!-- Leaderboard Script -->
+<script type="module">
+  import { db, collection, getDocs, query, orderBy, limit } from './firebase-config.js';
+
+  const LEADERBOARD_CONFIGS = [
+    {
+      id: 'gridLeaderboard',
+      collection: 'acesGridGames',
+      sortField: 'perfectGames',
+      displayField: 'perfectGames',
+      suffix: ''
+    },
+    {
+      id: 'connectionsLeaderboard',
+      collection: 'acesConnectionsGames',
+      sortField: 'wins',
+      displayField: 'wins',
+      suffix: ''
+    },
+    {
+      id: 'wordleLeaderboard',
+      collection: 'acesWordleGames',
+      sortField: 'currentStreak',
+      displayField: 'currentStreak',
+      suffix: '🔥'
+    },
+    {
+      id: 'higherLowerLeaderboard',
+      collection: 'acesHigherLowerGames',
+      sortField: 'perfectGames',
+      displayField: 'perfectGames',
+      suffix: ''
+    },
+    {
+      id: 'whoAmILeaderboard',
+      collection: 'acesWhoAmIGames',
+      sortField: 'wins',
+      displayField: 'wins',
+      suffix: ''
+    },
+    {
+      id: 'recallLeaderboard',
+      collection: 'acesRosterRecallGames',
+      sortField: 'perfectGames',
+      displayField: 'perfectGames',
+      suffix: ''
+    }
+  ];
+
+  function renderLeaderboard(elementId, players) {
+    const container = document.getElementById(elementId);
+    if (!container) return;
+
+    if (!players || players.length === 0) {
+      container.innerHTML = '<li class="leaderboard-empty">No players yet</li>';
+      return;
+    }
+
+    container.innerHTML = players.map((player, index) => {
+      const rank = index + 1;
+      const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-other';
+      const name = player.displayName || 'Anonymous';
+      
+      return `
+        <li class="leaderboard-item">
+          <span class="leaderboard-rank ${rankClass}">${rank}</span>
+          <span class="leaderboard-name">${escapeHtml(name)}</span>
+          <span class="leaderboard-score">${player.score}${player.suffix}</span>
+        </li>
+      `;
+    }).join('');
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  async function loadLeaderboard(config) {
+    try {
+      const collectionRef = collection(db, config.collection);
+      const snapshot = await getDocs(collectionRef);
+      
+      const players = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const score = data[config.sortField] || 0;
+        // Only include players with at least 1 game played and a score > 0
+        if (data.gamesPlayed > 0 && score > 0 && data.displayName) {
+          players.push({
+            displayName: data.displayName,
+            score: score,
+            suffix: config.suffix
+          });
+        }
+      });
+
+      // Sort by score descending
+      players.sort((a, b) => b.score - a.score);
+
+      // Take top 5
+      const topPlayers = players.slice(0, 5);
+
+      renderLeaderboard(config.id, topPlayers);
+    } catch (error) {
+      console.error(`Error loading ${config.collection} leaderboard:`, error);
+      const container = document.getElementById(config.id);
+      if (container) {
+        container.innerHTML = '<li class="leaderboard-empty">Unable to load</li>';
+      }
+    }
+  }
+
+  async function loadAllLeaderboards() {
+    console.log('🏆 Loading leaderboards...');
+    await Promise.all(LEADERBOARD_CONFIGS.map(loadLeaderboard));
+    console.log('✅ Leaderboards loaded');
+  }
+
+  // Load leaderboards when page is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    // Small delay to ensure Firebase is initialized
+    setTimeout(loadAllLeaderboards, 500);
+  });
+</script>
+
+<!-- Check game completion status -->
+<script type="module">
+  import { db, doc, getDoc } from './firebase-config.js';
+  import { onAuthChange } from './firebase-auth.js';
+  
+  // Calculate today's day number (same logic as the games use)
+  function getDayNumber() {
+    const LAUNCH_DATE = '2026-01-06';
+    const [launchYear, launchMonth, launchDay] = LAUNCH_DATE.split('-').map(Number);
+    const start = new Date(launchYear, launchMonth - 1, launchDay);
+    start.setHours(0, 0, 0, 0);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const daysSinceLaunch = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+    return Math.max(1, daysSinceLaunch + 1);
+  }
+  
+  // Game configs: data-game attribute -> Firebase path and completion check
+  // Some games use 'puzzles/puzzle_X', others use 'dailyGames/X'
+  const GAME_CONFIGS = {
+    grid: {
+      collection: 'acesGridGames',
+      subcollection: 'puzzles',
+      docIdFormat: (dayNum) => `puzzle_${dayNum}`,
+      checkCompletion: (data) => data.gameOver === true
+    },
+    connections: {
+      collection: 'acesConnectionsGames',
+      subcollection: 'dailyGames',
+      docIdFormat: (dayNum) => String(dayNum),
+      checkCompletion: (data) => data.isComplete === true || data.gameOver === true
+    },
+    wordle: {
+      collection: 'acesWordleGames',
+      subcollection: 'dailyGames',
+      docIdFormat: (dayNum) => String(dayNum),
+      checkCompletion: (data) => data.gameOver === true
+    },
+    higherLower: {
+      collection: 'acesHigherLowerGames',
+      subcollection: 'puzzles',
+      docIdFormat: (dayNum) => `puzzle_${dayNum}`,
+      checkCompletion: (data) => data.gameOver === true
+    },
+    whoAmI: {
+      collection: 'acesWhoAmIGames',
+      subcollection: 'dailyGames',
+      docIdFormat: (dayNum) => String(dayNum),
+      checkCompletion: (data) => data.gameOver === true
+    },
+    recall: {
+      collection: 'acesRosterRecallGames',
+      subcollection: 'dailyGames',
+      docIdFormat: (dayNum) => String(dayNum),
+      checkCompletion: (data) => data.phase === 'finished'
+    }
+  };
+  
+  async function checkGameCompletion(userId, gameKey, dayNum) {
+    const config = GAME_CONFIGS[gameKey];
+    if (!config) return false;
+    
+    try {
+      // First check the daily game document
+      const docId = config.docIdFormat(dayNum);
+      const gameRef = doc(db, config.collection, userId, config.subcollection, docId);
+      const gameDoc = await getDoc(gameRef);
+      
+      if (gameDoc.exists()) {
+        const data = gameDoc.data();
+        const isComplete = config.checkCompletion(data);
+        if (isComplete) {
+          console.log(`🔍 ${gameKey}: ✅ complete`);
+          return true;
+        }
+      }
+      
+      // Fallback: check stats doc for lastPlayedPuzzle
+      const statsRef = doc(db, config.collection, userId);
+      const statsDoc = await getDoc(statsRef);
+      
+      if (statsDoc.exists()) {
+        const stats = statsDoc.data();
+        if (stats.lastPlayedPuzzle === dayNum || stats.lastPuzzle === dayNum) {
+          console.log(`🔍 ${gameKey}: ✅ complete (from stats)`);
+          return true;
+        }
+      }
+      
+      console.log(`🔍 ${gameKey}: ⏳ not complete`);
+      return false;
+    } catch (error) {
+      console.error(`Error checking ${gameKey} completion:`, error);
+      return false;
+    }
+  }
+  
+  async function updateCompletionIndicators(userId) {
+    const dayNum = getDayNumber();
+    console.log(`🎮 Checking completion for day ${dayNum}...`);
+    
+    const cards = document.querySelectorAll('[data-game]');
+    
+    for (const card of cards) {
+      const gameKey = card.dataset.game;
+      const isComplete = await checkGameCompletion(userId, gameKey, dayNum);
+      
+      if (isComplete) {
+        card.classList.add('completed');
+      }
+    }
+  }
+  
+  // Use onAuthChange to detect signed-in user
+  onAuthChange((user) => {
+    if (user) {
+      console.log('🔐 User signed in:', user.displayName || user.uid);
+      updateCompletionIndicators(user.uid);
+    }
+  });
+</script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

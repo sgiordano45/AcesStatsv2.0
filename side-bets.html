@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Side Bets - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #3b82f6;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+.header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  text-align: center;
+  padding: 2rem 1.5rem 1.5rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 250px; height: 250px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.header h1 { margin: 0 0 0.3rem; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
+.header p { margin: 0; opacity: 0.85; font-size: 0.95rem; }
+
+.back-home-btn {
+  position: absolute;
+  top: 1rem; left: 1rem;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  text-decoration: none;
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s;
+  display: flex; align-items: center; gap: 0.3rem;
+}
+.back-home-btn:hover { background: rgba(255,255,255,0.25); }
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.top-bar h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-dark);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.btn-primary { background: var(--primary-color); color: white; }
+.btn-primary:hover { background: #234010; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn-secondary { background: var(--border-color); color: var(--text-dark); }
+.btn-secondary:hover { background: #cbd5e0; }
+.btn-danger { background: var(--danger-color); color: white; }
+.btn-danger:hover { background: #dc2626; }
+.btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+/* Bet Cards */
+.bet-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.bet-card:hover { box-shadow: var(--shadow-md); }
+
+.bet-card-header {
+  padding: 1rem 1.25rem 0.75rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.bet-title { font-size: 1rem; font-weight: 700; margin: 0 0 0.2rem; color: var(--text-dark); }
+.bet-meta { font-size: 0.8rem; color: var(--text-light); }
+.bet-meta span { margin-right: 0.75rem; }
+
+.bet-badges { display: flex; gap: 0.4rem; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.badge-active { background: #dcfce7; color: #15803d; }
+.badge-settled { background: #e0e7ff; color: #4338ca; }
+.badge-batting { background: #fef3c7; color: #92400e; }
+.badge-pitching { background: #ede9fe; color: #5b21b6; }
+.badge-public { background: #dbeafe; color: #1d4ed8; }
+.badge-private { background: #f1f5f9; color: #64748b; }
+
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.standings-table th {
+  padding: 0.5rem 1.25rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-light);
+  background: #f8fafc;
+}
+.standings-table th:last-child { text-align: right; }
+.standings-table td {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.9rem;
+}
+.standings-table td:last-child { text-align: right; font-weight: 700; font-size: 0.95rem; }
+.standings-table tr.rank-1 td { background: #fffbeb; }
+
+.player-rank {
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.rank-num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: var(--border-color);
+  color: var(--text-light);
+  flex-shrink: 0;
+}
+.rank-1 .rank-num { background: #ffd700; color: #78350f; }
+.rank-2 .rank-num { background: #e5e7eb; color: #374151; }
+.rank-3 .rank-num { background: #fed7aa; color: #7c2d12; }
+
+.player-name-cell { font-weight: 600; }
+.player-team-cell { font-size: 0.78rem; color: var(--text-light); }
+.loading-spinner { text-align: center; padding: 1.5rem; color: var(--text-light); font-size: 0.9rem; }
+.stat-value-loading { color: var(--border-color); }
+
+.bet-card-footer {
+  padding: 0.6rem 1.25rem;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+.bet-card-footer .actions { display: flex; gap: 0.5rem; }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-light);
+}
+.empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+.empty-state h3 { margin: 0 0 0.5rem; color: var(--text-dark); font-size: 1.1rem; }
+.empty-state p { margin: 0 0 1.5rem; font-size: 0.9rem; }
+
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--card-bg);
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-header {
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-header h3 { margin: 0; font-size: 1.1rem; }
+.modal-close {
+  background: none; border: none;
+  font-size: 1.3rem; cursor: pointer;
+  color: var(--text-light); padding: 0.2rem;
+  line-height: 1;
+}
+.modal-body { padding: 1.25rem 1.5rem; }
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+/* Form */
+.form-group { margin-bottom: 1.1rem; }
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: var(--text-dark);
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: white;
+  color: var(--text-dark);
+  transition: border-color 0.2s;
+}
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+.form-hint { font-size: 0.78rem; color: var(--text-light); margin-top: 0.3rem; }
+
+/* Participant selector */
+.participant-search-wrap { position: relative; }
+.participant-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: white;
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+  max-height: 220px;
+  overflow-y: auto;
+  display: none;
+}
+.participant-dropdown.open { display: block; }
+.participant-option {
+  padding: 0.6rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.1s;
+}
+.participant-option:hover { background: #f0fdf4; }
+.participant-option.disabled { opacity: 0.4; cursor: default; }
+.participant-option .opt-name { font-weight: 600; }
+.participant-option .opt-team { font-size: 0.78rem; color: var(--text-light); }
+
+.participant-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  min-height: 32px;
+}
+.participant-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #e8f5e9;
+  color: var(--primary-color);
+  border-radius: 20px;
+  padding: 0.25rem 0.6rem 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.participant-tag button {
+  background: none; border: none;
+  cursor: pointer; padding: 0;
+  color: var(--primary-color);
+  font-size: 0.9rem; line-height: 1;
+  opacity: 0.6;
+}
+.participant-tag button:hover { opacity: 1; }
+
+/* Alert */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+  display: none;
+}
+.alert.show { display: block; }
+.alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+.alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
+
+/* Loading overlay */
+#loadingState { text-align: center; padding: 3rem; color: var(--text-light); }
+
+/* Auth guard */
+#authLoading { display: flex; align-items: center; justify-content: center; min-height: 60vh; }
+#mainContent { display: none; }
+
+/* ── O/U Card ── */
+.ou-scoreboard {
+  padding: 1rem 1.25rem;
+}
+.ou-line-display {
+  text-align: center;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+.ou-line-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-light); }
+.ou-line-number { font-size: 1.8rem; font-weight: 800; color: var(--text-dark); line-height: 1.1; }
+.ou-line-stat { font-size: 0.85rem; color: var(--text-light); }
+.ou-current-val {
+  font-size: 0.9rem; text-align: center; margin-bottom: 1rem; font-weight: 600;
+}
+.ou-current-over { color: #15803d; }
+.ou-current-under { color: #b91c1c; }
+.ou-current-push { color: var(--text-light); }
+
+.ou-sides {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+}
+.ou-side-card {
+  border-radius: 10px; padding: 0.75rem; border: 2px solid var(--border-color);
+}
+.ou-side-card.over-side { border-color: #bbf7d0; background: #f0fdf4; }
+.ou-side-card.under-side { border-color: #fecaca; background: #fef2f2; }
+.ou-side-card.over-side.winning { border-color: #15803d; background: #dcfce7; }
+.ou-side-card.under-side.winning { border-color: #b91c1c; background: #fee2e2; }
+.ou-side-label {
+  font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.05em; margin-bottom: 0.4rem;
+}
+.over-side .ou-side-label { color: #15803d; }
+.under-side .ou-side-label { color: #b91c1c; }
+.ou-side-player { font-size: 0.88rem; font-weight: 600; color: var(--text-dark); }
+.ou-side-team { font-size: 0.75rem; color: var(--text-light); }
+.ou-status-chip {
+  display: inline-block; font-size: 0.7rem; font-weight: 700;
+  padding: 0.15rem 0.45rem; border-radius: 10px; margin-top: 0.4rem;
+}
+.chip-leading { background: #dcfce7; color: #15803d; }
+.chip-trailing { background: #fef2f2; color: #b91c1c; }
+.chip-push { background: #f1f5f9; color: #64748b; }
+.chip-winner { background: #fef9c3; color: #854d0e; }
+
+/* Side mini-select inside participant tag */
+.side-mini-select {
+  background: white; border: 1px solid var(--primary-color);
+  border-radius: 10px; padding: 0.1rem 0.3rem;
+  font-size: 0.75rem; font-weight: 600; color: var(--primary-color);
+  cursor: pointer; margin: 0 0.2rem;
+}
+
+/* O/U form fields */
+.ou-fields { display: none; }
+.ou-fields.visible { display: block; }
+.bet-type-tabs {
+  display: flex; gap: 0.5rem; margin-bottom: 1rem;
+}
+.bet-type-tab {
+  flex: 1; padding: 0.55rem; border: 1.5px solid var(--border-color);
+  border-radius: 8px; background: white; font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; text-align: center; color: var(--text-light); transition: all 0.15s;
+}
+.bet-type-tab.active { border-color: var(--primary-color); color: var(--primary-color); background: #f0fdf4; }
+
+/* Dark mode additions */
+[data-theme="dark"] .ou-line-display { background: #374151; }
+[data-theme="dark"] .ou-side-card { border-color: #4a5568; }
+[data-theme="dark"] .ou-side-card.over-side { background: rgba(21,128,61,0.1); border-color: rgba(187,247,208,0.3); }
+[data-theme="dark"] .ou-side-card.under-side { background: rgba(185,28,28,0.1); border-color: rgba(254,202,202,0.3); }
+[data-theme="dark"] .ou-side-card.over-side.winning { background: rgba(21,128,61,0.2); }
+[data-theme="dark"] .ou-side-card.under-side.winning { background: rgba(185,28,28,0.2); }
+[data-theme="dark"] .side-mini-select { background: #374151; border-color: #4a5568; color: #e2e8f0; }
+
+/* Winner highlight */
+.winner-badge {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  background: #fef9c3; color: #854d0e;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.75rem; font-weight: 700;
+  margin-left: 0.4rem;
+}
+
+/* Dark mode */
+[data-theme="dark"] body { background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%); color: #e2e8f0; }
+[data-theme="dark"] .bet-card, [data-theme="dark"] .modal { background: #2d3748; border-color: #4a5568; }
+[data-theme="dark"] .bet-card-header { border-color: #4a5568; }
+[data-theme="dark"] .standings-table th { background: #374151; color: #9ca3af; }
+[data-theme="dark"] .standings-table td { border-color: #4a5568; }
+[data-theme="dark"] .standings-table tr.rank-1 td { background: #1f1a0a; }
+[data-theme="dark"] .bet-card-footer { background: #374151; }
+[data-theme="dark"] .form-group input, [data-theme="dark"] .form-group select { background: #374151; border-color: #4a5568; color: #e2e8f0; }
+[data-theme="dark"] .participant-dropdown { background: #2d3748; border-color: #4a5568; }
+[data-theme="dark"] .participant-option:hover { background: #374151; }
+
+/* =============================================
+   RESPONSIVE — mobile
+   ============================================= */
+@media (max-width: 640px) {
+  /* Slim header, hide back button (nav handles it) */
+  .header { padding: 1.25rem 1rem 1rem; }
+  .header h1 { font-size: 1.5rem; }
+  .back-home-btn { display: none; }
+
+  /* Extra bottom padding so bottom nav doesn't cover last card */
+  .container { padding-bottom: 5rem; }
+
+  /* Bet card header: badges wrap below title on small screens */
+  .bet-card-header {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .bet-badges {
+    justify-content: flex-start;
+  }
+
+  /* Bet card footer: stack info + actions vertically */
+  .bet-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.75rem 1rem;
+  }
+  .bet-card-footer .actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  /* Standings table: tighter padding */
+  .standings-table th,
+  .standings-table td {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.82rem;
+  }
+
+  /* Modal: slide up from bottom on mobile */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal {
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+  }
+
+  /* Modal footer: full-width stacked buttons */
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+  .modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem;
+  }
+
+  /* Top bar */
+  .top-bar h2 { font-size: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="filters-nav"></div>
+
+<div id="authLoading">
+  <div style="text-align:center; color: var(--text-light);">
+    <div style="font-size:2rem; margin-bottom:0.5rem;">🎲</div>
+    <div>Loading...</div>
+  </div>
+</div>
+
+<div id="mainContent">
+  <div class="header">
+    <a href="profile.html" class="back-home-btn">← Back to Profile</a>
+    <h1>🎲 Side Bets</h1>
+    <p>Track your personal wagers on the season</p>
+  </div>
+
+  <div class="container">
+    <div id="alertBox" class="alert"></div>
+
+    <div class="top-bar">
+      <h2 id="betsHeading">My Bets</h2>
+      <button class="btn btn-primary" onclick="openCreateModal()">
+        + New Bet
+      </button>
+    </div>
+
+    <div id="betsContainer">
+      <div id="loadingState">
+        <div style="font-size:1.5rem; margin-bottom:0.5rem;">⏳</div>
+        Loading bets...
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Bet Modal -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🎲 New Side Bet</h3>
+      <button class="modal-close" onclick="closeCreateModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modalAlert" class="alert alert-error"></div>
+
+      <!-- Bet Type Tabs -->
+      <div class="form-group">
+        <label>Bet Type</label>
+        <div class="bet-type-tabs">
+          <button class="bet-type-tab active" id="tabH2H" onclick="switchBetType('h2h')">⚔️ Head to Head</button>
+          <button class="bet-type-tab" id="tabOU" onclick="switchBetType('ou')">📊 Over / Under</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Bet Title <span style="color:var(--text-light); font-weight:400">(optional)</span></label>
+        <input type="text" id="betTitle" placeholder="e.g. Who hits more dingers?" maxlength="80">
+        <div class="form-hint">Leave blank to auto-generate.</div>
+      </div>
+
+      <div class="form-group">
+        <label>Season</label>
+        <select id="betSeason">
+          <option value="">Loading seasons...</option>
+        </select>
+      </div>
+
+      <!-- H2H fields -->
+      <div id="h2hFields">
+        <div class="form-group">
+          <label>Stat Category</label>
+          <select id="betCategory" onchange="updateStatOptions()">
+            <option value="">-- Select --</option>
+            <option value="batting">⚾ Batting</option>
+            <option value="pitching">💪 Pitching</option>
+          </select>
+        </div>
+        <div class="form-group" id="statGroup" style="display:none">
+          <label>Stat</label>
+          <select id="betStat">
+            <option value="">-- Select category first --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- O/U fields -->
+      <div id="ouFields" class="ou-fields">
+        <div class="form-group">
+          <label>Team</label>
+          <input type="text" id="ouTeam" placeholder="e.g. Carolina" maxlength="40">
+          <div class="form-hint">Enter the team name exactly as it appears in the standings.</div>
+        </div>
+        <div class="form-group">
+          <label>Stat</label>
+          <select id="ouStat">
+            <option value="wins">Wins</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Line</label>
+          <input type="number" id="ouLine" placeholder="e.g. 10.5" min="0" max="99" step="0.5">
+          <div class="form-hint">The number participants are betting over or under.</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Visibility</label>
+        <select id="betVisibility">
+          <option value="private">🔒 Private — only participants can see</option>
+          <option value="public">🌐 Public — visible to all league members</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Participants</label>
+        <div class="participant-search-wrap">
+          <input type="text" id="participantSearch" placeholder="Search by player name..."
+            autocomplete="off"
+            oninput="searchParticipants(this.value)"
+            onfocus="showDropdown()"
+            onblur="hideDropdownDelayed()">
+          <div class="participant-dropdown" id="participantDropdown"></div>
+        </div>
+        <div class="form-hint" id="participantHint">Add 2 or more players.</div>
+        <div class="participant-tags" id="participantTags"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
+      <button class="btn btn-primary" id="createBetBtn" onclick="createBet()">Create Bet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <h3>Delete Bet</h3>
+      <button class="modal-close" onclick="closeDeleteModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0; font-size:0.93rem;">Are you sure you want to delete this bet? This cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { onAuthChange, getUserProfile } from './firebase-auth.js';
+import { getCurrentSeason } from './firebase-data.js';
+import { db } from './firebase-config.js';
+import {
+  collection, doc, getDoc, getDocs, addDoc, deleteDoc,
+  query, where, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+// ============================================================
+// STAT DEFINITIONS
+// ============================================================
+const STAT_OPTIONS = {
+  batting: [
+    { value: 'battingAverage',    label: 'Batting Average',     higherIsBetter: true,  format: 'avg' },
+    { value: 'onBasePercentage',  label: 'On-Base Percentage',  higherIsBetter: true,  format: 'avg' },
+    { value: 'hits',              label: 'Hits',                higherIsBetter: true,  format: 'int' },
+    { value: 'runs',              label: 'Runs',                higherIsBetter: true,  format: 'int' },
+    { value: 'homeRuns',          label: 'Home Runs',           higherIsBetter: true,  format: 'int' },
+    { value: 'rbi',               label: 'RBI',                 higherIsBetter: true,  format: 'int' },
+    { value: 'walks',             label: 'Walks',               higherIsBetter: true,  format: 'int' },
+    { value: 'doubles',           label: 'Doubles',             higherIsBetter: true,  format: 'int' },
+    { value: 'triples',           label: 'Triples',             higherIsBetter: true,  format: 'int' },
+    { value: 'stolenBases',       label: 'Stolen Bases',        higherIsBetter: true,  format: 'int' },
+    { value: 'strikeouts',        label: 'Strikeouts (Batting)',higherIsBetter: false, format: 'int' },
+    { value: 'atBats',            label: 'At Bats',             higherIsBetter: true,  format: 'int' },
+    { value: 'games',             label: 'Games Played',        higherIsBetter: true,  format: 'int' },
+    { value: 'acesBPI',           label: 'Aces BPI',            higherIsBetter: true,  format: 'dec' },
+  ],
+  pitching: [
+    { value: 'inningsPitched',    label: 'Innings Pitched',     higherIsBetter: true,  format: 'dec' },
+    { value: 'runsAllowed',       label: 'Runs Allowed',        higherIsBetter: false, format: 'int' },
+    { value: 'runsAllowedPerIP',  label: 'Runs Allowed / IP',   higherIsBetter: false, format: 'era' },
+    { value: 'games',             label: 'Games Pitched',       higherIsBetter: true,  format: 'int' },
+  ]
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser = null;
+let userProfile = null;
+let isAdmin = false;
+let allPlayers = [];       // { userId, playerName, legacyId, teamId }
+let selectedParticipants = [];
+let betToDelete = null;
+let seasons = [];
+let currentBetType = 'h2h'; // 'h2h' | 'ou'
+
+// ============================================================
+// AUTH
+// ============================================================
+onAuthChange(async (user) => {
+  if (!user) {
+    window.location.href = 'login.html';
+    return;
+  }
+  currentUser = user;
+  userProfile = await getUserProfile(user.uid);
+  isAdmin = userProfile?.isAdmin === true || userProfile?.userRole === 'admin';
+
+  document.getElementById('authLoading').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+
+  if (isAdmin) {
+    document.getElementById('betsHeading').textContent = 'All Bets';
+  }
+
+  await Promise.all([loadSeasons(), loadAllPlayers()]);
+  await loadBets();
+});
+
+// ============================================================
+// LOAD SEASONS
+// ============================================================
+async function loadSeasons() {
+  try {
+    const snap = await getDocs(collection(db, 'seasons'));
+    seasons = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.year || 0) - (a.year || 0));
+
+    const sel = document.getElementById('betSeason');
+    sel.innerHTML = seasons.map(s =>
+      `<option value="${s.id}"${s.isActive ? ' selected' : ''}>${s.year} ${capitalize(s.season)}${s.isActive ? ' (Current)' : ''}</option>`
+    ).join('');
+  } catch (e) {
+    console.error('Error loading seasons:', e);
+  }
+}
+
+// ============================================================
+// LOAD ALL LINKED PLAYERS (for participant search)
+// Sources: (1) users with linkedPlayer, (2) aggregatedPlayerStats
+// Merged and deduplicated by legacyId — users records take priority.
+// This ensures players with accounts but missing/empty linkedPlayer
+// fields are still findable.
+// ============================================================
+async function loadAllPlayers() {
+  const byLegacyId = {};
+
+  // Source 1: users collection
+  try {
+    const usersSnap = await getDocs(query(
+      collection(db, 'users'),
+      where('linkedPlayer', '!=', null)
+    ));
+    usersSnap.docs.forEach(d => {
+      const data = d.data();
+      if (!data.linkedPlayer) return;
+      const legacyId = data.mergedFromProfile ||
+        data.linkedPlayer.toLowerCase().replace(/\./g, '').replace(/\s+/g, '_');
+      byLegacyId[legacyId] = {
+        userId: d.id,
+        playerName: data.linkedPlayer,
+        legacyId,
+        teamId: data.linkedTeam || data.teamId || '',
+        source: 'users'
+      };
+    });
+  } catch (e) {
+    console.error('Error loading from users:', e);
+  }
+
+  // Source 2: aggregatedPlayerStats — catches players who have history
+  // but whose user doc doesn't have linkedPlayer set properly
+  try {
+    const statsSnap = await getDocs(collection(db, 'aggregatedPlayerStats'));
+    // Build a name index from Source 1 for fast duplicate checking
+    const existingNames = new Set(
+      Object.values(byLegacyId).map(p => p.playerName.toLowerCase())
+    );
+
+    statsSnap.docs.forEach(d => {
+      const data = d.data();
+      if (data.migrated) return; // skip legacy stub docs
+      const legacyId = d.id;
+      if (byLegacyId[legacyId]) return; // same legacyId already in map
+      const playerName = data.linkedPlayer || data.name || data.displayName;
+      if (!playerName) return;
+      if (existingNames.has(playerName.toLowerCase())) return; // already found via users
+      byLegacyId[legacyId] = {
+        userId: data.authId || data.uid || null,
+        playerName,
+        legacyId,
+        teamId: data.currentTeam || data.teamId || '',
+        source: 'stats'
+      };
+      existingNames.add(playerName.toLowerCase());
+    });
+  } catch (e) {
+    console.error('Error loading from aggregatedPlayerStats:', e);
+  }
+
+  allPlayers = Object.values(byLegacyId)
+    .sort((a, b) => a.playerName.localeCompare(b.playerName));
+}
+
+// ============================================================
+// LOAD BETS
+// ============================================================
+async function loadBets() {
+  const container = document.getElementById('betsContainer');
+  container.innerHTML = '<div id="loadingState" class="loading-spinner">⏳ Loading bets...</div>';
+
+  try {
+    let allDocs = [];
+    if (isAdmin) {
+      const snap = await getDocs(collection(db, 'sideBets'));
+      allDocs = snap.docs;
+    } else {
+      // Two separate queries — participantUserIds (private) + isPublic (public)
+      const [mySnap, publicSnap] = await Promise.all([
+        getDocs(query(collection(db, 'sideBets'), where('participantUserIds', 'array-contains', currentUser.uid))),
+        getDocs(query(collection(db, 'sideBets'), where('isPublic', '==', true)))
+      ]);
+      const seen = new Set();
+      for (const snap of [mySnap, publicSnap]) {
+        for (const d of snap.docs) {
+          if (!seen.has(d.id)) { seen.add(d.id); allDocs.push(d); }
+        }
+      }
+    }
+
+    if (allDocs.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">🎲</div>
+          <h3>No bets yet</h3>
+          <p>Create a bet to track who comes out on top this season.</p>
+          <button class="btn btn-primary" onclick="openCreateModal()">+ New Bet</button>
+        </div>`;
+      return;
+    }
+
+    const bets = allDocs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    container.innerHTML = '';
+    for (const bet of bets) {
+      const card = await buildBetCard(bet);
+      container.appendChild(card);
+      loadStandings(bet); // must be after card is in the DOM
+    }
+  } catch (e) {
+    console.error('Error loading bets:', e);
+    container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><h3>Error loading bets</h3><p>${e.message}</p></div>`;
+  }
+}
+
+// ============================================================
+// BUILD BET CARD
+// ============================================================
+async function buildBetCard(bet) {
+  const card = document.createElement('div');
+  card.className = 'bet-card';
+  card.id = `bet-${bet.id}`;
+
+  const isOU = bet.type === 'over_under';
+  const statusBadge = bet.status === 'settled' ? 'badge-settled' : 'badge-active';
+  const statusLabel = bet.status === 'settled' ? 'Settled' : 'Active';
+  const seasonLabel = getSeasonLabel(bet.seasonId);
+  const createdDate = bet.createdAt?.toDate ? bet.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  const canDelete = isAdmin || bet.createdBy === currentUser.uid;
+
+  // Category badge
+  let categoryBadgeHtml = '';
+  if (isOU) {
+    categoryBadgeHtml = `<span class="badge badge-public">📊 O/U</span>`;
+  } else {
+    const categoryLabel = bet.statCategory === 'pitching' ? 'Pitching' : 'Batting';
+    const categoryBadge = bet.statCategory === 'pitching' ? 'badge-pitching' : 'badge-batting';
+    categoryBadgeHtml = `<span class="badge ${categoryBadge}">${categoryLabel}</span>`;
+  }
+
+  // Subtitle line
+  const subtitleLine = isOU
+    ? `<span>🏟 ${escHtml(bet.ouTeam)}</span> <span>📊 ${escHtml(bet.statLabel)} O/U ${bet.ouLine}</span>${createdDate ? ` <span>Created ${createdDate}</span>` : ''}`
+    : `<span>📅 ${seasonLabel}</span><span>📊 ${escHtml(bet.statLabel)}</span>${createdDate ? ` <span>Created ${createdDate}</span>` : ''}`;
+
+  card.innerHTML = `
+    <div class="bet-card-header">
+      <div>
+        <div class="bet-title">${escHtml(bet.title)}</div>
+        <div class="bet-meta">${subtitleLine}</div>
+      </div>
+      <div class="bet-badges">
+        <span class="badge ${statusBadge}">${statusLabel}</span>
+        ${categoryBadgeHtml}
+        <span class="badge ${bet.isPublic ? 'badge-public' : 'badge-private'}">${bet.isPublic ? '🌐 Public' : '🔒 Private'}</span>
+      </div>
+    </div>
+    <div id="standings-${bet.id}">
+      <div class="loading-spinner">Loading...</div>
+    </div>
+    <div class="bet-card-footer">
+      <span>Created by ${escHtml(bet.createdByName || 'Unknown')}</span>
+      <div class="actions">
+        ${canDelete ? `<button class="btn btn-secondary btn-sm" onclick="openDeleteModal('${bet.id}')">🗑 Delete</button>` : ''}
+      </div>
+    </div>`;
+
+  return card;
+}
+
+// ============================================================
+// LOAD STANDINGS FOR A BET
+// ============================================================
+async function loadStandings(bet) {
+  const container = document.getElementById(`standings-${bet.id}`);
+  if (!container) return;
+
+  try {
+    if (bet.type === 'over_under') {
+      await loadOUStandings(bet, container);
+    } else {
+      await loadH2HStandings(bet, container);
+    }
+  } catch (e) {
+    console.error('Standings error:', e);
+    container.innerHTML = `<div class="loading-spinner" style="color:var(--danger-color)">Could not load standings</div>`;
+  }
+}
+
+async function loadH2HStandings(bet, container) {
+  const statDef = STAT_OPTIONS[bet.statCategory]?.find(s => s.value === bet.stat);
+  const higherIsBetter = statDef ? statDef.higherIsBetter : true;
+  const format = statDef?.format || 'int';
+
+  const results = await Promise.all(bet.participants.map(async (p) => {
+    const val = await getPlayerStat(p.legacyId, p.userId, bet.seasonId, bet.stat);
+    return { ...p, value: val };
+  }));
+
+  results.sort((a, b) => higherIsBetter ? (b.value - a.value) : (a.value - b.value));
+
+  let rows = '';
+  results.forEach((p, idx) => {
+    const rank = idx + 1;
+    const rankClass = rank <= 3 ? `rank-${rank}` : '';
+    const isWinner = bet.status === 'settled' && idx === 0;
+    const formattedVal = formatStat(p.value, format);
+
+    rows += `
+      <tr class="${rankClass}">
+        <td>
+          <div class="player-rank">
+            <span class="rank-num">${rank}</span>
+            <div>
+              <div class="player-name-cell">
+                ${escHtml(p.playerName)}
+                ${isWinner ? '<span class="winner-badge">🏆 Winner</span>' : ''}
+              </div>
+              <div class="player-team-cell">${escHtml(p.teamId || '')}</div>
+            </div>
+          </div>
+        </td>
+        <td>${formattedVal}</td>
+      </tr>`;
+  });
+
+  container.innerHTML = `
+    <table class="standings-table">
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th style="text-align:right">${escHtml(bet.statLabel)}</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+async function loadOUStandings(bet, container) {
+  const line = bet.ouLine ?? 0;
+  const currentVal = await getTeamWins(bet.seasonId, bet.ouTeam);
+
+  // Determine who's currently winning
+  const overIsWinning = currentVal > line;
+  const underIsWinning = currentVal < line;
+  const isPush = currentVal === line;
+
+  // Current status text
+  let currentText = '';
+  let currentClass = 'ou-current-push';
+  if (currentVal !== null) {
+    if (overIsWinning) { currentText = `${currentVal} wins — OVER ${line} 📈`; currentClass = 'ou-current-over'; }
+    else if (underIsWinning) { currentText = `${currentVal} wins — UNDER ${line} 📉`; currentClass = 'ou-current-under'; }
+    else { currentText = `${currentVal} wins — RIGHT ON THE LINE`; currentClass = 'ou-current-push'; }
+  }
+
+  // Group participants by side
+  const overPlayers  = (bet.participants || []).filter(p => p.side === 'over');
+  const underPlayers = (bet.participants || []).filter(p => p.side === 'under');
+
+  const isSettled = bet.status === 'settled';
+
+  function renderSideCard(players, side) {
+    const isWinningSide = side === 'over' ? overIsWinning : underIsWinning;
+    const winnerClass = isSettled && isWinningSide ? 'winning' : '';
+    const sideLabel = side === 'over' ? '📈 Over' : '📉 Under';
+
+    const playerLines = players.map(p => {
+      let chipHtml = '';
+      if (isSettled) {
+        chipHtml = isWinningSide
+          ? `<div><span class="ou-status-chip chip-winner">🏆 Winner</span></div>`
+          : `<div><span class="ou-status-chip chip-trailing">Lost</span></div>`;
+      } else if (currentVal !== null && !isPush) {
+        chipHtml = isWinningSide
+          ? `<div><span class="ou-status-chip chip-leading">Leading</span></div>`
+          : `<div><span class="ou-status-chip chip-trailing">Trailing</span></div>`;
+      } else if (isPush) {
+        chipHtml = `<div><span class="ou-status-chip chip-push">Push</span></div>`;
+      }
+      return `<div style="margin-bottom:0.35rem;">
+        <div class="ou-side-player">${escHtml(p.playerName)}</div>
+        <div class="ou-side-team">${escHtml(p.teamId || '')}</div>
+        ${chipHtml}
+      </div>`;
+    }).join('');
+
+    return `<div class="ou-side-card ${side}-side ${winnerClass}">
+      <div class="ou-side-label">${sideLabel}</div>
+      ${playerLines || '<div style="color:var(--text-light);font-size:0.82rem;">—</div>'}
+    </div>`;
+  }
+
+  container.innerHTML = `
+    <div class="ou-scoreboard">
+      <div class="ou-line-display">
+        <div class="ou-line-label">Line</div>
+        <div class="ou-line-number">${line}</div>
+        <div class="ou-line-stat">${escHtml(bet.statLabel || 'Wins')} — ${getSeasonLabel(bet.seasonId)}</div>
+      </div>
+      ${currentVal !== null ? `<div class="ou-current-val ${currentClass}">${currentText}</div>` : ''}
+      <div class="ou-sides">
+        ${renderSideCard(overPlayers, 'over')}
+        ${renderSideCard(underPlayers, 'under')}
+      </div>
+    </div>`;
+}
+
+// ============================================================
+// GET TEAM WIN COUNT FROM SEASON GAMES
+// ============================================================
+async function getTeamWins(seasonId, teamName) {
+  try {
+    const snap = await getDocs(collection(db, 'seasons', seasonId, 'games'));
+    let wins = 0;
+    snap.docs.forEach(d => {
+      const data = d.data();
+      const winner = data.winner || data.Winner || '';
+      if (winner.toLowerCase() === (teamName || '').toLowerCase()) wins++;
+    });
+    return wins;
+  } catch (e) {
+    console.warn('[SideBets] Could not fetch team wins:', e.message);
+    return null;
+  }
+}
+
+// ============================================================
+// GET PLAYER STAT FROM aggregatedPlayerStats
+// ============================================================
+async function getPlayerStat(legacyId, userId, seasonId, statField) {
+  // Try legacyId first, then userId as fallback (for migrated auth-account players).
+  // Use index-based loop so we can push migration targets (migratedTo) dynamically mid-loop.
+  const idsToTry = [legacyId, userId].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i);
+  if (idsToTry.length === 0) { console.warn('[SideBets] getPlayerStat: no IDs to try'); return 0; }
+
+  for (let _i = 0; _i < idsToTry.length; _i++) {
+    const id = idsToTry[_i];
+    try {
+      const snap = await getDoc(doc(db, 'aggregatedPlayerStats', id));
+      if (!snap.exists()) {
+        console.warn(`[SideBets] No doc for "${id}"`);
+        continue;
+      }
+      const data = snap.data();
+      if (data.migrated) {
+        // Follow the migratedTo pointer if present — covers players who joined after the bet was created
+        if (data.migratedTo && !idsToTry.includes(data.migratedTo)) {
+          console.log(`[SideBets] "${id}" is migrated → following pointer to "${data.migratedTo}"`);
+          idsToTry.push(data.migratedTo);
+        } else {
+          console.log(`[SideBets] "${id}" is migrated — no pointer, trying next ID`);
+        }
+        continue;
+      }
+
+      const seasons = data.seasons || {};
+      const key = Object.keys(seasons).find(k => k.startsWith(seasonId));
+      if (!key) {
+        console.warn(`[SideBets] No season key starting with "${seasonId}" for "${id}". Available:`, Object.keys(seasons));
+        continue;
+      }
+
+      const s = seasons[key];
+      if (statField === 'battingAverage') {
+        const avg = s.battingAverage ?? (s.atBats > 0 ? s.hits / s.atBats : 0);
+        console.log(`[SideBets] ${id} | key=${key} | BA=${avg} (hits=${s.hits}, ab=${s.atBats})`);
+        return avg;
+      }
+      if (statField === 'runsAllowedPerIP') {
+        const ip = s.inningsPitched ?? 0;
+        const ra = s.runsAllowed ?? 0;
+        const result = ip > 0 ? ra / ip : 0;
+        console.log(`[SideBets] ${id} | key=${key} | runsAllowedPerIP=${result} (ra=${ra}, ip=${ip})`);
+        return result;
+      }
+      const val = s[statField] ?? 0;
+      console.log(`[SideBets] ${id} | key=${key} | ${statField}=${val}`);
+      return val;
+    } catch (e) {
+      console.error(`[SideBets] Error fetching stat for "${id}":`, e);
+    }
+  }
+  return 0;
+}
+
+// ============================================================
+// CREATE BET
+// ============================================================
+window.createBet = async function() {
+  const btn = document.getElementById('createBetBtn');
+  hideAlert(document.getElementById('modalAlert'));
+
+  const seasonId = document.getElementById('betSeason').value;
+  const titleInput = document.getElementById('betTitle').value.trim();
+  const isPublic = document.getElementById('betVisibility').value === 'public';
+
+  if (!seasonId) return showModalAlert('Please select a season.');
+  if (selectedParticipants.length < 2) return showModalAlert('Please add at least 2 participants.');
+
+  const seasonLabel = getSeasonLabel(seasonId);
+  btn.disabled = true;
+  btn.textContent = 'Creating...';
+
+  try {
+    if (currentBetType === 'ou') {
+      // ── Over/Under bet ──────────────────────────────────────
+      const team = document.getElementById('ouTeam').value.trim();
+      const line = parseFloat(document.getElementById('ouLine').value);
+      const ouStatVal = document.getElementById('ouStat').value;
+      if (!team) { showModalAlert('Please enter a team name.'); return; }
+      if (isNaN(line) || line < 0) { showModalAlert('Please enter a valid line number.'); return; }
+      const hasBothSides = selectedParticipants.some(p => p.side === 'over') &&
+                           selectedParticipants.some(p => p.side === 'under');
+      if (!hasBothSides) return showModalAlert('At least one player must be on Over and one on Under.');
+
+      const statLabel = ouStatVal === 'wins' ? 'Wins' : capitalize(ouStatVal);
+      const title = titleInput || `${team} ${statLabel} O/U ${line} — ${seasonLabel}`;
+
+      await addDoc(collection(db, 'sideBets'), {
+        type: 'over_under',
+        title,
+        seasonId,
+        ouTeam: team,
+        ouStat: ouStatVal,
+        ouLine: line,
+        statLabel,
+        participants: selectedParticipants.map(p => ({
+          userId: p.userId,
+          playerName: p.playerName,
+          legacyId: p.legacyId,
+          teamId: p.teamId,
+          side: p.side || 'over'
+        })),
+        participantUserIds: [...new Set([
+          currentUser.uid,
+          ...selectedParticipants.map(p => p.userId).filter(Boolean)
+        ])],
+        isPublic,
+        createdBy: currentUser.uid,
+        createdByName: userProfile?.displayName || userProfile?.linkedPlayer || currentUser.email,
+        createdAt: serverTimestamp(),
+        status: 'active'
+      });
+
+    } else {
+      // ── Head-to-Head bet ────────────────────────────────────
+      const category = document.getElementById('betCategory').value;
+      const statValue = document.getElementById('betStat').value;
+      if (!category) return showModalAlert('Please select a stat category.');
+      if (!statValue) return showModalAlert('Please select a stat.');
+
+      const statDef = STAT_OPTIONS[category].find(s => s.value === statValue);
+      const title = titleInput || `${statDef.label} — ${seasonLabel}`;
+
+      await addDoc(collection(db, 'sideBets'), {
+        type: 'h2h',
+        title,
+        seasonId,
+        statCategory: category,
+        stat: statValue,
+        statLabel: statDef.label,
+        higherIsBetter: statDef.higherIsBetter,
+        participants: selectedParticipants.map(p => ({
+          userId: p.userId,
+          playerName: p.playerName,
+          legacyId: p.legacyId,
+          teamId: p.teamId
+        })),
+        participantUserIds: [...new Set([
+          currentUser.uid,
+          ...selectedParticipants.map(p => p.userId).filter(Boolean)
+        ])],
+        isPublic,
+        createdBy: currentUser.uid,
+        createdByName: userProfile?.displayName || userProfile?.linkedPlayer || currentUser.email,
+        createdAt: serverTimestamp(),
+        status: 'active'
+      });
+    }
+
+    closeCreateModal();
+    showAlert('Bet created!', 'success');
+    await loadBets();
+  } catch (e) {
+    console.error('Error creating bet:', e);
+    showModalAlert('Error creating bet: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create Bet';
+  }
+};
+
+// ============================================================
+// DELETE BET
+// ============================================================
+window.openDeleteModal = function(betId) {
+  betToDelete = betId;
+  document.getElementById('deleteModal').classList.add('open');
+};
+window.closeDeleteModal = function() {
+  betToDelete = null;
+  document.getElementById('deleteModal').classList.remove('open');
+};
+window.confirmDelete = async function() {
+  if (!betToDelete) return;
+  const btn = document.getElementById('confirmDeleteBtn');
+  btn.disabled = true;
+  btn.textContent = 'Deleting...';
+  try {
+    await deleteDoc(doc(db, 'sideBets', betToDelete));
+    closeDeleteModal();
+    showAlert('Bet deleted.', 'success');
+    await loadBets();
+  } catch (e) {
+    console.error('Delete error:', e);
+    closeDeleteModal();
+    showAlert('Could not delete bet: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Delete';
+  }
+};
+
+// ============================================================
+// CREATE MODAL UI
+// ============================================================
+window.openCreateModal = function() {
+  // Reset form
+  currentBetType = 'h2h';
+  document.getElementById('betTitle').value = '';
+  document.getElementById('betCategory').value = '';
+  document.getElementById('betStat').innerHTML = '<option value="">-- Select category first --</option>';
+  document.getElementById('statGroup').style.display = 'none';
+  document.getElementById('ouTeam').value = '';
+  document.getElementById('ouLine').value = '';
+  document.getElementById('ouStat').value = 'wins';
+  document.getElementById('betVisibility').value = 'private';
+  document.getElementById('participantSearch').value = '';
+  document.getElementById('participantDropdown').innerHTML = '';
+  document.getElementById('participantDropdown').classList.remove('open');
+  selectedParticipants = [];
+  renderParticipantTags();
+  hideAlert(document.getElementById('modalAlert'));
+  // Reset tabs
+  document.getElementById('tabH2H').classList.add('active');
+  document.getElementById('tabOU').classList.remove('active');
+  document.getElementById('h2hFields').style.display = '';
+  document.getElementById('ouFields').classList.remove('visible');
+  document.getElementById('betTitle').placeholder = 'e.g. Who hits more dingers?';
+  document.getElementById('participantHint').textContent = 'Add 2 or more players.';
+  document.getElementById('createModal').classList.add('open');
+};
+
+window.switchBetType = function(type) {
+  currentBetType = type;
+  document.getElementById('tabH2H').classList.toggle('active', type === 'h2h');
+  document.getElementById('tabOU').classList.toggle('active', type === 'ou');
+  document.getElementById('h2hFields').style.display = type === 'h2h' ? '' : 'none';
+  if (type === 'ou') {
+    document.getElementById('ouFields').classList.add('visible');
+    document.getElementById('betTitle').placeholder = 'e.g. Carolina win total O/U 10.5';
+    document.getElementById('participantHint').textContent = 'Add bettors and assign each side — first added defaults to Over.';
+  } else {
+    document.getElementById('ouFields').classList.remove('visible');
+    document.getElementById('betTitle').placeholder = 'e.g. Who hits more dingers?';
+    document.getElementById('participantHint').textContent = 'Add 2 or more players.';
+  }
+  selectedParticipants = [];
+  renderParticipantTags();
+};
+window.closeCreateModal = function() {
+  document.getElementById('createModal').classList.remove('open');
+};
+
+window.updateStatOptions = function() {
+  const cat = document.getElementById('betCategory').value;
+  const statSel = document.getElementById('betStat');
+  const statGroup = document.getElementById('statGroup');
+  if (!cat) { statGroup.style.display = 'none'; return; }
+  statGroup.style.display = 'block';
+  const opts = STAT_OPTIONS[cat] || [];
+  statSel.innerHTML = '<option value="">-- Select stat --</option>' +
+    opts.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+};
+
+// ============================================================
+// PARTICIPANT SEARCH
+// ============================================================
+window.searchParticipants = function(query) {
+  const dropdown = document.getElementById('participantDropdown');
+  if (!query.trim()) { dropdown.innerHTML = ''; dropdown.classList.remove('open'); return; }
+  const matches = allPlayers.filter(p =>
+    p.playerName.toLowerCase().includes(query.toLowerCase())
+  ).slice(0, 10);
+
+  if (matches.length === 0) {
+    dropdown.innerHTML = `<div class="participant-option" style="color:var(--text-light)">No players found</div>`;
+  } else {
+    dropdown.innerHTML = matches.map(p => {
+      const already = selectedParticipants.some(s => s.legacyId === p.legacyId);
+      return `<div class="participant-option ${already ? 'disabled' : ''}"
+                   onmousedown="addParticipant('${p.legacyId}')">
+        <span class="opt-name">${escHtml(p.playerName)}</span>
+        <span class="opt-team">${escHtml(p.teamId)}</span>
+      </div>`;
+    }).join('');
+  }
+  dropdown.classList.add('open');
+};
+
+window.showDropdown = function() {
+  const q = document.getElementById('participantSearch').value;
+  if (q.trim()) searchParticipants(q);
+};
+window.hideDropdownDelayed = function() {
+  setTimeout(() => {
+    document.getElementById('participantDropdown').classList.remove('open');
+  }, 200);
+};
+
+window.addParticipant = function(legacyId) {
+  const player = allPlayers.find(p => p.legacyId === legacyId);
+  if (!player || selectedParticipants.some(p => p.legacyId === legacyId)) return;
+  // For O/U: auto-assign sides — first person = over, rest = under
+  const side = currentBetType === 'ou'
+    ? (selectedParticipants.length === 0 ? 'over' : 'under')
+    : undefined;
+  selectedParticipants.push({ ...player, side });
+  renderParticipantTags();
+  document.getElementById('participantSearch').value = '';
+  document.getElementById('participantDropdown').classList.remove('open');
+};
+
+window.setParticipantSide = function(legacyId, side) {
+  const p = selectedParticipants.find(p => p.legacyId === legacyId);
+  if (p) p.side = side;
+};
+
+window.removeParticipant = function(legacyId) {
+  selectedParticipants = selectedParticipants.filter(p => p.legacyId !== legacyId);
+  renderParticipantTags();
+};
+
+function renderParticipantTags() {
+  const container = document.getElementById('participantTags');
+  container.innerHTML = selectedParticipants.map(p => {
+    const sideSelect = currentBetType === 'ou'
+      ? `<select class="side-mini-select" onchange="setParticipantSide('${p.legacyId}', this.value)">
+           <option value="over"  ${p.side === 'over'  ? 'selected' : ''}>📈 Over</option>
+           <option value="under" ${p.side === 'under' ? 'selected' : ''}>📉 Under</option>
+         </select>`
+      : '';
+    return `<span class="participant-tag">
+      ${escHtml(p.playerName)} <span style="opacity:0.6; font-weight:400; font-size:0.72rem">${escHtml(p.teamId)}</span>
+      ${sideSelect}
+      <button onclick="removeParticipant('${p.legacyId}')" title="Remove">✕</button>
+    </span>`;
+  }).join('');
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function getSeasonLabel(seasonId) {
+  const s = seasons.find(s => s.id === seasonId);
+  if (s) return `${s.year} ${capitalize(s.season)}`;
+  return seasonId;
+}
+
+function capitalize(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function formatStat(value, format) {
+  if (value === null || value === undefined) return '—';
+  if (format === 'avg') {
+    return value.toFixed(3).replace(/^0\./, '.');
+  }
+  if (format === 'dec') {
+    return Number(value).toFixed(1);
+  }
+  if (format === 'era') {
+    return Number(value).toFixed(2);
+  }
+  return Math.round(value).toString();
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function showAlert(msg, type = 'success') {
+  const el = document.getElementById('alertBox');
+  el.textContent = msg;
+  el.className = `alert alert-${type} show`;
+  setTimeout(() => { el.classList.remove('show'); }, 4000);
+}
+
+function showModalAlert(msg) {
+  const el = document.getElementById('modalAlert');
+  el.textContent = msg;
+  el.className = 'alert alert-error show';
+}
+
+function hideAlert(el) {
+  if (el) el.classList.remove('show');
+}
+
+// Close modals on overlay click
+document.getElementById('createModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeCreateModal();
+});
+document.getElementById('deleteModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeDeleteModal();
+});
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="mobile-enhancements.js"></script>
+</body>
+</html>

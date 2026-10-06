@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Draft Questionnaire - Mountainside Aces</title>
+  <meta name="theme-color" content="#2d5016">
+  <link rel="stylesheet" href="nav-styles.css">
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --secondary-color: #1a6b4a;
+      --accent-color: #ffd700;
+      --card-bg: #ffffff;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      min-height: 100vh;
+      color: var(--text-dark);
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.95);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; gap: 1rem;
+    }
+    .loading-overlay.hidden { display: none; }
+    .softball-spinner::before {
+      content: '⚾'; font-size: 72px;
+      animation: spin 1.5s ease-in-out infinite; display: block;
+    }
+    @keyframes spin {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50%       { transform: rotate(180deg) scale(1.1); }
+    }
+    .loading-text { color: var(--text-light); font-size: 1rem; }
+
+    /* Page header */
+    .page-header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      padding: 1.75rem 1.5rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .page-header::before {
+      content: '';
+      position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      background: rgba(255,255,255,0.05); border-radius: 50%;
+    }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.25rem; position: relative; }
+    .page-header .subtitle { font-size: 0.9rem; opacity: 0.85; position: relative; }
+    .header-badge {
+      display: inline-block; margin-top: 0.75rem;
+      background: rgba(255,255,255,0.2); border-radius: 999px;
+      padding: 0.25rem 0.75rem; font-size: 0.8rem; font-weight: 600;
+    }
+
+    /* Main container */
+    .page-container {
+      max-width: 720px; margin: 0 auto; padding: 1.5rem;
+    }
+
+    /* Section card */
+    .card {
+      background: var(--card-bg); border-radius: 12px;
+      box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+      margin-bottom: 1.25rem; overflow: hidden;
+    }
+    .card-header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white; padding: 0.875rem 1.25rem;
+      font-size: 0.95rem; font-weight: 700;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .card-header .icon { font-size: 1.1rem; }
+    .card-body { padding: 1.25rem; }
+
+    /* Form elements */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+    .form-group:last-child { margin-bottom: 0; }
+
+    label {
+      font-size: 0.82rem; font-weight: 700;
+      color: var(--text-light); text-transform: uppercase; letter-spacing: 0.04em;
+    }
+
+    input[type="number"],
+    select {
+      padding: 0.6rem 0.875rem;
+      border: 1.5px solid var(--border-color); border-radius: 8px;
+      font-size: 0.95rem; font-family: inherit;
+      background: white; color: var(--text-dark);
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    input[type="number"]:focus,
+    select:focus { outline: none; border-color: var(--primary-color); }
+
+    /* Positions multi-select */
+    .positions-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 0.5rem;
+    }
+    .position-chip {
+      display: flex; align-items: center; justify-content: center;
+      padding: 0.5rem 0.25rem; border-radius: 8px;
+      border: 1.5px solid var(--border-color); background: white;
+      font-size: 0.875rem; font-weight: 600; cursor: pointer;
+      transition: all 0.15s; user-select: none; text-align: center;
+    }
+    .position-chip input { display: none; }
+    .position-chip:hover { border-color: var(--primary-color); background: #f0f7ee; }
+    .position-chip.selected {
+      border-color: var(--primary-color); background: var(--primary-color); color: white;
+    }
+
+    /* Quiz questions */
+    .quiz-question {
+      margin-bottom: 1.25rem; padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .quiz-question:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+
+    .question-text {
+      font-size: 0.95rem; font-weight: 600; margin-bottom: 0.75rem; line-height: 1.5;
+    }
+    .question-number {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--primary-color); color: white;
+      font-size: 0.75rem; font-weight: 700; margin-right: 0.5rem; flex-shrink: 0;
+    }
+
+    .answer-options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .answer-option {
+      display: flex; align-items: flex-start; gap: 0.625rem;
+      padding: 0.625rem 0.875rem; border-radius: 8px;
+      border: 1.5px solid var(--border-color); cursor: pointer;
+      transition: all 0.15s; font-size: 0.9rem; line-height: 1.4;
+    }
+    .answer-option input[type="radio"] { display: none; }
+    .answer-option:hover { border-color: var(--primary-color); background: #f0f7ee; }
+    .answer-option.selected {
+      border-color: var(--primary-color); background: #f0f7ee;
+    }
+    .answer-option .radio-dot {
+      width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border-color);
+      flex-shrink: 0; margin-top: 2px; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .answer-option.selected .radio-dot {
+      border-color: var(--primary-color); background: var(--primary-color);
+    }
+    .answer-option.selected .radio-dot::after {
+      content: ''; width: 6px; height: 6px; border-radius: 50%; background: white;
+    }
+
+    /* Submit button */
+    .submit-section { margin-top: 1.5rem; }
+    .btn-submit {
+      width: 100%; padding: 0.875rem;
+      background: var(--primary-color); color: white;
+      border: none; border-radius: 10px;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: background 0.15s, transform 0.1s;
+    }
+    .btn-submit:hover { background: #224011; }
+    .btn-submit:active { transform: scale(0.99); }
+    .btn-submit:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    /* Success state */
+    .success-card {
+      background: var(--card-bg); border-radius: 12px;
+      box-shadow: var(--shadow-md); border: 2px solid #48bb78;
+      padding: 2.5rem 1.5rem; text-align: center; margin-bottom: 1.25rem;
+    }
+    .success-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+    .success-card h2 { color: var(--primary-color); font-size: 1.4rem; margin-bottom: 0.5rem; }
+    .success-card p { color: var(--text-light); font-size: 0.95rem; line-height: 1.5; }
+
+    .btn-update {
+      margin-top: 1.25rem; padding: 0.65rem 1.5rem;
+      background: transparent; color: var(--primary-color);
+      border: 2px solid var(--primary-color); border-radius: 8px;
+      font-size: 0.9rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .btn-update:hover { background: var(--primary-color); color: white; }
+
+    /* Previous answers summary */
+    .prev-summary {
+      background: #f0f7ee; border: 1px solid #c6e6c3; border-radius: 8px;
+      padding: 1rem; margin-bottom: 1.25rem; font-size: 0.875rem; color: var(--text-dark);
+    }
+    .prev-summary strong { color: var(--primary-color); }
+
+    /* Error message */
+    .error-msg {
+      background: #fff5f5; border: 1px solid #fc8181; border-radius: 8px;
+      padding: 0.875rem; margin-bottom: 1rem; color: #c53030;
+      font-size: 0.9rem; display: none;
+    }
+
+    /* Score display */
+    .quiz-score-display {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--primary-color); color: white;
+      border-radius: 999px; padding: 0.35rem 0.875rem;
+      font-weight: 700; font-size: 0.9rem; margin-top: 0.5rem;
+    }
+
+    /* Section description */
+    .section-desc {
+      font-size: 0.875rem; color: var(--text-light); margin-bottom: 1rem; line-height: 1.5;
+    }
+
+    /* Access denied */
+    #accessDenied {
+      max-width: 480px; margin: 3rem auto; text-align: center;
+      background: var(--card-bg); border-radius: 12px; padding: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+    #accessDenied h2 { color: var(--primary-color); margin-bottom: 0.5rem; }
+    #accessDenied p { color: var(--text-light); }
+  </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+  <div class="loading-text" id="loadingText">Loading…</div>
+</div>
+
+<div id="accessDenied" style="display:none;">
+  <div style="font-size:2.5rem;margin-bottom:0.75rem;">🔒</div>
+  <h2>Sign In Required</h2>
+  <p>Please <a href="signin.html" style="color:var(--primary-color);font-weight:600;">sign in</a> to access the draft questionnaire.</p>
+</div>
+
+<div id="mainContent" style="display:none;">
+  <div class="page-header">
+    <h1>⚾ Draft Questionnaire</h1>
+    <p class="subtitle">Help captains build balanced teams for the season</p>
+    <span class="header-badge">New Member Form</span>
+  </div>
+
+  <div class="page-container">
+
+    <!-- Success view (hidden by default) -->
+    <div id="successView" style="display:none;">
+      <div class="success-card">
+        <div class="success-icon">🎉</div>
+        <h2>Questionnaire Submitted!</h2>
+        <p>Thanks! Captains will use your info during the draft. You can update your answers below if anything changes.</p>
+        <div id="scoreDisplay"></div>
+        <button class="btn-update" onclick="showForm()">Update My Answers</button>
+      </div>
+    </div>
+
+    <!-- Form view -->
+    <div id="formView">
+      <div id="prevAnswersBanner" style="display:none;" class="prev-summary">
+        <strong>📋 You've already submitted a questionnaire.</strong> Your previous answers are loaded below — make any changes and re-submit to update.
+      </div>
+
+      <div id="errorMsg" class="error-msg"></div>
+
+      <!-- Baseball experience -->
+      <div class="card">
+        <div class="card-header"><span class="icon">⚾</span> Baseball Experience</div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="baseballYears">Years Played</label>
+              <input type="number" id="baseballYears" min="0" max="50" placeholder="0" value="0">
+            </div>
+            <div class="form-group">
+              <label for="baseballLevel">Skill Level</label>
+              <select id="baseballLevel">
+                <option value="">Select level…</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Recreational">Recreational</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Played competitively">Played competitively</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slowpitch softball experience -->
+      <div class="card">
+        <div class="card-header"><span class="icon">🥎</span> Slowpitch Softball Experience</div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="softballYears">Years Played</label>
+              <input type="number" id="softballYears" min="0" max="50" placeholder="0" value="0">
+            </div>
+            <div class="form-group">
+              <label for="softballLevel">Skill Level</label>
+              <select id="softballLevel">
+                <option value="">Select level…</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Recreational">Recreational</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Played competitively">Played competitively</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferred positions -->
+      <div class="card">
+        <div class="card-header"><span class="icon">🧤</span> Preferred Positions</div>
+        <div class="card-body">
+          <p class="section-desc">Select all positions you're comfortable playing.</p>
+          <div class="positions-grid" id="positionsGrid">
+            <!-- chips injected by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Age -->
+      <div class="card">
+        <div class="card-header"><span class="icon">🎂</span> Personal Info</div>
+        <div class="card-body">
+          <div class="form-group" style="max-width:200px;">
+            <label for="ageInput">Age</label>
+            <input type="number" id="ageInput" min="16" max="99" placeholder="Age">
+          </div>
+        </div>
+      </div>
+
+      <!-- Rules quiz -->
+      <div class="card">
+        <div class="card-header"><span class="icon">📋</span> Rules Quiz</div>
+        <div class="card-body">
+          <p class="section-desc">5 quick questions on baserunning and fielding. Don't worry — this is just to help captains understand your rules knowledge, not a pass/fail test!</p>
+          <div id="quizContainer">
+            <!-- questions injected by JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="submit-section">
+        <button class="btn-submit" id="submitBtn" onclick="handleSubmit()">Submit Questionnaire</button>
+      </div>
+    </div>
+
+  </div><!-- /page-container -->
+</div><!-- /mainContent -->
+
+<script type="module">
+  import { db, doc, getDoc, collection } from './firebase-config.js';
+  import { setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { onAuthChange } from './firebase-auth.js';
+  import { NavigationComponent } from './nav-component.js';
+
+  // ─── Data ───────────────────────────────────────────────────────────────────
+  const POSITIONS = ['P','C','1B','2B','3B','SS','LF','CF','RF','OF (any)','Anywhere'];
+
+  const QUIZ = [
+    {
+      q: 'A fly ball is hit to the outfield. The runner on first wants to tag up and advance. When is the earliest the runner may legally leave the base?',
+      options: [
+        'The moment the ball is caught',
+        'The moment the ball is touched by the fielder',
+        'After the fielder transfers the ball to their throwing hand',
+        'After the umpire signals the catch'
+      ],
+      correct: 1
+    },
+    {
+      q: "There's a runner on first, one out. The batter hits a ground ball to the shortstop who throws to second. The second baseman steps on the bag and fires to first. What kind of play is this?",
+      options: [
+        'Double play',
+        "Fielder's choice",
+        'Force out only',
+        'Tag play'
+      ],
+      correct: 0
+    },
+    {
+      q: 'Bases loaded, one out. A line drive is hit directly to the third baseman who catches it. What happens to the runner who was on third?',
+      options: [
+        'They are out automatically',
+        'They must tag up before advancing',
+        'They can run freely',
+        'The infield fly rule applies'
+      ],
+      correct: 1
+    },
+    {
+      q: 'With a runner on second and no outs, a ground ball is hit to the first baseman. Is the runner on second forced to run?',
+      options: [
+        'Yes',
+        'No',
+        'Only if the ball reaches the outfield',
+        'Only in extra innings'
+      ],
+      correct: 1
+    },
+    {
+      q: "A batted ball hits a fielder's glove and pops out. The fielder picks it up and throws to first for the out. Is the batter out?",
+      options: [
+        'No, the fielder must catch it cleanly',
+        'Yes, as long as they secure it before the throw',
+        "It's a do-over",
+        'The runner is safe automatically'
+      ],
+      correct: 1
+    }
+  ];
+
+  // ─── State ───────────────────────────────────────────────────────────────────
+  let currentUser = null;
+  let selectedPositions = new Set();
+  let quizAnswers = {};
+
+  // ─── Auth ─────────────────────────────────────────────────────────────────
+  onAuthChange(async (user) => {
+    if (!user) {
+      hideLoading();
+      document.getElementById('accessDenied').style.display = '';
+      return;
+    }
+    currentUser = user;
+    buildUI();
+    await loadExisting();
+    hideLoading();
+    document.getElementById('mainContent').style.display = '';
+  });
+
+  // ─── Build static UI ─────────────────────────────────────────────────────
+  function buildUI() {
+    // Positions chips
+    const grid = document.getElementById('positionsGrid');
+    POSITIONS.forEach(pos => {
+      const chip = document.createElement('label');
+      chip.className = 'position-chip';
+      chip.dataset.pos = pos;
+      chip.innerHTML = `<input type="checkbox" value="${pos}"> ${pos}`;
+      chip.addEventListener('click', () => togglePosition(pos, chip));
+      grid.appendChild(chip);
+    });
+
+    // Quiz questions
+    const container = document.getElementById('quizContainer');
+    QUIZ.forEach((q, qi) => {
+      const div = document.createElement('div');
+      div.className = 'quiz-question';
+      div.innerHTML = `
+        <div class="question-text">
+          <span class="question-number">${qi + 1}</span>${q.q}
+        </div>
+        <div class="answer-options" id="q${qi}options">
+          ${q.options.map((opt, oi) => `
+            <label class="answer-option" id="q${qi}o${oi}">
+              <input type="radio" name="q${qi}" value="${oi}">
+              <span class="radio-dot"></span>
+              <span>${String.fromCharCode(65 + oi)}. ${opt}</span>
+            </label>
+          `).join('')}
+        </div>`;
+      // attach click handlers after insertion
+      container.appendChild(div);
+      q.options.forEach((_, oi) => {
+        document.getElementById(`q${qi}o${oi}`).addEventListener('click', () => selectAnswer(qi, oi));
+      });
+    });
+  }
+
+  function togglePosition(pos, chip) {
+    if (selectedPositions.has(pos)) {
+      selectedPositions.delete(pos);
+      chip.classList.remove('selected');
+    } else {
+      selectedPositions.add(pos);
+      chip.classList.add('selected');
+    }
+  }
+
+  function selectAnswer(qi, oi) {
+    quizAnswers[qi] = oi;
+    // clear other options
+    QUIZ[qi].options.forEach((_, i) => {
+      document.getElementById(`q${qi}o${i}`).classList.remove('selected');
+    });
+    document.getElementById(`q${qi}o${oi}`).classList.add('selected');
+  }
+
+  // ─── Load existing submission ─────────────────────────────────────────────
+  async function loadExisting() {
+    try {
+      const snap = await getDoc(doc(db, 'draftQuestionnaires', currentUser.uid));
+      if (!snap.exists()) return;
+
+      const d = snap.data();
+      // populate fields
+      if (d.baseballYears != null) document.getElementById('baseballYears').value = d.baseballYears;
+      if (d.baseballLevel)  document.getElementById('baseballLevel').value = d.baseballLevel;
+      if (d.softballYears != null) document.getElementById('softballYears').value = d.softballYears;
+      if (d.softballLevel)  document.getElementById('softballLevel').value = d.softballLevel;
+      if (d.age != null)    document.getElementById('ageInput').value = d.age;
+
+      // positions
+      (d.preferredPositions || []).forEach(pos => {
+        selectedPositions.add(pos);
+        document.querySelectorAll('.position-chip').forEach(chip => {
+          if (chip.dataset.pos === pos) chip.classList.add('selected');
+        });
+      });
+
+      // quiz
+      if (d.quizAnswers) {
+        Object.entries(d.quizAnswers).forEach(([qi, oi]) => {
+          quizAnswers[qi] = oi;
+          const el = document.getElementById(`q${qi}o${oi}`);
+          if (el) el.classList.add('selected');
+        });
+      }
+
+      document.getElementById('prevAnswersBanner').style.display = '';
+      document.getElementById('submitBtn').textContent = 'Update My Answers';
+    } catch (e) {
+      console.error('Error loading existing answers:', e);
+    }
+  }
+
+  // ─── Submit ───────────────────────────────────────────────────────────────
+  window.handleSubmit = async function() {
+    clearError();
+    const baseballYears = parseInt(document.getElementById('baseballYears').value) || 0;
+    const baseballLevel = document.getElementById('baseballLevel').value;
+    const softballYears = parseInt(document.getElementById('softballYears').value) || 0;
+    const softballLevel = document.getElementById('softballLevel').value;
+    const age           = parseInt(document.getElementById('ageInput').value) || null;
+
+    // Validate
+    if (!baseballLevel) { showError('Please select your baseball skill level.'); return; }
+    if (!softballLevel) { showError('Please select your softball skill level.'); return; }
+    if (!age)           { showError('Please enter your age.'); return; }
+    if (selectedPositions.size === 0) { showError('Please select at least one preferred position.'); return; }
+    if (Object.keys(quizAnswers).length < QUIZ.length) {
+      showError(`Please answer all ${QUIZ.length} quiz questions.`); return;
+    }
+
+    const quizScore = QUIZ.reduce((score, q, qi) => {
+      return score + (quizAnswers[qi] === q.correct ? 1 : 0);
+    }, 0);
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    try {
+      await setDoc(doc(db, 'draftQuestionnaires', currentUser.uid), {
+        uid: currentUser.uid,
+        displayName: currentUser.displayName || currentUser.email || 'Unknown',
+        submittedAt: serverTimestamp(),
+        baseballYears,
+        baseballLevel,
+        softballYears,
+        softballLevel,
+        preferredPositions: Array.from(selectedPositions),
+        age,
+        quizAnswers: Object.fromEntries(Object.entries(quizAnswers).map(([k,v]) => [k, Number(v)])),
+        quizScore
+      });
+
+      // show success
+      document.getElementById('scoreDisplay').innerHTML = `
+        <div class="quiz-score-display">🧠 Quiz Score: ${quizScore} / ${QUIZ.length}</div>`;
+      document.getElementById('formView').style.display = 'none';
+      document.getElementById('successView').style.display = '';
+    } catch (e) {
+      console.error('Submit error:', e);
+      showError('Something went wrong saving your answers. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Submit Questionnaire';
+    }
+  };
+
+  window.showForm = function() {
+    document.getElementById('successView').style.display = 'none';
+    document.getElementById('formView').style.display = '';
+    document.getElementById('prevAnswersBanner').style.display = '';
+    document.getElementById('submitBtn').textContent = 'Update My Answers';
+    document.getElementById('submitBtn').disabled = false;
+  };
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.style.display = '';
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  function clearError() {
+    document.getElementById('errorMsg').style.display = 'none';
+  }
+
+  // ─── Loading helpers ──────────────────────────────────────────────────────
+  function hideLoading() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  }
+</script>
+
+</body>
+</html>

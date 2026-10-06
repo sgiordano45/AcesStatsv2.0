@@ -1,0 +1,868 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function ownsMergedProfile(profileId) {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.mergedFromProfile == profileId;
+    }
+
+    function isCaptain() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCaptain == true;
+    }
+
+     function isTeamStaff() {
+  return isSignedIn() &&
+         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isTeamStaff == true;
+}
+
+    function isStaffOrAdmin() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userRole in ['staff', 'admin', 'league-staff'] ||
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['staff', 'admin', 'league-staff'] ||
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true);
+    }
+
+    function hasSpecialRole(roleName) {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.specialRoles[roleName] == true;
+    }
+
+    function canEditOffseasonRoster() {
+      return isCaptain() || isStaffOrAdmin();
+    }
+
+    function canSubmitScores() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             (
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCaptain == true ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType in ['team-staff', 'league-staff'] ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userRole in ['admin', 'staff'] ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'staff', 'league-staff', 'team-staff']
+             );
+    }
+
+    function canManagePlayoffs() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             (
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'league-staff' ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userRole in ['admin', 'staff'] ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'staff', 'league-staff']
+             );
+    }
+
+    function canSubmitStats() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             (
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCaptain == true ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType in ['team-staff', 'league-staff'] ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userRole in ['admin', 'staff'] ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'staff', 'league-staff', 'team-staff'] ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.specialRoles.scorekeeper == true
+             );
+    }
+
+    function canManageContent() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             (
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'league-staff' ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userRole in ['admin', 'league-staff'] ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'staff', 'league-staff']
+             );
+    }
+
+    function canUploadPhotos() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             (
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType in ['captain', 'admin', 'team-staff', 'league-staff'] ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userRole in ['admin', 'staff', 'league-staff', 'captain', 'team-staff'] ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCaptain == true ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.specialRoles.photographer == true
+             );
+    }
+
+    function canManageBoxesPools() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             (
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userRole in ['admin'] ||
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.specialRoles.oddsmaker == true
+             );
+    }
+
+    // ========================================
+    // USERS COLLECTION
+    // ========================================
+
+match /users/{userId} {
+  allow read: if true;
+  allow create: if isSignedIn() && (userId == request.auth.uid || isStaffOrAdmin());
+  allow update: if isSignedIn() && (
+    userId == request.auth.uid ||
+    ownsMergedProfile(userId) ||
+    isStaffOrAdmin()
+  );
+  allow delete: if false;
+
+      match /notifications/{notificationId} {
+        allow read: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+        allow create: if false;
+      }
+    }
+
+    // ========================================
+    // PENDING PLAYERS
+    // ========================================
+
+    match /pendingPlayers/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && userId == request.auth.uid;
+      allow update: if isSignedIn() && userId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ========================================
+    // OFFSEASON ROSTERS
+    // ========================================
+
+    match /offseasonRosters/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOffseasonRoster();
+
+      match /changelog/{changeId} {
+        allow read: if canEditOffseasonRoster();
+        allow create: if canEditOffseasonRoster();
+        allow update, delete: if false;
+      }
+
+      match /presence/{userId} {
+        allow read: if canEditOffseasonRoster();
+        allow write: if canEditOffseasonRoster();
+      }
+    }
+
+    // ========================================
+    // RSVPS COLLECTION
+    // ========================================
+
+    match /rsvps/{gameId} {
+      allow read: if isSignedIn();
+
+      match /responses/{userId} {
+        allow read: if isSignedIn();
+allow create, update: if isSignedIn() && (
+  request.auth.uid == userId ||
+  isCaptain() ||
+  isTeamStaff()
+);
+        allow delete: if false;
+      }
+    }
+
+    // ========================================
+    // LINEUPS COLLECTION
+    // ========================================
+
+    match /lineups/{gameId} {
+      allow read: if isSignedIn();
+
+match /batting/{teamId} {
+  allow read: if isSignedIn();
+  allow write: if isCaptain() || isTeamStaff();
+}
+
+match /fielding/{teamId} {
+  allow read: if isSignedIn();
+
+  match /innings/{inning} {
+    allow read: if isSignedIn();
+    allow write: if isCaptain() || isTeamStaff();
+  }
+}
+
+match /bench/{teamId} {
+  allow read: if isSignedIn();
+
+  match /innings/{inning} {
+    allow read: if isSignedIn();
+    allow write: if isCaptain() || isTeamStaff();
+  }
+}
+    }
+
+        // ========================================
+    // LINEUP TEMPLATES (saved batting / defense templates)
+    // ========================================
+
+    match /lineupTemplates/{teamId} {
+      match /batting/{templateId} {
+        allow read: if isCaptain() || isTeamStaff();
+        allow create, update, delete: if isCaptain() || isTeamStaff();
+      }
+
+      match /fielding/{templateId} {
+        allow read: if isCaptain() || isTeamStaff();
+        allow create, update, delete: if isCaptain() || isTeamStaff();
+      }
+    }
+
+    // ========================================
+    // TEMPORARY AUTH USERS (Deprecated)
+    // ========================================
+
+    match /tempAuthUsers/{authUID} {
+      allow read: if isSignedIn() && isOwner(authUID);
+      allow create: if isSignedIn() && isOwner(authUID);
+      allow update: if isSignedIn() && isOwner(authUID);
+      allow delete: if isSignedIn() && isOwner(authUID);
+    }
+
+    // ========================================
+    // TEAM PHOTOS COLLECTION
+    // ========================================
+
+    match /teamPhotos/{photoId} {
+      allow read: if true;
+      allow create: if canUploadPhotos();
+      allow update: if isSignedIn() &&
+        (resource.data.uploadedBy == request.auth.uid ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'admin' ||
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userRole == 'admin' ||
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true)));
+      allow delete: if isSignedIn() &&
+        (resource.data.uploadedBy == request.auth.uid ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'admin' ||
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userRole == 'admin' ||
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true)));
+    }
+
+    // ========================================
+    // LEAGUE DOCUMENTS
+    // ========================================
+
+    match /leagueDocuments/{docId} {
+      allow read: if true;
+      allow create, update, delete: if canManageContent();
+    }
+
+    // ========================================
+    // MEDIA CHANNELS
+    // ========================================
+
+    match /mediaChannels/{channelId} {
+      allow read: if true;
+      allow create, update, delete: if canManageContent();
+    }
+
+    // ========================================
+    // READ-ONLY DATA COLLECTIONS
+    // ========================================
+
+    match /players/{document=**} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+
+match /gameBoxScores/{gameId} {
+  allow read: if true;
+  allow write: if canManageContent();
+}
+
+
+    match /bannerMessages/{messageId} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    // siteConfig: public read (anyone can see stream state), admin-only write
+    match /siteConfig/{document=**} {
+      allow read: if true;
+      allow write: if isStaffOrAdmin();
+    }
+
+    match /champions/{document=**} {
+      allow read: if true;
+    }
+
+    match /runnerUps/{document=**} {
+      allow read: if true;
+    }
+
+    // ========================================
+    // GAME RESULTS
+    // ========================================
+
+    match /gameResults/{resultId} {
+      allow read: if true;
+      allow create, update: if canSubmitStats();
+      allow delete: if canManageContent();
+    }
+
+    // ========================================
+    // ACTIVITY FEED
+    // ========================================
+
+    match /activity/{activityId} {
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+
+    // ========================================
+    // CAREER HIGHS
+    // ========================================
+
+    match /careerHighs/{docId} {
+      allow read: if true;
+      allow create, update: if canManageContent();
+      allow delete: if false;
+    }
+
+    // ========================================
+    // HIT STREAKS
+    // ========================================
+
+    match /hitStreaks/{docId} {
+      allow read: if true;
+      allow create, update: if canManageContent();
+      allow delete: if false;
+    }
+
+    // ========================================
+    // OUT-OF-PARK HOME RUNS
+    // ========================================
+
+    match /outOfParkHRs/{docId} {
+      allow read: if true;
+      allow create, update: if canManageContent();
+      allow delete: if canManageContent();
+    }
+
+    // ========================================
+    // SETTINGS COLLECTION
+    // ========================================
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow create, update: if canManageContent();
+      allow delete: if false;
+    }
+
+    match /games/{document=**} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    match /aggregatedPlayerStats/{document=**} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    match /aggregatedPlayerStats_test/{document=**} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    match /aggregatedPlayerStats2025Splits/{document=**} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    match /stats/{document=**} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    match /awards/{document=**} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    match /teams/{document=**} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    match /eulogies/{eulogyId} {
+      allow read: if true;
+      allow create, update, delete: if canManageContent();
+    }
+
+    // ========================================
+    // SEASONS COLLECTION
+    // ========================================
+
+    match /seasons/{seasonId} {
+      allow read: if true;
+      allow write: if canManageContent();
+
+      match /games/{gameId} {
+        allow read: if true;
+        allow update: if canSubmitScores() ||
+  (canSubmitStats() &&
+   request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+     'statsSubmittedHome', 'statsSubmittedAway',
+     'statsSubmittedBy', 'statsSubmittedByName',
+     'statsSubmittedAt', 'statsSubmittedForTeam',
+     'statsSubmittedViaBulkUpload',
+     'lineScore'
+   ]));
+        allow create: if canManageContent();
+        allow delete: if canManageContent();
+
+        match /metadata/{metadataDoc} {
+          allow read: if true;
+          allow write: if canSubmitStats();
+        }
+
+        match /presence/{userId} {
+          allow read: if true;
+          allow create, update: if isSignedIn() && request.auth.uid == userId;
+          allow delete: if isSignedIn() && request.auth.uid == userId;
+        }
+
+        match /gameState/{teamId} {
+          allow read: if true;
+          allow write: if canSubmitStats();
+        }
+      }
+
+      match /playoffs/{playoffDoc} {
+        allow read: if true;
+        allow create, update: if canManagePlayoffs();
+        allow delete: if false;
+      }
+
+      match /previews/{previewId} {
+        allow read: if true;
+        allow create, update: if canManageContent();
+        allow delete: if false;
+      }
+          match /scheduleDraft/{draftId} {
+        allow read: if canManageContent();
+        allow write: if canManageContent();
+      }
+    }
+
+    // ========================================
+    // PLAYER STATS COLLECTIONS
+    // ========================================
+
+    match /playerStats/{userId} {
+      allow read: if true;
+      allow write: if canManageContent();
+
+      match /games/{gameId} {
+        allow read: if true;
+        allow create, update: if canSubmitStats();
+        allow delete: if canManageContent();
+      }
+
+      match /career/{careerDoc} {
+        allow read: if true;
+        allow write: if canManageContent();
+      }
+
+      match /seasons/{seasonId} {
+        allow read: if true;
+        allow write: if canManageContent();
+      }
+    }
+
+    match /pitchingStats/{userId} {
+      allow read: if true;
+
+      match /games/{gameId} {
+        allow read: if true;
+        allow create, update: if canSubmitStats();
+        allow delete: if canManageContent();
+      }
+
+      match /career/{careerDoc} {
+        allow read: if true;
+        allow write: if canManageContent();
+      }
+
+      match /seasons/{seasonId} {
+        allow read: if true;
+        allow write: if canManageContent();
+      }
+    }
+
+    // ========================================
+    // BUSINESS RECOMMENDATIONS
+    // ========================================
+
+    match /businessRecommendations/{recId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.recommenderUid == request.auth.uid
+        && request.resource.data.businessName is string
+        && request.resource.data.businessName.size() > 0
+        && request.resource.data.businessName.size() <= 100
+        && request.resource.data.category in ['contractor', 'electrician', 'plumber', 'mechanic', 'restaurant', 'landscaping', 'hvac', 'other']
+        && request.resource.data.description is string
+        && request.resource.data.description.size() > 0
+        && request.resource.data.description.size() <= 1000;
+      allow update, delete: if isSignedIn() && (
+        resource.data.recommenderUid == request.auth.uid ||
+        isStaffOrAdmin()
+      );
+    }
+
+    // ========================================
+    // RULE PROPOSALS
+    // ========================================
+
+    match /rule_proposals/{proposalId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.description is string
+        && request.resource.data.description.size() > 0
+        && request.resource.data.description.size() <= 2000
+        && request.resource.data.category in ['gameplay', 'scoring', 'eligibility', 'playoffs', 'scheduling', 'other']
+        && request.resource.data.submittedBy.uid == request.auth.uid;
+      allow update, delete: if canManageContent();
+    }
+
+
+    // ========================================
+    // SPRAY CHART DATA
+    // ========================================
+
+    match /sprayChartData/{playerId} {
+      allow read: if true;
+      allow create, update: if canManageContent();
+      allow delete: if false;
+    }
+    // ========================================
+    // FEATURE SUBMISSIONS
+    // ========================================
+
+    match /featureSubmissions/{submissionId} {
+      allow create: if true;
+      allow read: if canManageContent();
+      allow update: if canManageContent();
+      allow delete: if canManageContent();
+    }
+
+    // ========================================
+    // SIDE BETS
+    // ========================================
+
+    match /sideBets/{betId} {
+      allow read: if isSignedIn() && (
+        resource.data.isPublic == true ||
+        isStaffOrAdmin() ||
+        request.auth.uid in resource.data.participantUserIds
+      );
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        request.auth.uid == resource.data.createdBy ||
+        isStaffOrAdmin()
+      );
+      allow delete: if isSignedIn() && (
+        request.auth.uid == resource.data.createdBy ||
+        isStaffOrAdmin()
+      );
+    }
+
+    // ========================================
+    // WEEKLY PICK'EM
+    // ========================================
+
+    // One entry doc per user per season: pickem/{seasonId}/entries/{uid}
+    // picks map: { [gameId]: { team, at (serverTimestamp) } }. Picks saved
+    // after a game's first pitch are ignored by the page's scoring.
+    match /pickem/{seasonId}/entries/{userId} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(userId) && request.resource.data.uid == userId;
+      allow delete: if isStaffOrAdmin();
+    }
+
+    // ========================================
+    // ACES GRID GAMES
+    // ========================================
+
+    match /acesGridGames/{userId} {
+      allow read: if true;
+      allow create, update: if isOwner(userId) || isStaffOrAdmin();
+      allow delete: if false;
+
+      match /puzzles/{puzzleId} {
+        allow read: if true;
+        allow create, update: if isOwner(userId) || isStaffOrAdmin();
+        allow delete: if false;
+      }
+    }
+
+    // ========================================
+    // ACES HIGHER OR LOWER GAMES
+    // ========================================
+
+    match /acesHigherLowerGames/{userId} {
+      allow read: if true;
+      allow create, update: if isOwner(userId) || isStaffOrAdmin();
+      allow delete: if false;
+
+      match /puzzles/{puzzleId} {
+        allow read: if true;
+        allow create, update: if isOwner(userId) || isStaffOrAdmin();
+        allow delete: if false;
+      }
+    }
+
+    // ========================================
+    // ACES CONNECTIONS GAMES
+    // ========================================
+
+    match /acesConnectionsGames/{userId} {
+      allow read: if true;
+      allow create, update: if isOwner(userId) || isStaffOrAdmin();
+      allow delete: if false;
+
+      match /dailyGames/{dayNum} {
+        allow read: if true;
+        allow create, update: if isOwner(userId) || isStaffOrAdmin();
+        allow delete: if false;
+      }
+    }
+
+    // ========================================
+    // ACES WORDLE GAMES
+    // ========================================
+
+    match /acesWordleGames/{userId} {
+      allow read: if true;
+      allow create, update: if isOwner(userId) || isStaffOrAdmin();
+      allow delete: if false;
+
+      match /dailyGames/{dayNum} {
+        allow read: if true;
+        allow create, update: if isOwner(userId) || isStaffOrAdmin();
+        allow delete: if false;
+      }
+    }
+
+    match /wordleDailyPuzzles/{dayNum} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if false;
+    }
+
+    match /wordleWords/{wordId} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    // ========================================
+    // ACES WHO AM I GAMES
+    // ========================================
+
+    match /acesWhoAmIGames/{userId} {
+      allow read: if true;
+      allow create, update: if isOwner(userId) || isStaffOrAdmin();
+      allow delete: if false;
+
+      match /dailyGames/{dayNum} {
+        allow read: if true;
+        allow create, update: if isOwner(userId) || isStaffOrAdmin();
+        allow delete: if false;
+      }
+    }
+
+    // ========================================
+    // ACES ROSTER RECALL GAMES
+    // ========================================
+
+    match /acesRosterRecallGames/{userId} {
+      allow read: if true;
+      allow create, update: if isOwner(userId) || isStaffOrAdmin();
+      allow delete: if false;
+
+      match /dailyGames/{dayNum} {
+        allow read: if true;
+        allow create, update: if isOwner(userId) || isStaffOrAdmin();
+        allow delete: if false;
+      }
+    }
+
+    // ========================================
+    // PLAYER BADGES
+    // ========================================
+
+    match /playerBadges/{docId} {
+      allow read: if true;
+      allow create, update: if canManageContent();
+      allow delete: if canManageContent();
+    }
+
+    match /playerBadges_test/{docId} {
+      allow read: if true;
+      allow create, update: if canManageContent();
+      allow delete: if canManageContent();
+    }
+
+    // ========================================
+    // ANNOUNCEMENTS
+    // ========================================
+
+    match /announcements/{announcementId} {
+      allow read: if canManageContent();
+      allow create, update, delete: if false;
+    }
+
+    // ========================================
+    // EMAIL CAMPAIGNS
+    // ========================================
+
+    match /emailCampaigns/{campaignId} {
+      allow read: if isStaffOrAdmin();
+      allow create, update, delete: if false; // Cloud Function only
+    }
+
+    // ========================================
+    // BOXES POOLS
+    // ========================================
+
+    match /boxesPools/{poolId} {
+      allow read: if isSignedIn();
+      allow create: if canManageBoxesPools();
+      allow update: if canManageBoxesPools() || (
+        isSignedIn() &&
+        resource.data.locked != true &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['entries', 'updatedAt'])
+      );
+      allow delete: if canManageBoxesPools();
+    }
+
+    // ========================================
+    // VIOLATIONS (Wall of Shame)
+    // ========================================
+
+    match /violations/{violationId} {
+      allow read: if true;
+      allow create: if isCaptain() || isStaffOrAdmin() ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.specialRoles.mallCop == true;
+      allow update: if isStaffOrAdmin() ||
+        (isSignedIn() &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']));
+      allow delete: if isStaffOrAdmin();
+    }
+
+    // ========================================
+    // PRACTICE POLLS
+    // ========================================
+
+    match /practicePolls/{pollId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null;
+      allow delete: if request.auth != null &&
+        (resource.data.createdBy == request.auth.uid ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userRole == 'admin');
+
+      match /responses/{responseId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && request.auth.uid == responseId;
+      }
+    }
+
+    // ========================================
+    // ROSTERS COLLECTION
+    // ========================================
+
+    match /rosters/{docId} {
+      allow read: if true;
+      allow create, update: if canEditOffseasonRoster() || isStaffOrAdmin();
+      allow delete: if isStaffOrAdmin();
+    }
+
+    // ========================================
+    // ACES DFS
+    // ========================================
+
+    match /dfsWeeks/{weekDocId} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    match /dfsSalaries/{weekDocId} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    match /dfsScores/{weekDocId} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    // Lineup entries are keyed by uid under each week. Owners can create/update
+    // their own entry only while that week's dfsWeeks doc is still 'open';
+    // admins/league staff can always write (corrections). Reads are open to
+    // any signed-in user so the weekly/season leaderboards can show everyone's
+    // picks and points.
+    match /dfsLineups/{weekDocId}/entries/{userId} {
+      allow read: if isSignedIn();
+      allow create, update: if canManageContent() || (
+        isOwner(userId) &&
+        get(/databases/$(database)/documents/dfsWeeks/$(weekDocId)).data.status == 'open'
+      );
+      allow delete: if canManageContent();
+    }
+
+    // ========================================
+    // SNAKE DRAFT
+    // ========================================
+
+    match /drafts/{draftId} {
+      allow read: if isSignedIn();
+      allow create, update: if canEditOffseasonRoster();
+      allow delete: if isStaffOrAdmin();
+    }
+
+    // ========================================
+    // ROSTER IMPORT AUDIT
+    // ========================================
+
+    match /rosterImportAudit/{docId} {
+      allow read, write: if isStaffOrAdmin();
+    }
+
+  }  // end match /databases/{database}/documents
+}  // end service cloud.firestore

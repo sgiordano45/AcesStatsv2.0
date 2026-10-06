@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help Center - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+}
+
+[data-theme="dark"] {
+  --primary-color: #4a9d3f;
+  --secondary-color: #2d8a6e;
+  --card-bg: #1e293b;
+  --text-dark: #f1f5f9;
+  --text-light: #94a3b8;
+  --border-color: #334155;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  padding: 3rem 2rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 300px;
+  height: 300px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.header h1 {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.header p {
+  color: rgba(255,255,255,0.9);
+  font-size: 1.1rem;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Section Headers */
+.section-header {
+  margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.section-header p {
+  color: var(--text-light);
+  margin-top: 0.5rem;
+}
+
+/* Guides Grid */
+.guides-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+/* Guide Card */
+.guide-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+}
+
+.guide-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+.guide-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+}
+
+.guide-card-icon.green {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.guide-card-icon.blue {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+.guide-card-icon.purple {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+}
+
+.guide-card-icon.orange {
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+}
+
+.guide-card-icon.teal {
+  background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+}
+
+.guide-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.guide-card-description {
+  color: var(--text-light);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  flex-grow: 1;
+}
+
+.guide-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.guide-card-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.guide-card-badge.everyone {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.guide-card-badge.captain {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.guide-card-badge.contributor {
+  background: #cffafe;
+  color: #0e7490;
+}
+
+.guide-card-badge.league-staff {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.guide-card-arrow {
+  color: var(--primary-color);
+  font-size: 1.25rem;
+  transition: transform 0.3s ease;
+}
+
+.guide-card:hover .guide-card-arrow {
+  transform: translateX(4px);
+}
+
+/* Role-based sections */
+.role-section {
+  display: none;
+}
+
+.role-section.visible {
+  display: block;
+}
+
+/* Divider */
+.section-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 2rem 0;
+}
+
+/* Back to Home */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-light);
+  text-decoration: none;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  transition: color 0.2s ease;
+}
+
+.back-link:hover {
+  color: var(--primary-color);
+}
+
+/* Quick Links */
+.quick-links {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.quick-links h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quick-links-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f1f5f9;
+  border-radius: 8px;
+  color: var(--text-dark);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .quick-link {
+  background: #334155;
+}
+
+.quick-link:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* Loading State */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.3s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.softball-spinner::before {
+  content: '⚾';
+  font-size: 60px;
+  animation: spin 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .header {
+    padding: 2rem 1rem;
+  }
+  
+  .header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .container {
+    padding: 1.5rem 1rem;
+  }
+  
+  .guides-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .guide-card {
+    padding: 1.25rem;
+  }
+  
+  .quick-links-list {
+    flex-direction: column;
+  }
+  
+  .quick-link {
+    justify-content: center;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-content">
+    <h1>📚 Help Center</h1>
+    <p>Guides and resources to help you get the most out of Mountainside Aces</p>
+  </div>
+</header>
+
+<!-- Main Content -->
+<div class="container">
+  
+  <a href="index.html" class="back-link">
+    ← Back to Home
+  </a>
+
+  <!-- Getting Started Section (Everyone) -->
+  <section class="getting-started-section">
+    <div class="section-header">
+      <h2>🚀 Getting Started</h2>
+      <p>New to Mountainside Aces? Start here to get set up.</p>
+    </div>
+    
+    <div class="guides-grid">
+      
+      <!-- Sign-Up Guide -->
+      <a href="mountainside-aces-signup-guide.html" class="guide-card">
+        <div class="guide-card-icon green">📝</div>
+        <h3 class="guide-card-title">Sign-Up Guide</h3>
+        <p class="guide-card-description">
+          Learn how to create your account, choose your sign-in method, verify your email, and link to your player profile.
+        </p>
+        <div class="guide-card-footer">
+          <span class="guide-card-badge everyone">Everyone</span>
+          <span class="guide-card-arrow">→</span>
+        </div>
+      </a>
+      
+      <!-- Profile Setup Guide -->
+      <a href="profile-setup-guide.html" class="guide-card">
+        <div class="guide-card-icon blue">👤</div>
+        <h3 class="guide-card-title">Profile Setup Guide</h3>
+        <p class="guide-card-description">
+          Complete your profile with player info, notification preferences, directory settings, and customize your experience.
+        </p>
+        <div class="guide-card-footer">
+          <span class="guide-card-badge everyone">Everyone</span>
+          <span class="guide-card-arrow">→</span>
+        </div>
+      </a>
+      
+      <!-- Features Guide -->
+      <a href="aces-features-guide.html" class="guide-card">
+        <div class="guide-card-icon purple">✨</div>
+        <h3 class="guide-card-title">Features Guide</h3>
+        <p class="guide-card-description">
+          Discover all the features available on the platform including stats tracking, favorites, RSVPs, notifications, and more.
+        </p>
+        <div class="guide-card-footer">
+          <span class="guide-card-badge everyone">Everyone</span>
+          <span class="guide-card-arrow">→</span>
+        </div>
+      </a>
+
+      <!-- Calendar Export Guide -->
+      <a href="calendar-export-guide.html" class="guide-card">
+        <div class="guide-card-icon teal">📅</div>
+        <h3 class="guide-card-title">Add Schedule to Your Calendar</h3>
+        <p class="guide-card-description">
+          Sync your team's games or the full league schedule to Google Calendar, Apple Calendar, or Outlook — with automatic updates.
+        </p>
+        <div class="guide-card-footer">
+          <span class="guide-card-badge everyone">Everyone</span>
+          <span class="guide-card-arrow">→</span>
+        </div>
+      </a>
+      
+    </div>
+  </section>
+
+  <!-- Role-Specific Section (Captains & Team Staff) -->
+  <section class="role-section" id="captainSection">
+    <div class="section-divider"></div>
+    
+    <div class="section-header">
+      <h2>🎯 Team Management</h2>
+      <p>Guides for captains and team staff to manage their teams effectively.</p>
+    </div>
+    
+    <div class="guides-grid">
+      
+      <!-- Captain's Guide -->
+      <a href="captain-guide.html" class="guide-card">
+        <div class="guide-card-icon orange">👨‍✈️</div>
+        <h3 class="guide-card-title">Captain's Guide</h3>
+        <p class="guide-card-description">
+          Everything you need to manage your team: roster management, lineup creation, RSVP tracking, game submissions, and more.
+        </p>
+        <div class="guide-card-footer">
+          <span class="guide-card-badge captain">Captains & Staff</span>
+          <span class="guide-card-arrow">→</span>
+        </div>
+      </a>
+      
+      <!-- Game Tracker Guide -->
+      <a href="game-tracker-guide.html" class="guide-card">
+        <div class="guide-card-icon green">⚾</div>
+        <h3 class="guide-card-title">Game Tracker Guide</h3>
+        <p class="guide-card-description">
+          Live play-by-play tracking: record at-bats, manage base runners, track batting stats in real-time, and sync between teams.
+        </p>
+        <div class="guide-card-footer">
+          <span class="guide-card-badge captain">Captains & Staff</span>
+          <span class="guide-card-arrow">→</span>
+        </div>
+      </a>
+
+      <!-- Score & Stats Guide -->
+      <a href="scoring-guide.html" class="guide-card">
+        <div class="guide-card-icon teal">🔢</div>
+        <h3 class="guide-card-title">Score &amp; Stats Guide</h3>
+        <p class="guide-card-description">
+          How to submit game scores and player statistics after each game — including inning-by-inning line scores, CSV bulk upload, and correcting existing entries.
+        </p>
+        <div class="guide-card-footer">
+          <span class="guide-card-badge captain">Captains &amp; Staff</span>
+          <span class="guide-card-arrow">→</span>
+        </div>
+      </a>
+      
+    </div>
+  </section>
+
+  <!-- Role-Specific Section (Contributors) - Hidden until guide exists -->
+  <section class="role-section" id="contributorSection">
+    <div class="section-divider"></div>
+    
+    <div class="section-header">
+      <h2>✨ Contributors</h2>
+      <p>Special guides for league contributors.</p>
+    </div>
+    
+    <div class="guides-grid">
+      
+      <!-- Contributor Guide -->
+      <a href="contributor-guide.html" class="guide-card">
+        <div class="guide-card-icon teal">✨</div>
+        <h3 class="guide-card-title">Contributor Dashboard Guide</h3>
+        <p class="guide-card-description">
+          Create content for the league: write team eulogies, manage photos, set game odds and previews, and manage banner messages.
+        </p>
+        <div class="guide-card-footer">
+          <span class="guide-card-badge contributor">Contributors</span>
+          <span class="guide-card-arrow">→</span>
+        </div>
+      </a>
+      
+    </div>
+  </section>
+
+  <!-- Role-Specific Section (League Staff) - Hidden until guide exists -->
+  <section class="role-section" id="leagueStaffSection">
+    <div class="section-divider"></div>
+    
+    <div class="section-header">
+      <h2>⚙️ League Administration</h2>
+      <p>Administrative guides for league staff.</p>
+    </div>
+    
+    <div class="guides-grid">
+      
+      <!-- League Staff Guide -->
+      <a href="league-staff-guide.html" class="guide-card">
+        <div class="guide-card-icon blue">⚙️</div>
+        <h3 class="guide-card-title">League Staff Admin Guide</h3>
+        <p class="guide-card-description">
+          Manage game schedules, homepage banners, and push notifications. Edit games, share updates to WhatsApp, and communicate with the league.
+        </p>
+        <div class="guide-card-footer">
+          <span class="guide-card-badge league-staff">League Staff</span>
+          <span class="guide-card-arrow">→</span>
+        </div>
+      </a>
+
+      <!-- Offseason Hub Guide -->
+      <a href="offseason-guide.html" class="guide-card">
+        <div class="guide-card-icon green">🎣</div>
+        <h3 class="guide-card-title">Offseason Hub Guide</h3>
+        <p class="guide-card-description">
+          Manage offseason rosters, generate and balance schedules, analyze schedule fairness, and publish new seasons with the setup wizard.
+        </p>
+        <div class="guide-card-footer">
+          <span class="guide-card-badge league-staff">League Staff</span>
+          <span class="guide-card-arrow">→</span>
+        </div>
+      </a>
+      
+    </div>
+  </section>
+
+  <!-- Quick Links Section -->
+  <div class="section-divider"></div>
+  
+  <div class="quick-links">
+    <h3>🔗 Quick Links</h3>
+    <div class="quick-links-list">
+      <a href="league-rules.html" class="quick-link">📋 League Rules</a>
+      <a href="current-season.html" class="quick-link">📅 Current Season</a>
+      <a href="profile.html" class="quick-link" id="profileLink" style="display: none;">👤 My Profile</a>
+      <a href="feature-submit.html" class="quick-link">💡 Submit Feedback</a>
+      <a href="signin.html" class="quick-link" id="signInLink">🔐 Sign In</a>
+    </div>
+  </div>
+  
+</div>
+
+<!-- Scripts -->
+<script type="module">
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { app, db } from './firebase-data.js';
+import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { NavigationComponent } from './nav-component.js';
+
+const auth = getAuth(app);
+
+// Role checking helpers (inline to avoid import issues)
+const USER_ROLES = {
+  PLAYER: 'player',
+  CAPTAIN: 'captain',
+  TEAM_STAFF: 'team-staff',
+  LEAGUE_STAFF: 'league-staff',
+  ADMIN: 'admin'
+};
+
+function isUserCaptain(userProfile) {
+  if (!userProfile) return false;
+  if (userProfile.isCaptain === true) return true;
+  if (userProfile.userRole === USER_ROLES.CAPTAIN) return true;
+  if (userProfile.teamRoles) {
+    return Object.values(userProfile.teamRoles).some(
+      tr => tr.role === USER_ROLES.CAPTAIN && tr.status === 'active'
+    );
+  }
+  return false;
+}
+
+function isUserTeamStaff(userProfile) {
+  if (!userProfile) return false;
+  if (userProfile.teamRoles) {
+    return Object.values(userProfile.teamRoles).some(
+      tr => tr.role === USER_ROLES.TEAM_STAFF && tr.status === 'active'
+    );
+  }
+  return false;
+}
+
+function hasLeagueRole(userProfile) {
+  if (!userProfile) return false;
+  if (userProfile.isAdmin === true) return true;
+  const role = userProfile.userRole;
+  return role === USER_ROLES.ADMIN || role === USER_ROLES.LEAGUE_STAFF;
+}
+
+function hasSpecialRole(userProfile, role) {
+  if (!userProfile) return false;
+  if (userProfile.userRole === USER_ROLES.ADMIN) return true;
+  return userProfile.specialRoles?.[role] === true;
+}
+
+// Initialize page
+async function initPage() {
+  // Initialize navigation
+  await NavigationComponent.init();
+  
+  // Check auth state and show appropriate sections
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // Show profile link, hide sign in link
+      document.getElementById('profileLink').style.display = '';
+      document.getElementById('signInLink').style.display = 'none';
+      
+      // Get user profile to check roles
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userProfile = userDoc.data();
+          
+          // Show captain/team-staff section
+          if (isUserCaptain(userProfile) || isUserTeamStaff(userProfile) || hasLeagueRole(userProfile)) {
+            document.getElementById('captainSection').classList.add('visible');
+          }
+          
+          // Show contributor section
+          const isContributor = hasSpecialRole(userProfile, 'eulogist') || 
+                                hasSpecialRole(userProfile, 'photographer') || 
+                                hasSpecialRole(userProfile, 'oddsmaker') ||
+                                hasLeagueRole(userProfile);
+          if (isContributor) {
+            document.getElementById('contributorSection').classList.add('visible');
+          }
+          
+          // Show league staff section
+          if (hasLeagueRole(userProfile)) {
+            document.getElementById('leagueStaffSection').classList.add('visible');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    }
+    
+    // Hide loading overlay
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  });
+}
+
+// Run on page load
+initPage();
+</script>
+
+</body>
+</html>

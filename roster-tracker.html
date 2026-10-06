@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roster Tracker - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+
+  --team-black: #1a1a1a; --team-green: #2d7d32; --team-red: #d32f2f;
+  --team-blue: #1976d2; --team-white: #607d8b; --team-orange: #f57c00;
+  --team-silver: #757575; --team-purple: #7b1fa2; --team-gold: #CFB53B;
+  --team-carolina: #4b9cd3; --team-army: #654321;
+
+  --new-color: #10b981;
+  --gone-color: #ef4444;
+  --transferred-color: #8b5cf6;
+  --returned-color: #3b82f6;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+/* Loading */
+.loading-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 9999; gap: 1rem;
+}
+.loading-overlay.hidden { display: none; }
+.softball-spinner::before {
+  content: '⚾'; font-size: 80px;
+  animation: spin 1.5s ease-in-out infinite;
+}
+@keyframes spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+.loading-text { color: var(--text-light); font-size: 1.1rem; }
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  padding: 3rem 2rem;
+  box-shadow: var(--shadow-lg);
+  position: relative; overflow: hidden; text-align: center; color: white;
+}
+.header::before {
+  content: ''; position: absolute; top: -80px; right: -80px;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.header h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; position: relative; z-index: 1; }
+.header p { font-size: 1.1rem; opacity: 0.9; position: relative; z-index: 1; }
+
+.back-button {
+  position: absolute; top: 1.5rem; left: 1.5rem;
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+  color: white; padding: 0.6rem 1.2rem; border-radius: 8px;
+  text-decoration: none; font-weight: 600; font-size: 0.9rem;
+  border: 1px solid rgba(255,255,255,0.2); z-index: 10;
+  transition: all 0.3s ease;
+}
+.back-button:hover { background: rgba(255,255,255,0.25); }
+
+/* Container */
+.container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+/* View Controls */
+.controls {
+  display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;
+  margin-bottom: 2rem; background: var(--card-bg);
+  padding: 1.25rem 1.5rem; border-radius: 12px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+}
+.controls label { font-weight: 600; font-size: 0.9rem; color: var(--text-light); }
+.controls select {
+  padding: 0.5rem 1rem; border-radius: 8px; border: 2px solid var(--border-color);
+  font-size: 0.95rem; font-family: inherit; background: white; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.controls select:focus { outline: none; border-color: var(--primary-color); }
+
+.view-toggle {
+  display: flex; gap: 0; margin-left: auto; border-radius: 8px; overflow: hidden;
+  border: 2px solid var(--border-color);
+}
+.view-toggle button {
+  padding: 0.5rem 1rem; border: none; background: white;
+  font-family: inherit; font-size: 0.9rem; font-weight: 500;
+  cursor: pointer; transition: all 0.2s; color: var(--text-light);
+}
+.view-toggle button.active {
+  background: var(--primary-color); color: white;
+}
+.view-toggle button:hover:not(.active) { background: #f0f0f0; }
+
+/* Legend */
+.legend {
+  display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+  padding: 0.75rem 1.25rem; background: var(--card-bg);
+  border-radius: 10px; border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+.legend-item {
+  display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--text-light);
+}
+.legend-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.legend-dot.new { background: var(--new-color); }
+.legend-dot.gone { background: var(--gone-color); }
+.legend-dot.transferred { background: var(--transferred-color); }
+.legend-dot.returned { background: var(--returned-color); }
+.legend-dot.stayed { background: var(--border-color); border: 2px solid #cbd5e0; }
+
+/* Stats Bar */
+.stats-bar {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem; margin-bottom: 2rem;
+}
+.stat-card {
+  background: var(--card-bg); border-radius: 12px; padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+  text-align: center;
+}
+.stat-card .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary-color); }
+.stat-card .stat-label { font-size: 0.8rem; color: var(--text-light); font-weight: 500; margin-top: 0.25rem; }
+.stat-card.new-stat .stat-value { color: var(--new-color); }
+.stat-card.gone-stat .stat-value { color: var(--gone-color); }
+.stat-card.transferred-stat .stat-value { color: var(--transferred-color); }
+.stat-card.returned-stat .stat-value { color: var(--returned-color); }
+
+/* Team Grid */
+.teams-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Team Card */
+.team-card {
+  background: var(--card-bg); border-radius: 16px; overflow: hidden;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+.team-card:hover { box-shadow: var(--shadow-md); }
+
+.team-card-header {
+  padding: 1rem 1.25rem; color: white; font-weight: 700; font-size: 1.15rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.team-card-header .roster-count {
+  font-size: 0.85rem; font-weight: 500; opacity: 0.9;
+  background: rgba(255,255,255,0.2); padding: 0.2rem 0.6rem; border-radius: 20px;
+}
+
+.team-card-body { padding: 0; }
+
+/* Player Row */
+.player-row {
+  display: flex; align-items: center; padding: 0.6rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9; font-size: 0.9rem;
+  transition: background 0.15s;
+}
+.player-row:last-child { border-bottom: none; }
+.player-row:hover { background: #f8fafc; }
+
+.player-name { flex: 1; font-weight: 500; }
+.player-name a {
+  color: inherit; text-decoration: none;
+  transition: color 0.2s;
+}
+.player-name a:hover { color: var(--primary-color); text-decoration: underline; }
+
+.player-badge {
+  font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem;
+  border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.badge-new { background: #d1fae5; color: #065f46; }
+.badge-gone { background: #fee2e2; color: #991b1b; text-decoration: line-through; }
+.badge-transferred { background: #ede9fe; color: #5b21b6; }
+.badge-returned { background: #dbeafe; color: #1e40af; }
+.badge-stayed { background: #f1f5f9; color: #64748b; }
+
+.player-from {
+  font-size: 0.75rem; color: var(--text-light); margin-left: 0.5rem;
+}
+
+/* Single Team View */
+.single-team-view { display: none; }
+.single-team-view.active { display: block; }
+
+/* Timeline View - toggled via JS */
+.timeline-container { }
+
+.player-timeline-card {
+  background: var(--card-bg); border-radius: 12px; padding: 1.25rem;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+  margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem;
+}
+.player-timeline-name {
+  font-weight: 700; font-size: 1rem; min-width: 140px;
+}
+.player-timeline-name a {
+  color: var(--text-dark); text-decoration: none;
+}
+.player-timeline-name a:hover { color: var(--primary-color); text-decoration: underline; }
+.timeline-seasons {
+  display: flex; gap: 0.5rem; flex: 1; flex-wrap: wrap; align-items: center;
+}
+.timeline-chip {
+  padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.8rem;
+  font-weight: 600; color: white; white-space: nowrap;
+  display: flex; align-items: center; gap: 0.3rem;
+  min-width: 60px; justify-content: center;
+}
+.timeline-arrow { color: var(--text-light); font-size: 1rem; }
+.timeline-chip.absent {
+  background: #f1f5f9; color: #94a3b8; border: 1px dashed #cbd5e0;
+  font-style: italic;
+}
+
+/* Search */
+.search-box {
+  width: 100%; padding: 0.6rem 1rem; border-radius: 8px;
+  border: 2px solid var(--border-color); font-size: 0.95rem;
+  font-family: inherit; transition: border-color 0.2s;
+  max-width: 300px;
+}
+.search-box:focus { outline: none; border-color: var(--primary-color); }
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 4rem 2rem; color: var(--text-light);
+}
+.empty-state .empty-icon { font-size: 4rem; margin-bottom: 1rem; }
+.empty-state p { font-size: 1.1rem; }
+
+/* Controls inner row */
+.controls-row {
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  body { padding-top: 60px; }
+  .header { padding: 4rem 1.5rem 2rem; }
+  .header h1 { font-size: 1.8rem; }
+  .controls { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+  .controls-row { width: 100%; }
+  .controls-row label { display: none; }
+  .controls-row select { flex: 1; min-width: 0; font-size: 0.9rem; }
+  .controls-row span { flex-shrink: 0; }
+  .view-toggle { margin-left: 0; width: 100%; }
+  .view-toggle button { flex: 1; }
+  .search-box { max-width: 100%; }
+  .teams-grid { grid-template-columns: 1fr; }
+  .stats-bar { grid-template-columns: repeat(3, 1fr); }
+  .stats-bar .stat-card { padding: 0.75rem 0.5rem; }
+  .stats-bar .stat-card .stat-value { font-size: 1.5rem; }
+  .stats-bar .stat-card .stat-label { font-size: 0.7rem; }
+  .legend { gap: 0.5rem; justify-content: center; }
+  .legend-item { font-size: 0.78rem; }
+  .player-timeline-card {
+    flex-direction: column; align-items: flex-start;
+  }
+  .player-timeline-name { min-width: auto; font-size: 0.9rem; margin-bottom: 0.25rem; }
+  .timeline-seasons { flex-wrap: wrap; overflow-x: visible; padding-bottom: 0.25rem; }
+  .timeline-chip { font-size: 0.7rem; padding: 0.2rem 0.5rem; flex-shrink: 0; }
+  .timeline-arrow { font-size: 0.75rem; flex-shrink: 0; }
+  .container { padding: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+  <div class="loading-text">Loading roster data...</div>
+</div>
+
+<div class="page-container">
+  <div class="filters-nav"></div>
+
+  <div class="header">
+    <a href="index.html" class="back-button">← Home</a>
+    <h1>📋 Roster Tracker</h1>
+    <p>See how every roster evolved across seasons</p>
+  </div>
+
+  <div class="container">
+    <!-- Controls -->
+    <div class="controls">
+      <div class="controls-row">
+        <label>Comparing:</label>
+        <select id="seasonFromSelect"><option value="">Loading...</option></select>
+        <span style="font-weight: 700; color: var(--text-light);">→</span>
+        <select id="seasonToSelect"><option value="">Loading...</option></select>
+      </div>
+      <input type="text" class="search-box" id="playerSearch" placeholder="🔍 Filter by player name...">
+      <div class="view-toggle">
+        <button class="active" data-view="teams" onclick="setView('teams')">Teams</button>
+        <button data-view="timeline" onclick="setView('timeline')">Timeline</button>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item"><span class="legend-dot stayed"></span> Stayed</div>
+      <div class="legend-item"><span class="legend-dot new"></span> New</div>
+      <div class="legend-item"><span class="legend-dot gone"></span> Left</div>
+      <div class="legend-item"><span class="legend-dot transferred"></span> Transferred</div>
+      <div class="legend-item"><span class="legend-dot returned"></span> Returned</div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar" id="statsBar"></div>
+
+    <!-- Teams View -->
+    <div class="teams-grid" id="teamsView"></div>
+
+    <!-- Timeline View -->
+    <div class="timeline-container" id="timelineView" style="display: none;"></div>
+  </div>
+</div>
+
+<script type="module">
+import { db } from './firebase-data.js';
+import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getAllPlayerStatsOptimized, getAllSeasons } from './firebase-data.js';
+import { NavigationComponent } from './nav-component.js';
+
+const TEAM_COLORS = {
+  black: '#1a1a1a', green: '#2d7d32', red: '#d32f2f', blue: '#1976d2',
+  white: '#607d8b', orange: '#f57c00', silver: '#757575', purple: '#7b1fa2',
+  gold: '#CFB53B', carolina: '#4b9cd3', army: '#654321'
+};
+
+// Season sort: 2024-summer, 2024-fall, 2025-summer, 2025-fall, etc.
+function seasonSortKey(seasonId) {
+  const parts = seasonId.split('-');
+  const year = parseInt(parts[0]) || 0;
+  const typeOrder = { spring: 0, summer: 1, fall: 2, winter: 3 };
+  const type = (typeOrder[parts[1]] !== undefined) ? typeOrder[parts[1]] : 9;
+  return year * 10 + type;
+}
+
+let allPlayers = [];
+let allSeasons = [];
+let seasonRosters = {}; // { seasonId: { teamName: [playerNames] } }
+let currentView = 'teams';
+
+async function init() {
+  try {
+    await NavigationComponent.init();
+  } catch(e) { console.log('Nav init skipped'); }
+  
+  try {
+    // Load all seasons
+    const seasons = await getAllSeasons();
+    allSeasons = seasons
+      .map(s => ({ id: s.id, name: s.seasonName || s.id, type: s.seasonType || '', ...s }))
+      .sort((a, b) => seasonSortKey(a.id) - seasonSortKey(b.id));
+    
+    // Load all players with season data
+    allPlayers = await getAllPlayerStatsOptimized();
+    
+    // Build season rosters from player data
+    buildSeasonRosters();
+    
+    // Populate dropdowns
+    populateDropdowns();
+    
+    // Setup listeners
+    setupListeners();
+    
+    // Initial render
+    render();
+    
+  } catch(error) {
+    console.error('Error initializing:', error);
+    document.getElementById('teamsView').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <p>Error loading roster data. Please try refreshing.</p>
+      </div>`;
+  }
+  
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+function buildSeasonRosters() {
+  seasonRosters = {};
+  
+  allPlayers.forEach(player => {
+    if (player.migrated) return;
+    const name = player.name || player.playerName;
+    if (!name) return;
+    
+    if (player.seasons && typeof player.seasons === 'object') {
+      Object.entries(player.seasons).forEach(([seasonKey, stats]) => {
+        // Skip sub/substitute players - check key suffix AND stats field
+        if (seasonKey.endsWith('-sub')) return;
+        if (stats.sub === 'Yes' || stats.sub === 'yes' || stats.sub === true) return;
+        
+        // Extract base season id and team name
+        // Format: "2025-fall-orange" -> baseId: "2025-fall", team: "orange"
+        // Format: "2025-fall" -> baseId: "2025-fall", team from stats
+        const parts = seasonKey.split('-');
+        let baseSeasonId, teamName;
+        
+        if (parts.length >= 3) {
+          baseSeasonId = parts[0] + '-' + parts[1];
+          teamName = parts.slice(2).join('-');
+        } else if (parts.length === 2) {
+          baseSeasonId = seasonKey;
+          teamName = stats.team || 'unknown';
+        } else {
+          return;
+        }
+        
+        // Capitalize team name
+        teamName = teamName.charAt(0).toUpperCase() + teamName.slice(1);
+        
+        if (!seasonRosters[baseSeasonId]) seasonRosters[baseSeasonId] = {};
+        if (!seasonRosters[baseSeasonId][teamName]) seasonRosters[baseSeasonId][teamName] = [];
+        
+        if (!seasonRosters[baseSeasonId][teamName].includes(name)) {
+          seasonRosters[baseSeasonId][teamName].push(name);
+        }
+      });
+    }
+  });
+  
+  // Sort player lists
+  Object.values(seasonRosters).forEach(teams => {
+    Object.keys(teams).forEach(team => {
+      teams[team].sort((a, b) => a.localeCompare(b));
+    });
+  });
+}
+
+function populateDropdowns() {
+  const fromSelect = document.getElementById('seasonFromSelect');
+  const toSelect = document.getElementById('seasonToSelect');
+  
+  // Only show seasons that have roster data
+  const seasonsWithData = allSeasons.filter(s => seasonRosters[s.id]);
+  
+  if (seasonsWithData.length < 2) {
+    fromSelect.innerHTML = '<option>Not enough seasons</option>';
+    toSelect.innerHTML = '<option>Not enough seasons</option>';
+    return;
+  }
+  
+  const options = seasonsWithData.map(s => 
+    `<option value="${s.id}">${formatSeasonName(s.id)}</option>`
+  ).join('');
+  
+  fromSelect.innerHTML = options;
+  toSelect.innerHTML = options;
+  
+  // Default: second-to-last -> last
+  fromSelect.value = seasonsWithData[seasonsWithData.length - 2].id;
+  toSelect.value = seasonsWithData[seasonsWithData.length - 1].id;
+}
+
+function formatSeasonName(seasonId) {
+  const parts = seasonId.split('-');
+  if (parts.length >= 2) {
+    const year = parts[0];
+    const type = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+    return `${type} ${year}`;
+  }
+  return seasonId;
+}
+
+function setupListeners() {
+  document.getElementById('seasonFromSelect').addEventListener('change', render);
+  document.getElementById('seasonToSelect').addEventListener('change', render);
+  document.getElementById('playerSearch').addEventListener('input', render);
+}
+
+window.setView = function(view) {
+  currentView = view;
+  document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-view="${view}"]`).classList.add('active');
+  render();
+};
+
+function getTeamColor(teamName) {
+  const key = teamName.toLowerCase().replace(/\s+/g, '');
+  return TEAM_COLORS[key] || '#64748b';
+}
+
+function getPlayerLink(name) {
+  const slug = name.toLowerCase().replace(/\s+/g, '_');
+  return `player.html?name=${encodeURIComponent(name)}`;
+}
+
+function compareRosters(fromId, toId) {
+  const fromTeams = seasonRosters[fromId] || {};
+  const toTeams = seasonRosters[toId] || {};
+  
+  // Build sets of all players in each season
+  const fromAll = {};  // player -> team
+  const toAll = {};    // player -> team
+  
+  Object.entries(fromTeams).forEach(([team, players]) => {
+    players.forEach(p => { fromAll[p] = team; });
+  });
+  Object.entries(toTeams).forEach(([team, players]) => {
+    players.forEach(p => { toAll[p] = team; });
+  });
+  
+  // Check for players who were in an even earlier season (for "returned" detection)
+  const seasonsWithData = allSeasons.filter(s => seasonRosters[s.id]).map(s => s.id).sort((a, b) => seasonSortKey(a) - seasonSortKey(b));
+  const fromIndex = seasonsWithData.indexOf(fromId);
+  const earlierPlayers = new Set();
+  for (let i = 0; i < fromIndex; i++) {
+    const teams = seasonRosters[seasonsWithData[i]] || {};
+    Object.values(teams).forEach(players => players.forEach(p => earlierPlayers.add(p)));
+  }
+  
+  // Classify each player in the TO season
+  const results = {};  // team -> [{ name, status, from }]
+  
+  // Get all teams from both seasons
+  const allTeamNames = new Set([...Object.keys(fromTeams), ...Object.keys(toTeams)]);
+  
+  allTeamNames.forEach(team => {
+    results[team] = { current: [], departed: [] };
+  });
+  
+  // Players in the TO season
+  Object.entries(toTeams).forEach(([team, players]) => {
+    if (!results[team]) results[team] = { current: [], departed: [] };
+    
+    players.forEach(name => {
+      if (fromAll[name]) {
+        if (fromAll[name] === team) {
+          results[team].current.push({ name, status: 'stayed' });
+        } else {
+          results[team].current.push({ name, status: 'transferred', from: fromAll[name] });
+        }
+      } else if (earlierPlayers.has(name)) {
+        results[team].current.push({ name, status: 'returned' });
+      } else {
+        results[team].current.push({ name, status: 'new' });
+      }
+    });
+  });
+  
+  // Players who LEFT (in FROM but not in TO)
+  Object.entries(fromTeams).forEach(([team, players]) => {
+    if (!results[team]) results[team] = { current: [], departed: [] };
+    
+    players.forEach(name => {
+      if (!toAll[name]) {
+        results[team].departed.push({ name, status: 'gone' });
+      }
+    });
+  });
+  
+  // Sort each team's players
+  Object.values(results).forEach(team => {
+    team.current.sort((a, b) => {
+      const order = { stayed: 0, transferred: 1, returned: 2, new: 3 };
+      return (order[a.status] || 9) - (order[b.status] || 9) || a.name.localeCompare(b.name);
+    });
+    team.departed.sort((a, b) => a.name.localeCompare(b.name));
+  });
+  
+  return { results, fromAll, toAll };
+}
+
+function computeStats(comparison) {
+  const { fromAll, toAll } = comparison;
+  let stayed = 0, newPlayers = 0, gone = 0, transferred = 0, returned = 0;
+  
+  // Check every player in TO season
+  Object.entries(comparison.results).forEach(([team, data]) => {
+    data.current.forEach(p => {
+      if (p.status === 'stayed') stayed++;
+      else if (p.status === 'new') newPlayers++;
+      else if (p.status === 'transferred') transferred++;
+      else if (p.status === 'returned') returned++;
+    });
+    data.departed.forEach(p => { gone++; });
+  });
+  
+  return {
+    total: Object.keys(toAll).length,
+    stayed, new: newPlayers, gone, transferred, returned,
+    prev: Object.keys(fromAll).length
+  };
+}
+
+function render() {
+  const fromId = document.getElementById('seasonFromSelect').value;
+  const toId = document.getElementById('seasonToSelect').value;
+  const searchTerm = document.getElementById('playerSearch').value.toLowerCase().trim();
+  
+  if (!fromId || !toId || !seasonRosters[fromId] || !seasonRosters[toId]) {
+    document.getElementById('teamsView').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p>Select two seasons to compare rosters.</p>
+      </div>`;
+    return;
+  }
+  
+  const comparison = compareRosters(fromId, toId);
+  const stats = computeStats(comparison);
+  
+  // Render stats bar
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${stats.total}</div><div class="stat-label">Total Players</div></div>
+    <div class="stat-card"><div class="stat-value">${stats.stayed}</div><div class="stat-label">Stayed</div></div>
+    <div class="stat-card new-stat"><div class="stat-value">${stats.new}</div><div class="stat-label">New</div></div>
+    <div class="stat-card gone-stat"><div class="stat-value">${stats.gone}</div><div class="stat-label">Left</div></div>
+    <div class="stat-card transferred-stat"><div class="stat-value">${stats.transferred}</div><div class="stat-label">Transferred</div></div>
+    <div class="stat-card returned-stat"><div class="stat-value">${stats.returned}</div><div class="stat-label">Returned</div></div>
+  `;
+  
+  if (currentView === 'teams') {
+    renderTeamsView(comparison, searchTerm, toId);
+    document.getElementById('teamsView').style.display = 'grid';
+    document.getElementById('timelineView').style.display = 'none';
+  } else {
+    renderTimelineView(comparison, searchTerm, fromId, toId);
+    document.getElementById('teamsView').style.display = 'none';
+    document.getElementById('timelineView').style.display = 'block';
+  }
+}
+
+function renderTeamsView(comparison, searchTerm, toId) {
+  const container = document.getElementById('teamsView');
+  const toTeams = seasonRosters[toId] || {};
+  
+  // Sort teams alphabetically, but only show teams that are in the TO season (or had departures)
+  const teamNames = Object.keys(comparison.results)
+    .filter(team => {
+      const data = comparison.results[team];
+      return data.current.length > 0 || data.departed.length > 0;
+    })
+    .sort();
+  
+  let html = '';
+  
+  teamNames.forEach(team => {
+    const data = comparison.results[team];
+    const color = getTeamColor(team);
+    
+    // Filter by search
+    let current = data.current;
+    let departed = data.departed;
+    
+    if (searchTerm) {
+      current = current.filter(p => p.name.toLowerCase().includes(searchTerm));
+      departed = departed.filter(p => p.name.toLowerCase().includes(searchTerm));
+      if (current.length === 0 && departed.length === 0) return;
+    }
+    
+    const totalCurrent = data.current.length;
+    
+    html += `<div class="team-card">
+      <div class="team-card-header" style="background: ${color};">
+        <span>${team}</span>
+        <span class="roster-count">${totalCurrent} players</span>
+      </div>
+      <div class="team-card-body">`;
+    
+    // Current roster
+    current.forEach(p => {
+      const badgeClass = `badge-${p.status}`;
+      const badgeText = p.status === 'stayed' ? '' : p.status.charAt(0).toUpperCase() + p.status.slice(1);
+      const fromText = p.from ? `<span class="player-from">← ${p.from}</span>` : '';
+      
+      html += `<div class="player-row">
+        <span class="player-name"><a href="${getPlayerLink(p.name)}">${p.name}</a></span>
+        ${fromText}
+        ${badgeText ? `<span class="player-badge ${badgeClass}">${badgeText}</span>` : ''}
+      </div>`;
+    });
+    
+    // Departed
+    if (departed.length > 0) {
+      departed.forEach(p => {
+        html += `<div class="player-row" style="opacity: 0.5;">
+          <span class="player-name" style="text-decoration: line-through;"><a href="${getPlayerLink(p.name)}">${p.name}</a></span>
+          <span class="player-badge badge-gone">Left</span>
+        </div>`;
+      });
+    }
+    
+    html += `</div></div>`;
+  });
+  
+  container.innerHTML = html || `<div class="empty-state"><div class="empty-icon">🔍</div><p>No players match your search.</p></div>`;
+}
+
+function renderTimelineView(comparison, searchTerm, fromId, toId) {
+  const container = document.getElementById('timelineView');
+  
+  // Get all seasons in order for full timeline
+  const seasonsWithData = allSeasons.filter(s => seasonRosters[s.id]).map(s => s.id).sort((a, b) => seasonSortKey(a) - seasonSortKey(b));
+  
+  // Get all unique players
+  const allPlayerNames = new Set();
+  seasonsWithData.forEach(sid => {
+    const teams = seasonRosters[sid] || {};
+    Object.values(teams).forEach(players => players.forEach(p => allPlayerNames.add(p)));
+  });
+  
+  let playerList = [...allPlayerNames].sort();
+  
+  if (searchTerm) {
+    playerList = playerList.filter(p => p.toLowerCase().includes(searchTerm));
+  }
+  
+  // Season header - uses same structure as player rows for alignment
+  let html = `<div class="player-timeline-card" style="margin-bottom: 0.5rem; padding: 0.75rem 1.25rem; background: #f8fafc; box-shadow: none; border-bottom: 2px solid var(--border-color);">
+    <div class="player-timeline-name" style="font-size: 0.8rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px;">Player</div>
+    <div class="timeline-seasons">`;
+  
+  seasonsWithData.forEach((sid, i) => {
+    html += `<span class="timeline-chip" style="background: transparent; color: var(--text-dark); font-size: 0.75rem; font-weight: 700; min-width: 60px; text-align: center; justify-content: center;">${formatSeasonName(sid)}</span>`;
+    if (i < seasonsWithData.length - 1) {
+      html += `<span class="timeline-arrow" style="opacity: 0.4;">→</span>`;
+    }
+  });
+  html += `</div></div>`;
+  
+  // Player rows
+  playerList.forEach(name => {
+    html += `<div class="player-timeline-card">
+      <div class="player-timeline-name"><a href="${getPlayerLink(name)}">${name}</a></div>
+      <div class="timeline-seasons">`;
+    
+    seasonsWithData.forEach((sid, i) => {
+      const teams = seasonRosters[sid] || {};
+      let team = null;
+      
+      Object.entries(teams).forEach(([t, players]) => {
+        if (players.includes(name)) team = t;
+      });
+      
+      if (team) {
+        html += `<span class="timeline-chip" style="background: ${getTeamColor(team)};">${team}</span>`;
+      } else {
+        html += `<span class="timeline-chip absent">—</span>`;
+      }
+      
+      if (i < seasonsWithData.length - 1) {
+        html += `<span class="timeline-arrow">→</span>`;
+      }
+    });
+    
+    html += `</div></div>`;
+  });
+  
+  container.innerHTML = html || `<div class="empty-state"><div class="empty-icon">🔍</div><p>No players match your search.</p></div>`;
+}
+
+// Start
+init();
+</script>
+
+<script src="mobile-enhancements.js"></script>
+</body>
+</html>

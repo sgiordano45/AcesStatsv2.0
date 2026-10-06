@@ -1,0 +1,3777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Management - Mountainside Aces Admin</title>
+<meta name="theme-color" content="#6b21a8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --admin-color: #6b21a8;
+    --admin-secondary: #7c3aed;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    --success-color: #22c55e;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --info-color: #3b82f6;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+
+  /* Loading Overlay */
+  .loading-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .loading-spinner::before {
+    content: '👥';
+    font-size: 80px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .loading-text {
+    margin-top: 1rem;
+    color: var(--text-light);
+    font-size: 1.1rem;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+  }
+
+  /* Auth Gate */
+  .auth-gate {
+    display: none;
+    max-width: 500px;
+    margin: 4rem auto;
+    padding: 3rem;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+  }
+
+  .auth-gate.visible { display: block; }
+
+  .auth-gate h2 {
+    color: var(--danger-color);
+    margin-bottom: 1rem;
+  }
+
+  .auth-gate p {
+    color: var(--text-light);
+    margin-bottom: 2rem;
+  }
+
+  .auth-gate a {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: var(--admin-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    margin: 0.5rem;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--admin-color) 0%, var(--admin-secondary) 100%);
+    color: white;
+    padding: 2rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .header::after {
+    content: '👥';
+    position: absolute;
+    bottom: -40px;
+    left: -30px;
+    font-size: 180px;
+    opacity: 0.08;
+  }
+
+  .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+  }
+
+  .header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.95rem;
+  }
+
+  .admin-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+  }
+
+  .header-buttons {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .nav-btn {
+    padding: 0.75rem 1.25rem;
+    border: 2px solid white;
+    background: white;
+    color: var(--admin-color);
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .nav-btn:hover {
+    background: var(--accent-color);
+    transform: translateY(-2px);
+  }
+
+  /* Main Container */
+  .main-content {
+    display: none;
+  }
+
+  .main-content.visible { display: block; }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* Section Cards */
+  .section {
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 2rem;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+  }
+
+  .section-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1.25rem 1.5rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .section-content {
+    padding: 1.5rem;
+  }
+
+  /* Info Boxes */
+  .info-box, .warning-box, .success-box {
+    padding: 1.25rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+  }
+
+  .info-box {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border: 2px solid var(--info-color);
+  }
+
+  .warning-box {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 2px solid var(--warning-color);
+  }
+
+  .success-box {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    border: 2px solid var(--success-color);
+  }
+
+  /* Search and Filters */
+  .search-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-input {
+    flex: 1;
+    min-width: 250px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    transition: border-color 0.2s;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: var(--admin-color);
+  }
+
+  /* Buttons */
+  button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--admin-color);
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--admin-secondary);
+    transform: translateY(-1px);
+  }
+
+  .btn-success {
+    background: var(--success-color);
+    color: white;
+  }
+
+  .btn-success:hover:not(:disabled) {
+    background: #16a34a;
+  }
+
+  .btn-danger {
+    background: var(--danger-color);
+    color: white;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: #dc2626;
+  }
+
+  .btn-secondary {
+    background: #64748b;
+    color: white;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: #475569;
+  }
+
+  .btn-info {
+    background: var(--info-color);
+    color: white;
+  }
+
+  .btn-info:hover:not(:disabled) {
+    background: #2563eb;
+  }
+
+  .btn-warning {
+    background: var(--warning-color);
+    color: white;
+  }
+
+  .btn-warning:hover:not(:disabled) {
+    background: #d97706;
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  /* Player List */
+  .player-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.5rem;
+  }
+
+  .player-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .player-item:hover {
+    background: #e2e8f0;
+  }
+
+  .player-item.selected {
+    background: #dbeafe;
+    border: 2px solid var(--info-color);
+  }
+
+  .player-item.selected-target {
+    background: #dcfce7;
+    border: 2px solid var(--success-color);
+  }
+
+  .player-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+
+  .player-info {
+    flex: 1;
+  }
+
+  .player-name {
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .player-meta {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+  }
+
+  .player-stats-mini {
+    font-size: 0.8rem;
+    color: var(--admin-color);
+    background: #f1f5f9;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+  }
+
+  /* Merge Panel */
+  .merge-panel {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 2px solid var(--warning-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    display: none;
+  }
+
+  .merge-panel.visible {
+    display: block;
+  }
+
+  .merge-panel h3 {
+    margin: 0 0 1rem 0;
+    color: var(--text-dark);
+  }
+
+  .merge-summary {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .merge-arrow {
+    font-size: 2rem;
+    color: var(--warning-color);
+  }
+
+  .merge-box {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }
+
+  .merge-box h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+  }
+
+  .merge-box .player-name {
+    font-size: 1.1rem;
+  }
+
+  /* Stats Preview */
+  .stats-preview {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 6px;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--admin-color);
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+  }
+
+  /* Console Output */
+  #output {
+    background: #1e293b;
+    color: #a5f3fc;
+    padding: 1.5rem;
+    border-radius: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    margin-top: 1.5rem;
+    border: 1px solid #334155;
+  }
+
+  .log-success { color: #4ade80; }
+  .log-error { color: #f87171; }
+  .log-warning { color: #fbbf24; }
+  .log-header { color: #818cf8; font-weight: bold; }
+  .log-info { color: #38bdf8; }
+
+  /* Seasons Table */
+  .seasons-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+  }
+
+  .seasons-table th,
+  .seasons-table td {
+    padding: 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .seasons-table th {
+    background: #f1f5f9;
+    font-weight: 600;
+    color: var(--text-light);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+  }
+
+  .seasons-table tr:hover td {
+    background: #f8fafc;
+  }
+
+  /* Toast Notifications */
+  .toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 10000;
+  }
+
+  .toast {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.3s ease;
+  }
+
+  .toast-success { background: var(--success-color); }
+  .toast-error { background: var(--danger-color); }
+  .toast-warning { background: var(--warning-color); }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* Stats Overview */
+  .stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .overview-card {
+    background: var(--card-bg);
+    padding: 1.25rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    border: 2px solid var(--border-color);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+
+  .overview-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .overview-card.auth {
+    border-color: var(--success-color);
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  }
+
+  .overview-card.linked {
+    border-color: var(--info-color);
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  }
+
+  .overview-card.legacy {
+    border-color: #64748b;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  }
+
+  .overview-card.migrated {
+    border-color: var(--admin-color);
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  }
+
+  .overview-card.warning {
+    border-color: var(--warning-color);
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  }
+
+  .overview-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-dark);
+  }
+
+  .overview-label {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+  }
+
+  /* Filter Buttons */
+  .filter-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .filter-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border-color);
+    background: white;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover {
+    border-color: var(--admin-color);
+    background: #f8fafc;
+  }
+
+  .filter-btn.active {
+    background: var(--admin-color);
+    color: white;
+    border-color: var(--admin-color);
+  }
+
+  .filter-btn.auth.active {
+    background: var(--success-color);
+    border-color: var(--success-color);
+  }
+
+  .filter-btn.issues.active {
+    background: var(--warning-color);
+    border-color: var(--warning-color);
+  }
+
+  /* Issue Cards */
+  .issue-card {
+    background: #fffbeb;
+    border: 1px solid var(--warning-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .issue-card h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .issue-card p {
+    margin: 0 0 0.75rem 0;
+    color: var(--text-light);
+    font-size: 0.9rem;
+  }
+
+  .issue-type {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .issue-type.duplicate { background: #fee2e2; color: #dc2626; }
+  .issue-type.unlinked { background: #fef3c7; color: #d97706; }
+  .issue-type.orphan { background: #e0e7ff; color: #4f46e5; }
+  .issue-type.needs-migration { background: #fce7f3; color: #be185d; }
+  .issue-type.missing-stats-doc { background: #fef2f2; color: #991b1b; }
+
+  /* Badge styles for player items */
+  .player-badge {
+    display: inline-block;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+  }
+
+  .badge-auth {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  .badge-linked {
+    background: #dbeafe;
+    color: #2563eb;
+  }
+
+  .badge-migrated {
+    background: #f3e8ff;
+    color: #7c3aed;
+  }
+
+  .badge-legacy {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header-content {
+      flex-direction: column;
+      text-align: center;
+      gap: 1rem;
+    }
+
+    .search-row {
+      flex-direction: column;
+    }
+
+    .search-input {
+      width: 100%;
+    }
+
+    .merge-summary {
+      grid-template-columns: 1fr;
+    }
+
+    .merge-arrow {
+      transform: rotate(90deg);
+    }
+  }
+
+  /* Profile Setup Dashboard */
+  .setup-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .setup-stat {
+    background: var(--card-bg);
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    border: 2px solid var(--border-color);
+  }
+
+  .setup-stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .setup-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+  }
+
+  .setup-stat.complete {
+    border-color: var(--success-color);
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  }
+
+  .setup-stat.complete .setup-stat-value { color: #166534; }
+
+  .setup-stat.partial {
+    border-color: var(--warning-color);
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  }
+
+  .setup-stat.partial .setup-stat-value { color: #92400e; }
+
+  .setup-stat.none {
+    border-color: var(--danger-color);
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  }
+
+  .setup-stat.none .setup-stat-value { color: #991b1b; }
+
+  /* Setup Users Table */
+  .setup-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .setup-table th,
+  .setup-table td {
+    padding: 0.75rem 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .setup-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: var(--text-dark);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  .setup-table tr:hover td {
+    background: #f8fafc;
+  }
+
+  .setup-table-container {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+  }
+
+  .step-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .step-indicator.complete {
+    background: var(--success-color);
+    color: white;
+  }
+
+  .step-indicator.skipped {
+    background: #9ca3af;
+    color: white;
+  }
+
+  .step-indicator.pending {
+    background: var(--border-color);
+    color: var(--text-light);
+  }
+
+  .setup-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .setup-filter-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border-color);
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .setup-filter-btn:hover {
+    border-color: var(--admin-color);
+  }
+
+  .setup-filter-btn.active {
+    background: var(--admin-color);
+    color: white;
+    border-color: var(--admin-color);
+  }
+
+  .user-name-cell {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .user-name-cell .name {
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .user-name-cell .email {
+    font-size: 0.75rem;
+    color: var(--text-light);
+  }
+
+  .user-name-cell .linked-player {
+    font-size: 0.75rem;
+    color: var(--primary-color);
+    font-weight: 500;
+  }
+
+  /* Sortable Table Headers */
+  .setup-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+
+  .setup-table th.sortable:hover {
+    background: #e2e8f0;
+  }
+
+  .sort-icon {
+    margin-left: 0.25rem;
+    opacity: 0.5;
+    font-size: 0.75rem;
+  }
+
+  .sort-icon.active {
+    opacity: 1;
+    color: var(--admin-color);
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Loading user data...</div>
+</div>
+
+<!-- Auth Gate -->
+<div class="auth-gate" id="authGate">
+  <h2>🔒 Admin Access Required</h2>
+  <p>You need admin or league staff permissions to access User Management.</p>
+  <a href="signin.html">Sign In</a>
+  <a href="index.html" style="background: var(--primary-color);">Back to Home</a>
+</div>
+
+<!-- Main Content -->
+<div class="main-content" id="mainContent">
+  
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div>
+        <h1>👥 User Management</h1>
+        <p>Combine duplicate player records and re-aggregate stats</p>
+        <span class="admin-badge">🔒 Admin Tool</span>
+      </div>
+      <div class="header-buttons">
+        <a href="admin-content.html" class="nav-btn">← Back to Admin</a>
+        <a href="aggregate-stats.html" class="nav-btn">📊 Aggregator</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Stats Overview -->
+    <div class="stats-overview" id="statsOverview">
+      <div class="overview-card">
+        <div class="overview-value" id="totalPlayers">-</div>
+        <div class="overview-label">Total Records</div>
+      </div>
+      <div class="overview-card auth">
+        <div class="overview-value" id="authUsers">-</div>
+        <div class="overview-label">Auth Users 🔐</div>
+      </div>
+      <div class="overview-card linked">
+        <div class="overview-value" id="linkedUsers">-</div>
+        <div class="overview-label">Linked (users coll)</div>
+      </div>
+      <div class="overview-card legacy">
+        <div class="overview-value" id="legacyProfiles">-</div>
+        <div class="overview-label">Legacy Profiles</div>
+      </div>
+      <div class="overview-card migrated">
+        <div class="overview-value" id="migratedProfiles">-</div>
+        <div class="overview-label">Migrated</div>
+      </div>
+      <div class="overview-card warning">
+        <div class="overview-value" id="issueCount">-</div>
+        <div class="overview-label">⚠️ Issues</div>
+      </div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+      <strong>ℹ️ How to Combine Player Records (e.g., Joe/Joseph)</strong>
+      <ol style="margin: 0.75rem 0 0 1.5rem; padding: 0;">
+        <li>Search for player name variants (e.g., "Joe Smith" and "Joseph Smith")</li>
+        <li>Select the records to merge as <strong>Source</strong> (data moves FROM these)</li>
+        <li>Select ONE record as the <strong>Target</strong> (data moves TO this)</li>
+        <li>Preview shows actual <code>playerStats</code> and <code>pitchingStats</code> data</li>
+        <li>Execute merge moves all season/game docs and deletes source docs</li>
+        <li><strong>Run the Aggregator</strong> afterward to rebuild career totals!</li>
+      </ol>
+    </div>
+
+    <div class="warning-box">
+      <strong>⚠️ This tool merges at the source level:</strong>
+      <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
+        <li><code>playerStats/{source}/seasons/*</code> → <code>playerStats/{target}/seasons/*</code></li>
+        <li><code>playerStats/{source}/games/*</code> → <code>playerStats/{target}/games/*</code></li>
+        <li><code>pitchingStats</code> subcollections are also moved</li>
+        <li>Source documents are <strong>deleted</strong> after copying</li>
+        <li><code>aggregatedPlayerStats/{source}</code> is marked as migrated</li>
+      </ul>
+    </div>
+
+    <!-- Auth User Issues Section -->
+    <div class="section" id="authIssuesSection" style="display: none;">
+      <div class="section-header" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: var(--text-dark);">
+        ⚠️ Auth User Issues Detected
+      </div>
+      <div class="section-content">
+        <div id="authIssuesList">
+          <!-- Issues will be listed here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Player Search Section -->
+    <div class="section">
+      <div class="section-header">🔍 Find Player Records</div>
+      <div class="section-content">
+        
+        <!-- Filter Buttons -->
+        <div class="filter-row">
+          <button class="filter-btn active" data-filter="all" onclick="applyFilter('all')">All Records</button>
+          <button class="filter-btn auth" data-filter="auth" onclick="applyFilter('auth')">🔐 Auth Users</button>
+          <button class="filter-btn" data-filter="linked" onclick="applyFilter('linked')">🔗 Linked</button>
+          <button class="filter-btn" data-filter="legacy" onclick="applyFilter('legacy')">📁 Legacy Only</button>
+          <button class="filter-btn" data-filter="unaggregated" onclick="applyFilter('unaggregated')">⚠️ No Agg Doc</button>
+          <button class="filter-btn" data-filter="migrated" onclick="applyFilter('migrated')">➡️ Migrated</button>
+          <button class="filter-btn issues" data-filter="issues" onclick="applyFilter('issues')">⚠️ Issues</button>
+        </div>
+
+        <div class="search-row">
+          <input type="text" id="playerSearch" class="search-input" placeholder="Search by name (e.g., 'Joe Smith' or 'Joseph')...">
+          <button onclick="searchPlayers()" class="btn-primary">🔍 Search</button>
+          <button onclick="findPotentialDuplicates()" class="btn-info">🔄 Find Duplicates</button>
+          <button onclick="clearSelection()" class="btn-secondary">✕ Clear</button>
+        </div>
+        
+        <!-- Direct playerStats ID lookup -->
+        <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-radius: 8px; border: 1px solid #fcd34d;">
+          <strong>🔎 Direct playerStats Lookup</strong> (for records not in aggregatedPlayerStats)
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+            <input type="text" id="directIdLookup" class="search-input" placeholder="Enter exact ID (e.g., tim_o'grady or tim_ogrady)" style="flex: 1;">
+            <button onclick="lookupPlayerStatsId()" class="btn-warning">Check ID</button>
+          </div>
+        </div>
+
+        <div id="searchResults" class="player-list" style="display: none;">
+          <!-- Player items will be inserted here -->
+        </div>
+
+        <p id="resultCount" style="margin-top: 1rem; color: var(--text-light);"></p>
+
+      </div>
+    </div>
+
+    <!-- Merge Panel -->
+    <div class="merge-panel" id="mergePanel">
+      <h3>⚡ Merge Preview</h3>
+      
+      <div class="merge-summary">
+        <div class="merge-box">
+          <h4>📥 Source Records (will be merged)</h4>
+          <div id="sourceList">
+            <!-- Source players listed here -->
+          </div>
+        </div>
+        
+        <div class="merge-arrow">→</div>
+        
+        <div class="merge-box">
+          <h4>📤 Target Record (receives all stats)</h4>
+          <div id="targetInfo">
+            <!-- Target player info here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Combined Stats Preview -->
+      <div class="stats-preview">
+        <strong>📊 Combined Career Stats Preview</strong>
+        <div class="stats-grid" id="combinedStatsPreview">
+          <!-- Stats will be shown here -->
+        </div>
+      </div>
+
+      <!-- Seasons Preview -->
+      <div class="stats-preview" style="margin-top: 1rem;">
+        <strong>📅 Seasons to Merge</strong>
+        <table class="seasons-table" id="seasonsTable">
+          <thead>
+            <tr>
+              <th>Season</th>
+              <th>Team</th>
+              <th>G</th>
+              <th>AB</th>
+              <th>H</th>
+              <th>R</th>
+              <th>AVG</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody id="seasonsList">
+            <!-- Seasons listed here -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Merge Actions -->
+      <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button onclick="executeMerge()" class="btn-success" id="mergeBtn">
+          ✅ Execute Merge
+        </button>
+        <button onclick="executeMerge(true)" class="btn-warning" id="mergeTestBtn">
+          🧪 Test Mode (Preview Only)
+        </button>
+        <button onclick="clearSelection()" class="btn-secondary">
+          ✕ Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- Profile Setup Status Section -->
+    <div class="section">
+      <div class="section-header" style="background: linear-gradient(135deg, var(--admin-color) 0%, var(--admin-secondary) 100%);">
+        📊 Profile Setup Status
+      </div>
+      <div class="section-content">
+        <p style="color: var(--text-light); margin-bottom: 1rem;">
+          Track which authenticated users have completed the profile setup guide.
+        </p>
+        
+        <!-- Summary Dashboard -->
+        <div class="setup-dashboard" id="setupDashboard">
+          <div class="setup-stat">
+            <div class="setup-stat-value" id="totalAuthUsers">-</div>
+            <div class="setup-stat-label">Total Auth Users</div>
+          </div>
+          <div class="setup-stat complete">
+            <div class="setup-stat-value" id="setupComplete">-</div>
+            <div class="setup-stat-label">Setup Complete</div>
+          </div>
+          <div class="setup-stat partial">
+            <div class="setup-stat-value" id="setupPartial">-</div>
+            <div class="setup-stat-label">Partial Setup</div>
+          </div>
+          <div class="setup-stat none">
+            <div class="setup-stat-value" id="setupNone">-</div>
+            <div class="setup-stat-label">Not Started</div>
+          </div>
+          <div class="setup-stat" style="border-color: var(--info-color); background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+            <div class="setup-stat-value" id="notificationsEnabled" style="color: #1e40af;">-</div>
+            <div class="setup-stat-label">Has FCM Token</div>
+          </div>
+          <div class="setup-stat" style="border-color: var(--primary-color); background: linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%);">
+            <div class="setup-stat-value" id="directoryOptIn" style="color: var(--primary-color);">-</div>
+            <div class="setup-stat-label">In Directory</div>
+          </div>
+          <div class="setup-stat" style="border-color: #8b5cf6; background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);">
+            <div class="setup-stat-value" id="activeRecently" style="color: #6d28d9;">-</div>
+            <div class="setup-stat-label">Active (30 days)</div>
+          </div>
+          <div class="setup-stat" style="border-color: #f97316; background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);">
+            <div class="setup-stat-value" id="staleUsers" style="color: #c2410c;">-</div>
+            <div class="setup-stat-label">Stale (60+ days)</div>
+          </div>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="setup-filter-row">
+          <button class="setup-filter-btn active" data-setup-filter="all" onclick="applySetupFilter('all')">All Users</button>
+          <button class="setup-filter-btn" data-setup-filter="complete" onclick="applySetupFilter('complete')">✅ Complete</button>
+          <button class="setup-filter-btn" data-setup-filter="partial" onclick="applySetupFilter('partial')">⏳ Partial</button>
+          <button class="setup-filter-btn" data-setup-filter="none" onclick="applySetupFilter('none')">❌ Not Started</button>
+          <button class="setup-filter-btn" data-setup-filter="notifications" onclick="applySetupFilter('notifications')">🔔 Has FCM Token</button>
+          <button class="setup-filter-btn" data-setup-filter="no-notifications" onclick="applySetupFilter('no-notifications')">🔕 No FCM Token</button>
+          <button class="setup-filter-btn" data-setup-filter="stale" onclick="applySetupFilter('stale')">⏰ Stale (60+ days)</button>
+          <button class="setup-filter-btn" data-setup-filter="never-visited" onclick="applySetupFilter('never-visited')">👻 Never Visited</button>
+        </div>
+
+        <!-- Users Table -->
+        <div class="setup-table-container">
+          <table class="setup-table">
+            <thead>
+              <tr>
+                <th class="sortable" onclick="sortSetupTable('name')" title="Click to sort">
+                  User <span class="sort-icon" id="sort-name">↕</span>
+                </th>
+                <th title="Player Info">1️⃣</th>
+                <th title="Notifications">2️⃣</th>
+                <th title="Directory">3️⃣</th>
+                <th>Role</th>
+                <th class="sortable" onclick="sortSetupTable('joined')" title="Click to sort">
+                  Joined <span class="sort-icon active" id="sort-joined">↓</span>
+                </th>
+                <th class="sortable" onclick="sortSetupTable('lastVisit')" title="Click to sort">
+                  Last Visit <span class="sort-icon" id="sort-lastVisit">↕</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="setupUsersTable">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-light);">
+                  Loading user data...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <p id="setupResultCount" style="margin-top: 1rem; color: var(--text-light); font-size: 0.85rem;"></p>
+      </div>
+    </div>
+
+    <!-- Repair Orphaned Stats Section -->
+    <div class="section" id="repairOrphanSection">
+      <div class="section-header" style="background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%); color: white;">
+        🔧 Repair Orphaned Stats (Auth UID → Legacy ID)
+      </div>
+      <div class="section-content">
+        <div class="warning-box" style="margin-bottom: 1rem;">
+          <strong>⚠️ What this does:</strong> Finds <code>playerStats</code> documents stored under a Firebase auth UID
+          (caused by a merge bug now fixed). Moves seasons/games to the correct legacy snake_case path, then deletes the orphaned UID doc.
+          Run the Aggregator afterward.
+        </div>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+          <button class="btn-info" onclick="scanOrphanedStats()">🔍 Scan for Orphaned Stats</button>
+          <button class="btn-warning" id="repairTestBtn" onclick="repairOrphanedStats(true)" style="display:none;">🧪 Test Repair</button>
+          <button class="btn-danger" id="repairBtn" onclick="repairOrphanedStats(false)" style="display:none;">⚡ Execute Repair</button>
+        </div>
+        <div id="repairPreview" style="display:none;">
+          <table style="width:100%; border-collapse:collapse; font-size:0.9rem; margin-bottom:1rem;">
+            <thead>
+              <tr style="background:#f1f5f9;">
+                <th style="padding:8px 12px; text-align:left; border-bottom:2px solid #e2e8f0;">Auth UID (orphaned path)</th>
+                <th style="padding:8px 12px; text-align:left; border-bottom:2px solid #e2e8f0;">Player Name</th>
+                <th style="padding:8px 12px; text-align:left; border-bottom:2px solid #e2e8f0;">Legacy ID (target path)</th>
+                <th style="padding:8px 12px; text-align:center; border-bottom:2px solid #e2e8f0;">Seasons (bat/pitch)</th>
+                <th style="padding:8px 12px; text-align:center; border-bottom:2px solid #e2e8f0;">Games (bat/pitch)</th>
+              </tr>
+            </thead>
+            <tbody id="repairTableBody"></tbody>
+          </table>
+          <p id="repairSummary" style="color: var(--text-light); font-size:0.85rem;"></p>
+        </div>
+        <div id="repairOutput" style="background:#1e293b; color:#a5f3fc; padding:1rem; border-radius:8px; font-family:monospace; font-size:13px; line-height:1.7; white-space:pre-wrap; max-height:300px; overflow-y:auto; display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Email Bulk Update Section -->
+    <div class="section" id="emailImportSection">
+      <div class="section-header" style="background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);">
+        📧 Bulk Email Update
+      </div>
+      <div class="section-content">
+        <p style="color: var(--text-light); margin-bottom: 1rem;">
+          Upload a CSV or Excel file to update the <code>email</code> field in <code>users/{id}</code> for any player — auth or non-auth. Matched by player name against the loaded player list.
+        </p>
+
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem; font-size: 0.88rem;">
+          <strong>📋 Expected format:</strong> Any CSV or Excel with at least a <em>name</em> column and an <em>email</em> column. You'll map the columns after upload.<br>
+          <span style="color: var(--text-light);">Writes only the <code>email</code> field to <code>users/{documentId}</code> — no other fields touched.</span>
+        </div>
+
+        <!-- Upload Zone -->
+        <div id="emailUploadZone" onclick="document.getElementById('emailFileInput').click()"
+          style="border: 2px dashed #7dd3fc; border-radius: 12px; padding: 36px 20px; text-align: center; cursor: pointer; background: #f0f9ff; margin-bottom: 1rem; transition: border-color 0.2s, background 0.2s;">
+          <div style="font-size: 2.5rem; margin-bottom: 8px;">📧</div>
+          <p style="margin: 0; color: var(--text-light);"><strong style="color: #0369a1;">Click to upload</strong> or drag &amp; drop</p>
+          <p style="margin: 4px 0 0; font-size: 0.8rem; color: var(--text-light);">CSV, XLSX, or XLS</p>
+          <input type="file" id="emailFileInput" accept=".csv,.xlsx,.xls" style="display:none;">
+        </div>
+
+        <!-- Column Mapping -->
+        <div id="emailColumnConfig" style="display:none; background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;">
+          <h3 style="margin: 0 0 1rem; font-size: 1rem;">🗂️ Map Columns</h3>
+          <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <label style="font-weight: 600; font-size: 0.9rem; min-width: 100px;">Player Name:</label>
+              <select id="emailNameCol" style="border: 1px solid var(--border-color); border-radius: 8px; padding: 7px 12px; font-size: 0.9rem;"></select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <label style="font-weight: 600; font-size: 0.9rem; min-width: 100px;">Email:</label>
+              <select id="emailEmailCol" style="border: 1px solid var(--border-color); border-radius: 8px; padding: 7px 12px; font-size: 0.9rem;"></select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <label style="font-size: 0.85rem; color: var(--text-light);">Match threshold:</label>
+              <select id="emailMatchThreshold" style="border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 10px; font-size: 0.85rem;">
+                <option value="0.85">Strict (85%+)</option>
+                <option value="0.70" selected>Normal (70%+)</option>
+                <option value="0.55">Loose (55%+)</option>
+              </select>
+            </div>
+            <button onclick="runEmailMatch()" style="background: #0369a1; color: white; border: none; border-radius: 8px; padding: 8px 18px; font-size: 0.9rem; font-weight: 600; cursor: pointer;">🔍 Preview Matches</button>
+          </div>
+        </div>
+
+        <!-- Match Preview Table -->
+        <div id="emailMatchPreview" style="display:none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+            <h3 style="margin: 0; font-size: 1rem;">📊 Match Preview</h3>
+            <div id="emailMatchStats" style="display:flex; gap:0.5rem; flex-wrap:wrap;"></div>
+          </div>
+          <div style="overflow-x: auto; border-radius: 10px; border: 1px solid var(--border-color);">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+              <thead>
+                <tr style="background: #f8fafc;">
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border-color); white-space: nowrap;">
+                    <input type="checkbox" id="selectAllEmailMatches" onchange="toggleAllEmailRows(this.checked)" style="margin-right: 6px; accent-color: #0369a1;">Include
+                  </th>
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border-color);">File Name</th>
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border-color);">Matched Player</th>
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border-color);">users/ Doc ID</th>
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border-color);">Confidence</th>
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border-color);">New Email</th>
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border-color);">Current Email</th>
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border-color);">Status</th>
+                </tr>
+              </thead>
+              <tbody id="emailMatchTableBody"></tbody>
+            </table>
+          </div>
+          <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+            <button onclick="executeEmailUpdate(false)" id="emailUpdateBtn"
+              style="background: #16a34a; color: white; border: none; border-radius: 8px; padding: 10px 22px; font-size: 0.95rem; font-weight: 700; cursor: pointer;">
+              ✅ Apply Selected Updates
+            </button>
+            <button onclick="executeEmailUpdate(true)"
+              style="background: #d97706; color: white; border: none; border-radius: 8px; padding: 10px 22px; font-size: 0.95rem; font-weight: 600; cursor: pointer;">
+              🧪 Test Mode (No Writes)
+            </button>
+            <button onclick="resetEmailImport()"
+              style="background: white; color: var(--text-dark); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 16px; font-size: 0.9rem; cursor: pointer;">
+              ✕ Reset
+            </button>
+            <span id="emailUpdateStatus" style="font-size: 0.88rem; color: var(--text-light);"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output Console -->
+    <div class="section">
+      <div class="section-header">📋 Operation Log</div>
+      <div class="section-content">
+        <div id="output">Ready. Search for players to begin...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+  import { db, app } from './firebase-config.js';
+  import { 
+    collection,
+    collectionGroup,
+    getDocs, 
+    doc, 
+    getDoc, 
+    setDoc,
+    updateDoc,
+    deleteDoc,
+    serverTimestamp 
+  } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { 
+    getAuth, 
+    onAuthStateChanged 
+  } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  
+  // Make Firebase available globally
+  window.db = db;
+  window.collection = collection;
+  window.collectionGroup = collectionGroup;
+  window.getDocs = getDocs;
+  window.doc = doc;
+  window.getDoc = getDoc;
+  window.setDoc = setDoc;
+  window.updateDoc = updateDoc;
+  window.deleteDoc = deleteDoc;
+  window.serverTimestamp = serverTimestamp;
+
+  const auth = getAuth(app);
+  
+  let currentUser = null;
+  let allPlayers = [];
+  let selectedSources = [];
+  let selectedTarget = null;
+  let currentFilter = 'all';
+  let detectedIssues = [];
+
+  // Stats tracking
+  let stats = {
+    total: 0,
+    authUsers: 0,
+    linkedUsers: 0,
+    legacyProfiles: 0,
+    migratedProfiles: 0,
+    issues: 0
+  };
+
+  // Initialize
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      await checkAdminAccess();
+    } else {
+      hideLoading();
+      showAuthGate();
+    }
+  });
+
+  async function checkAdminAccess() {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      if (!userDoc.exists()) {
+        hideLoading();
+        showAuthGate();
+        return;
+      }
+      
+      const userData = userDoc.data();
+      if (userData.userRole !== 'admin' && userData.userRole !== 'league-staff') {
+        hideLoading();
+        showAuthGate();
+        return;
+      }
+      
+      // Load all players
+      await loadAllPlayers();
+      
+      // Load profile setup status
+      await loadProfileSetupStatus();
+      
+      hideLoading();
+      showMainContent();
+      
+    } catch (error) {
+      console.error('Error checking admin access:', error);
+      hideLoading();
+      showAuthGate();
+    }
+  }
+
+  async function loadAllPlayers() {
+    log('Loading all player records...', 'info');
+    
+    // Load aggregatedPlayerStats
+    const statsRef = collection(db, 'aggregatedPlayerStats');
+    const snapshot = await getDocs(statsRef);
+    
+    allPlayers = [];
+    const playerIdsFound = new Set();
+    
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const id = docSnap.id;
+      playerIdsFound.add(id);
+      
+      // Determine player type
+      const isAuthUser = data.isAuthUser === true || (id.length > 20 && !id.includes('_'));
+      const isLinked = !!data.linkedPlayer;
+      const isMigrated = data.migrated === true;
+      const isLegacy = !isAuthUser && !isMigrated;
+      
+      allPlayers.push({
+        id: id,
+        ...data,
+        _isAuthUser: isAuthUser,
+        _isLinked: isLinked,
+        _isMigrated: isMigrated,
+        _isLegacy: isLegacy,
+        _source: 'aggregatedPlayerStats',
+        _hasAggregatedDoc: true
+      });
+    });
+    
+    log(`Found ${allPlayers.length} records in aggregatedPlayerStats`, 'info');
+    
+    // ALSO scan playerStats collection to find players that haven't been aggregated yet
+    log('Scanning playerStats for unaggregated players...', 'info');
+    
+    try {
+      // We can't list subcollections directly, but we can check known patterns
+      // Get all documents that are parent docs in playerStats (the player ID level)
+      // Unfortunately Firestore doesn't let us list collection IDs easily from client
+      // But we can use a collection group query on 'seasons' and 'games' to find player IDs
+      
+      // Try to get all 'games' subcollection docs to find player IDs
+      const gamesQuery = await getDocs(window.collectionGroup(db, 'games'));
+      const playerStatsIds = new Set();
+      
+      gamesQuery.forEach(gameDoc => {
+        // Path is: playerStats/{playerId}/games/{gameId}
+        const pathParts = gameDoc.ref.path.split('/');
+        if (pathParts[0] === 'playerStats' && pathParts.length >= 2) {
+          playerStatsIds.add(pathParts[1]);
+        }
+      });
+      
+      // Also check 'seasons' subcollection
+      const seasonsQuery = await getDocs(window.collectionGroup(db, 'seasons'));
+      seasonsQuery.forEach(seasonDoc => {
+        const pathParts = seasonDoc.ref.path.split('/');
+        if (pathParts[0] === 'playerStats' && pathParts.length >= 2) {
+          playerStatsIds.add(pathParts[1]);
+        }
+      });
+      
+      // Find players in playerStats but NOT in aggregatedPlayerStats
+      let unaggregatedCount = 0;
+      for (const playerId of playerStatsIds) {
+        if (!playerIdsFound.has(playerId)) {
+          // This player exists in playerStats but not aggregatedPlayerStats
+          unaggregatedCount++;
+          
+          // Create a placeholder entry
+          const displayName = playerId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          
+          allPlayers.push({
+            id: playerId,
+            name: displayName,
+            displayName: displayName,
+            _isAuthUser: false,
+            _isLinked: false,
+            _isMigrated: false,
+            _isLegacy: true,
+            _source: 'playerStats',
+            _hasAggregatedDoc: false,
+            _unaggregated: true
+          });
+          
+          playerIdsFound.add(playerId);
+        }
+      }
+      
+      if (unaggregatedCount > 0) {
+        log(`Found ${unaggregatedCount} players in playerStats without aggregatedPlayerStats doc`, 'warning');
+      }
+      
+    } catch (err) {
+      log(`Could not scan playerStats: ${err.message}`, 'warning');
+      log('Collection group queries may need index creation', 'info');
+    }
+    
+    // ALSO load users collection to find linked accounts
+    log('Loading users collection for linked accounts...', 'info');
+    const usersRef = collection(db, 'users');
+    const usersSnapshot = await getDocs(usersRef);
+    
+    const linkedUsers = [];
+    usersSnapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const id = docSnap.id;
+      
+      // Only care about authenticated users with linkedPlayer
+      const isFirebaseUID = id.length > 20 && !id.includes('_');
+      if (isFirebaseUID && data.linkedPlayer) {
+        linkedUsers.push({
+          odoc: id,
+          ...data,
+          _userId: id
+        });
+      }
+    });
+    
+    log(`Found ${linkedUsers.length} linked user accounts in users collection`, 'info');
+    
+    // Store for cross-referencing
+    window.linkedUsersFromUsersCollection = linkedUsers;
+    
+    // Sort by name
+    allPlayers.sort((a, b) => {
+      const nameA = (a.name || a.displayName || '').toLowerCase();
+      const nameB = (b.name || b.displayName || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+    
+    // Calculate stats and detect issues
+    calculateStats();
+    detectIssues();
+    updateStatsDisplay();
+    
+    log(`Loaded ${allPlayers.length} total player records`, 'success');
+    log(`  - Auth users: ${stats.authUsers}`, 'info');
+    log(`  - Linked: ${stats.linkedUsers}`, 'info');
+    log(`  - Legacy profiles: ${stats.legacyProfiles}`, 'info');
+    log(`  - Migrated: ${stats.migratedProfiles}`, 'info');
+    if (stats.issues > 0) {
+      log(`  - Issues detected: ${stats.issues}`, 'warning');
+    }
+    // Expose for email bulk update tool
+    window._emailAllPlayers = allPlayers;
+    window._fbDb = db;
+    window._fbFirestore = { doc, updateDoc };
+  }
+
+  function calculateStats() {
+    stats = {
+      total: allPlayers.length,
+      authUsers: 0,
+      linkedUsers: 0,
+      legacyProfiles: 0,
+      migratedProfiles: 0,
+      issues: 0
+    };
+    
+    allPlayers.forEach(player => {
+      if (player._isAuthUser) stats.authUsers++;
+      if (player._isLegacy) stats.legacyProfiles++;
+      if (player._isMigrated) stats.migratedProfiles++;
+    });
+    
+    // Count linked users from users collection (more accurate)
+    const linkedUsers = window.linkedUsersFromUsersCollection || [];
+    stats.linkedUsers = linkedUsers.length;
+  }
+
+  function detectIssues() {
+    detectedIssues = [];
+    
+    // Build a map of linked player names from aggregatedPlayerStats
+    const linkedNames = new Map();
+    allPlayers.forEach(player => {
+      if (player._isAuthUser && player.linkedPlayer) {
+        linkedNames.set(player.linkedPlayer.toLowerCase(), player);
+      }
+    });
+    
+    // Build a map of all player IDs for quick lookup
+    const playerIdMap = new Map();
+    allPlayers.forEach(player => {
+      playerIdMap.set(player.id, player);
+    });
+    
+    // Find issues
+    allPlayers.forEach(player => {
+      if (player._isMigrated) return; // Skip already migrated
+      
+      const name = (player.name || player.displayName || '').toLowerCase();
+      
+      // Issue 1: Auth user with matching un-migrated legacy profile
+      if (player._isAuthUser && player.linkedPlayer) {
+        const legacyId = player.linkedPlayer.toLowerCase().replace(/\./g, '').replace(/'/g, '').replace(/\s+/g, '_');
+        const legacyProfile = allPlayers.find(p => 
+          p.id === legacyId && 
+          !p._isMigrated && 
+          !p._isAuthUser
+        );
+        
+        if (legacyProfile) {
+          detectedIssues.push({
+            type: 'duplicate',
+            title: `Duplicate: ${player.linkedPlayer}`,
+            description: `Auth user "${player.displayName || player.name}" has un-migrated legacy profile "${legacyProfile.id}"`,
+            authUser: player,
+            legacyProfile: legacyProfile,
+            suggestion: 'Merge legacy stats into auth user, then mark legacy as migrated'
+          });
+        }
+      }
+      
+      // Issue 2: Legacy profile with same name as an auth user's linked name
+      if (player._isLegacy) {
+        const matchingAuth = linkedNames.get(name);
+        if (matchingAuth && matchingAuth.id !== player.id) {
+          // Check if already reported from auth side
+          const alreadyReported = detectedIssues.find(i => 
+            i.legacyProfile?.id === player.id
+          );
+          if (!alreadyReported) {
+            detectedIssues.push({
+              type: 'orphan',
+              title: `Orphan Legacy: ${player.name || player.displayName}`,
+              description: `Legacy profile should be migrated to auth user "${matchingAuth.displayName || matchingAuth.name}"`,
+              authUser: matchingAuth,
+              legacyProfile: player,
+              suggestion: 'Merge legacy stats into auth user'
+            });
+          }
+        }
+      }
+    });
+    
+    // Issue 3: Auth users without linkedPlayer (unlinked accounts)
+    allPlayers.forEach(player => {
+      if (player._isAuthUser && !player.linkedPlayer && !player._isMigrated) {
+        // Only flag if they have no seasons (truly empty accounts)
+        const hasSeasons = player.seasons && Object.keys(player.seasons).length > 0;
+        if (!hasSeasons) {
+          detectedIssues.push({
+            type: 'unlinked',
+            title: `Unlinked Auth: ${player.displayName || player.name || player.id}`,
+            description: `Auth user has not linked to a player profile`,
+            authUser: player,
+            suggestion: 'Use Admin Link Players page to link this account'
+          });
+        }
+      }
+    });
+    
+    // NEW Issue 4: Users in users collection with linkedPlayer but no aggregatedPlayerStats entry
+    // OR their aggregatedPlayerStats entry has no seasons/stats
+    const linkedUsers = window.linkedUsersFromUsersCollection || [];
+    linkedUsers.forEach(user => {
+      const legacyId = user.linkedPlayer.toLowerCase().replace(/\./g, '').replace(/'/g, '').replace(/\s+/g, '_');
+      
+      // Check if auth user has aggregatedPlayerStats document
+      const authStatsDoc = playerIdMap.get(user._userId);
+      const legacyStatsDoc = playerIdMap.get(legacyId);
+      
+      // Check if legacy profile exists and is not migrated
+      const legacyExists = legacyStatsDoc && !legacyStatsDoc._isMigrated;
+      const legacyHasStats = legacyStatsDoc?.seasons && Object.keys(legacyStatsDoc.seasons).length > 0;
+      
+      // Check if auth user's stats doc exists and has the stats
+      const authHasStatsDoc = !!authStatsDoc;
+      const authHasStats = authStatsDoc?.seasons && Object.keys(authStatsDoc.seasons).length > 0;
+      
+      // Issue: Linked in users collection but legacy stats not migrated
+      if (legacyExists && legacyHasStats && !authHasStats) {
+        // Check if we already reported this
+        const alreadyReported = detectedIssues.find(i => 
+          (i.authUser?.id === user._userId || i.legacyProfile?.id === legacyId)
+        );
+        
+        if (!alreadyReported) {
+          detectedIssues.push({
+            type: 'needs-migration',
+            title: `Needs Migration: ${user.linkedPlayer}`,
+            description: `User "${user.displayName || user.email}" linked to "${user.linkedPlayer}" but stats not migrated. Legacy has ${Object.keys(legacyStatsDoc.seasons).length} seasons.`,
+            authUser: authStatsDoc || { 
+              id: user._userId, 
+              displayName: user.displayName, 
+              email: user.email,
+              linkedPlayer: user.linkedPlayer,
+              _isAuthUser: true,
+              _fromUsersCollection: true
+            },
+            legacyProfile: legacyStatsDoc,
+            suggestion: 'Merge legacy stats into auth user document'
+          });
+        }
+      }
+      
+      // Issue: User linked but NO aggregatedPlayerStats doc for auth user at all
+      if (!authHasStatsDoc && legacyExists) {
+        const alreadyReported = detectedIssues.find(i => 
+          i.authUser?.id === user._userId || i.authUser?._userId === user._userId
+        );
+        
+        if (!alreadyReported) {
+          detectedIssues.push({
+            type: 'missing-stats-doc',
+            title: `Missing Stats Doc: ${user.linkedPlayer}`,
+            description: `User "${user.displayName || user.email}" has no aggregatedPlayerStats document. Legacy profile "${legacyId}" exists with stats.`,
+            authUser: { 
+              id: user._userId, 
+              displayName: user.displayName, 
+              email: user.email,
+              linkedPlayer: user.linkedPlayer,
+              _isAuthUser: true,
+              _fromUsersCollection: true,
+              _noStatsDoc: true
+            },
+            legacyProfile: legacyStatsDoc,
+            suggestion: 'Create aggregatedPlayerStats doc for auth user and merge legacy stats'
+          });
+        }
+      }
+    });
+    
+    stats.issues = detectedIssues.length;
+    
+    // Show/hide issues section
+    const issuesSection = document.getElementById('authIssuesSection');
+    if (detectedIssues.length > 0) {
+      issuesSection.style.display = 'block';
+      renderIssues();
+    } else {
+      issuesSection.style.display = 'none';
+    }
+  }
+
+  function renderIssues() {
+    const container = document.getElementById('authIssuesList');
+    
+    container.innerHTML = detectedIssues.map((issue, index) => `
+      <div class="issue-card">
+        <h4>
+          <span class="issue-type ${issue.type}">${issue.type}</span>
+          ${issue.title}
+        </h4>
+        <p>${issue.description}</p>
+        <p><strong>Suggestion:</strong> ${issue.suggestion}</p>
+        ${issue.authUser && issue.legacyProfile ? `
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+            <button class="btn-sm btn-info" onclick="quickSelectForMerge(${index})">
+              ⚡ Quick Setup Merge
+            </button>
+          </div>
+        ` : ''}
+      </div>
+    `).join('');
+  }
+
+  window.quickSelectForMerge = async function(issueIndex) {
+    const issue = detectedIssues[issueIndex];
+    if (!issue || !issue.legacyProfile) return;
+    
+    // Clear current selection
+    clearSelection();
+    
+    // For missing-stats-doc or needs-migration, we need special handling
+    if (issue.type === 'missing-stats-doc' || issue.type === 'needs-migration') {
+      // The auth user might not be in allPlayers, so we need to add them temporarily
+      let authUser = issue.authUser;
+      
+      if (authUser._fromUsersCollection || authUser._noStatsDoc) {
+        // Create a temporary entry for display
+        log(`Auth user ${authUser.id} not in aggregatedPlayerStats - will create on merge`, 'warning');
+      }
+      
+      // Display both records
+      const results = [issue.legacyProfile];
+      
+      // Add auth user to results if it exists in allPlayers
+      const existingAuth = allPlayers.find(p => p.id === authUser.id);
+      if (existingAuth) {
+        results.push(existingAuth);
+        authUser = existingAuth;
+      }
+      
+      displayResults(results);
+      
+      // Set legacy as source, auth as target
+      selectedSources = [issue.legacyProfile];
+      selectedTarget = authUser;
+      
+      updateSelectionDisplay();
+      await updateMergePanel();
+      
+      log(`Quick setup: Merge "${issue.legacyProfile.id}" → "${authUser.id}"`, 'success');
+      if (authUser._noStatsDoc || authUser._fromUsersCollection) {
+        log(`Note: Will CREATE aggregatedPlayerStats/${authUser.id} on merge`, 'warning');
+      }
+      showToast('Merge setup complete - review and execute', 'success');
+    } else {
+      // Standard case - both records exist
+      const results = [issue.legacyProfile, issue.authUser];
+      displayResults(results);
+      
+      // Set legacy as source, auth as target
+      selectedSources = [issue.legacyProfile];
+      selectedTarget = issue.authUser;
+      
+      updateSelectionDisplay();
+      await updateMergePanel();
+      
+      log(`Quick setup: Merge "${issue.legacyProfile.id}" → "${issue.authUser.id}"`, 'success');
+      showToast('Merge setup complete - review and execute', 'success');
+    }
+    
+    // Scroll to merge panel
+    document.getElementById('mergePanel').scrollIntoView({ behavior: 'smooth' });
+  };
+
+  function updateStatsDisplay() {
+    document.getElementById('totalPlayers').textContent = stats.total;
+    document.getElementById('authUsers').textContent = stats.authUsers;
+    document.getElementById('linkedUsers').textContent = stats.linkedUsers;
+    document.getElementById('legacyProfiles').textContent = stats.legacyProfiles;
+    document.getElementById('migratedProfiles').textContent = stats.migratedProfiles;
+    document.getElementById('issueCount').textContent = stats.issues;
+    
+    // Add click handlers to overview cards
+    document.querySelectorAll('.overview-card').forEach(card => {
+      card.onclick = () => {
+        const cardClasses = card.classList;
+        if (cardClasses.contains('auth')) applyFilter('auth');
+        else if (cardClasses.contains('linked')) applyFilter('linked');
+        else if (cardClasses.contains('legacy')) applyFilter('legacy');
+        else if (cardClasses.contains('migrated')) applyFilter('migrated');
+        else if (cardClasses.contains('warning')) applyFilter('issues');
+        else applyFilter('all');
+      };
+    });
+  }
+
+  // ============================================
+  // FILTER FUNCTIONS
+  // ============================================
+
+  window.applyFilter = function(filter) {
+    currentFilter = filter;
+    
+    // Update button states
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.filter === filter) {
+        btn.classList.add('active');
+      }
+    });
+    
+    // Get filtered results
+    let filtered = [];
+    switch(filter) {
+      case 'auth':
+        filtered = allPlayers.filter(p => p._isAuthUser && !p._isMigrated);
+        break;
+      case 'linked':
+        filtered = allPlayers.filter(p => p._isLinked && !p._isMigrated);
+        break;
+      case 'legacy':
+        filtered = allPlayers.filter(p => p._isLegacy && !p._unaggregated);
+        break;
+      case 'unaggregated':
+        filtered = allPlayers.filter(p => p._unaggregated);
+        break;
+      case 'migrated':
+        filtered = allPlayers.filter(p => p._isMigrated);
+        break;
+      case 'issues':
+        // Show all players involved in issues
+        const issueIds = new Set();
+        detectedIssues.forEach(issue => {
+          if (issue.authUser) issueIds.add(issue.authUser.id);
+          if (issue.legacyProfile) issueIds.add(issue.legacyProfile.id);
+        });
+        filtered = allPlayers.filter(p => issueIds.has(p.id));
+        break;
+      default:
+        filtered = allPlayers.filter(p => !p._isMigrated);
+    }
+    
+    displayResults(filtered);
+    log(`Filter: ${filter} - showing ${filtered.length} records`, 'info');
+  };
+
+  // ============================================
+  // SEARCH FUNCTIONS
+  // ============================================
+
+  window.searchPlayers = function() {
+    const searchTerm = document.getElementById('playerSearch').value.trim().toLowerCase();
+    
+    if (!searchTerm) {
+      showToast('Please enter a search term', 'warning');
+      return;
+    }
+    
+    log(`Searching for: "${searchTerm}"`, 'info');
+    
+    const results = allPlayers.filter(player => {
+      const name = (player.name || player.displayName || '').toLowerCase();
+      const id = player.id.toLowerCase();
+      
+      // Check if search term matches name or ID
+      return name.includes(searchTerm) || id.includes(searchTerm);
+    });
+    
+    displayResults(results);
+    log(`Found ${results.length} matching records`, 'success');
+  };
+
+  // Direct lookup for playerStats ID (bypasses aggregatedPlayerStats)
+  window.lookupPlayerStatsId = async function() {
+    const lookupId = document.getElementById('directIdLookup').value.trim();
+    
+    if (!lookupId) {
+      showToast('Please enter an ID to lookup', 'warning');
+      return;
+    }
+    
+    log(`\n🔎 Direct lookup for playerStats/${lookupId}...`, 'info');
+    
+    let hasSeasons = false;
+    let hasGames = false;
+    let hasCareer = false;
+    let seasonCount = 0;
+    let gameCount = 0;
+    let seasonData = [];
+    
+    // Check seasons subcollection
+    try {
+      const seasonsRef = collection(db, 'playerStats', lookupId, 'seasons');
+      const seasonsSnap = await getDocs(seasonsRef);
+      hasSeasons = !seasonsSnap.empty;
+      seasonCount = seasonsSnap.size;
+      seasonsSnap.forEach(doc => {
+        const data = doc.data();
+        seasonData.push({ id: doc.id, games: data.games || 0, hits: data.hits || 0 });
+      });
+      log(`  seasons: ${seasonCount} documents`, hasSeasons ? 'success' : 'info');
+      seasonData.forEach(s => log(`    - ${s.id}: ${s.games} G, ${s.hits} H`, 'info'));
+    } catch (e) {
+      log(`  seasons: Error - ${e.message}`, 'error');
+    }
+    
+    // Check games subcollection
+    try {
+      const gamesRef = collection(db, 'playerStats', lookupId, 'games');
+      const gamesSnap = await getDocs(gamesRef);
+      hasGames = !gamesSnap.empty;
+      gameCount = gamesSnap.size;
+      log(`  games: ${gameCount} documents`, hasGames ? 'success' : 'info');
+    } catch (e) {
+      log(`  games: Error - ${e.message}`, 'error');
+    }
+    
+    // Check career subcollection
+    try {
+      const careerRef = collection(db, 'playerStats', lookupId, 'career');
+      const careerSnap = await getDocs(careerRef);
+      hasCareer = !careerSnap.empty;
+      log(`  career: ${careerSnap.size} documents`, hasCareer ? 'success' : 'info');
+    } catch (e) {
+      log(`  career: Error - ${e.message}`, 'error');
+    }
+    
+    // Check if in aggregatedPlayerStats
+    const inAggregated = allPlayers.some(p => p.id === lookupId);
+    log(`  aggregatedPlayerStats: ${inAggregated ? 'YES' : 'NO'}`, inAggregated ? 'success' : 'warning');
+    
+    if (hasSeasons || hasGames || hasCareer) {
+      // Add to allPlayers if not already there
+      if (!inAggregated) {
+        const displayName = lookupId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        
+        const newPlayer = {
+          id: lookupId,
+          name: displayName,
+          displayName: displayName,
+          _isAuthUser: false,
+          _isLinked: false,
+          _isMigrated: false,
+          _isLegacy: true,
+          _source: 'playerStats (manual lookup)',
+          _hasAggregatedDoc: false,
+          _unaggregated: true,
+          _seasonCount: seasonCount,
+          _gameCount: gameCount
+        };
+        
+        allPlayers.push(newPlayer);
+        log(`\n✅ Added "${lookupId}" to player list`, 'success');
+        showToast(`Found! ${seasonCount} seasons, ${gameCount} games`, 'success');
+        
+        // Show in results
+        displayResults([newPlayer]);
+      } else {
+        log(`\n✅ "${lookupId}" already in player list`, 'success');
+        const existing = allPlayers.find(p => p.id === lookupId);
+        displayResults([existing]);
+      }
+    } else {
+      log(`\n❌ No data found for playerStats/${lookupId}`, 'error');
+      showToast(`No playerStats data found for "${lookupId}"`, 'error');
+    }
+  };
+
+  window.findPotentialDuplicates = function() {
+    log('Scanning for potential duplicate records...', 'info');
+    
+    const duplicates = [];
+    const processedNames = new Set();
+    
+    allPlayers.forEach(player => {
+      if (player.migrated) return;
+      
+      const lastName = extractLastName(player.name || player.displayName || '');
+      if (!lastName || processedNames.has(lastName)) return;
+      
+      // Find all players with same last name
+      const sameLastName = allPlayers.filter(p => {
+        if (p.migrated) return false;
+        const pLastName = extractLastName(p.name || p.displayName || '');
+        return pLastName === lastName;
+      });
+      
+      if (sameLastName.length > 1) {
+        sameLastName.forEach(p => {
+          if (!duplicates.find(d => d.id === p.id)) {
+            duplicates.push(p);
+          }
+        });
+        processedNames.add(lastName);
+      }
+    });
+    
+    // Sort by last name for easier review
+    duplicates.sort((a, b) => {
+      const lastA = extractLastName(a.name || a.displayName || '');
+      const lastB = extractLastName(b.name || b.displayName || '');
+      return lastA.localeCompare(lastB);
+    });
+    
+    displayResults(duplicates);
+    log(`Found ${duplicates.length} potential duplicate records`, 'success');
+  };
+
+  function extractLastName(fullName) {
+    if (!fullName) return '';
+    const parts = fullName.trim().split(/\s+/);
+    return parts[parts.length - 1].toLowerCase();
+  }
+
+  function displayResults(players) {
+    const container = document.getElementById('searchResults');
+    const countEl = document.getElementById('resultCount');
+    
+    if (players.length === 0) {
+      container.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-light);">No players found</div>';
+      container.style.display = 'block';
+      countEl.textContent = '';
+      return;
+    }
+    
+    container.innerHTML = players.map(player => {
+      const name = player.name || player.displayName || 'Unknown';
+      const seasons = player.seasons ? Object.keys(player.seasons).length : 0;
+      const games = player.career?.games || 0;
+      const hits = player.career?.hits || 0;
+      
+      // Build badges
+      let badges = '';
+      if (player._isAuthUser) {
+        badges += '<span class="player-badge badge-auth">🔐 AUTH</span>';
+      }
+      if (player._isLinked) {
+        badges += `<span class="player-badge badge-linked">🔗 ${player.linkedPlayer}</span>`;
+      }
+      if (player._isMigrated) {
+        badges += `<span class="player-badge badge-migrated">➡️ → ${player.migratedTo || '?'}</span>`;
+      }
+      if (player._isLegacy && !player._unaggregated) {
+        badges += '<span class="player-badge badge-legacy">📁 LEGACY</span>';
+      }
+      if (player._unaggregated) {
+        badges += '<span class="player-badge" style="background: #fef3c7; color: #d97706;">⚠️ NO AGG DOC</span>';
+      }
+      
+      // Check if this player is involved in an issue
+      const hasIssue = detectedIssues.some(i => 
+        i.authUser?.id === player.id || i.legacyProfile?.id === player.id
+      );
+      
+      // Encode ID for safe use in HTML attributes
+      const safeId = encodeURIComponent(player.id);
+      
+      return `
+        <div class="player-item ${player._isMigrated ? 'migrated' : ''} ${hasIssue ? 'has-issue' : ''}" 
+             data-player-id="${safeId}"
+             style="${hasIssue ? 'border-left: 4px solid var(--warning-color);' : ''}">
+          <input type="checkbox" 
+                 class="player-checkbox"
+                 data-player-id="${safeId}"
+                 ${player._isMigrated ? 'disabled' : ''}>
+          <div class="player-info">
+            <div class="player-name">
+              ${name}
+              ${badges}
+            </div>
+            <div class="player-meta">
+              ID: <code>${player.id}</code>
+              ${player.currentTeam ? ` • Team: ${player.currentTeam}` : ''}
+            </div>
+          </div>
+          <div class="player-stats-mini">
+            ${seasons} seasons • ${games} G • ${hits} H
+          </div>
+          <button class="btn-sm btn-info set-target-btn" 
+                  data-player-id="${safeId}"
+                  ${player._isMigrated ? 'disabled' : ''}>
+            Set Target
+          </button>
+        </div>
+      `;
+    }).join('');
+    
+    container.style.display = 'block';
+    countEl.textContent = `Showing ${players.length} records`;
+    
+    // Add event delegation for player items
+    container.querySelectorAll('.player-item').forEach(item => {
+      const encodedId = item.dataset.playerId;
+      if (!encodedId) return;
+      
+      // Click on row toggles selection
+      item.addEventListener('click', (e) => {
+        // Don't trigger if clicking checkbox or button
+        if (e.target.closest('.player-checkbox') || e.target.closest('.set-target-btn')) return;
+        togglePlayerSelection(encodedId);
+      });
+    });
+    
+    container.querySelectorAll('.player-checkbox').forEach(checkbox => {
+      const encodedId = checkbox.dataset.playerId;
+      if (!encodedId) return;
+      
+      checkbox.addEventListener('change', () => {
+        togglePlayerSelection(encodedId);
+      });
+    });
+    
+    container.querySelectorAll('.set-target-btn').forEach(btn => {
+      const encodedId = btn.dataset.playerId;
+      if (!encodedId) return;
+      
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setAsTarget(encodedId);
+      });
+    });
+    
+    // Update checkboxes for already selected items
+    updateSelectionDisplay();
+  }
+
+  // ============================================
+  // SELECTION FUNCTIONS
+  // ============================================
+
+  window.togglePlayerSelection = async function(encodedPlayerId) {
+    const playerId = decodeURIComponent(encodedPlayerId);
+    const item = document.querySelector(`.player-item[data-player-id="${encodedPlayerId}"]`);
+    const checkbox = item ? item.querySelector('.player-checkbox') : null;
+    const player = allPlayers.find(p => p.id === playerId);
+    
+    // Don't allow selecting migrated records
+    if (player && player._isMigrated) {
+      showToast('Cannot select migrated records', 'warning');
+      if (checkbox) checkbox.checked = false;
+      return;
+    }
+    
+    // Don't allow selecting target as source
+    if (selectedTarget && selectedTarget.id === playerId) {
+      showToast('Cannot select target as source', 'warning');
+      if (checkbox) checkbox.checked = false;
+      return;
+    }
+    
+    if (checkbox && checkbox.checked) {
+      // Add to sources
+      if (player && !selectedSources.find(s => s.id === playerId)) {
+        selectedSources.push(player);
+        if (item) item.classList.add('selected');
+      }
+    } else {
+      // Remove from sources
+      selectedSources = selectedSources.filter(s => s.id !== playerId);
+      if (item) item.classList.remove('selected');
+    }
+    
+    await updateMergePanel();
+  };
+
+  window.setAsTarget = async function(encodedPlayerId) {
+    const playerId = decodeURIComponent(encodedPlayerId);
+    
+    // Remove previous target styling
+    document.querySelectorAll('.player-item.selected-target').forEach(el => {
+      el.classList.remove('selected-target');
+    });
+    
+    // Remove from sources if it was there
+    selectedSources = selectedSources.filter(s => s.id !== playerId);
+    
+    // Set new target
+    const player = allPlayers.find(p => p.id === playerId);
+    if (player) {
+      selectedTarget = player;
+      
+      // Update checkbox (use encoded ID for DOM lookup)
+      const item = document.querySelector(`.player-item[data-player-id="${encodedPlayerId}"]`);
+      const checkbox = item ? item.querySelector('.player-checkbox') : null;
+      if (checkbox) {
+        checkbox.checked = false;
+      }
+      
+      // Add target styling
+      if (item) {
+        item.classList.remove('selected');
+        item.classList.add('selected-target');
+      }
+      
+      log(`Set target: ${player.name || player.displayName}`, 'success');
+    }
+    
+    await updateMergePanel();
+  };
+
+  window.clearSelection = function() {
+    selectedSources = [];
+    selectedTarget = null;
+    
+    // Clear all checkboxes and styling
+    document.querySelectorAll('.player-item').forEach(el => {
+      el.classList.remove('selected', 'selected-target');
+    });
+    document.querySelectorAll('.player-item input[type="checkbox"]').forEach(cb => {
+      cb.checked = false;
+    });
+    
+    // Hide merge panel
+    document.getElementById('mergePanel').classList.remove('visible');
+    
+    // Hide search results
+    document.getElementById('searchResults').style.display = 'none';
+    document.getElementById('resultCount').textContent = '';
+    
+    // Reset filter to 'all'
+    currentFilter = 'all';
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.filter === 'all') btn.classList.add('active');
+    });
+    
+    // Clear search box
+    document.getElementById('playerSearch').value = '';
+    
+    log('Selection cleared', 'info');
+  };
+
+  function updateSelectionDisplay() {
+    selectedSources.forEach(source => {
+      const encodedId = encodeURIComponent(source.id);
+      const item = document.querySelector(`.player-item[data-player-id="${encodedId}"]`);
+      if (item) {
+        const checkbox = item.querySelector('.player-checkbox');
+        if (checkbox) checkbox.checked = true;
+        item.classList.add('selected');
+      }
+    });
+    
+    if (selectedTarget) {
+      const encodedId = encodeURIComponent(selectedTarget.id);
+      const item = document.querySelector(`.player-item[data-player-id="${encodedId}"]`);
+      if (item) item.classList.add('selected-target');
+    }
+  }
+
+  // ============================================
+  // MERGE PREVIEW
+  // ============================================
+
+  async function updateMergePanel() {
+    const panel = document.getElementById('mergePanel');
+    
+    if (selectedSources.length === 0 || !selectedTarget) {
+      panel.classList.remove('visible');
+      return;
+    }
+    
+    panel.classList.add('visible');
+    
+    // Update source list
+    document.getElementById('sourceList').innerHTML = selectedSources.map(p => `
+      <div class="player-name" style="margin-bottom: 0.5rem;">
+        ${p.name || p.displayName} 
+        <span style="color: var(--text-light); font-weight: normal;">(${p.id})</span>
+      </div>
+    `).join('');
+    
+    // Update target info - use actual document ID
+    const targetLegacyId = selectedTarget.id;
+    const targetName = selectedTarget.name || selectedTarget.displayName || targetLegacyId;
+    
+    document.getElementById('targetInfo').innerHTML = `
+      <div class="player-name" style="color: var(--success-color);">
+        ${targetName}
+        <span style="color: var(--text-light); font-weight: normal;">(${targetLegacyId})</span>
+      </div>
+    `;
+    
+    // Show loading state
+    document.getElementById('combinedStatsPreview').innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; color: var(--text-light);">
+        Loading playerStats data...
+      </div>
+    `;
+    document.getElementById('seasonsList').innerHTML = `
+      <tr><td colspan="8" style="text-align: center; color: var(--text-light);">Scanning collections...</td></tr>
+    `;
+    
+    // Scan actual playerStats/pitchingStats subcollections
+    const allSeasons = [];
+    let totalGames = 0;
+    let totalGameDocs = 0;
+    let totalPitchingSeasons = 0;
+    let totalPitchingGames = 0;
+    
+    // Scan sources
+    for (const source of selectedSources) {
+      const sourceLegacyId = source.id;
+      const sourceName = source.name || source.displayName || sourceLegacyId;
+      
+      // Check playerStats/seasons
+      try {
+        const seasonsRef = collection(db, 'playerStats', sourceLegacyId, 'seasons');
+        const seasonsSnap = await getDocs(seasonsRef);
+        seasonsSnap.forEach(doc => {
+          const data = doc.data();
+          allSeasons.push({
+            seasonId: doc.id,
+            source: sourceLegacyId,
+            sourceType: 'seasons',
+            ...data
+          });
+          totalGames += data.games || 0;
+        });
+      } catch (err) {}
+      
+      // Check playerStats/games
+      try {
+        const gamesRef = collection(db, 'playerStats', sourceLegacyId, 'games');
+        const gamesSnap = await getDocs(gamesRef);
+        totalGameDocs += gamesSnap.size;
+      } catch (err) {}
+      
+      // Check pitchingStats/seasons
+      try {
+        const pitchSeasonsRef = collection(db, 'pitchingStats', sourceLegacyId, 'seasons');
+        const pitchSeasonsSnap = await getDocs(pitchSeasonsRef);
+        totalPitchingSeasons += pitchSeasonsSnap.size;
+      } catch (err) {}
+      
+      // Check pitchingStats/games
+      try {
+        const pitchGamesRef = collection(db, 'pitchingStats', sourceLegacyId, 'games');
+        const pitchGamesSnap = await getDocs(pitchGamesRef);
+        totalPitchingGames += pitchGamesSnap.size;
+      } catch (err) {}
+    }
+    
+    // Also check target (to show existing data)
+    try {
+      const targetSeasonsRef = collection(db, 'playerStats', targetLegacyId, 'seasons');
+      const targetSeasonsSnap = await getDocs(targetSeasonsRef);
+      targetSeasonsSnap.forEach(doc => {
+        const data = doc.data();
+        allSeasons.push({
+          seasonId: doc.id,
+          source: targetLegacyId,
+          sourceType: 'seasons (TARGET)',
+          ...data
+        });
+      });
+    } catch (err) {}
+    
+    // Calculate combined totals
+    let combinedStats = {
+      games: 0,
+      atBats: 0,
+      hits: 0,
+      runs: 0,
+      walks: 0
+    };
+    
+    allSeasons.forEach(s => {
+      combinedStats.games += s.games || 0;
+      combinedStats.atBats += s.atBats || 0;
+      combinedStats.hits += s.hits || 0;
+      combinedStats.runs += s.runs || 0;
+      combinedStats.walks += s.walks || 0;
+    });
+    
+    const ba = combinedStats.atBats > 0 ? combinedStats.hits / combinedStats.atBats : 0;
+    const obp = (combinedStats.atBats + combinedStats.walks) > 0 
+      ? (combinedStats.hits + combinedStats.walks) / (combinedStats.atBats + combinedStats.walks) : 0;
+    
+    // Update stats preview
+    document.getElementById('combinedStatsPreview').innerHTML = `
+      <div class="stat-item">
+        <div class="stat-value">${allSeasons.length}</div>
+        <div class="stat-label">Seasons</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">${combinedStats.games}</div>
+        <div class="stat-label">Games</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">${combinedStats.atBats}</div>
+        <div class="stat-label">At Bats</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">${combinedStats.hits}</div>
+        <div class="stat-label">Hits</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">${combinedStats.runs}</div>
+        <div class="stat-label">Runs</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">${ba.toFixed(3)}</div>
+        <div class="stat-label">AVG</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">${totalGameDocs}</div>
+        <div class="stat-label">Game Docs</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">${totalPitchingSeasons + totalPitchingGames}</div>
+        <div class="stat-label">Pitching</div>
+      </div>
+    `;
+    
+    // Sort seasons by ID
+    allSeasons.sort((a, b) => b.seasonId.localeCompare(a.seasonId));
+    
+    // Update seasons table
+    if (allSeasons.length === 0) {
+      document.getElementById('seasonsList').innerHTML = `
+        <tr><td colspan="8" style="text-align: center; color: var(--text-light);">No season data found in playerStats</td></tr>
+      `;
+    } else {
+      document.getElementById('seasonsList').innerHTML = allSeasons.map(s => `
+        <tr style="${s.sourceType.includes('TARGET') ? 'background: #dcfce7;' : ''}">
+          <td><strong>${s.seasonId}</strong></td>
+          <td>${s.team || '-'}</td>
+          <td>${s.games || 0}</td>
+          <td>${s.atBats || 0}</td>
+          <td>${s.hits || 0}</td>
+          <td>${s.runs || 0}</td>
+          <td>${s.battingAverage ? s.battingAverage.toFixed(3) : (s.atBats > 0 ? (s.hits/s.atBats).toFixed(3) : '.000')}</td>
+          <td><code style="font-size: 0.75rem;">${s.source}</code><br><small>${s.sourceType}</small></td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  function calculateCombinedStats() {
+    // Start with target's data (might be empty if no aggregatedPlayerStats doc)
+    const combined = {
+      seasons: { ...(selectedTarget.seasons || {}) },
+      pitchingSeasons: { ...(selectedTarget.pitchingSeasons || {}) },
+      career: {
+        games: 0,
+        atBats: 0,
+        hits: 0,
+        runs: 0,
+        walks: 0,
+        doubles: 0,
+        triples: 0,
+        homeRuns: 0,
+        rbi: 0,
+        strikeouts: 0,
+        stolenBases: 0
+      }
+    };
+    
+    // Mark target seasons
+    Object.keys(combined.seasons).forEach(key => {
+      combined.seasons[key]._source = selectedTarget.id;
+    });
+    
+    // Add seasons from sources (only if not already present)
+    selectedSources.forEach(source => {
+      if (source.seasons) {
+        Object.entries(source.seasons).forEach(([seasonId, stats]) => {
+          if (!combined.seasons[seasonId]) {
+            combined.seasons[seasonId] = { ...stats, _source: source.id };
+          } else {
+            // Season exists - log conflict
+            log(`Season ${seasonId} exists in multiple records - keeping target's version`, 'warning');
+          }
+        });
+      }
+      
+      // Merge pitching seasons
+      if (source.pitchingSeasons) {
+        Object.entries(source.pitchingSeasons).forEach(([seasonId, stats]) => {
+          if (!combined.pitchingSeasons[seasonId]) {
+            combined.pitchingSeasons[seasonId] = { ...stats };
+          }
+        });
+      }
+    });
+    
+    // Recalculate career totals
+    Object.values(combined.seasons).forEach(season => {
+      combined.career.games += season.games || 0;
+      combined.career.atBats += season.atBats || 0;
+      combined.career.hits += season.hits || 0;
+      combined.career.runs += season.runs || 0;
+      combined.career.walks += season.walks || 0;
+      combined.career.doubles += season.doubles || 0;
+      combined.career.triples += season.triples || 0;
+      combined.career.homeRuns += season.homeRuns || 0;
+      combined.career.rbi += season.rbi || 0;
+      combined.career.strikeouts += season.strikeouts || 0;
+      combined.career.stolenBases += season.stolenBases || 0;
+    });
+    
+    // Calculate rate stats
+    combined.career.battingAverage = combined.career.atBats > 0 
+      ? combined.career.hits / combined.career.atBats : 0;
+    combined.career.onBasePercentage = (combined.career.atBats + combined.career.walks) > 0
+      ? (combined.career.hits + combined.career.walks) / (combined.career.atBats + combined.career.walks) : 0;
+    
+    return combined;
+  }
+
+  // ============================================
+  // EXECUTE MERGE
+  // ============================================
+
+  window.executeMerge = async function(testMode = false) {
+    if (selectedSources.length === 0 || !selectedTarget) {
+      showToast('Please select source and target records', 'warning');
+      return;
+    }
+    
+    const confirmMsg = testMode 
+      ? 'Run merge in TEST MODE? (No changes will be saved)'
+      : `Merge ${selectedSources.length} source record(s) into "${selectedTarget.linkedPlayer || selectedTarget.name || selectedTarget.displayName}"?\n\nThis will:\n- Move all playerStats/seasons and playerStats/games docs\n- Move all pitchingStats/seasons and pitchingStats/games docs\n- DELETE source documents after moving\n- Mark aggregatedPlayerStats source as migrated\n\nYou should run the Aggregator afterward to rebuild career totals.`;
+    
+    if (!confirm(confirmMsg)) return;
+    
+    const btn = document.getElementById(testMode ? 'mergeTestBtn' : 'mergeBtn');
+    btn.disabled = true;
+    btn.textContent = testMode ? '🧪 Testing...' : '⏳ Merging...';
+    
+    log('═══════════════════════════════════════', 'header');
+    log(testMode ? '🧪 TEST MODE - Preview Only' : '⚡ EXECUTING MERGE', 'header');
+    log('═══════════════════════════════════════', 'header');
+    
+    try {
+      // For auth users, stats live under the legacy snake_case name, NOT the auth UID.
+      // Use linkedPlayer → snake_case when available; fall back to doc ID for legacy profiles.
+      const targetLegacyId = selectedTarget.linkedPlayer
+        ? selectedTarget.linkedPlayer.toLowerCase().replace(/\./g, '').replace(/'/g, '').replace(/\s+/g, '_')
+        : selectedTarget.id;
+      const targetName = selectedTarget.name || selectedTarget.displayName || targetLegacyId;
+      
+      log(`\nTarget: ${targetName}`, 'info');
+      log(`Target ID: ${targetLegacyId}`, 'info');
+      
+      let totalSeasonsMoved = 0;
+      let totalGamesMoved = 0;
+      let totalPitchingSeasonsMoved = 0;
+      let totalPitchingGamesMoved = 0;
+      let totalDocsDeleted = 0;
+      
+      for (const source of selectedSources) {
+        // Use actual document ID - NOT derived from name
+        const sourceLegacyId = source.id;
+        const sourceName = source.name || source.displayName || sourceLegacyId;
+        
+        log(`\n${'─'.repeat(50)}`, 'header');
+        log(`Processing source: ${sourceName}`, 'info');
+        log(`Source ID: ${sourceLegacyId}`, 'info');
+        
+        if (sourceLegacyId === targetLegacyId) {
+          log(`⚠️ Source and target are the same - skipping`, 'warning');
+          continue;
+        }
+        
+        // ========================================
+        // 1. MOVE playerStats/seasons
+        // ========================================
+        log(`\n📂 Checking playerStats/${sourceLegacyId}/seasons...`, 'info');
+        
+        try {
+          const seasonsRef = collection(db, 'playerStats', sourceLegacyId, 'seasons');
+          const seasonsSnap = await getDocs(seasonsRef);
+          
+          if (seasonsSnap.empty) {
+            log(`   No seasons found`, 'info');
+          } else {
+            log(`   Found ${seasonsSnap.size} season documents`, 'success');
+            
+            for (const seasonDoc of seasonsSnap.docs) {
+              const seasonId = seasonDoc.id;
+              const seasonData = seasonDoc.data();
+              
+              if (!testMode) {
+                // Copy to target
+                const targetSeasonRef = doc(db, 'playerStats', targetLegacyId, 'seasons', seasonId);
+                await setDoc(targetSeasonRef, {
+                  ...seasonData,
+                  mergedFrom: sourceLegacyId,
+                  mergedAt: serverTimestamp()
+                });
+                
+                // Delete from source
+                await deleteDoc(doc(db, 'playerStats', sourceLegacyId, 'seasons', seasonId));
+                totalDocsDeleted++;
+              }
+              
+              totalSeasonsMoved++;
+              log(`   ✓ ${seasonId}: ${seasonData.games || 0} G, ${seasonData.hits || 0} H`, 'success');
+            }
+          }
+        } catch (err) {
+          log(`   Error reading seasons: ${err.message}`, 'error');
+        }
+        
+        // ========================================
+        // 2. MOVE playerStats/games (2026+)
+        // ========================================
+        log(`\n📂 Checking playerStats/${sourceLegacyId}/games...`, 'info');
+        
+        try {
+          const gamesRef = collection(db, 'playerStats', sourceLegacyId, 'games');
+          const gamesSnap = await getDocs(gamesRef);
+          
+          if (gamesSnap.empty) {
+            log(`   No game docs found`, 'info');
+          } else {
+            log(`   Found ${gamesSnap.size} game documents`, 'success');
+            
+            for (const gameDoc of gamesSnap.docs) {
+              const gameId = gameDoc.id;
+              const gameData = gameDoc.data();
+              
+              if (!testMode) {
+                // Copy to target
+                const targetGameRef = doc(db, 'playerStats', targetLegacyId, 'games', gameId);
+                await setDoc(targetGameRef, {
+                  ...gameData,
+                  mergedFrom: sourceLegacyId,
+                  mergedAt: serverTimestamp()
+                });
+                
+                // Delete from source
+                await deleteDoc(doc(db, 'playerStats', sourceLegacyId, 'games', gameId));
+                totalDocsDeleted++;
+              }
+              
+              totalGamesMoved++;
+              log(`   ✓ ${gameId}`, 'success');
+            }
+          }
+        } catch (err) {
+          log(`   Error reading games: ${err.message}`, 'error');
+        }
+        
+        // ========================================
+        // 3. MOVE pitchingStats/seasons
+        // ========================================
+        log(`\n📂 Checking pitchingStats/${sourceLegacyId}/seasons...`, 'info');
+        
+        try {
+          const pitchSeasonsRef = collection(db, 'pitchingStats', sourceLegacyId, 'seasons');
+          const pitchSeasonsSnap = await getDocs(pitchSeasonsRef);
+          
+          if (pitchSeasonsSnap.empty) {
+            log(`   No pitching seasons found`, 'info');
+          } else {
+            log(`   Found ${pitchSeasonsSnap.size} pitching season documents`, 'success');
+            
+            for (const seasonDoc of pitchSeasonsSnap.docs) {
+              const seasonId = seasonDoc.id;
+              const seasonData = seasonDoc.data();
+              
+              if (!testMode) {
+                // Copy to target
+                const targetSeasonRef = doc(db, 'pitchingStats', targetLegacyId, 'seasons', seasonId);
+                await setDoc(targetSeasonRef, {
+                  ...seasonData,
+                  mergedFrom: sourceLegacyId,
+                  mergedAt: serverTimestamp()
+                });
+                
+                // Delete from source
+                await deleteDoc(doc(db, 'pitchingStats', sourceLegacyId, 'seasons', seasonId));
+                totalDocsDeleted++;
+              }
+              
+              totalPitchingSeasonsMoved++;
+              log(`   ✓ ${seasonId}: ${seasonData.inningsPitched || 0} IP`, 'success');
+            }
+          }
+        } catch (err) {
+          log(`   Error reading pitching seasons: ${err.message}`, 'error');
+        }
+        
+        // ========================================
+        // 4. MOVE pitchingStats/games (2026+)
+        // ========================================
+        log(`\n📂 Checking pitchingStats/${sourceLegacyId}/games...`, 'info');
+        
+        try {
+          const pitchGamesRef = collection(db, 'pitchingStats', sourceLegacyId, 'games');
+          const pitchGamesSnap = await getDocs(pitchGamesRef);
+          
+          if (pitchGamesSnap.empty) {
+            log(`   No pitching game docs found`, 'info');
+          } else {
+            log(`   Found ${pitchGamesSnap.size} pitching game documents`, 'success');
+            
+            for (const gameDoc of pitchGamesSnap.docs) {
+              const gameId = gameDoc.id;
+              const gameData = gameDoc.data();
+              
+              if (!testMode) {
+                // Copy to target
+                const targetGameRef = doc(db, 'pitchingStats', targetLegacyId, 'games', gameId);
+                await setDoc(targetGameRef, {
+                  ...gameData,
+                  mergedFrom: sourceLegacyId,
+                  mergedAt: serverTimestamp()
+                });
+                
+                // Delete from source
+                await deleteDoc(doc(db, 'pitchingStats', sourceLegacyId, 'games', gameId));
+                totalDocsDeleted++;
+              }
+              
+              totalPitchingGamesMoved++;
+              log(`   ✓ ${gameId}`, 'success');
+            }
+          }
+        } catch (err) {
+          log(`   Error reading pitching games: ${err.message}`, 'error');
+        }
+        
+        // ========================================
+        // 5. Mark aggregatedPlayerStats as migrated
+        // ========================================
+        if (!testMode) {
+          log(`\n📝 Marking aggregatedPlayerStats/${sourceLegacyId} as migrated...`, 'info');
+          
+          try {
+            const sourceAggRef = doc(db, 'aggregatedPlayerStats', sourceLegacyId);
+            const sourceAggDoc = await getDoc(sourceAggRef);
+            
+            if (sourceAggDoc.exists()) {
+              await updateDoc(sourceAggRef, {
+                migrated: true,
+                migratedTo: targetLegacyId,
+                migratedAt: serverTimestamp()
+              });
+              log(`   ✓ Marked as migrated → ${targetLegacyId}`, 'success');
+            } else {
+              log(`   No aggregatedPlayerStats doc found for source`, 'info');
+            }
+          } catch (err) {
+            log(`   Error marking as migrated: ${err.message}`, 'error');
+          }
+        }
+      }
+      
+      // Summary
+      log('\n═══════════════════════════════════════', 'header');
+      log(testMode ? '🧪 TEST COMPLETE' : '✅ MERGE COMPLETE', 'header');
+      log('═══════════════════════════════════════', 'header');
+      log(`\nSummary:`, 'info');
+      log(`  Batting seasons moved: ${totalSeasonsMoved}`, 'success');
+      log(`  Batting games moved: ${totalGamesMoved}`, 'success');
+      log(`  Pitching seasons moved: ${totalPitchingSeasonsMoved}`, 'success');
+      log(`  Pitching games moved: ${totalPitchingGamesMoved}`, 'success');
+      if (!testMode) {
+        log(`  Source docs deleted: ${totalDocsDeleted}`, 'success');
+      }
+      
+      if (!testMode) {
+        log(`\n⚠️ NEXT STEP: Run the Aggregator to rebuild career totals!`, 'warning');
+        showToast('Merge complete! Run Aggregator next.', 'success');
+        
+        // Refresh data
+        await loadAllPlayers();
+        clearSelection();
+        updateStatsDisplay();
+      } else {
+        log(`\n🧪 No changes made - this was a test run`, 'warning');
+        showToast('Test complete - no changes made', 'warning');
+      }
+      
+    } catch (error) {
+      log(`\n❌ Error: ${error.message}`, 'error');
+      console.error(error);
+      showToast('Error during merge - check console', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = testMode ? '🧪 Test Mode (Preview Only)' : '✅ Execute Merge';
+    }
+  };
+
+  // ============================================
+  // PROFILE SETUP STATUS FUNCTIONS
+  // ============================================
+
+  let allAuthUsers = [];
+  let currentSetupFilter = 'all';
+  
+  // Sort state tracking
+  let currentSort = {
+    field: 'joined',    // Default sort field
+    direction: 'desc'   // 'asc' or 'desc'
+  };
+
+  // Load and display profile setup status
+  async function loadProfileSetupStatus() {
+    try {
+      console.log('Loading profile setup status...');
+      
+      // Get all users from users collection
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      allAuthUsers = [];
+      
+      usersSnapshot.forEach(doc => {
+        const data = doc.data();
+        
+        // Skip placeholder/migrated accounts - only show real auth users
+        if (data.email && data.email.includes('@placeholder.aces')) {
+          return; // Skip this user
+        }
+        
+        allAuthUsers.push({
+          id: doc.id,
+          ...data,
+          setupStatus: calculateSetupStatus(data)
+        });
+      });
+      
+      // Sort by createdAt descending (newest first)
+      allAuthUsers.sort((a, b) => {
+        const aTime = a.createdAt?.seconds || 0;
+        const bTime = b.createdAt?.seconds || 0;
+        return bTime - aTime;
+      });
+      
+      // Calculate stats
+      const now = Date.now() / 1000;
+      const stats = {
+        total: allAuthUsers.length,
+        complete: allAuthUsers.filter(u => u.setupStatus.status === 'complete').length,
+        partial: allAuthUsers.filter(u => u.setupStatus.status === 'partial').length,
+        none: allAuthUsers.filter(u => u.setupStatus.status === 'none').length,
+        // Check for actual FCM tokens, not just the notificationsEnabled flag (which has a bad default)
+        notifications: allAuthUsers.filter(u => u.fcmTokens && u.fcmTokens.length > 0).length,
+        directory: allAuthUsers.filter(u => u.directoryOptIn === true).length,
+        // Visit tracking stats
+        activeRecently: allAuthUsers.filter(u => {
+          if (!u.lastVisit?.seconds) return false;
+          const daysSinceVisit = (now - u.lastVisit.seconds) / 86400;
+          return daysSinceVisit <= 30;
+        }).length,
+        staleUsers: allAuthUsers.filter(u => {
+          if (!u.lastVisit?.seconds) return true; // No visit = stale
+          const daysSinceVisit = (now - u.lastVisit.seconds) / 86400;
+          return daysSinceVisit > 60;
+        }).length
+      };
+      
+      // Update dashboard
+      document.getElementById('totalAuthUsers').textContent = stats.total;
+      document.getElementById('setupComplete').textContent = stats.complete;
+      document.getElementById('setupPartial').textContent = stats.partial;
+      document.getElementById('setupNone').textContent = stats.none;
+      document.getElementById('notificationsEnabled').textContent = stats.notifications;
+      document.getElementById('directoryOptIn').textContent = stats.directory;
+      document.getElementById('activeRecently').textContent = stats.activeRecently;
+      document.getElementById('staleUsers').textContent = stats.staleUsers;
+      
+      // Render table
+      renderSetupUsersTable(allAuthUsers);
+      
+      console.log(`✅ Loaded ${allAuthUsers.length} users for setup status`);
+      
+    } catch (error) {
+      console.error('Error loading setup status:', error);
+      document.getElementById('setupUsersTable').innerHTML = `
+        <tr><td colspan="7" style="text-align: center; color: var(--danger-color);">
+          Error loading users: ${error.message}
+        </td></tr>
+      `;
+    }
+  }
+
+  // Calculate setup status for a user
+  // Calculate setup status for a user (3 steps: Player Info, Notifications, Directory)
+  function calculateSetupStatus(user) {
+    const progress = user.profileSetupProgress || {};
+    
+    // Step 1: Player Info
+    const step1Complete = !!(user.position || user.primaryPosition || (user.bats && user.throws));
+    const step1Dismissed = progress.playerInfoDismissed || false;
+    const step1Done = step1Complete || step1Dismissed;
+    
+    // Step 2: Notifications - check for actual FCM tokens
+    const step2Complete = user.fcmTokens && user.fcmTokens.length > 0;
+    const step2Dismissed = progress.notificationsDismissed || false;
+    const step2Done = step2Complete || step2Dismissed;
+    
+    // Step 3: Directory
+    const step3Complete = user.directoryOptIn === true;
+    const step3Dismissed = progress.directoryDismissed || false;
+    const step3Done = step3Complete || step3Dismissed;
+    
+    const stepsComplete = [step1Done, step2Done, step3Done].filter(Boolean).length;
+    
+    let status = 'none';
+    if (stepsComplete === 3) status = 'complete';
+    else if (stepsComplete > 0) status = 'partial';
+    
+    return {
+      status,
+      stepsComplete,
+      step1: { complete: step1Complete, dismissed: step1Dismissed, done: step1Done },
+      step2: { complete: step2Complete, dismissed: step2Dismissed, done: step2Done },
+      step3: { complete: step3Complete, dismissed: step3Dismissed, done: step3Done }
+    };
+  }
+
+  // Render step indicator
+  function renderStepIndicator(step) {
+    if (step.complete) {
+      return '<span class="step-indicator complete" title="Complete">✓</span>';
+    } else if (step.dismissed) {
+      return '<span class="step-indicator skipped" title="Skipped">—</span>';
+    } else {
+      return '<span class="step-indicator pending" title="Pending">○</span>';
+    }
+  }
+
+  // Format relative time (e.g., "2h ago", "3d ago")
+  function formatRelativeTime(timestampSeconds) {
+    if (!timestampSeconds) return '<span style="color: var(--text-light);">Never</span>';
+    
+    const now = Date.now() / 1000;
+    const diff = now - timestampSeconds;
+    
+    if (diff < 3600) {
+      const mins = Math.floor(diff / 60);
+      return `${mins}m ago`;
+    } else if (diff < 86400) {
+      const hours = Math.floor(diff / 3600);
+      return `${hours}h ago`;
+    } else if (diff < 604800) {
+      const days = Math.floor(diff / 86400);
+      return `${days}d ago`;
+    } else if (diff < 2592000) {
+      const weeks = Math.floor(diff / 604800);
+      return `${weeks}w ago`;
+    } else {
+      const months = Math.floor(diff / 2592000);
+      if (months > 2) {
+        return `<span style="color: var(--warning-color);">${months}mo ago</span>`;
+      }
+      return `${months}mo ago`;
+    }
+  }
+
+  // Render users table
+  function renderSetupUsersTable(users) {
+    const tbody = document.getElementById('setupUsersTable');
+    
+    if (users.length === 0) {
+      tbody.innerHTML = `
+        <tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-light);">
+          No users found matching filter.
+        </td></tr>
+      `;
+      document.getElementById('setupResultCount').textContent = '';
+      return;
+    }
+    
+    tbody.innerHTML = users.map(user => {
+      const status = user.setupStatus;
+      const joinDate = user.createdAt?.seconds 
+        ? new Date(user.createdAt.seconds * 1000).toLocaleDateString()
+        : 'Unknown';
+      const lastVisitDisplay = formatRelativeTime(user.lastVisit?.seconds);
+      
+      return `
+        <tr>
+          <td class="user-name-cell">
+            <span class="name">${user.displayName || 'No Name'}</span>
+            <span class="email">${user.email || 'No Email'}</span>
+            ${user.linkedPlayer ? `<span class="linked-player">⚾ ${user.linkedPlayer}</span>` : ''}
+          </td>
+          <td>${renderStepIndicator(status.step1)}</td>
+          <td>${renderStepIndicator(status.step2)}</td>
+          <td>${renderStepIndicator(status.step3)}</td>
+          <td><span class="badge badge-${getRoleBadgeClass(user.userRole)}">${user.userRole || 'user'}</span></td>
+          <td style="font-size: 0.8rem; color: var(--text-light);">${joinDate}</td>
+          <td style="font-size: 0.8rem;">${lastVisitDisplay}</td>
+        </tr>
+      `;
+    }).join('');
+    
+    document.getElementById('setupResultCount').textContent = `Showing ${users.length} user${users.length !== 1 ? 's' : ''}`;
+  }
+
+  // Get badge class for role
+  function getRoleBadgeClass(role) {
+    switch (role) {
+      case 'admin': return 'admin';
+      case 'league-staff': return 'linked';
+      case 'captain': return 'auth';
+      case 'team-staff': return 'auth';
+      case 'player': return 'legacy';
+      case 'fan': return 'migrated';
+      default: return 'legacy';
+    }
+  }
+
+  /**
+   * Sort the setup users table by specified field
+   */
+  window.sortSetupTable = function(field) {
+    // Toggle direction if same field, otherwise default to asc (except joined/lastVisit which default to desc)
+    if (currentSort.field === field) {
+      currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      currentSort.field = field;
+      // Date fields default to descending (newest first), text fields to ascending (A-Z)
+      currentSort.direction = (field === 'joined' || field === 'lastVisit') ? 'desc' : 'asc';
+    }
+    
+    // Update sort icons
+    document.querySelectorAll('.sort-icon').forEach(icon => {
+      icon.classList.remove('active');
+      icon.textContent = '↕';
+    });
+    
+    const activeIcon = document.getElementById(`sort-${field}`);
+    if (activeIcon) {
+      activeIcon.classList.add('active');
+      activeIcon.textContent = currentSort.direction === 'asc' ? '↑' : '↓';
+    }
+    
+    // Sort the data
+    const sorted = [...allAuthUsers].sort((a, b) => {
+      let aVal, bVal;
+      
+      switch (field) {
+        case 'name':
+          aVal = (a.displayName || '').toLowerCase();
+          bVal = (b.displayName || '').toLowerCase();
+          break;
+        case 'joined':
+          aVal = a.createdAt?.seconds || 0;
+          bVal = b.createdAt?.seconds || 0;
+          break;
+        case 'lastVisit':
+          aVal = a.lastVisit?.seconds || 0;
+          bVal = b.lastVisit?.seconds || 0;
+          break;
+        default:
+          aVal = a[field] || '';
+          bVal = b[field] || '';
+      }
+      
+      // Compare
+      if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    // Apply current filter to sorted data
+    applySetupFilterToData(sorted);
+  };
+
+  /**
+   * Apply filter to already-sorted data
+   */
+  function applySetupFilterToData(sortedUsers) {
+    let filtered = sortedUsers;
+    const now = Date.now() / 1000;
+    
+    switch (currentSetupFilter) {
+      case 'complete':
+        filtered = sortedUsers.filter(u => u.setupStatus.status === 'complete');
+        break;
+      case 'partial':
+        filtered = sortedUsers.filter(u => u.setupStatus.status === 'partial');
+        break;
+      case 'none':
+        filtered = sortedUsers.filter(u => u.setupStatus.status === 'none');
+        break;
+      case 'notifications':
+        filtered = sortedUsers.filter(u => u.fcmTokens && u.fcmTokens.length > 0);
+        break;
+      case 'no-notifications':
+        filtered = sortedUsers.filter(u => !u.fcmTokens || u.fcmTokens.length === 0);
+        break;
+      case 'stale':
+        filtered = sortedUsers.filter(u => {
+          if (!u.lastVisit?.seconds) return true;
+          const daysSinceVisit = (now - u.lastVisit.seconds) / 86400;
+          return daysSinceVisit > 60;
+        });
+        break;
+      case 'never-visited':
+        filtered = sortedUsers.filter(u => !u.lastVisit);
+        break;
+    }
+    
+    renderSetupUsersTable(filtered);
+  }
+
+  // Apply setup filter
+  window.applySetupFilter = function(filter) {
+    currentSetupFilter = filter;
+    
+    // Update button states
+    document.querySelectorAll('.setup-filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.setupFilter === filter);
+    });
+    
+    // Re-sort with current sort settings (which will also apply the filter)
+    sortSetupTable(currentSort.field);
+  };
+
+  // ============================================
+  // UTILITY FUNCTIONS
+  // ============================================
+
+  function log(message, type = '') {
+    const output = document.getElementById('output');
+    const timestamp = new Date().toLocaleTimeString();
+    
+    let className = '';
+    if (type === 'success') className = 'log-success';
+    else if (type === 'error') className = 'log-error';
+    else if (type === 'warning') className = 'log-warning';
+    else if (type === 'header') className = 'log-header';
+    else if (type === 'info') className = 'log-info';
+    
+    output.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+    output.scrollTop = output.scrollHeight;
+  }
+
+  function hideLoading() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  }
+
+  function showAuthGate() {
+    document.getElementById('authGate').classList.add('visible');
+    document.getElementById('mainContent').classList.remove('visible');
+  }
+
+  function showMainContent() {
+    document.getElementById('authGate').classList.remove('visible');
+    document.getElementById('mainContent').classList.add('visible');
+  }
+
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
+
+  // Enter key triggers search
+  document.getElementById('playerSearch').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      searchPlayers();
+    }
+  });
+
+  // ============================================
+  // REPAIR ORPHANED STATS
+  // ============================================
+
+  let orphanedEntries = []; // { uid, playerName, legacyId, seasonCount, gameCount }
+
+  function isFirebaseUID(id) {
+    // Firebase UIDs are 28 chars, alphanumeric, no underscores
+    return id.length >= 20 && !/[_\s]/.test(id);
+  }
+
+  function repairLog(msg, type = '') {
+    const el = document.getElementById('repairOutput');
+    el.style.display = 'block';
+    const colors = { success: '#4ade80', error: '#f87171', warning: '#fbbf24', info: '#38bdf8' };
+    const color = colors[type] || '#a5f3fc';
+    el.innerHTML += `<span style="color:${color}">${msg}</span>\n`;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  window.scanOrphanedStats = async function() {
+    orphanedEntries = [];
+    document.getElementById('repairOutput').style.display = 'none';
+    document.getElementById('repairOutput').innerHTML = '';
+    document.getElementById('repairPreview').style.display = 'none';
+    document.getElementById('repairTestBtn').style.display = 'none';
+    document.getElementById('repairBtn').style.display = 'none';
+
+    repairLog('Scanning for orphaned stats — checking auth users with linkedPlayer...', 'info');
+
+    try {
+      // Load all users, find auth users (UID-based IDs) who have linkedPlayer set
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const candidates = [];
+      usersSnap.forEach(d => {
+        const data = d.data();
+        // Auth users: Firebase UID (long alphanumeric, no underscores) + has linkedPlayer
+        if (isFirebaseUID(d.id) && data.linkedPlayer) {
+          candidates.push({ uid: d.id, linkedPlayer: data.linkedPlayer });
+        }
+      });
+
+      repairLog(`Found ${candidates.length} auth users with linkedPlayer — checking each for orphaned playerStats/pitchingStats...`, 'info');
+
+      for (const c of candidates) {
+        const legacyId = c.linkedPlayer.toLowerCase().replace(/\./g, '').replace(/'/g, '').replace(/\s+/g, '_');
+
+        // Check playerStats/{uid} and pitchingStats/{uid}
+        const sSnap  = await getDocs(collection(db, 'playerStats',  c.uid, 'seasons'));
+        const gSnap  = await getDocs(collection(db, 'playerStats',  c.uid, 'games'));
+        const psSnap = await getDocs(collection(db, 'pitchingStats', c.uid, 'seasons'));
+        const pgSnap = await getDocs(collection(db, 'pitchingStats', c.uid, 'games'));
+
+        if (sSnap.empty && gSnap.empty && psSnap.empty && pgSnap.empty) continue;
+
+        orphanedEntries.push({
+          uid: c.uid,
+          playerName: c.linkedPlayer,
+          legacyId,
+          seasonDocs: sSnap.docs,
+          gameDocs: gSnap.docs,
+          pitchingSeasonDocs: psSnap.docs,
+          pitchingGameDocs: pgSnap.docs
+        });
+
+        repairLog(`  ⚠️  ${c.uid} → "${c.linkedPlayer}" (legacy: ${legacyId}) — batting: ${sSnap.size} seasons, ${gSnap.size} games | pitching: ${psSnap.size} seasons, ${pgSnap.size} games`, 'warning');
+      }
+
+      if (orphanedEntries.length === 0) {
+        repairLog('✅ No orphaned stats found. Nothing to repair.', 'success');
+        return;
+      }
+
+      // Build preview table
+      const tbody = document.getElementById('repairTableBody');
+      tbody.innerHTML = orphanedEntries.map(e => `
+        <tr style="border-bottom:1px solid #f0f0f0;">
+          <td style="padding:8px 12px; font-family:monospace; font-size:0.8rem; color:#64748b;">${e.uid}</td>
+          <td style="padding:8px 12px; font-weight:600;">${e.playerName}</td>
+          <td style="padding:8px 12px; font-family:monospace; font-size:0.85rem; color:#7c3aed;">${e.legacyId}</td>
+          <td style="padding:8px 12px; text-align:center;">${e.seasonDocs.length} / ${e.pitchingSeasonDocs.length}</td>
+          <td style="padding:8px 12px; text-align:center;">${e.gameDocs.length} / ${e.pitchingGameDocs.length}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('repairSummary').textContent =
+        `${orphanedEntries.length} player(s) with orphaned stats found. Review above, then use Test or Execute.`;
+      document.getElementById('repairPreview').style.display = 'block';
+      document.getElementById('repairTestBtn').style.display = 'inline-flex';
+      document.getElementById('repairBtn').style.display = 'inline-flex';
+
+    } catch (err) {
+      repairLog(`❌ Scan failed: ${err.message}`, 'error');
+      console.error(err);
+    }
+  };
+
+  window.repairOrphanedStats = async function(testMode) {
+    if (orphanedEntries.length === 0) {
+      showToast('Run scan first', 'warning');
+      return;
+    }
+
+    const confirmMsg = testMode
+      ? 'Run repair in TEST MODE? (No changes will be saved)'
+      : `Move stats for ${orphanedEntries.length} player(s) from UID paths to legacy paths and delete orphaned docs?\n\nRun the Aggregator afterward.`;
+    if (!confirm(confirmMsg)) return;
+
+    document.getElementById('repairTestBtn').disabled = true;
+    document.getElementById('repairBtn').disabled = true;
+    document.getElementById('repairOutput').innerHTML = '';
+
+    repairLog(`${'═'.repeat(50)}`, 'info');
+    repairLog(testMode ? '🧪 TEST MODE — no writes' : '⚡ EXECUTING REPAIR', 'info');
+    repairLog(`${'═'.repeat(50)}`, 'info');
+
+    let totalMoved = 0, totalDeleted = 0, errors = 0;
+
+    for (const entry of orphanedEntries) {
+      repairLog(`\nPlayer: ${entry.playerName}`, 'info');
+      repairLog(`  From: playerStats/${entry.uid}/`, 'warning');
+      repairLog(`  To:   playerStats/${entry.legacyId}/`, 'info');
+
+      try {
+        // Move batting seasons
+        for (const seasonDoc of entry.seasonDocs) {
+          const seasonId = seasonDoc.id;
+          repairLog(`  → batting season: ${seasonId}`, 'info');
+          if (!testMode) {
+            await setDoc(doc(db, 'playerStats', entry.legacyId, 'seasons', seasonId), {
+              ...seasonDoc.data(),
+              repairedFrom: entry.uid,
+              repairedAt: new Date().toISOString()
+            });
+            await deleteDoc(doc(db, 'playerStats', entry.uid, 'seasons', seasonId));
+          }
+          totalMoved++;
+        }
+
+        // Move batting games
+        for (const gameDoc of entry.gameDocs) {
+          const gameId = gameDoc.id;
+          repairLog(`  → batting game: ${gameId}`, 'info');
+          if (!testMode) {
+            await setDoc(doc(db, 'playerStats', entry.legacyId, 'games', gameId), {
+              ...gameDoc.data(),
+              repairedFrom: entry.uid,
+              repairedAt: new Date().toISOString()
+            });
+            await deleteDoc(doc(db, 'playerStats', entry.uid, 'games', gameId));
+          }
+          totalMoved++;
+        }
+
+        // Move pitching seasons
+        for (const seasonDoc of entry.pitchingSeasonDocs) {
+          const seasonId = seasonDoc.id;
+          repairLog(`  → pitching season: ${seasonId}`, 'info');
+          if (!testMode) {
+            await setDoc(doc(db, 'pitchingStats', entry.legacyId, 'seasons', seasonId), {
+              ...seasonDoc.data(),
+              repairedFrom: entry.uid,
+              repairedAt: new Date().toISOString()
+            });
+            await deleteDoc(doc(db, 'pitchingStats', entry.uid, 'seasons', seasonId));
+          }
+          totalMoved++;
+        }
+
+        // Move pitching games
+        for (const gameDoc of entry.pitchingGameDocs) {
+          const gameId = gameDoc.id;
+          repairLog(`  → pitching game: ${gameId}`, 'info');
+          if (!testMode) {
+            await setDoc(doc(db, 'pitchingStats', entry.legacyId, 'games', gameId), {
+              ...gameDoc.data(),
+              repairedFrom: entry.uid,
+              repairedAt: new Date().toISOString()
+            });
+            await deleteDoc(doc(db, 'pitchingStats', entry.uid, 'games', gameId));
+          }
+          totalMoved++;
+        }
+
+        repairLog(`  ✅ ${entry.playerName} — ${entry.seasonDocs.length} batting seasons, ${entry.gameDocs.length} batting games, ${entry.pitchingSeasonDocs.length} pitching seasons, ${entry.pitchingGameDocs.length} pitching games moved`, 'success');
+
+      } catch (err) {
+        repairLog(`  ❌ Error on ${entry.playerName}: ${err.message}`, 'error');
+        errors++;
+      }
+    }
+
+    repairLog(`\n${'═'.repeat(50)}`, 'info');
+    repairLog(testMode
+      ? `🧪 Test complete: ${totalMoved} docs would move, ${errors} errors`
+      : `✅ Done: ${totalMoved} docs moved, ${errors} errors`, errors ? 'warning' : 'success');
+    repairLog(`Remember to run the Aggregator to rebuild career totals!`, 'warning');
+
+    document.getElementById('repairTestBtn').disabled = false;
+    document.getElementById('repairBtn').disabled = false;
+
+    if (!testMode) showToast(`Repair complete: ${totalMoved} docs moved, ${errors} errors`, errors ? 'warning' : 'success');
+  };
+</script>
+
+<script>
+(function() {
+  let emailFileRows  = [];
+  let emailMatchRows = [];
+
+  // Levenshtein similarity 0-1
+  function similarity(a, b) {
+    a = (a || '').toLowerCase().trim();
+    b = (b || '').toLowerCase().trim();
+    if (a === b) return 1;
+    if (!a || !b) return 0;
+    const la = a.length, lb = b.length;
+    const dp = Array.from({length: la + 1}, (_, i) => [i]);
+    for (let j = 1; j <= lb; j++) dp[0][j] = j;
+    for (let i = 1; i <= la; i++) {
+      for (let j = 1; j <= lb; j++) {
+        dp[i][j] = a[i-1] === b[j-1]
+          ? dp[i-1][j-1]
+          : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+      }
+    }
+    return 1 - dp[la][lb] / Math.max(la, lb);
+  }
+
+  // File upload handling
+  const zone  = document.getElementById('emailUploadZone');
+  const input = document.getElementById('emailFileInput');
+
+  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.style.background = '#e0f2fe'; });
+  zone.addEventListener('dragleave', ()  => { zone.style.background = '#f0f9ff'; });
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.style.background = '#f0f9ff';
+    handleEmailFile(e.dataTransfer.files[0]);
+  });
+  input.addEventListener('change', () => { if (input.files[0]) handleEmailFile(input.files[0]); });
+
+  function handleEmailFile(file) {
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        let rows;
+        if (ext === 'csv') {
+          rows = parseCSV(e.target.result);
+        } else {
+          const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
+          rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval: ''});
+        }
+        if (!rows || rows.length === 0) { alert('No rows found in file.'); return; }
+        emailFileRows = rows;
+        populateColumnSelects(Object.keys(rows[0]));
+        document.getElementById('emailColumnConfig').style.display = 'block';
+        document.getElementById('emailMatchPreview').style.display = 'none';
+        zone.innerHTML = `<div style="font-size:2rem;">✅</div><p style="margin:0;color:#0369a1;font-weight:600;">${file.name} — ${rows.length} rows loaded</p>`;
+      } catch(err) { alert('Error reading file: ' + err.message); }
+    };
+    if (ext === 'csv') reader.readAsText(file);
+    else reader.readAsArrayBuffer(file);
+  }
+
+  function parseCSV(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+    return lines.slice(1).map(line => {
+      const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g,''));
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = vals[i] || '');
+      return obj;
+    });
+  }
+
+  function populateColumnSelects(cols) {
+    ['emailNameCol','emailEmailCol'].forEach(id => {
+      const sel = document.getElementById(id);
+      sel.innerHTML = cols.map(c => `<option value="${c}">${c}</option>`).join('');
+    });
+    const guess = (candidates) => cols.find(c => candidates.includes(c.toLowerCase())) || cols[0];
+    document.getElementById('emailNameCol').value  = guess(['name','player','full name','player name']);
+    document.getElementById('emailEmailCol').value = guess(['email','email address','e-mail','address']);
+  }
+
+  window.runEmailMatch = function() {
+    const nameCol   = document.getElementById('emailNameCol').value;
+    const emailCol  = document.getElementById('emailEmailCol').value;
+    const threshold = parseFloat(document.getElementById('emailMatchThreshold').value);
+
+    if (!emailFileRows.length) { alert('No file loaded.'); return; }
+
+    const candidates = (window._emailAllPlayers || [])
+      .filter(p => !p._isMigrated && !p._isAuthUser); // only non-auth, non-migrated legacy players
+
+    if (candidates.length === 0) {
+      alert('Player list not loaded yet. Make sure the page has finished loading players above, then try again.');
+      return;
+    }
+
+    emailMatchRows = emailFileRows.map(row => {
+      const fileName = (row[nameCol] || '').trim();
+      const newEmail = (row[emailCol] || '').trim().toLowerCase();
+      if (!fileName || !newEmail) {
+        return { fileName, newEmail, matched: null, score: 0, skip: true, skipReason: 'Missing name or email' };
+      }
+
+      let best = null, bestScore = 0;
+      candidates.forEach(p => {
+        const pName = (p.name || p.displayName || '').trim();
+        const s = similarity(fileName, pName);
+        // On tie, prefer auth user over legacy
+        if (s > bestScore) {
+          bestScore = s; best = p;
+        }
+      });
+
+      const skip = bestScore < threshold;
+      const sameEmail = best && (best.email || '').toLowerCase() === newEmail;
+
+      return {
+        fileName, newEmail,
+        matched: best || null,
+        score: bestScore,
+        skip,
+        skipReason: skip ? `Low confidence (${Math.round(bestScore*100)}%)` : null,
+        sameEmail
+      };
+    });
+
+    renderMatchTable();
+  };
+
+  function renderMatchTable() {
+    const tbody = document.getElementById('emailMatchTableBody');
+    let toUpdate = 0, noChange = 0, unmatched = 0;
+
+    tbody.innerHTML = emailMatchRows.map((r, i) => {
+      const conf = Math.round(r.score * 100);
+      const confColor = conf >= 85 ? '#16a34a' : conf >= 70 ? '#d97706' : '#dc2626';
+      const currentEmail = r.matched ? (r.matched.email || '<em style="color:#aaa">none</em>') : '—';
+      // The users/ doc ID for this player
+      const usersDocId = r.matched ? r.matched.id : '—';
+      let statusBadge, checked = false, rowBg = 'white';
+
+      if (r.skip) {
+        statusBadge = `<span style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;">NO MATCH</span>`;
+        rowBg = '#fef2f2'; unmatched++;
+      } else if (r.sameEmail) {
+        statusBadge = `<span style="background:#f0fdf4;color:#16a34a;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;">NO CHANGE</span>`;
+        rowBg = '#f0fdf4'; noChange++;
+      } else {
+        statusBadge = `<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;">UPDATE</span>`;
+        checked = true; toUpdate++;
+      }
+
+      return `<tr style="background:${rowBg}; border-bottom: 1px solid #f0f0f0;">
+        <td style="padding:9px 14px; text-align:center;">
+          <input type="checkbox" class="email-row-check" data-idx="${i}"
+            ${checked ? 'checked' : ''} ${r.skip || r.sameEmail ? 'disabled' : ''}
+            style="accent-color:#0369a1; width:16px; height:16px;">
+        </td>
+        <td style="padding:9px 14px; font-weight:500;">${r.fileName}</td>
+        <td style="padding:9px 14px;">${r.matched ? (r.matched.name || r.matched.displayName || '—') : '<em style="color:#aaa">—</em>'}</td>
+        <td style="padding:9px 14px; font-family:monospace; font-size:0.82rem; color:#64748b;">${usersDocId}</td>
+        <td style="padding:9px 14px; font-weight:700; color:${confColor};">${r.matched ? conf + '%' : '—'}</td>
+        <td style="padding:9px 14px; color:#0369a1;">${r.newEmail}</td>
+        <td style="padding:9px 14px; color:var(--text-light); font-size:0.85rem;">${currentEmail}</td>
+        <td style="padding:9px 14px;">${statusBadge}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('emailMatchStats').innerHTML = [
+      `<span style="background:#dbeafe;color:#1d4ed8;padding:4px 12px;border-radius:20px;font-size:0.82rem;font-weight:600;">✏️ ${toUpdate} to update</span>`,
+      `<span style="background:#dcfce7;color:#16a34a;padding:4px 12px;border-radius:20px;font-size:0.82rem;font-weight:600;">✅ ${noChange} no change</span>`,
+      `<span style="background:#fee2e2;color:#dc2626;padding:4px 12px;border-radius:20px;font-size:0.82rem;font-weight:600;">⚠️ ${unmatched} unmatched</span>`,
+    ].join('');
+
+    document.getElementById('emailMatchPreview').style.display = 'block';
+    document.getElementById('selectAllEmailMatches').checked = true;
+  }
+
+  window.toggleAllEmailRows = function(checked) {
+    document.querySelectorAll('.email-row-check:not(:disabled)').forEach(cb => cb.checked = checked);
+  };
+
+  window.executeEmailUpdate = async function(testMode) {
+    const checked = [...document.querySelectorAll('.email-row-check:checked')]
+      .map(cb => parseInt(cb.dataset.idx));
+    if (!checked.length) { alert('No rows selected.'); return; }
+
+    const btn    = document.getElementById('emailUpdateBtn');
+    const status = document.getElementById('emailUpdateStatus');
+    btn.disabled = true;
+    status.textContent = testMode ? '🧪 Running test...' : '⏳ Applying updates...';
+
+    const { doc, updateDoc } = window._fbFirestore;
+    const db = window._fbDb;
+    let updated = 0, errors = 0;
+
+    for (const idx of checked) {
+      const r = emailMatchRows[idx];
+      if (!r || !r.matched || r.skip) continue;
+      const docId   = r.matched.id;   // users/ document ID (UID or legacy snake_case)
+      const newEmail = r.newEmail;
+
+      if (typeof log === 'function') log(`${testMode ? '[TEST] ' : ''}${r.matched.name || docId} → ${newEmail}`, 'info');
+
+      if (!testMode) {
+        try {
+          await updateDoc(doc(db, 'users', docId), {
+            email: newEmail,
+            emailUpdatedAt: new Date().toISOString(),
+            emailUpdatedBy: 'bulk-import'
+          });
+          r.matched.email = newEmail;  // reflect in memory
+          updated++;
+          if (typeof log === 'function') log(`  ✅ Updated users/${docId}`, 'success');
+        } catch(err) {
+          errors++;
+          if (typeof log === 'function') log(`  ❌ Error on users/${docId}: ${err.message}`, 'error');
+        }
+      } else {
+        updated++;
+      }
+    }
+
+    status.textContent = testMode
+      ? `🧪 Test complete: ${updated} would update, ${errors} errors`
+      : `✅ Done: ${updated} updated, ${errors} errors`;
+    btn.disabled = false;
+
+    if (!testMode) {
+      if (typeof showToast === 'function') showToast(`Email update: ${updated} updated, ${errors} errors`, errors ? 'warning' : 'success');
+      renderMatchTable();
+    }
+  };
+
+  window.resetEmailImport = function() {
+    emailFileRows = []; emailMatchRows = [];
+    document.getElementById('emailColumnConfig').style.display  = 'none';
+    document.getElementById('emailMatchPreview').style.display  = 'none';
+    document.getElementById('emailFileInput').value = '';
+    document.getElementById('emailUpdateStatus').textContent = '';
+    document.getElementById('emailUploadZone').innerHTML = `
+      <div style="font-size:2.5rem;margin-bottom:8px;">📧</div>
+      <p style="margin:0;color:var(--text-light);"><strong style="color:#0369a1;">Click to upload</strong> or drag &amp; drop</p>
+      <p style="margin:4px 0 0;font-size:0.8rem;color:var(--text-light);">CSV, XLSX, or XLS</p>`;
+  };
+})();
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="mobile-enhancements.js"></script>
+</body>
+</html>

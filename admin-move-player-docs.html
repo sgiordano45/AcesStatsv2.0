@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Move Player Game Docs - One Time Fix</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #1a1a2e; color: #eee; }
+  .container { background: #16213e; border-radius: 12px; padding: 30px; }
+  label { display: block; margin: 12px 0 4px; font-size: 14px; }
+  input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #0f1a30; color: #eee; box-sizing: border-box; }
+  button { margin: 16px 8px 0 0; padding: 10px 18px; border: 0; border-radius: 6px; background: #3b82f6; color: #fff; cursor: pointer; }
+  button.danger { background: #dc2626; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  pre { background: #0b1220; padding: 12px; border-radius: 8px; height: 300px; overflow: auto; font-size: 13px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Move Player Game Docs</h1>
+  <p>Copies every doc in <code>playerStats/{from}/games</code> and <code>pitchingStats/{from}/games</code> to <code>{to}</code> and sets <code>playerId</code>. Does NOT delete the originals.</p>
+  <label>From ID (wrong)</label>
+  <input id="fromId" value="paul_treyman_jr.">
+  <label>To ID (correct)</label>
+  <input id="toId" value="paul_treyman_jr">
+  <button id="previewBtn" disabled>Preview</button>
+  <button id="runBtn" class="danger" disabled>Copy Docs</button>
+  <pre id="output"></pre>
+</div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { getFirestore, collection, doc, getDocs, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  const app = initializeApp({
+    apiKey: "AIzaSyCAEWkrTcprzJ2KPPJu-vFJPvYOVU4ky20",
+    authDomain: "acessoftballreference-84791.firebaseapp.com",
+    projectId: "acessoftballreference-84791",
+    storageBucket: "acessoftballreference-84791.firebasestorage.app",
+    messagingSenderId: "777699560175",
+    appId: "1:777699560175:web:4092b422e7d7116352e91a"
+  });
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const out = document.getElementById('output');
+  const log = m => { out.textContent += m + '\n'; out.scrollTop = out.scrollHeight; };
+
+  async function run(commit) {
+    const from = document.getElementById('fromId').value.trim();
+    const to = document.getElementById('toId').value.trim();
+    if (!from || !to || from === to) { log('Invalid IDs.'); return; }
+    let count = 0;
+    for (const coll of ['playerStats', 'pitchingStats']) {
+      const snap = await getDocs(collection(db, coll, from, 'games'));
+      log(`${coll}/${from}/games: ${snap.size} doc(s)`);
+      for (const d of snap.docs) {
+        log(`  ${commit ? 'Copying' : 'Would copy'} ${d.id}`);
+        if (commit) {
+          await setDoc(doc(db, coll, to, 'games', d.id), { ...d.data(), playerId: to, movedFrom: from }, { merge: true });
+        }
+        count++;
+      }
+    }
+    log(commit ? `Done. ${count} doc(s) copied. Delete the originals and re-run aggregation.` : `Preview complete: ${count} doc(s).`);
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { log('Not signed in. Sign in on the main site first.'); return; }
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    const u = snap.exists() ? snap.data() : {};
+    const role = u.userRole || u.role || '';
+    if (role === 'admin' || role === 'league-staff' || u.isAdmin) {
+      log('Signed in as ' + user.email);
+      document.getElementById('previewBtn').disabled = false;
+      document.getElementById('runBtn').disabled = false;
+    } else {
+      log('Access denied. Role: ' + role);
+    }
+  });
+
+  document.getElementById('previewBtn').onclick = () => run(false).catch(e => log('Error: ' + e.message));
+  document.getElementById('runBtn').onclick = () => run(true).catch(e => log('Error: ' + e.message));
+</script>
+</body>
+</html>

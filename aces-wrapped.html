@@ -1,0 +1,2206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aces Wrapped 2025</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* Loading Overlay */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.3s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .softball-spinner::before {
+    content: '⚾';
+    font-size: 80px;
+    display: block;
+    animation: spin 1.5s ease-in-out infinite;
+    margin-bottom: 20px;
+  }
+
+  .softball-spinner::after {
+    content: 'Loading your season...';
+    display: block;
+    font-size: 1.2rem;
+    color: #4a5568;
+    font-weight: 600;
+  }
+
+  @keyframes spin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+  }
+
+  /* Wrapped Container */
+  .wrapped-container {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Card */
+  .wrapped-card {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .wrapped-card.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .wrapped-card h1 {
+    font-size: clamp(2rem, 8vw, 5rem);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: white;
+  }
+
+  .wrapped-card h2 {
+    font-size: clamp(1.5rem, 5vw, 4rem);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: white;
+  }
+
+  .wrapped-card h3 {
+    font-size: clamp(1.2rem, 4vw, 3rem);
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .wrapped-card p {
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 800px;
+  }
+
+  /* Stats Display */
+  .big-number {
+    font-size: clamp(4rem, 15vw, 10rem);
+    font-weight: 900;
+    color: #14b8a6;
+    line-height: 1;
+    margin: 1rem 0;
+  }
+
+  .stat-label {
+    font-size: clamp(1rem, 3vw, 2rem);
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+  }
+
+  /* Progress Bar */
+  .progress-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 2rem auto;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #14b8a6 100%);
+    border-radius: 20px;
+    transition: width 1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 15px;
+    color: white;
+    font-weight: 700;
+  }
+
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 2rem;
+    max-width: 800px;
+    margin: 2rem auto;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    font-weight: 800;
+    color: #14b8a6;
+  }
+
+  .stat-name {
+    font-size: clamp(0.9rem, 2vw, 1.2rem);
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 0.5rem;
+  }
+
+  /* Milestone Cards */
+  .milestones-list {
+    max-width: 600px;
+    margin: 2rem auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .milestone-item {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-align: left;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .milestone-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+
+  .milestone-text {
+    color: white;
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    font-weight: 600;
+  }
+
+  /* Navigation */
+  .nav-dots {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 100;
+  }
+
+  .nav-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .nav-dot.active {
+    width: 30px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  /* Navigation Buttons */
+  .nav-button {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 100;
+  }
+
+  .nav-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  .nav-button.prev {
+    left: 2rem;
+  }
+
+  .nav-button.next {
+    right: 2rem;
+  }
+
+  /* Instructions */
+  .instructions {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    z-index: 100;
+  }
+
+  /* Replay Button */
+  .replay-button {
+    padding: 1rem 2rem;
+    background: #14b8a6;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 2rem;
+  }
+
+  .replay-button:hover {
+    background: #0d9488;
+    transform: scale(1.05);
+  }
+
+  /* Share Button */
+  .share-button {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .share-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+  }
+
+  /* Share Modal */
+  .share-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 2rem;
+  }
+
+  .share-modal.active {
+    display: flex;
+  }
+
+  .share-modal-content {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    position: relative;
+  }
+
+  .share-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.3s ease;
+  }
+
+  .share-modal-close:hover {
+    color: #000;
+  }
+
+  .share-modal h3 {
+    color: var(--text-dark, #2d3748);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+  }
+
+  .share-link-container {
+    background: #f7fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .share-link-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    font-size: 0.9rem;
+    color: #2d3748;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .share-link-input:focus {
+    outline: none;
+  }
+
+  .copy-link-btn {
+    padding: 0.5rem 1rem;
+    background: #14b8a6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .copy-link-btn:hover {
+    background: #0d9488;
+  }
+
+  .copy-link-btn.copied {
+    background: #10b981;
+  }
+
+  .share-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+
+  .share-platform-btn {
+    padding: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: #2d3748;
+  }
+
+  .share-platform-btn:hover {
+    border-color: #14b8a6;
+    background: #f0fdfa;
+    transform: translateY(-2px);
+  }
+
+  .share-platform-icon {
+    font-size: 2rem;
+  }
+
+  .share-platform-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  /* Best Game Card */
+  .best-game-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    border-radius: 20px;
+    max-width: 600px;
+    margin: 2rem auto;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .best-game-opponent {
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 1rem;
+  }
+
+  .best-game-stats {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    color: #14b8a6;
+    margin: 1rem 0;
+  }
+
+  .best-game-result {
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    color: #10b981;
+    font-weight: 700;
+  }
+
+  /* Team Stats */
+  .team-record {
+    display: flex;
+    gap: 3rem;
+    justify-content: center;
+    margin: 2rem 0;
+  }
+
+  .record-item {
+    text-align: center;
+  }
+
+  .record-number {
+    font-size: clamp(3rem, 10vw, 6rem);
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .wins { color: #10b981; }
+  .losses { color: #ef4444; }
+
+  @media (max-width: 768px) {
+    .nav-button {
+      width: 50px;
+      height: 50px;
+    }
+
+    .nav-button.prev {
+      left: 1rem;
+    }
+
+    .nav-button.next {
+      right: 1rem;
+    }
+
+    .instructions {
+      display: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<!-- Navigation Component -->
+<nav-component></nav-component>
+
+<!-- Wrapped Container -->
+<div id="wrappedContainer" class="wrapped-container" style="display: none;">
+  <!-- Cards will be generated dynamically -->
+</div>
+
+<!-- Navigation Dots -->
+<div id="navDots" class="nav-dots" style="display: none;"></div>
+
+<!-- Navigation Buttons -->
+<button id="prevButton" class="nav-button prev" style="display: none;">←</button>
+<button id="nextButton" class="nav-button next" style="display: none;">→</button>
+
+<!-- Instructions -->
+<div class="instructions" id="instructions" style="display: none;">
+  Use arrow keys or click to navigate
+</div>
+
+<!-- Share Button -->
+<button id="shareButton" class="share-button" style="display: none;">
+  <span>📤</span> Share
+</button>
+
+<!-- Share Modal -->
+<div id="shareModal" class="share-modal">
+  <div class="share-modal-content">
+    <button class="share-modal-close" onclick="closeShareModal()">✕</button>
+    <h3>Share Your Aces Wrapped</h3>
+    
+    <div class="share-link-container">
+      <input type="text" class="share-link-input" id="shareLink" readonly>
+      <button class="copy-link-btn" id="copyLinkBtn" onclick="copyShareLink()">
+        Copy Link
+      </button>
+    </div>
+
+    <div class="share-buttons">
+      <a id="shareWhatsApp" class="share-platform-btn" target="_blank">
+        <div class="share-platform-icon">💬</div>
+        <div class="share-platform-name">WhatsApp</div>
+      </a>
+      <a id="shareText" class="share-platform-btn" target="_blank">
+        <div class="share-platform-icon">💬</div>
+        <div class="share-platform-name">Text Message</div>
+      </a>
+      <a id="shareTwitter" class="share-platform-btn" target="_blank">
+        <div class="share-platform-icon">🐦</div>
+        <div class="share-platform-name">Twitter</div>
+      </a>
+      <a id="shareFacebook" class="share-platform-btn" target="_blank">
+        <div class="share-platform-icon">📘</div>
+        <div class="share-platform-name">Facebook</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { db, collection, doc, getDoc, getDocs } from './firebase-config.js';
+import { getCurrentUser } from './firebase-auth.js';
+
+// Team colors mapping - using accents instead of full backgrounds for readability
+const teamColors = {
+  'Black': { 
+    primary: '#1a1a1a', 
+    gradient: 'linear-gradient(135deg, #1a1a3a 0%, #2d2d4d 100%)',
+    accent: '#4a4a6a'
+  },
+  'Green': { 
+    primary: '#2d7d32', 
+    gradient: 'linear-gradient(135deg, #1a2d1e 0%, #2d4d32 100%)',
+    accent: '#2d7d32'
+  },
+  'Red': { 
+    primary: '#d32f2f', 
+    gradient: 'linear-gradient(135deg, #2d1a1a 0%, #4d2d2d 100%)',
+    accent: '#d32f2f'
+  },
+  'Blue': { 
+    primary: '#1976d2', 
+    gradient: 'linear-gradient(135deg, #1a2d3a 0%, #2d3d4d 100%)',
+    accent: '#1976d2'
+  },
+  'White': { 
+    primary: '#f5f5f5', 
+    gradient: 'linear-gradient(135deg, #2d2d3a 0%, #3d3d4d 100%)',
+    accent: '#e0e0e0'
+  },
+  'Orange': { 
+    primary: '#f57c00', 
+    gradient: 'linear-gradient(135deg, #2d1f0a 0%, #4d3520 100%)',
+    accent: '#f57c00'
+  },
+  'Silver': { 
+    primary: '#757575', 
+    gradient: 'linear-gradient(135deg, #2d2d2d 0%, #4d4d4d 100%)',
+    accent: '#9e9e9e'
+  },
+  'Purple': { 
+    primary: '#7b1fa2', 
+    gradient: 'linear-gradient(135deg, #1f0a2d 0%, #35204d 100%)',
+    accent: '#7b1fa2'
+  },
+  'Gold': { 
+    primary: '#CFB53B', 
+    gradient: 'linear-gradient(135deg, #2d2710 0%, #4d4520 100%)',
+    accent: '#CFB53B'
+  },
+  'Carolina': { 
+    primary: '#4b9cd3', 
+    gradient: 'linear-gradient(135deg, #1a2d3a 0%, #2d4d5d 100%)',
+    accent: '#4b9cd3'
+  },
+  'Army': { 
+    primary: '#654321', 
+    gradient: 'linear-gradient(135deg, #1f1510 0%, #352520 100%)',
+    accent: '#654321'
+  }
+};
+
+// State
+let currentCardIndex = 0;
+let cards = [];
+let isAnimating = false;
+
+// Get player ID from URL or use current user
+const urlParams = new URLSearchParams(window.location.search);
+const playerIdParam = urlParams.get('id');
+
+// Get team record(s) for 2025 seasons by calculating from games
+async function getTeamRecords(summerTeam, fallTeam) {
+  console.log('🏆 Calculating team records from games:', { summerTeam, fallTeam });
+  
+  try {
+    let combinedRecord = { wins: 0, losses: 0, teams: [] };
+    
+    // Helper to get a single team's record from games
+    async function getTeamRecordFromGames(teamName, seasonId) {
+      if (!teamName) return null;
+      
+      try {
+        console.log(`📊 Calculating ${teamName} record for ${seasonId}...`);
+        
+        // Get games for this season
+        const { getSeasonGames } = await import('./firebase-data.js');
+        const games = await getSeasonGames(seasonId);
+        
+        if (!games || games.length === 0) {
+          console.warn(`⚠️ No games found for season ${seasonId}`);
+          return null;
+        }
+        
+        // Calculate record for this team
+        let wins = 0;
+        let losses = 0;
+        
+        games.forEach(game => {
+          // Use correct field names from your structure
+          const homeTeam = game.homeTeamName || game["home team"];
+          const awayTeam = game.awayTeamName || game["away team"];
+          const homeTeamId = game.homeTeamId;
+          const awayTeamId = game.awayTeamId;
+          const winner = game.winner; // This is lowercase team ID
+          
+          // Check if this team is playing (using team name)
+          const isPlaying = homeTeam === teamName || awayTeam === teamName;
+          
+          if (!isPlaying || !winner || game.status !== 'completed') {
+            return; // Skip this game
+          }
+          
+          // Determine if this team won
+          // winner is lowercase ID, so compare against homeTeamId/awayTeamId
+          let thisTeamWon = false;
+          if (homeTeam === teamName) {
+            thisTeamWon = (winner === homeTeamId);
+            console.log(`  Game: ${homeTeam} vs ${awayTeam} | Winner ID: ${winner} | Home ID: ${homeTeamId} | We won: ${thisTeamWon}`);
+          } else if (awayTeam === teamName) {
+            thisTeamWon = (winner === awayTeamId);
+            console.log(`  Game: ${homeTeam} vs ${awayTeam} | Winner ID: ${winner} | Away ID: ${awayTeamId} | We won: ${thisTeamWon}`);
+          }
+          
+          if (thisTeamWon) {
+            wins++;
+          } else {
+            losses++;
+          }
+        });
+        
+        console.log(`✅ ${teamName} ${seasonId}: ${wins}-${losses}`);
+        
+        return {
+          wins,
+          losses,
+          team: teamName,
+          season: seasonId.includes('summer') ? 'summer' : 'fall'
+        };
+        
+      } catch (error) {
+        console.error(`❌ Error calculating record for ${teamName} ${seasonId}:`, error);
+        return null;
+      }
+    }
+    
+    // Get summer team record
+    if (summerTeam) {
+      const summerRecord = await getTeamRecordFromGames(summerTeam, '2025-summer');
+      if (summerRecord) {
+        combinedRecord.wins += summerRecord.wins;
+        combinedRecord.losses += summerRecord.losses;
+        combinedRecord.teams.push(summerRecord);
+      }
+    }
+    
+    // Get fall team record (only if different from summer)
+    if (fallTeam && fallTeam !== summerTeam) {
+      const fallRecord = await getTeamRecordFromGames(fallTeam, '2025-fall');
+      if (fallRecord) {
+        combinedRecord.wins += fallRecord.wins;
+        combinedRecord.losses += fallRecord.losses;
+        combinedRecord.teams.push(fallRecord);
+      }
+    } else if (fallTeam && fallTeam === summerTeam) {
+      // Same team both seasons, get fall record
+      const fallRecord = await getTeamRecordFromGames(fallTeam, '2025-fall');
+      if (fallRecord) {
+        combinedRecord.wins += fallRecord.wins;
+        combinedRecord.losses += fallRecord.losses;
+        combinedRecord.teams.push(fallRecord);
+      }
+    }
+    
+    console.log('🏆 Final combined team record:', combinedRecord);
+    return combinedRecord;
+    
+  } catch (error) {
+    console.error('❌ Error getting team records:', error);
+    return { wins: 0, losses: 0, teams: [] };
+  }
+}
+
+// Check if player won a championship in 2025
+async function getChampionshipInfo(summerTeam, fallTeam) {
+  console.log('🏆 Checking for championships:', { summerTeam, fallTeam });
+  
+  try {
+    const championships = [];
+    
+    // Helper to check if team won championship in a season
+    async function checkChampionship(teamName, seasonId) {
+      if (!teamName) return null;
+      
+      try {
+        console.log(`🔍 Checking ${teamName} for ${seasonId} championship...`);
+        const { getSeasonGames } = await import('./firebase-data.js');
+        const games = await getSeasonGames(seasonId);
+        
+        if (!games || games.length === 0) {
+          console.log(`⚠️ No games found for ${seasonId}`);
+          return null;
+        }
+        
+        console.log(`📊 Found ${games.length} games in ${seasonId}`);
+        
+        // Find ALL championship games (there may be 2 in double elimination)
+        const champGames = games.filter(g => {
+          const gameType = (g.gameType || g.game_type || '').toLowerCase();
+          const round = (g.round || g.playoff_round || '').toLowerCase();
+          return gameType === 'playoff' && round.includes('champ');
+        });
+        
+        if (champGames.length === 0) {
+          console.log(`❌ No championship game found in ${seasonId}`);
+          console.log(`Checked ${games.length} games for gameType='playoff' and round contains 'champ'`);
+          return null;
+        }
+        
+        console.log(`🏆 Found ${champGames.length} championship game(s) in ${seasonId}`);
+        
+        // In double elimination, take the LAST championship game (the deciding game)
+        // Sort by date to get the final game
+        const sortedChampGames = champGames.sort((a, b) => {
+          const dateA = a.date?.seconds || 0;
+          const dateB = b.date?.seconds || 0;
+          return dateB - dateA; // Most recent first
+        });
+        
+        const champGame = sortedChampGames[0]; // Take the most recent championship game
+        
+        if (champGames.length > 1) {
+          console.log(`⚠️ Double elimination: ${champGames.length} championship games found - using the most recent (final) game`);
+          champGames.forEach((g, i) => {
+            const gameDate = g.date?.seconds ? new Date(g.date.seconds * 1000).toLocaleDateString() : 'Unknown date';
+            console.log(`  Game ${i + 1} (${gameDate}): ${g.homeTeamName} vs ${g.awayTeamName}, winner: ${g.winner}`);
+          });
+          console.log(`  → Selected: ${champGame.homeTeamName} vs ${champGame.awayTeamName} (most recent)`);
+        }
+        
+        console.log(`✅ Using championship game:`, {
+          homeTeam: champGame.homeTeamName,
+          awayTeam: champGame.awayTeamName,
+          winner: champGame.winner,
+          gameType: champGame.gameType,
+          round: champGame.round
+        });
+        
+        const homeTeam = champGame.homeTeamName || champGame["home team"];
+        const awayTeam = champGame.awayTeamName || champGame["away team"];
+        const homeTeamId = champGame.homeTeamId;
+        const awayTeamId = champGame.awayTeamId;
+        const winner = champGame.winner; // lowercase team ID
+        
+        console.log(`Championship details:`, {
+          homeTeam,
+          awayTeam,
+          homeTeamId,
+          awayTeamId,
+          winner,
+          lookingFor: teamName
+        });
+        
+        // Check if this team won (compare winner ID to team's ID)
+        let thisTeamWon = false;
+        if (homeTeam === teamName) {
+          thisTeamWon = (winner === homeTeamId);
+          console.log(`${teamName} was home team. Winner ID: ${winner}, Home ID: ${homeTeamId}, Won: ${thisTeamWon}`);
+        } else if (awayTeam === teamName) {
+          thisTeamWon = (winner === awayTeamId);
+          console.log(`${teamName} was away team. Winner ID: ${winner}, Away ID: ${awayTeamId}, Won: ${thisTeamWon}`);
+        } else {
+          console.log(`❌ ${teamName} was not in this championship game`);
+        }
+        
+        if (thisTeamWon) {
+          console.log(`🏆 ${teamName} won ${seasonId} championship!`);
+          
+          // Determine winner and loser scores
+          let winnerScore, loserScore;
+          if (homeTeam === teamName) {
+            // We're home team and won
+            winnerScore = champGame.homeScore;
+            loserScore = champGame.awayScore;
+          } else {
+            // We're away team and won
+            winnerScore = champGame.awayScore;
+            loserScore = champGame.homeScore;
+          }
+          
+          return {
+            season: seasonId.includes('summer') ? 'Summer' : 'Fall',
+            team: teamName,
+            opponent: homeTeam === teamName ? awayTeam : homeTeam,
+            score: {
+              winner: winnerScore,
+              loser: loserScore
+            }
+          };
+        }
+        
+        console.log(`❌ ${teamName} did not win the ${seasonId} championship`);
+        return null;
+      } catch (error) {
+        console.error(`Error checking championship for ${teamName} ${seasonId}:`, error);
+        return null;
+      }
+    }
+    
+    // Check summer
+    if (summerTeam) {
+      console.log(`🌞 Checking Summer championship for ${summerTeam}...`);
+      const summerChamp = await checkChampionship(summerTeam, '2025-summer');
+      if (summerChamp) {
+        console.log(`✅ ${summerTeam} won Summer championship!`, summerChamp);
+        championships.push(summerChamp);
+      } else {
+        console.log(`❌ ${summerTeam} did not win Summer championship`);
+      }
+    }
+    
+    // Check fall - ALWAYS check even if same team as summer
+    if (fallTeam) {
+      console.log(`🍂 Checking Fall championship for ${fallTeam}...`);
+      const fallChamp = await checkChampionship(fallTeam, '2025-fall');
+      if (fallChamp) {
+        console.log(`✅ ${fallTeam} won Fall championship!`, fallChamp);
+        championships.push(fallChamp);
+      } else {
+        console.log(`❌ ${fallTeam} did not win Fall championship`);
+      }
+    }
+    
+    console.log(`🏆 Total championships found: ${championships.length}`, championships);
+    return championships;
+    
+  } catch (error) {
+    console.error('Error checking championships:', error);
+    return [];
+  }
+}
+
+// Get 2025 combined league leaders (Summer + Fall)
+async function get2025LeagueLeaders() {
+  console.log('📊 Calculating 2025 combined league leaders...');
+  
+  try {
+    const statsRef = collection(db, 'aggregatedPlayerStats');
+    const snapshot = await getDocs(statsRef);
+    
+    const playerStats = [];
+    
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.migrated) return; // Skip migrated profiles
+      
+      let combinedStats = {
+        id: doc.id,
+        name: data.name || data.displayName || 'Unknown',
+        hits: 0,
+        walks: 0,
+        atBats: 0,
+        runs: 0
+      };
+      
+      // Combine 2025 Summer and Fall stats
+      if (data.seasons) {
+        Object.keys(data.seasons).forEach(seasonKey => {
+          if (seasonKey.startsWith('2025-summer') || seasonKey.startsWith('2025-fall')) {
+            const season = data.seasons[seasonKey];
+            combinedStats.hits += season.hits || 0;
+            combinedStats.walks += season.walks || 0;
+            combinedStats.atBats += season.atBats || 0;
+            combinedStats.runs += season.runs || 0;
+          }
+        });
+      }
+      
+      // Only include players with at least some activity
+      if (combinedStats.atBats > 0 || combinedStats.walks > 0) {
+        // Calculate derived stats
+        combinedStats.plateAppearances = combinedStats.atBats + combinedStats.walks;
+        combinedStats.battingAverage = combinedStats.atBats > 0 ? combinedStats.hits / combinedStats.atBats : 0;
+        combinedStats.onBasePercentage = combinedStats.plateAppearances > 0 
+          ? (combinedStats.hits + combinedStats.walks) / combinedStats.plateAppearances 
+          : 0;
+        
+        playerStats.push(combinedStats);
+      }
+    });
+    
+    // Calculate top 10 for each category
+    const minPlateAppearances = 40; // Minimum for qualified AVG/OBP
+    
+    // Hits leaders (top 10)
+    const hitsLeaders = [...playerStats]
+      .filter(p => p.hits > 0)
+      .sort((a, b) => b.hits - a.hits)
+      .slice(0, 10);
+    
+    // Walks leaders (top 10)
+    const walksLeaders = [...playerStats]
+      .filter(p => p.walks > 0)
+      .sort((a, b) => b.walks - a.walks)
+      .slice(0, 10);
+    
+    // Batting Average leaders (top 10, min 40 PA)
+    const avgLeaders = [...playerStats]
+      .filter(p => p.plateAppearances >= minPlateAppearances)
+      .sort((a, b) => b.battingAverage - a.battingAverage)
+      .slice(0, 10);
+    
+    // OBP leaders (top 10, min 40 PA)
+    const obpLeaders = [...playerStats]
+      .filter(p => p.plateAppearances >= minPlateAppearances)
+      .sort((a, b) => b.onBasePercentage - a.onBasePercentage)
+      .slice(0, 10);
+    
+    console.log(`✅ 2025 Leaders calculated:`, {
+      totalPlayers: playerStats.length,
+      hitsLeader: hitsLeaders[0]?.name,
+      walksLeader: walksLeaders[0]?.name,
+      avgLeader: avgLeaders[0]?.name,
+      obpLeader: obpLeaders[0]?.name
+    });
+    
+    return {
+      hits: hitsLeaders,
+      walks: walksLeaders,
+      battingAverage: avgLeaders,
+      onBasePercentage: obpLeaders
+    };
+    
+  } catch (error) {
+    console.error('Error calculating 2025 leaders:', error);
+    return {
+      hits: [],
+      walks: [],
+      battingAverage: [],
+      onBasePercentage: []
+    };
+  }
+}
+
+// Check if player is in top 10 for any category
+function checkTop10Status(playerId, leagueLeaders) {
+  const achievements = [];
+  
+  // Check hits
+  const hitsRank = leagueLeaders.hits.findIndex(p => p.id === playerId) + 1;
+  if (hitsRank > 0 && hitsRank <= 10) {
+    const playerData = leagueLeaders.hits[hitsRank - 1];
+    achievements.push({
+      category: 'Hits',
+      rank: hitsRank,
+      value: playerData.hits,
+      icon: '🎯'
+    });
+  }
+  
+  // Check walks
+  const walksRank = leagueLeaders.walks.findIndex(p => p.id === playerId) + 1;
+  if (walksRank > 0 && walksRank <= 10) {
+    const playerData = leagueLeaders.walks[walksRank - 1];
+    achievements.push({
+      category: 'Walks',
+      rank: walksRank,
+      value: playerData.walks,
+      icon: '👁️'
+    });
+  }
+  
+  // Check batting average
+  const avgRank = leagueLeaders.battingAverage.findIndex(p => p.id === playerId) + 1;
+  if (avgRank > 0 && avgRank <= 10) {
+    const playerData = leagueLeaders.battingAverage[avgRank - 1];
+    achievements.push({
+      category: 'Batting Average',
+      rank: avgRank,
+      value: playerData.battingAverage.toFixed(3).replace(/^0/, ''),
+      icon: '🥇'
+    });
+  }
+  
+  // Check OBP
+  const obpRank = leagueLeaders.onBasePercentage.findIndex(p => p.id === playerId) + 1;
+  if (obpRank > 0 && obpRank <= 10) {
+    const playerData = leagueLeaders.onBasePercentage[obpRank - 1];
+    achievements.push({
+      category: 'On-Base %',
+      rank: obpRank,
+      value: playerData.onBasePercentage.toFixed(3).replace(/^0/, ''),
+      icon: '📊'
+    });
+  }
+  
+  return achievements;
+}
+
+// Calculate league-wide stats for comparison
+async function getLeagueStats() {
+  try {
+    const statsRef = collection(db, 'aggregatedPlayerStats');
+    const snapshot = await getDocs(statsRef);
+    
+    let totalHits = 0;
+    let totalAtBats = 0;
+    let playerAverages = [];
+    
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.migrated) return; // Skip migrated profiles
+      
+      // Look for 2025 season data
+      if (data.seasons) {
+        Object.keys(data.seasons).forEach(seasonKey => {
+          if (seasonKey.startsWith('2025-summer') || seasonKey.startsWith('2025-fall')) {
+            const season = data.seasons[seasonKey];
+            const hits = season.hits || 0;
+            const atBats = season.atBats || 0;
+            
+            if (atBats > 0) {
+              totalHits += hits;
+              totalAtBats += atBats;
+              
+              // Track individual player averages for percentile
+              const existingPlayer = playerAverages.find(p => p.id === doc.id);
+              if (existingPlayer) {
+                existingPlayer.hits += hits;
+                existingPlayer.atBats += atBats;
+              } else {
+                playerAverages.push({
+                  id: doc.id,
+                  hits: hits,
+                  atBats: atBats
+                });
+              }
+            }
+          }
+        });
+      }
+    });
+    
+    // Calculate league average
+    const leagueAvg = totalAtBats > 0 ? (totalHits / totalAtBats) : 0.290;
+    
+    // Calculate percentiles
+    const qualifiedPlayers = playerAverages
+      .filter(p => p.atBats >= 10) // Minimum 10 at-bats to qualify
+      .map(p => ({
+        ...p,
+        avg: p.hits / p.atBats
+      }))
+      .sort((a, b) => a.avg - b.avg);
+    
+    return {
+      leagueAvg,
+      totalPlayers: qualifiedPlayers.length,
+      playerAverages: qualifiedPlayers
+    };
+    
+  } catch (error) {
+    console.error('Error calculating league stats:', error);
+    return {
+      leagueAvg: 0.290,
+      totalPlayers: 0,
+      playerAverages: []
+    };
+  }
+}
+
+async function loadPlayerData() {
+  try {
+    let playerId = playerIdParam;
+    
+    // If no ID in URL, try to get current user
+    if (!playerId) {
+      const user = await getCurrentUser();
+      if (user?.linkedPlayer) {
+        playerId = user.linkedPlayer;
+      } else if (user) {
+        // Try to find player by email
+        playerId = user.uid;
+      } else {
+        throw new Error('Please sign in to view your Aces Wrapped');
+      }
+    }
+
+    // Fetch player data from aggregatedPlayerStats
+    const playerRef = doc(db, 'aggregatedPlayerStats', playerId);
+    const playerSnap = await getDoc(playerRef);
+
+    if (!playerSnap.exists() || playerSnap.data().migrated) {
+      throw new Error('Player data not found');
+    }
+
+    const playerData = { id: playerSnap.id, ...playerSnap.data() };
+    
+    // Generate cards with player data
+    await generateCards(playerData);
+    
+    // Show wrapped container
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('wrappedContainer').style.display = 'block';
+    document.getElementById('navDots').style.display = 'flex';
+    document.getElementById('instructions').style.display = 'block';
+    document.getElementById('shareButton').style.display = 'flex';
+    
+    // Setup sharing
+    setupSharing(playerData);
+    
+    // Show first card
+    showCard(0);
+    
+  } catch (error) {
+    console.error('Error loading player data:', error);
+    document.getElementById('loadingOverlay').innerHTML = `
+      <div style="text-align: center; padding: 2rem;">
+        <h2 style="color: #ef4444; margin-bottom: 1rem;">Unable to Load Aces Wrapped</h2>
+        <p style="color: #666;">${error.message}</p>
+        <a href="index.html" style="display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; background: #2d7d32; color: white; text-decoration: none; border-radius: 8px;">Return to Home</a>
+      </div>
+    `;
+  }
+}
+
+async function generateCards(playerData) {
+  const container = document.getElementById('wrappedContainer');
+  const dotsContainer = document.getElementById('navDots');
+  
+  // Get league stats for comparison
+  const leagueStats = await getLeagueStats();
+  
+  // Get 2025 combined league leaders
+  const leagueLeaders = await get2025LeagueLeaders();
+  
+  // Check if player is in top 10 for any category
+  const top10Achievements = checkTop10Status(playerData.id, leagueLeaders);
+  
+  // Get 2025 season data (Summer + Fall combined)
+  const season2025Data = getCombined2025Stats(playerData);
+  
+  // Get game-level stats if available
+  const gameStats = await getGameLevelStats(playerData.id);
+  
+  // Get team records
+  const teamRecords = await getTeamRecords(season2025Data.summerTeam, season2025Data.fallTeam);
+  
+  // Get championship info
+  const championships = await getChampionshipInfo(season2025Data.summerTeam, season2025Data.fallTeam);
+  
+  // Determine team color (use fall team if changed, otherwise summer team or current team)
+  const finalTeam = season2025Data.fallTeam || season2025Data.summerTeam || playerData.currentTeam || 'Green';
+  const teamColor = getPlayerTeamColor(finalTeam);
+  
+  // Generate card data
+  const cardData = [
+    generateWelcomeCard(playerData, teamColor),
+    generateGamesCard(season2025Data, teamColor),
+    generateBattingCard(season2025Data, playerData, teamColor, leagueStats),
+    generateStatsCard(season2025Data, teamColor)
+  ];
+  
+  // Add championship card(s) if player won any titles
+  if (championships.length > 0) {
+    console.log(`🎉 Adding championship card with ${championships.length} championship(s):`, championships);
+    cardData.push(generateChampionshipCard(championships, teamColors));
+  }
+  
+  // Add league leaders card if player is top 10 in any category
+  if (top10Achievements.length > 0) {
+    console.log(`⭐ Adding league leaders card - top 10 in ${top10Achievements.length} categories:`, top10Achievements);
+    cardData.push(generateLeagueLeadersCard(top10Achievements, teamColor));
+  }
+  
+  // Add team change card if player changed teams
+  if (season2025Data.teamChanged) {
+    cardData.push(generateTeamChangeCard(season2025Data, teamColors));
+  }
+  
+  // Add game highlights if available
+  if (gameStats) {
+    if (gameStats.bestGame) {
+      cardData.push(generateBestGameCard(gameStats.bestGame, teamColor));
+    }
+    if (gameStats.longestStreak > 1 || gameStats.multiHitGames > 0) {
+      cardData.push(generateGameHighlightsCard(gameStats, teamColor));
+    }
+  }
+  
+  // Add milestones
+  const milestoneCards = generateMilestoneCards(playerData, teamColor);
+  cardData.push(...milestoneCards);
+  
+  // Add team card (using final team)
+  cardData.push(generateTeamCard(season2025Data, playerData, teamColor, finalTeam, teamRecords));
+  
+  // Add summary
+  cardData.push(generateSummaryCard(season2025Data, playerData, teamColor));
+
+  cards = cardData;
+
+  // Render cards
+  cardData.forEach((card, index) => {
+    const cardEl = document.createElement('div');
+    cardEl.className = 'wrapped-card hidden';
+    cardEl.id = `card-${index}`;
+    cardEl.style.background = card.background;
+    cardEl.innerHTML = card.html;
+    container.appendChild(cardEl);
+
+    // Add dot
+    const dot = document.createElement('div');
+    dot.className = 'nav-dot';
+    dot.onclick = () => showCard(index);
+    dotsContainer.appendChild(dot);
+  });
+}
+
+function getCombined2025Stats(playerData) {
+  const stats = {
+    games: 0,
+    hits: 0,
+    walks: 0,
+    atBats: 0,
+    runs: 0,
+    summerTeam: null,
+    fallTeam: null,
+    teamChanged: false,
+    bestGame: null,
+    gameStats: []
+  };
+
+  if (!playerData.seasons) return stats;
+
+  // Combine summer and fall 2025
+  Object.keys(playerData.seasons).forEach(seasonKey => {
+    if (seasonKey.startsWith('2025-summer')) {
+      const season = playerData.seasons[seasonKey];
+      stats.games += season.games || 0;
+      stats.hits += season.hits || 0;
+      stats.walks += season.walks || 0;
+      stats.atBats += season.atBats || 0;
+      stats.runs += season.runs || 0;
+      
+      if (season.team) {
+        stats.summerTeam = season.team;
+      }
+    } else if (seasonKey.startsWith('2025-fall')) {
+      const season = playerData.seasons[seasonKey];
+      stats.games += season.games || 0;
+      stats.hits += season.hits || 0;
+      stats.walks += season.walks || 0;
+      stats.atBats += season.atBats || 0;
+      stats.runs += season.runs || 0;
+      
+      if (season.team) {
+        stats.fallTeam = season.team;
+      }
+    }
+  });
+
+  // Detect team change
+  if (stats.summerTeam && stats.fallTeam && stats.summerTeam !== stats.fallTeam) {
+    stats.teamChanged = true;
+  }
+
+  return stats;
+}
+
+// Get game-level stats from splits collection
+async function getGameLevelStats(playerId) {
+  try {
+    const splitsRef = doc(db, 'aggregatedPlayerStats2025Splits', playerId);
+    const splitsSnap = await getDoc(splitsRef);
+    
+    if (!splitsSnap.exists()) {
+      return null;
+    }
+    
+    const splitsData = splitsSnap.data();
+    let allGames = [];
+    
+    // Collect games from both seasons
+    if (splitsData.seasons) {
+      ['2025-summer', '2025-fall'].forEach(seasonId => {
+        if (splitsData.seasons[seasonId] && splitsData.seasons[seasonId].games) {
+          const seasonGames = splitsData.seasons[seasonId].games.map(g => ({
+            ...g,
+            season: seasonId
+          }));
+          allGames = allGames.concat(seasonGames);
+        }
+      });
+    }
+    
+    if (allGames.length === 0) {
+      return null;
+    }
+    
+    // Find best game (most hits)
+    const bestGame = allGames.reduce((best, game) => {
+      const gameHits = game.hits || 0;
+      const bestHits = best.hits || 0;
+      return gameHits > bestHits ? game : best;
+    }, allGames[0]);
+    
+    // Calculate hitting streak
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let streakGames = [];
+    
+    // Sort games by date
+    const sortedGames = [...allGames].sort((a, b) => {
+      const dateA = a.gameDate?.seconds || 0;
+      const dateB = b.gameDate?.seconds || 0;
+      return dateA - dateB;
+    });
+    
+    sortedGames.forEach(game => {
+      if ((game.hits || 0) > 0) {
+        currentStreak++;
+        if (currentStreak > longestStreak) {
+          longestStreak = currentStreak;
+        }
+      } else {
+        currentStreak = 0;
+      }
+    });
+    
+    // Count multi-hit games
+    const multiHitGames = allGames.filter(g => (g.hits || 0) >= 2).length;
+    
+    return {
+      bestGame,
+      longestStreak,
+      multiHitGames,
+      totalGamesWithStats: allGames.length
+    };
+    
+  } catch (error) {
+    console.error('Error loading game-level stats:', error);
+    return null;
+  }
+}
+
+function getPlayerTeamColor(team) {
+  const teamName = team || 'Green';
+  return teamColors[teamName] || teamColors['Green'];
+}
+
+function calculatePercentile(avg, allAverages) {
+  const sorted = allAverages.sort((a, b) => a - b);
+  const index = sorted.findIndex(a => a >= avg);
+  return Math.round((index / sorted.length) * 100);
+}
+
+function generateWelcomeCard(playerData, teamColor) {
+  return {
+    background: teamColor.gradient,
+    html: `
+      <div style="max-width: 800px;">
+        <h1>Mountainside Aces</h1>
+        <h2 style="font-size: clamp(3rem, 10vw, 6rem); color: ${teamColor.accent}; margin: 2rem 0;">
+          Wrapped 2025
+        </h2>
+        <h3>${playerData.name || playerData.displayName}'s Season in Review</h3>
+        <p style="margin-top: 2rem; opacity: 0.8;">
+          ⚾ Summer & Fall 2025
+        </p>
+      </div>
+    `
+  };
+}
+
+function generateGamesCard(stats, teamColor) {
+  return {
+    background: teamColor.gradient,
+    html: `
+      <h2>You showed up</h2>
+      <div class="big-number" style="color: ${teamColor.accent};">${stats.games}</div>
+      <p class="stat-label">games played</p>
+      <p style="margin-top: 2rem; font-size: 1.5rem;">That's dedication! ⚾</p>
+    `
+  };
+}
+
+function generateBattingCard(stats, playerData, teamColor, leagueStats) {
+  const avg = stats.atBats > 0 ? (stats.hits / stats.atBats) : 0;
+  const avgDisplay = avg.toFixed(3).replace(/^0/, '');
+  
+  // Calculate actual percentile based on league data
+  let percentile = 50; // Default to middle
+  if (leagueStats.playerAverages.length > 0 && stats.atBats >= 10) {
+    const playersBelowYou = leagueStats.playerAverages.filter(p => p.avg < avg).length;
+    percentile = Math.round((playersBelowYou / leagueStats.playerAverages.length) * 100);
+  }
+  
+  // Format league average for display
+  const leagueAvgDisplay = leagueStats.leagueAvg.toFixed(3).replace(/^0/, '');
+  
+  return {
+    background: teamColor.gradient,
+    html: `
+      <h2>Your batting average</h2>
+      <div class="big-number" style="color: ${teamColor.accent};">${avgDisplay}</div>
+      <p class="stat-label">${stats.hits} hits in ${stats.games} games</p>
+      
+      <div class="progress-container">
+        <div class="progress-label">
+          <span>League Average (${leagueAvgDisplay})</span>
+          <span>You</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${percentile}%; background: linear-gradient(90deg, ${teamColor.accent} 0%, ${teamColor.primary} 100%);"></div>
+        </div>
+      </div>
+
+      <h3 style="color: ${teamColor.accent}; margin-top: 2rem;">
+        ${percentile >= 50 ? `Top ${100 - percentile}% in the league` : `${percentile}th percentile`}
+      </h3>
+    `
+  };
+}
+
+function generateStatsCard(stats, teamColor) {
+  const obp = (stats.atBats + stats.walks) > 0 
+    ? ((stats.hits + stats.walks) / (stats.atBats + stats.walks)).toFixed(3).replace(/^0/, '')
+    : '.000';
+
+  return {
+    background: teamColor.gradient,
+    html: `
+      <h2>Your 2025 Numbers</h2>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value">${stats.hits}</div>
+          <div class="stat-name">Hits</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${stats.walks}</div>
+          <div class="stat-name">Walks</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${obp}</div>
+          <div class="stat-name">On-Base %</div>
+        </div>
+      </div>
+    `
+  };
+}
+
+function generateMilestoneCards(playerData, teamColor) {
+  const milestones = findMilestones(playerData);
+  
+  if (milestones.length === 0) return [];
+
+  return [{
+    background: teamColor.gradient,
+    html: `
+      <h2 style="color: ${teamColor.accent};">🏆 Milestones Unlocked</h2>
+      <div class="milestones-list">
+        ${milestones.map(m => `
+          <div class="milestone-item" style="border: 2px solid ${teamColor.accent};">
+            <div class="milestone-icon">${m.icon}</div>
+            <div class="milestone-text">${m.text}</div>
+          </div>
+        `).join('')}
+      </div>
+    `
+  }];
+}
+
+function findMilestones(playerData) {
+  const milestones = [];
+  
+  // Career stats
+  const careerHits = playerData.career?.hits || 0;
+  const careerRuns = playerData.career?.runs || 0;
+  const careerWalks = playerData.career?.walks || 0;
+
+  // Check hits milestones
+  if (careerHits >= 300) milestones.push({ icon: '🏆', text: 'Reached 300 career hits!' });
+  else if (careerHits >= 200) milestones.push({ icon: '🎯', text: 'Reached 200 career hits!' });
+  else if (careerHits >= 100) milestones.push({ icon: '💯', text: 'Reached 100 career hits!' });
+
+  // Check runs milestones
+  if (careerRuns >= 200) milestones.push({ icon: '🚀', text: 'Reached 200 career runs!' });
+  else if (careerRuns >= 150) milestones.push({ icon: '🔥', text: 'Reached 150 career runs!' });
+  else if (careerRuns >= 100) milestones.push({ icon: '💯', text: 'Reached 100 career runs!' });
+
+  // Check walks milestones
+  if (careerWalks >= 50) milestones.push({ icon: '🚶', text: 'Reached 50 career walks!' });
+  else if (careerWalks >= 25) milestones.push({ icon: '👁️', text: 'Reached 25 career walks!' });
+
+  return milestones;
+}
+
+function generateLeagueLeadersCard(achievements, teamColor) {
+  console.log(`🏅 Generating league leaders card for ${achievements.length} achievements`);
+  
+  // Sort achievements by rank (best first)
+  const sortedAchievements = [...achievements].sort((a, b) => a.rank - b.rank);
+  
+  // Medal emojis for top 3
+  const getMedal = (rank) => {
+    if (rank === 1) return '🥇';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return `#${rank}`;
+  };
+  
+  return {
+    background: teamColor.gradient,
+    html: `
+      <div style="max-width: 700px; margin: 0 auto;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">⭐</div>
+        <h2 style="color: ${teamColor.accent}; font-size: clamp(2rem, 5vw, 3rem);">
+          League Leader${achievements.length > 1 ? 's' : ''}
+        </h2>
+        <p class="stat-label" style="margin-bottom: 2rem;">
+          Top 10 in 2025 (Summer + Fall Combined)
+        </p>
+        
+        <div style="display: grid; gap: 1.5rem; margin: 2rem 0;">
+          ${sortedAchievements.map(achievement => `
+            <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 1.5rem; border-radius: 16px; border-left: 4px solid ${teamColor.accent};">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="flex: 1;">
+                  <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">
+                    ${achievement.icon}
+                  </div>
+                  <div style="font-size: 1.3rem; font-weight: 700; color: ${teamColor.accent}; margin-bottom: 0.3rem;">
+                    ${achievement.category}
+                  </div>
+                  <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">
+                    2025 Combined Stats
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 2.5rem; font-weight: 800; color: ${teamColor.accent}; margin-bottom: 0.3rem;">
+                    ${getMedal(achievement.rank)}
+                  </div>
+                  <div style="font-size: 1.8rem; font-weight: 700;">
+                    ${achievement.value}
+                  </div>
+                  <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-top: 0.3rem;">
+                    ${achievement.rank === 1 ? '1st in League!' : 
+                      achievement.rank === 2 ? '2nd in League' :
+                      achievement.rank === 3 ? '3rd in League' :
+                      `${achievement.rank}th in League`}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <p style="font-size: clamp(1.1rem, 2.5vw, 1.4rem); margin-top: 2rem; color: rgba(255,255,255,0.95); font-weight: 600;">
+          ${achievements.length === 1 
+            ? "Elite performance! 🌟" 
+            : achievements.some(a => a.rank === 1)
+              ? "Dominant season! 👑"
+              : "Outstanding across the board! 🔥"}
+        </p>
+      </div>
+    `
+  };
+}
+
+function generateChampionshipCard(championships, teamColors) {
+  console.log(`🎨 Generating championship card for ${championships.length} championships`);
+  
+  // If multiple championships, show both
+  if (championships.length > 1) {
+    console.log(`🏆🏆 Creating DOUBLE CHAMPION card`);
+    const summerChamp = championships.find(c => c.season === 'Summer');
+    const fallChamp = championships.find(c => c.season === 'Fall');
+    console.log('Summer champ:', summerChamp);
+    console.log('Fall champ:', fallChamp);
+    
+    return {
+      background: 'linear-gradient(135deg, #ffd700 0%, #f0c14b 50%, #daa520 100%)',
+      html: `
+        <div style="max-width: 700px; margin: 0 auto;">
+          <div style="font-size: 5rem; margin-bottom: 1rem;">🏆🏆</div>
+          <h2 style="font-size: clamp(2.5rem, 6vw, 4rem); color: #2d5016; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">
+            DOUBLE CHAMPION
+          </h2>
+          <p style="font-size: clamp(1.2rem, 3vw, 1.8rem); margin: 2rem 0; color: rgba(45,80,22,0.9);">
+            You won championships in BOTH seasons!
+          </p>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
+            ${summerChamp ? `
+              <div style="background: rgba(255,255,255,0.3); backdrop-filter: blur(10px); padding: 1.5rem; border-radius: 16px; border: 3px solid rgba(45,80,22,0.3);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌞</div>
+                <div style="font-size: 1.3rem; font-weight: 700; color: #2d5016; margin-bottom: 0.5rem;">
+                  ${summerChamp.team}
+                </div>
+                <div style="font-size: 1rem; color: rgba(45,80,22,0.8); margin-bottom: 1rem;">
+                  Summer 2025 Champions
+                </div>
+                <div style="font-size: 0.9rem; color: rgba(45,80,22,0.7);">
+                  def. ${summerChamp.opponent}
+                  <div style="font-size: 1.5rem; font-weight: 700; margin-top: 0.5rem;">
+                    ${summerChamp.score.winner}-${summerChamp.score.loser}
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+            
+            ${fallChamp ? `
+              <div style="background: rgba(255,255,255,0.3); backdrop-filter: blur(10px); padding: 1.5rem; border-radius: 16px; border: 3px solid rgba(45,80,22,0.3);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🍂</div>
+                <div style="font-size: 1.3rem; font-weight: 700; color: #2d5016; margin-bottom: 0.5rem;">
+                  ${fallChamp.team}
+                </div>
+                <div style="font-size: 1rem; color: rgba(45,80,22,0.8); margin-bottom: 1rem;">
+                  Fall 2025 Champions
+                </div>
+                <div style="font-size: 0.9rem; color: rgba(45,80,22,0.7);">
+                  def. ${fallChamp.opponent}
+                  <div style="font-size: 1.5rem; font-weight: 700; margin-top: 0.5rem;">
+                    ${fallChamp.score.winner}-${fallChamp.score.loser}
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+          
+          <p style="font-size: clamp(1.1rem, 2.5vw, 1.5rem); margin-top: 2rem; color: rgba(45,80,22,0.9); font-weight: 600;">
+            That's Aces excellence! 🎉
+          </p>
+        </div>
+      `
+    };
+  }
+  
+  // Single championship
+  console.log(`🏆 Creating single championship card for ${championships[0].season}`);
+  const champ = championships[0];
+  const teamColor = teamColors[champ.team] || teamColors['Green'];
+  
+  return {
+    background: 'linear-gradient(135deg, #ffd700 0%, #f0c14b 50%, #daa520 100%)',
+    html: `
+      <div style="max-width: 700px; margin: 0 auto;">
+        <div style="font-size: 6rem; margin-bottom: 1rem;">🏆</div>
+        <h2 style="font-size: clamp(2.5rem, 6vw, 4rem); color: #2d5016; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">
+          CHAMPION!
+        </h2>
+        <p style="font-size: clamp(1.2rem, 3vw, 1.8rem); margin: 1.5rem 0; color: rgba(45,80,22,0.9);">
+          ${champ.season} 2025
+        </p>
+        
+        <div style="background: rgba(255,255,255,0.3); backdrop-filter: blur(10px); padding: 2rem; border-radius: 20px; margin: 2rem 0; border: 4px solid ${teamColor.accent};">
+          <div style="font-size: 2rem; font-weight: 800; color: ${teamColor.accent}; margin-bottom: 1rem;">
+            ${champ.team}
+          </div>
+          
+          <div style="font-size: 1.2rem; color: rgba(45,80,22,0.8); margin: 1rem 0;">
+            defeated
+          </div>
+          
+          <div style="font-size: 1.5rem; color: rgba(45,80,22,0.8); margin-bottom: 1rem;">
+            ${champ.opponent}
+          </div>
+          
+          <div style="font-size: 3rem; font-weight: 800; color: #2d5016; margin-top: 1.5rem;">
+            ${champ.score.winner} - ${champ.score.loser}
+          </div>
+          
+          <div style="font-size: 1rem; color: rgba(45,80,22,0.7); margin-top: 1rem;">
+            Championship Game
+          </div>
+        </div>
+        
+        <p style="font-size: clamp(1.1rem, 2.5vw, 1.5rem); margin-top: 2rem; color: rgba(45,80,22,0.9); font-weight: 600;">
+          You're a champion! 🎉
+        </p>
+      </div>
+    `
+  };
+}
+
+function generateTeamChangeCard(stats, teamColors) {
+  const summerColor = teamColors[stats.summerTeam] || teamColors['Green'];
+  const fallColor = teamColors[stats.fallTeam] || teamColors['Green'];
+  
+  return {
+    background: 'linear-gradient(135deg, #1a1a2e 0%, #2d2d3e 100%)',
+    html: `
+      <h2>Your Journey</h2>
+      <div style="max-width: 600px; margin: 2rem auto;">
+        <p style="font-size: clamp(1.2rem, 3vw, 1.8rem); margin-bottom: 3rem; color: rgba(255,255,255,0.9);">
+          You started with one team and finished with another...
+        </p>
+        
+        <div style="display: flex; align-items: center; justify-content: center; gap: 2rem; margin: 3rem 0; flex-wrap: wrap;">
+          <div style="text-align: center;">
+            <div style="width: 100px; height: 100px; background: ${summerColor.accent}; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 4px solid rgba(255,255,255,0.3);">
+              🌞
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: ${summerColor.accent};">
+              ${stats.summerTeam}
+            </div>
+            <div style="color: rgba(255,255,255,0.7); margin-top: 0.5rem;">Summer</div>
+          </div>
+          
+          <div style="font-size: 3rem; color: rgba(255,255,255,0.5);">→</div>
+          
+          <div style="text-align: center;">
+            <div style="width: 100px; height: 100px; background: ${fallColor.accent}; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 4px solid rgba(255,255,255,0.3);">
+              🍂
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: ${fallColor.accent};">
+              ${stats.fallTeam}
+            </div>
+            <div style="color: rgba(255,255,255,0.7); margin-top: 0.5rem;">Fall</div>
+          </div>
+        </div>
+        
+        <p style="font-size: clamp(1rem, 2.5vw, 1.3rem); margin-top: 3rem; color: rgba(255,255,255,0.8);">
+          Two teams, one incredible season 🏆
+        </p>
+      </div>
+    `
+  };
+}
+
+function generateBestGameCard(bestGame, teamColor) {
+  const formatDate = (gameDate) => {
+    if (!gameDate || !gameDate.seconds) return 'Unknown Date';
+    const date = new Date(gameDate.seconds * 1000);
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  };
+  
+  const avg = bestGame.atBats > 0 ? (bestGame.hits / bestGame.atBats).toFixed(3).replace(/^0/, '') : '.000';
+  
+  return {
+    background: teamColor.gradient,
+    html: `
+      <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
+        <span style="font-size: 4rem;">⭐</span>
+      </div>
+      <h2 style="color: ${teamColor.accent};">Your Best Game</h2>
+      <div style="color: rgba(255,255,255,0.8); font-size: 1.2rem; margin-bottom: 2rem;">
+        ${formatDate(bestGame.gameDate)}
+      </div>
+      
+      <div class="best-game-card" style="border: 2px solid ${teamColor.accent};">
+        <div class="best-game-opponent">
+          vs ${bestGame.opponent || 'Unknown'}
+        </div>
+        <div class="best-game-stats" style="color: ${teamColor.accent};">
+          ${bestGame.hits || 0}-${bestGame.atBats || 0}${bestGame.walks > 0 ? `, ${bestGame.walks} BB` : ''}
+        </div>
+        <div style="font-size: clamp(1.5rem, 4vw, 2rem); margin: 1rem 0; color: ${teamColor.accent};">
+          ${avg} AVG
+        </div>
+        ${bestGame.runs > 0 ? `<div class="best-game-result">${bestGame.runs} Runs Scored</div>` : ''}
+      </div>
+    `
+  };
+}
+
+function generateGameHighlightsCard(gameStats, teamColor) {
+  return {
+    background: teamColor.gradient,
+    html: `
+      <h2 style="color: ${teamColor.accent};">Game Highlights</h2>
+      <div style="max-width: 600px; margin: 2rem auto;">
+        
+        ${gameStats.longestStreak > 1 ? `
+          <div style="background: rgba(255,255,255,0.1); border-left: 4px solid ${teamColor.accent}; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px;">
+            <div style="font-size: 3rem; font-weight: 800; color: ${teamColor.accent}; margin-bottom: 0.5rem;">
+              ${gameStats.longestStreak}
+            </div>
+            <div style="font-size: 1.2rem; color: rgba(255,255,255,0.9);">
+              Game Hitting Streak 🔥
+            </div>
+          </div>
+        ` : ''}
+        
+        ${gameStats.multiHitGames > 0 ? `
+          <div style="background: rgba(255,255,255,0.1); border-left: 4px solid ${teamColor.accent}; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px;">
+            <div style="font-size: 3rem; font-weight: 800; color: ${teamColor.accent}; margin-bottom: 0.5rem;">
+              ${gameStats.multiHitGames}
+            </div>
+            <div style="font-size: 1.2rem; color: rgba(255,255,255,0.9);">
+              Multi-Hit Games ⚾⚾
+            </div>
+          </div>
+        ` : ''}
+        
+        <div style="background: rgba(255,255,255,0.1); border-left: 4px solid ${teamColor.accent}; padding: 1.5rem; border-radius: 8px;">
+          <div style="font-size: 3rem; font-weight: 800; color: ${teamColor.accent}; margin-bottom: 0.5rem;">
+            ${gameStats.totalGamesWithStats}
+          </div>
+          <div style="font-size: 1.2rem; color: rgba(255,255,255,0.9);">
+            Games Tracked 📊
+          </div>
+        </div>
+      </div>
+    `
+  };
+}
+
+function generateTeamCard(stats, playerData, teamColor, teamName, teamRecords) {
+  const team = teamName || stats.fallTeam || stats.summerTeam || playerData.currentTeam || 'Your Team';
+  
+  // Check if we have actual records
+  const hasRecords = teamRecords && (teamRecords.wins > 0 || teamRecords.losses > 0);
+  const totalGames = teamRecords ? teamRecords.wins + teamRecords.losses : 0;
+  const winPct = totalGames > 0 ? (teamRecords.wins / totalGames) : 0;
+  
+  // If player changed teams, show breakdown
+  if (stats.teamChanged && teamRecords.teams.length > 1) {
+    return {
+      background: teamColor.gradient,
+      html: `
+        <h2 style="color: ${teamColor.accent};">Your Teams' 2025 Records</h2>
+        <p class="stat-label" style="margin-bottom: 2rem;">Combined record from both teams</p>
+        
+        <div class="team-record" style="margin-bottom: 2rem;">
+          <div class="record-item">
+            <div class="record-number wins" style="color: #10b981;">${teamRecords.wins}</div>
+            <div class="stat-name">Wins</div>
+          </div>
+          <div class="record-item">
+            <div class="record-number losses" style="color: #ef4444;">${teamRecords.losses}</div>
+            <div class="stat-name">Losses</div>
+          </div>
+        </div>
+        
+        ${teamRecords.teams.map(t => {
+          const tColor = teamColors[t.team] || teamColors['Green'];
+          const tWinPct = (t.wins + t.losses) > 0 ? (t.wins / (t.wins + t.losses)) : 0;
+          return `
+            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 12px; margin: 0.5rem 0; border-left: 4px solid ${tColor.accent};">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 1.2rem; font-weight: 700; color: ${tColor.accent};">${t.team}</div>
+                  <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7); text-transform: capitalize;">${t.season} 2025</div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 1.5rem; font-weight: 700;">${t.wins}-${t.losses}</div>
+                  <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">${(tWinPct * 100).toFixed(0)}%</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+
+        <p style="margin-top: 2rem; font-size: 1.2rem; opacity: 0.9;">
+          ${totalGames > 0 ? `Combined ${(winPct * 100).toFixed(0)}% winning percentage` : 'You were part of something special'}
+        </p>
+      `
+    };
+  }
+  
+  // Single team display
+  return {
+    background: teamColor.gradient,
+    html: `
+      <h2 style="color: ${teamColor.accent};">${team}</h2>
+      <p class="stat-label" style="margin-bottom: 2rem;">${hasRecords ? 'had a season to remember' : '2025 Season'}</p>
+      
+      ${hasRecords ? `
+        <div class="team-record">
+          <div class="record-item">
+            <div class="record-number wins" style="color: #10b981;">${teamRecords.wins}</div>
+            <div class="stat-name">Wins</div>
+          </div>
+          <div class="record-item">
+            <div class="record-number losses" style="color: #ef4444;">${teamRecords.losses}</div>
+            <div class="stat-name">Losses</div>
+          </div>
+        </div>
+
+        <p style="margin-top: 2rem; font-size: 1.2rem; opacity: 0.9;">
+          ${(winPct * 100).toFixed(0)}% winning percentage
+        </p>
+      ` : `
+        <div class="team-record">
+          <div class="record-item">
+            <div class="record-number wins">--</div>
+            <div class="stat-name">Wins</div>
+          </div>
+          <div class="record-item">
+            <div class="record-number losses">--</div>
+            <div class="stat-name">Losses</div>
+          </div>
+        </div>
+
+        <p style="margin-top: 2rem; font-size: 1.2rem; opacity: 0.9;">
+          You were part of something special
+        </p>
+      `}
+    `
+  };
+}
+
+function generateSummaryCard(stats, playerData, teamColor) {
+  const avg = stats.atBats > 0 ? (stats.hits / stats.atBats).toFixed(3).replace(/^0/, '') : '.000';
+  
+  return {
+    background: teamColor.gradient,
+    html: `
+      <h2 style="font-size: clamp(2.5rem, 8vw, 5rem);">What a season!</h2>
+      <p style="max-width: 700px; font-size: clamp(1.2rem, 3vw, 1.8rem); line-height: 1.6; margin: 2rem 0;">
+        You played <strong style="color: ${teamColor.accent};">${stats.games} games</strong>, 
+        collected <strong style="color: ${teamColor.accent};">${stats.hits} hits</strong>, 
+        and batted <strong style="color: ${teamColor.accent};">${avg}</strong>.
+      </p>
+
+      <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 2rem; border-radius: 20px; margin: 2rem 0; border: 2px solid ${teamColor.accent};">
+        <h3 style="font-size: clamp(1.5rem, 4vw, 2.5rem); margin-bottom: 1rem; color: ${teamColor.accent};">
+          See you in 2026! 🏆
+        </h3>
+      </div>
+
+      <button class="replay-button" onclick="window.location.reload()">
+        ↻ Replay Your Season
+      </button>
+    `
+  };
+}
+
+function showCard(index) {
+  if (isAnimating || index < 0 || index >= cards.length) return;
+  
+  isAnimating = true;
+  
+  // Hide current card
+  const currentCard = document.getElementById(`card-${currentCardIndex}`);
+  if (currentCard) {
+    currentCard.classList.add('hidden');
+  }
+
+  // Update index
+  currentCardIndex = index;
+
+  // Show new card
+  setTimeout(() => {
+    const newCard = document.getElementById(`card-${currentCardIndex}`);
+    if (newCard) {
+      newCard.classList.remove('hidden');
+    }
+
+    // Update dots
+    document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+      dot.classList.toggle('active', i === currentCardIndex);
+    });
+
+    // Update button visibility
+    document.getElementById('prevButton').style.display = currentCardIndex > 0 ? 'flex' : 'none';
+    document.getElementById('nextButton').style.display = currentCardIndex < cards.length - 1 ? 'flex' : 'none';
+
+    isAnimating = false;
+  }, 300);
+}
+
+function nextCard() {
+  if (currentCardIndex < cards.length - 1) {
+    showCard(currentCardIndex + 1);
+  }
+}
+
+function prevCard() {
+  if (currentCardIndex > 0) {
+    showCard(currentCardIndex - 1);
+  }
+}
+
+// Event listeners
+document.getElementById('prevButton').onclick = prevCard;
+document.getElementById('nextButton').onclick = nextCard;
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') {
+    e.preventDefault();
+    nextCard();
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    prevCard();
+  }
+});
+
+// Swipe support for mobile
+let touchStartX = 0;
+let touchEndX = 0;
+
+document.getElementById('wrappedContainer').addEventListener('touchstart', (e) => {
+  touchStartX = e.changedTouches[0].screenX;
+});
+
+document.getElementById('wrappedContainer').addEventListener('touchend', (e) => {
+  touchEndX = e.changedTouches[0].screenX;
+  handleSwipe();
+});
+
+function handleSwipe() {
+  if (touchEndX < touchStartX - 50) nextCard();
+  if (touchEndX > touchStartX + 50) prevCard();
+}
+
+// Sharing functions
+function setupSharing(playerData) {
+  const playerName = playerData.name || playerData.displayName || 'Player';
+  const playerId = playerData.id;
+  
+  // Generate shareable URL
+  const shareUrl = `${window.location.origin}/aces-wrapped.html?id=${encodeURIComponent(playerId)}`;
+  const shareText = `Check out ${playerName}'s Mountainside Aces Wrapped 2025! 🏆⚾`;
+  
+  // Set share link
+  document.getElementById('shareLink').value = shareUrl;
+  
+  // Setup WhatsApp sharing
+  document.getElementById('shareWhatsApp').href = 
+    `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
+  
+  // Setup Text Message sharing (SMS)
+  document.getElementById('shareText').href = 
+    `sms:?&body=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
+  
+  // Setup Twitter sharing
+  document.getElementById('shareTwitter').href = 
+    `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+  
+  // Setup Facebook sharing
+  document.getElementById('shareFacebook').href = 
+    `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+}
+
+window.openShareModal = function() {
+  document.getElementById('shareModal').classList.add('active');
+};
+
+window.closeShareModal = function() {
+  document.getElementById('shareModal').classList.remove('active');
+};
+
+window.copyShareLink = async function() {
+  const shareLink = document.getElementById('shareLink');
+  const copyBtn = document.getElementById('copyLinkBtn');
+  
+  try {
+    await navigator.clipboard.writeText(shareLink.value);
+    copyBtn.textContent = '✓ Copied!';
+    copyBtn.classList.add('copied');
+    
+    setTimeout(() => {
+      copyBtn.textContent = 'Copy Link';
+      copyBtn.classList.remove('copied');
+    }, 2000);
+  } catch (err) {
+    // Fallback for older browsers
+    shareLink.select();
+    document.execCommand('copy');
+    copyBtn.textContent = '✓ Copied!';
+    
+    setTimeout(() => {
+      copyBtn.textContent = 'Copy Link';
+    }, 2000);
+  }
+};
+
+// Share button click handler
+document.getElementById('shareButton').onclick = openShareModal;
+
+// Close modal when clicking outside
+document.getElementById('shareModal').onclick = function(e) {
+  if (e.target === this) {
+    closeShareModal();
+  }
+};
+
+// Initialize
+loadPlayerData();
+</script>
+
+<script src="nav-component.js" type="module"></script>
+<script src="team-colors.js"></script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+
+</body>
+</html>

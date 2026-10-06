@@ -1,0 +1,2190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Player Recall - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  
+  /* Roster Recall theme - Red/Orange energy */
+  --recall-primary: #dc2626;
+  --recall-secondary: #ea580c;
+  --recall-gradient: linear-gradient(135deg, #dc2626, #ea580c);
+  --correct: #10b981;
+  --timer-warning: #f59e0b;
+  --timer-danger: #ef4444;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.softball-spinner::before {
+  content: '⚾';
+  font-size: 60px;
+  animation: spin 1.5s ease-in-out infinite;
+  display: block;
+}
+
+@keyframes spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+
+/* Page Container */
+.page-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Page Header */
+.page-header {
+  background: var(--recall-gradient);
+  color: white;
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.back-link {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(255,255,255,0.15);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.back-link:hover {
+  background: rgba(255,255,255,0.25);
+  color: white;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.page-header h1 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.page-header .subtitle {
+  opacity: 0.9;
+  font-size: 0.9rem;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.puzzle-date {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-top: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Timer Display */
+.timer-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.timer-display {
+  font-size: 3.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dark);
+  transition: color 0.3s ease;
+}
+
+.timer-display.warning {
+  color: var(--timer-warning);
+}
+
+.timer-display.danger {
+  color: var(--timer-danger);
+  animation: pulse 0.5s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.timer-label {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 0.25rem;
+}
+
+.timer-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 4px;
+  margin-top: 1rem;
+  overflow: hidden;
+}
+
+.timer-bar-fill {
+  height: 100%;
+  background: var(--recall-gradient);
+  border-radius: 4px;
+  transition: width 0.1s linear;
+}
+
+.timer-bar-fill.warning {
+  background: var(--timer-warning);
+}
+
+.timer-bar-fill.danger {
+  background: var(--timer-danger);
+}
+
+/* Category Display */
+.category-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.category-label {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+}
+
+.category-name {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--recall-primary);
+}
+
+.found-count {
+  margin-top: 0.75rem;
+  font-size: 1.1rem;
+  color: var(--text-dark);
+}
+
+.found-count span {
+  font-weight: 700;
+  color: var(--correct);
+}
+
+/* Input Section */
+.input-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-md);
+}
+
+.guess-input-container {
+  position: relative;
+}
+
+.guess-input {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.guess-input:focus {
+  border-color: var(--recall-primary);
+}
+
+.guess-input:disabled {
+  background: #f7fafc;
+  cursor: not-allowed;
+}
+
+/* Autocomplete Dropdown */
+.autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+  display: none;
+}
+
+.autocomplete-dropdown.active {
+  display: block;
+}
+
+.autocomplete-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item:hover {
+  background: #f7fafc;
+}
+
+.autocomplete-item.selected {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.autocomplete-item.already-guessed {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+/* Feedback Messages */
+.feedback {
+  text-align: center;
+  margin-top: 0.75rem;
+  font-weight: 600;
+  min-height: 24px;
+}
+
+.feedback.correct {
+  color: var(--correct);
+  animation: popIn 0.3s ease;
+}
+
+.feedback.wrong {
+  color: var(--timer-danger);
+  animation: shake 0.3s ease;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Found Players List */
+.found-list-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-md);
+}
+
+.found-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.found-list-title {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.found-list-toggle {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.found-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.found-list.collapsed {
+  display: none;
+}
+
+.found-player {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #065f46;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: popIn 0.3s ease;
+}
+
+/* Pre-game State */
+.pre-game {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+
+.pre-game h2 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-dark);
+}
+
+.pre-game p {
+  color: var(--text-light);
+  margin: 0 0 1.5rem 0;
+}
+
+.start-btn {
+  padding: 1rem 2.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: var(--recall-gradient);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+}
+
+/* Results Section */
+.results-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.results-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.results-subtitle {
+  color: var(--text-light);
+  margin-bottom: 1rem;
+}
+
+.score-breakdown {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.score-item {
+  background: #f7fafc;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.score-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--recall-primary);
+}
+
+.score-label {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.total-score {
+  background: var(--recall-gradient);
+  color: white;
+  padding: 1.25rem;
+  border-radius: 12px;
+  margin-top: 1rem;
+}
+
+.total-score .score-value {
+  color: white;
+  font-size: 2.5rem;
+}
+
+.total-score .score-label {
+  color: rgba(255,255,255,0.85);
+}
+
+/* Missed Players */
+.missed-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-md);
+}
+
+.missed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+}
+
+.missed-title {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.missed-toggle {
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+.missed-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.missed-list.collapsed {
+  display: none;
+}
+
+.missed-player {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-btn.primary {
+  background: var(--recall-gradient);
+  color: white;
+}
+
+.action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+.action-btn.secondary {
+  background: var(--card-bg);
+  color: var(--text-dark);
+  border: 2px solid var(--border-color);
+}
+
+.action-btn.secondary:hover {
+  border-color: var(--recall-primary);
+  color: var(--recall-primary);
+}
+
+/* User Stats Section */
+.user-stats-container {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.user-stats-content {
+  text-align: center;
+}
+
+.sign-in-prompt {
+  color: var(--text-light);
+  font-size: 0.85rem;
+}
+
+.sign-in-prompt a {
+  color: var(--recall-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.user-greeting {
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.lifetime-stats {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.lifetime-stat {
+  text-align: center;
+}
+
+.lifetime-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--recall-primary);
+  display: block;
+}
+
+.lifetime-label {
+  font-size: 0.65rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* How to Play */
+.how-to-play {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.how-to-play h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.how-to-play-content {
+  display: none;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+.how-to-play.expanded .how-to-play-content {
+  display: block;
+}
+
+/* Stats Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  padding: 1rem;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+  transform: scale(1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-light);
+  padding: 0.25rem;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--text-dark);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 2000;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .timer-display {
+    font-size: 2.75rem;
+  }
+  
+  .score-breakdown {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+}
+</style>
+</head>
+<body>
+<nav-component></nav-component>
+
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="softball-spinner"></div>
+  <p style="margin-top: 1rem; color: var(--text-light);">Loading puzzle...</p>
+</div>
+
+<div class="page-container">
+  <header class="page-header">
+    <a href="index.html" class="back-link">← Home</a>
+    <h1>🧠 Player Recall</h1>
+    <p class="subtitle">Test your Aces knowledge!</p>
+    <p class="puzzle-date" id="puzzleDate"></p>
+  </header>
+  
+  <div id="userStatsContainer" class="user-stats-container">
+    <!-- Filled by JS -->
+  </div>
+  
+  <div id="gameContent">
+    <!-- Game content rendered here -->
+  </div>
+  
+  <div class="how-to-play" id="howToPlay">
+    <h3 onclick="toggleHowToPlay()">
+      How to Play
+      <span id="howToPlayToggle">▼</span>
+    </h3>
+    <div class="how-to-play-content">
+      <p><strong>Goal:</strong> Name all the players that match the category before time runs out.</p>
+      <p><strong>Scoring:</strong></p>
+      <ul style="margin: 0.5rem 0; padding-left: 1.25rem;">
+        <li>+10 points per correct player</li>
+        <li>+1 point per second remaining</li>
+        <li>Perfect game bonus: +50 points</li>
+      </ul>
+      <p><strong>Tips:</strong> Type player names and select from the dropdown. A new puzzle appears each day!</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { 
+  db, 
+  doc,
+  getDoc
+} from './firebase-config.js';
+
+import {
+  setDoc,
+  serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+import { getAllPlayerStatsOptimized } from './firebase-data.js';
+
+import {
+  getCurrentUser,
+  onAuthChange
+} from './firebase-auth.js';
+
+// ============================================
+// VERSION CHECK - Increment to clear old localStorage data
+// ============================================
+const DATA_VERSION = 7; // Fix seasonId key extraction (keys include team name)
+const VERSION_KEY = 'acesRosterRecall_dataVersion';
+
+(function checkDataVersion() {
+  const storedVersion = localStorage.getItem(VERSION_KEY);
+  if (!storedVersion || parseInt(storedVersion) < DATA_VERSION) {
+    console.log('🔄 Clearing old Roster Recall data (version update)');
+    localStorage.removeItem('acesRosterRecall_game');
+    localStorage.removeItem('acesRosterRecall_stats');
+    localStorage.setItem(VERSION_KEY, String(DATA_VERSION));
+  }
+})();
+
+// ============================================
+// CONFIGURATION
+// ============================================
+const LAUNCH_YEAR = 2026;
+const LAUNCH_MONTH = 0;
+const LAUNCH_DAY = 6;
+const BASE_TIME = 60; // 60 seconds base
+const TIME_PER_PLAYER = 3; // +3 seconds per player
+
+// ============================================
+// SUBSTITUTE SEASON HELPER
+// ============================================
+function isSubstituteSeason(season) {
+  return season.sub === 'Yes' || season.sub === 'yes' || season.sub === true;
+}
+
+function getNonSubSeasons(player) {
+  if (!player.seasons) return [];
+  return Object.entries(player.seasons)
+    .filter(([, s]) => !isSubstituteSeason(s))
+    .map(([id, s]) => ({ seasonId: id, ...s }));
+}
+
+// ============================================
+// AUTH STATE
+// ============================================
+let currentUser = null;
+
+// ============================================
+// GAME STATE
+// ============================================
+let allPlayers = [];
+let playerNames = [];
+let todaysPuzzle = null;
+let gameState = {
+  phase: 'pre', // 'pre', 'playing', 'finished'
+  foundPlayers: [],
+  timeRemaining: 0,
+  totalTime: 0,
+  startTime: null,
+  endTime: null,
+  score: 0
+};
+let timerInterval = null;
+
+// ============================================
+// SEEDED RANDOM
+// ============================================
+function seededRandom(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function getDayNumber() {
+  const start = new Date(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY).setHours(0, 0, 0, 0);
+  const now = new Date().setHours(0, 0, 0, 0);
+  const daysSinceLaunch = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  return Math.max(1, daysSinceLaunch + 1);
+}
+
+function shuffleWithSeed(array, seed) {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    seed++;
+    const j = Math.floor(seededRandom(seed) * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+// ============================================
+// CATEGORY GENERATORS
+// ============================================
+function getTeamRoster(team, seasonId) {
+  const players = [];
+  const targetTeam = team?.toLowerCase();
+  allPlayers.forEach(p => {
+    const seasons = getNonSubSeasons(p);
+    // Keys are like "2024-summer-gold", extract season part for comparison
+    const match = seasons.find(s => extractSeasonFromKey(s.seasonId) === seasonId && s.team?.toLowerCase() === targetTeam);
+    if (match) {
+      players.push(p.name || p.playerName);
+    }
+  });
+  return [...new Set(players)];
+}
+
+function getCareerStatPlayers(stat, threshold) {
+  const players = [];
+  allPlayers.forEach(p => {
+    const seasons = getNonSubSeasons(p);
+    if (seasons.length === 0) return;
+    
+    let value = 0;
+    if (stat === 'hits') value = p.career?.hits || p.careerHits || 0;
+    else if (stat === 'runs') value = p.career?.runs || p.careerRuns || 0;
+    else if (stat === 'walks') value = p.career?.walks || p.careerWalks || 0;
+    else if (stat === 'games') value = p.career?.games || p.careerGames || 0;
+    
+    if (value >= threshold) {
+      players.push(p.name || p.playerName);
+    }
+  });
+  return [...new Set(players)];
+}
+
+function extractSeasonFromKey(key) {
+  // Keys are like "2024-summer-gold" or "2024-fall-white-sub"
+  // Extract just "2024-summer" or "2024-fall"
+  if (!key) return null;
+  const parts = key.split('-');
+  if (parts.length >= 2) {
+    return `${parts[0]}-${parts[1]}`; // "2024-summer"
+  }
+  return key;
+}
+
+function getSeasonSpecificStatPlayers(stat, threshold, seasonId) {
+  // Players who hit threshold in a SPECIFIC season (aggregated across all teams)
+  const players = [];
+  allPlayers.forEach(p => {
+    const seasons = getNonSubSeasons(p);
+    // Get ALL entries for this season (player might have been on multiple teams)
+    // Keys are like "2024-summer-gold", so extract just the season part
+    const matches = seasons.filter(s => extractSeasonFromKey(s.seasonId) === seasonId);
+    if (matches.length === 0) return;
+    
+    // Sum stats across all team entries for this season
+    let value = 0;
+    matches.forEach(match => {
+      if (stat === 'hits') value += match.hits || 0;
+      else if (stat === 'runs') value += match.runs || 0;
+      else if (stat === 'walks') value += match.walks || 0;
+      else if (stat === 'games') value += match.games || 0;
+    });
+    
+    if (value >= threshold) {
+      players.push(p.name || p.playerName);
+    }
+  });
+  return [...new Set(players)];
+}
+
+function getTeamSeasonStatPlayers(stat, threshold, seasonId, team) {
+  // Players who hit threshold on a SPECIFIC team in a SPECIFIC season
+  const players = [];
+  const targetTeam = team?.toLowerCase();
+  allPlayers.forEach(p => {
+    const seasons = getNonSubSeasons(p);
+    // Keys are like "2024-summer-gold", extract season part for comparison
+    const match = seasons.find(s => 
+      extractSeasonFromKey(s.seasonId) === seasonId && 
+      s.team?.toLowerCase() === targetTeam
+    );
+    if (!match) return;
+    
+    let value = 0;
+    if (stat === 'hits') value = match.hits || 0;
+    else if (stat === 'runs') value = match.runs || 0;
+    else if (stat === 'walks') value = match.walks || 0;
+    else if (stat === 'games') value = match.games || 0;
+    
+    if (value >= threshold) {
+      players.push(p.name || p.playerName);
+    }
+  });
+  return [...new Set(players)];
+}
+
+function getMultiTeamPlayers(count) {
+  const players = [];
+  allPlayers.forEach(p => {
+    const seasons = getNonSubSeasons(p);
+    const teams = new Set(seasons.map(s => s.team?.toLowerCase()).filter(Boolean));
+    if (teams.size >= count) {
+      players.push(p.name || p.playerName);
+    }
+  });
+  return [...new Set(players)];
+}
+
+function getVeteranPlayers(seasonCount) {
+  const players = [];
+  allPlayers.forEach(p => {
+    const seasons = getNonSubSeasons(p);
+    if (seasons.length >= seasonCount) {
+      players.push(p.name || p.playerName);
+    }
+  });
+  return [...new Set(players)];
+}
+
+function getPlayersWithExactSeasons(count) {
+  const players = [];
+  allPlayers.forEach(p => {
+    const seasons = getNonSubSeasons(p);
+    if (seasons.length === count) {
+      players.push(p.name || p.playerName);
+    }
+  });
+  return [...new Set(players)];
+}
+
+function getFirstNameStartsWith(letter) {
+  const players = [];
+  allPlayers.forEach(p => {
+    const name = p.name || p.playerName;
+    if (name && name.charAt(0).toUpperCase() === letter.toUpperCase()) {
+      players.push(name);
+    }
+  });
+  return [...new Set(players)];
+}
+
+function getLastNameStartsWith(letter) {
+  const players = [];
+  allPlayers.forEach(p => {
+    const name = p.name || p.playerName;
+    if (name) {
+      const parts = name.trim().split(' ');
+      const lastName = parts[parts.length - 1];
+      if (lastName && lastName.charAt(0).toUpperCase() === letter.toUpperCase()) {
+        players.push(name);
+      }
+    }
+  });
+  return [...new Set(players)];
+}
+
+// ============================================
+// PUZZLE GENERATION
+// ============================================
+function generateCategoryPool() {
+  const categories = [];
+  
+  // Get available season IDs (full keys like "2024-summer-gold")
+  const fullSeasonIds = new Set();
+  allPlayers.forEach(p => {
+    getNonSubSeasons(p).forEach(s => fullSeasonIds.add(s.seasonId));
+  });
+  const sortedFullSeasons = [...fullSeasonIds].sort().reverse();
+  
+  // Extract unique seasons (year-season only, like "2024-summer") for league-wide stats
+  const uniqueSeasons = new Set();
+  sortedFullSeasons.forEach(s => uniqueSeasons.add(extractSeasonFromKey(s)));
+  const sortedUniqueSeasons = [...uniqueSeasons].sort().reverse();
+  
+  // Filter to only 2024 and 2025 seasons
+  const recentUniqueSeasons = sortedUniqueSeasons.filter(s => s.startsWith('2024') || s.startsWith('2025'));
+  
+  console.log(`📊 Found ${sortedFullSeasons.length} team-season keys, ${sortedUniqueSeasons.length} unique seasons, ${recentUniqueSeasons.length} recent (2024/2025)`);
+  
+  // ========== TYPE: ROSTER (2024/2025 only) ==========
+  // Use unique seasons + team loop (not full season keys which already include team)
+  const teams = ['Black', 'Blue', 'Green', 'Red', 'Orange', 'Purple', 'Gold', 'Silver', 'White', 'Carolina', 'Army'];
+  recentUniqueSeasons.forEach(seasonId => {
+    teams.forEach(team => {
+      const roster = getTeamRoster(team, seasonId);
+      if (roster.length >= 5 && roster.length <= 25) {
+        const [year, szn] = seasonId.split('-');
+        categories.push({
+          name: `${year} ${szn.charAt(0).toUpperCase() + szn.slice(1)} ${team} Roster`,
+          players: roster,
+          type: 'roster'
+        });
+      }
+    });
+  });
+  
+  // ========== TYPE: CAREER ==========
+  // Career hits 150+
+  const careerHits150 = getCareerStatPlayers('hits', 150);
+  if (careerHits150.length >= 5 && careerHits150.length <= 25) {
+    categories.push({ name: '150+ Career Hits', players: careerHits150, type: 'career' });
+  }
+  
+  // Career runs 50+
+  const careerRuns50 = getCareerStatPlayers('runs', 50);
+  if (careerRuns50.length >= 5 && careerRuns50.length <= 25) {
+    categories.push({ name: '50+ Career Runs', players: careerRuns50, type: 'career' });
+  }
+  
+  // Career walks 10+
+  const careerWalks10 = getCareerStatPlayers('walks', 10);
+  if (careerWalks10.length >= 5 && careerWalks10.length <= 25) {
+    categories.push({ name: '10+ Career Walks', players: careerWalks10, type: 'career' });
+  }
+  
+  // Career games 100+
+  const careerGames100 = getCareerStatPlayers('games', 100);
+  if (careerGames100.length >= 5 && careerGames100.length <= 25) {
+    categories.push({ name: '100+ Career Games', players: careerGames100, type: 'career' });
+  }
+  
+  // ========== TYPE: SEASON (specific season stats) ==========
+  recentUniqueSeasons.forEach(seasonId => {
+    const [year, szn] = seasonId.split('-');
+    const seasonLabel = `${year} ${szn.charAt(0).toUpperCase() + szn.slice(1)}`;
+    
+    // Hits thresholds for specific seasons (higher since leagues have 150+ players)
+    [20, 25, 30, 35].forEach(threshold => {
+      const players = getSeasonSpecificStatPlayers('hits', threshold, seasonId);
+      if (players.length >= 5 && players.length <= 25) {
+        categories.push({
+          name: `${threshold}+ Hits in ${seasonLabel}`,
+          players,
+          type: 'season'
+        });
+      }
+    });
+    
+    // Runs thresholds for specific seasons
+    [10, 15, 20].forEach(threshold => {
+      const players = getSeasonSpecificStatPlayers('runs', threshold, seasonId);
+      if (players.length >= 5 && players.length <= 25) {
+        categories.push({
+          name: `${threshold}+ Runs in ${seasonLabel}`,
+          players,
+          type: 'season'
+        });
+      }
+    });
+    
+    // Walks thresholds for specific seasons
+    [5, 8].forEach(threshold => {
+      const players = getSeasonSpecificStatPlayers('walks', threshold, seasonId);
+      if (players.length >= 5 && players.length <= 25) {
+        categories.push({
+          name: `${threshold}+ Walks in ${seasonLabel}`,
+          players,
+          type: 'season'
+        });
+      }
+    });
+  });
+  
+  // ========== TYPE: TEAMSTAT (Team-specific stats in a season) ==========
+  recentUniqueSeasons.forEach(seasonId => {
+    const [year, szn] = seasonId.split('-');
+    const seasonLabel = `${year} ${szn.charAt(0).toUpperCase() + szn.slice(1)}`;
+    
+    teams.forEach(team => {
+      // Hits thresholds for specific team in season
+      [8, 10, 12, 15].forEach(threshold => {
+        const players = getTeamSeasonStatPlayers('hits', threshold, seasonId, team);
+        if (players.length >= 5 && players.length <= 20) {
+          categories.push({
+            name: `${threshold}+ Hits for ${seasonLabel} ${team}`,
+            players,
+            type: 'teamstat'
+          });
+        }
+      });
+      
+      // Runs thresholds for specific team in season
+      [5, 8, 10].forEach(threshold => {
+        const players = getTeamSeasonStatPlayers('runs', threshold, seasonId, team);
+        if (players.length >= 5 && players.length <= 20) {
+          categories.push({
+            name: `${threshold}+ Runs for ${seasonLabel} ${team}`,
+            players,
+            type: 'teamstat'
+          });
+        }
+      });
+      
+      // Games thresholds for specific team in season  
+      [8, 10, 12].forEach(threshold => {
+        const players = getTeamSeasonStatPlayers('games', threshold, seasonId, team);
+        if (players.length >= 5 && players.length <= 20) {
+          categories.push({
+            name: `${threshold}+ Games for ${seasonLabel} ${team}`,
+            players,
+            type: 'teamstat'
+          });
+        }
+      });
+    });
+  });
+  
+  // ========== TYPE: MULTI (Multi-team players) ==========
+  [2, 3, 4].forEach(count => {
+    const players = getMultiTeamPlayers(count);
+    if (players.length >= 5 && players.length <= 25) {
+      categories.push({
+        name: `Played for ${count}+ Teams`,
+        players,
+        type: 'multi'
+      });
+    }
+  });
+  
+  // ========== TYPE: VETERAN ==========
+  [3, 4, 5, 6, 7, 8].forEach(count => {
+    const players = getVeteranPlayers(count);
+    if (players.length >= 5 && players.length <= 25) {
+      categories.push({
+        name: `${count}+ Seasons Played`,
+        players,
+        type: 'veteran'
+      });
+    }
+  });
+  
+  // Exact seasons
+  [1, 2, 3].forEach(count => {
+    const players = getPlayersWithExactSeasons(count);
+    if (players.length >= 5 && players.length <= 25) {
+      categories.push({
+        name: `Exactly ${count} Season${count > 1 ? 's' : ''} Played`,
+        players,
+        type: 'veteran'
+      });
+    }
+  });
+  
+  // ========== TYPE: ALPHA (Name-based) ==========
+  'ABCDEFGHJKLMNPRSTW'.split('').forEach(letter => {
+    const firstPlayers = getFirstNameStartsWith(letter);
+    if (firstPlayers.length >= 5 && firstPlayers.length <= 25) {
+      categories.push({
+        name: `First Name Starts with "${letter}"`,
+        players: firstPlayers,
+        type: 'alpha'
+      });
+    }
+    
+    const lastPlayers = getLastNameStartsWith(letter);
+    if (lastPlayers.length >= 5 && lastPlayers.length <= 25) {
+      categories.push({
+        name: `Last Name Starts with "${letter}"`,
+        players: lastPlayers,
+        type: 'alpha'
+      });
+    }
+  });
+  
+  console.log(`📊 Generated ${categories.length} total categories`);
+  
+  // Debug: show counts per type
+  const typeCounts = {};
+  categories.forEach(c => {
+    typeCounts[c.type] = (typeCounts[c.type] || 0) + 1;
+  });
+  console.log('📊 Categories by type:', typeCounts);
+  
+  return categories;
+}
+
+function generateDailyPuzzle() {
+  const dayNum = getDayNumber();
+  const seed = dayNum * 13583;
+  
+  const allCategories = generateCategoryPool();
+  
+  // Group categories by type for variety rotation
+  const categoryTypes = ['roster', 'career', 'season', 'teamstat', 'multi', 'veteran', 'alpha'];
+  const byType = {};
+  categoryTypes.forEach(t => byType[t] = []);
+  
+  allCategories.forEach(cat => {
+    if (byType[cat.type]) {
+      byType[cat.type].push(cat);
+    }
+  });
+  
+  // Sort each type's categories alphabetically for deterministic ordering
+  categoryTypes.forEach(t => {
+    byType[t].sort((a, b) => a.name.localeCompare(b.name));
+  });
+  
+  // Filter to types that have valid categories
+  const availableTypes = categoryTypes.filter(t => byType[t].length > 0);
+  
+  console.log(`📊 Available category types: ${availableTypes.join(', ')} (${availableTypes.length} types)`);
+  
+  if (availableTypes.length === 0) {
+    throw new Error('No valid categories available');
+  }
+  
+  // Cycle through category types based on day number
+  // This ensures variety: Day 1 roster, Day 2 career, Day 3 season, etc.
+  const typeIndex = (dayNum - 1) % availableTypes.length;
+  const selectedType = availableTypes[typeIndex];
+  const typeCategories = byType[selectedType];
+  
+  // Within the type, rotate through categories deterministically
+  // Count how many times we've been on this type
+  const typeOccurrence = Math.floor((dayNum - 1) / availableTypes.length);
+  
+  // Use a consistent seed PER TYPE, not per day
+  // This ensures the shuffle order is stable so typeOccurrence properly cycles through
+  const typeSeed = (categoryTypes.indexOf(selectedType) + 1) * 7919 + LAUNCH_YEAR;
+  const shuffledTypeCategories = shuffleWithSeed([...typeCategories], typeSeed);
+  
+  // Pick category using modulo to ensure we cycle through all before repeating
+  const categoryIndex = typeOccurrence % shuffledTypeCategories.length;
+  const category = shuffledTypeCategories[categoryIndex];
+  
+  console.log(`📅 Day ${dayNum}: Type "${selectedType}" (occurrence #${typeOccurrence + 1}), Category: "${category.name}" (${category.players.length} players)`);
+  
+  const totalTime = BASE_TIME + (category.players.length * TIME_PER_PLAYER);
+  
+  return {
+    dayNum,
+    categoryName: category.name,
+    categoryType: category.type,
+    players: category.players,
+    totalTime
+  };
+}
+
+// ============================================
+// UI RENDERING
+// ============================================
+function renderPreGame() {
+  const content = document.getElementById('gameContent');
+  content.innerHTML = `
+    <div class="pre-game">
+      <h2>🎯 Today's Challenge</h2>
+      <div class="category-name" style="margin: 1rem 0; font-size: 1.5rem; color: var(--recall-primary);">
+        ${todaysPuzzle.categoryName}
+      </div>
+      <p>Name all the players in this category!</p>
+      <button class="start-btn" onclick="startGame()">▶️ Start</button>
+    </div>
+  `;
+}
+
+function renderPlaying() {
+  const content = document.getElementById('gameContent');
+  const pct = (gameState.timeRemaining / gameState.totalTime) * 100;
+  const timerClass = pct <= 15 ? 'danger' : pct <= 30 ? 'warning' : '';
+  
+  content.innerHTML = `
+    <div class="timer-container">
+      <div class="timer-display ${timerClass}" id="timerDisplay">${formatTime(gameState.timeRemaining)}</div>
+      <div class="timer-label">Time Remaining</div>
+      <div class="timer-bar">
+        <div class="timer-bar-fill ${timerClass}" id="timerBar" style="width: ${pct}%"></div>
+      </div>
+    </div>
+    
+    <div class="category-container">
+      <div class="category-label">Category</div>
+      <div class="category-name">${todaysPuzzle.categoryName}</div>
+      <div class="found-count">
+        <span id="foundCount">${gameState.foundPlayers.length}</span> / ${todaysPuzzle.players.length} found
+      </div>
+    </div>
+    
+    <div class="input-container">
+      <div class="guess-input-container">
+        <input type="text" 
+               id="guessInput" 
+               class="guess-input" 
+               placeholder="Type a player name..." 
+               autocomplete="off"
+               autocapitalize="words">
+        <div class="autocomplete-dropdown" id="autocomplete"></div>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    
+    <div class="found-list-container" id="foundListContainer" style="${gameState.foundPlayers.length === 0 ? 'display:none' : ''}">
+      <div class="found-list-header">
+        <span class="found-list-title">Found Players</span>
+        <button class="found-list-toggle" onclick="toggleFoundList()">Hide</button>
+      </div>
+      <div class="found-list" id="foundList">
+        ${gameState.foundPlayers.map(p => `<span class="found-player">${p}</span>`).join('')}
+      </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 1rem;">
+      <button class="action-btn secondary" onclick="giveUp()">Give Up</button>
+    </div>
+  `;
+  
+  setupInput();
+}
+
+function renderFinished() {
+  const found = gameState.foundPlayers.length;
+  const total = todaysPuzzle.players.length;
+  const missed = todaysPuzzle.players.filter(p => !gameState.foundPlayers.includes(p));
+  const isPerfect = found === total;
+  
+  // Calculate score
+  const playerPoints = found * 10;
+  const timeBonus = Math.max(0, gameState.timeRemaining);
+  const perfectBonus = isPerfect ? 50 : 0;
+  const totalScore = playerPoints + timeBonus + perfectBonus;
+  gameState.score = totalScore;
+  
+  // Save stats
+  updateStats(isPerfect, totalScore);
+  
+  const content = document.getElementById('gameContent');
+  content.innerHTML = `
+    <div class="results-container">
+      <div class="results-title">${isPerfect ? '🎉 Perfect!' : '⏱️ Time\'s Up!'}</div>
+      <div class="results-subtitle">${todaysPuzzle.categoryName}</div>
+      
+      <div class="score-breakdown">
+        <div class="score-item">
+          <div class="score-value">${found}/${total}</div>
+          <div class="score-label">Players Found</div>
+        </div>
+        <div class="score-item">
+          <div class="score-value">${playerPoints}</div>
+          <div class="score-label">Player Points</div>
+        </div>
+        <div class="score-item">
+          <div class="score-value">+${timeBonus}</div>
+          <div class="score-label">Time Bonus</div>
+        </div>
+        <div class="score-item">
+          <div class="score-value">+${perfectBonus}</div>
+          <div class="score-label">Perfect Bonus</div>
+        </div>
+      </div>
+      
+      <div class="total-score">
+        <div class="score-value">${totalScore}</div>
+        <div class="score-label">Total Score</div>
+      </div>
+      
+      <div class="action-buttons">
+        <button class="action-btn primary" onclick="shareResults()">📤 Share</button>
+      </div>
+    </div>
+    
+    ${found > 0 ? `
+    <div class="found-list-container">
+      <div class="found-list-header">
+        <span class="found-list-title">✅ Found (${found})</span>
+      </div>
+      <div class="found-list">
+        ${gameState.foundPlayers.map(p => `<span class="found-player">${p}</span>`).join('')}
+      </div>
+    </div>
+    ` : ''}
+    
+    ${missed.length > 0 ? `
+    <div class="missed-container">
+      <div class="missed-header" onclick="toggleMissed()">
+        <span class="missed-title">❌ Missed (${missed.length})</span>
+        <span class="missed-toggle" id="missedToggle">Show ▼</span>
+      </div>
+      <div class="missed-list collapsed" id="missedList">
+        ${missed.map(p => `<span class="missed-player">${p}</span>`).join('')}
+      </div>
+    </div>
+    ` : ''}
+  `;
+  
+  saveGameState();
+}
+
+// ============================================
+// GAME LOGIC
+// ============================================
+window.startGame = function() {
+  gameState.phase = 'playing';
+  gameState.foundPlayers = [];
+  gameState.timeRemaining = todaysPuzzle.totalTime;
+  gameState.totalTime = todaysPuzzle.totalTime;
+  gameState.startTime = Date.now();
+  gameState.score = 0;
+  
+  renderPlaying();
+  startTimer();
+  saveGameState();
+  
+  document.getElementById('guessInput').focus();
+};
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    gameState.timeRemaining--;
+    updateTimerDisplay();
+    
+    if (gameState.timeRemaining <= 0) {
+      endGame();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const display = document.getElementById('timerDisplay');
+  const bar = document.getElementById('timerBar');
+  if (!display || !bar) return;
+  
+  const pct = (gameState.timeRemaining / gameState.totalTime) * 100;
+  const timerClass = pct <= 15 ? 'danger' : pct <= 30 ? 'warning' : '';
+  
+  display.textContent = formatTime(gameState.timeRemaining);
+  display.className = `timer-display ${timerClass}`;
+  bar.style.width = `${pct}%`;
+  bar.className = `timer-bar-fill ${timerClass}`;
+}
+
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function endGame() {
+  clearInterval(timerInterval);
+  gameState.phase = 'finished';
+  gameState.endTime = Date.now();
+  renderFinished();
+}
+
+window.giveUp = function() {
+  if (confirm('Are you sure you want to give up?')) {
+    gameState.timeRemaining = 0;
+    endGame();
+  }
+};
+
+// ============================================
+// INPUT & AUTOCOMPLETE
+// ============================================
+function setupInput() {
+  const input = document.getElementById('guessInput');
+  const dropdown = document.getElementById('autocomplete');
+  let selectedIndex = -1;
+  
+  input.addEventListener('input', () => {
+    const query = input.value.trim().toLowerCase();
+    
+    if (query.length < 2) {
+      dropdown.classList.remove('active');
+      return;
+    }
+    
+    const matches = playerNames.filter(name => 
+      name.toLowerCase().includes(query)
+    ).slice(0, 8);
+    
+    if (matches.length === 0) {
+      dropdown.classList.remove('active');
+      return;
+    }
+    
+    dropdown.innerHTML = matches.map((name, i) => {
+      const alreadyGuessed = gameState.foundPlayers.includes(name);
+      return `<div class="autocomplete-item ${alreadyGuessed ? 'already-guessed' : ''} ${i === selectedIndex ? 'selected' : ''}" 
+                   data-name="${name}">${name}</div>`;
+    }).join('');
+    
+    dropdown.classList.add('active');
+    selectedIndex = -1;
+    
+    dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+      item.addEventListener('click', () => {
+        if (!item.classList.contains('already-guessed')) {
+          submitGuess(item.dataset.name);
+        }
+      });
+    });
+  });
+  
+  input.addEventListener('keydown', (e) => {
+    const items = dropdown.querySelectorAll('.autocomplete-item:not(.already-guessed)');
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+      updateSelection(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIndex = Math.max(selectedIndex - 1, 0);
+      updateSelection(items);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedIndex >= 0 && items[selectedIndex]) {
+        submitGuess(items[selectedIndex].dataset.name);
+      } else if (items.length === 1) {
+        submitGuess(items[0].dataset.name);
+      }
+    } else if (e.key === 'Escape') {
+      dropdown.classList.remove('active');
+    }
+  });
+  
+  function updateSelection(items) {
+    items.forEach((item, i) => {
+      item.classList.toggle('selected', i === selectedIndex);
+    });
+    if (items[selectedIndex]) {
+      items[selectedIndex].scrollIntoView({ block: 'nearest' });
+    }
+  }
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.remove('active');
+    }
+  });
+}
+
+function submitGuess(name) {
+  const input = document.getElementById('guessInput');
+  const dropdown = document.getElementById('autocomplete');
+  const feedback = document.getElementById('feedback');
+  
+  dropdown.classList.remove('active');
+  input.value = '';
+  
+  // Check if already found
+  if (gameState.foundPlayers.includes(name)) {
+    showFeedback('Already found!', 'wrong');
+    return;
+  }
+  
+  // Check if correct
+  if (todaysPuzzle.players.includes(name)) {
+    gameState.foundPlayers.push(name);
+    showFeedback(`✓ ${name}`, 'correct');
+    updateFoundDisplay();
+    saveGameState();
+    
+    // Check for win
+    if (gameState.foundPlayers.length === todaysPuzzle.players.length) {
+      setTimeout(() => endGame(), 500);
+    }
+  } else {
+    showFeedback('Not in this category', 'wrong');
+  }
+  
+  input.focus();
+}
+
+function showFeedback(text, type) {
+  const feedback = document.getElementById('feedback');
+  feedback.textContent = text;
+  feedback.className = `feedback ${type}`;
+  
+  setTimeout(() => {
+    feedback.textContent = '';
+    feedback.className = 'feedback';
+  }, 1500);
+}
+
+function updateFoundDisplay() {
+  const count = document.getElementById('foundCount');
+  const list = document.getElementById('foundList');
+  const container = document.getElementById('foundListContainer');
+  
+  count.textContent = gameState.foundPlayers.length;
+  
+  const newest = gameState.foundPlayers[gameState.foundPlayers.length - 1];
+  list.innerHTML += `<span class="found-player">${newest}</span>`;
+  
+  container.style.display = '';
+}
+
+window.toggleFoundList = function() {
+  const list = document.getElementById('foundList');
+  const btn = list.previousElementSibling.querySelector('.found-list-toggle');
+  list.classList.toggle('collapsed');
+  btn.textContent = list.classList.contains('collapsed') ? 'Show' : 'Hide';
+};
+
+window.toggleMissed = function() {
+  const list = document.getElementById('missedList');
+  const toggle = document.getElementById('missedToggle');
+  list.classList.toggle('collapsed');
+  toggle.textContent = list.classList.contains('collapsed') ? 'Show ▼' : 'Hide ▲';
+};
+
+// ============================================
+// STATS MANAGEMENT
+// ============================================
+function getLocalStats() {
+  try {
+    const stored = localStorage.getItem('acesRosterRecall_stats');
+    if (stored) return JSON.parse(stored);
+  } catch (e) {}
+  return {
+    gamesPlayed: 0,
+    perfectGames: 0,
+    totalScore: 0,
+    bestScore: 0,
+    lastPlayedPuzzle: 0
+  };
+}
+
+function saveLocalStats(stats) {
+  try {
+    localStorage.setItem('acesRosterRecall_stats', JSON.stringify(stats));
+  } catch (e) {}
+}
+
+async function updateStats(isPerfect, score) {
+  let stats;
+  let firebaseLoadFailed = false;
+  
+  if (currentUser) {
+    const firebaseStats = await loadStatsFromFirebase();
+    
+    if (firebaseStats === undefined) {
+      // Firebase load FAILED - don't risk overwriting with zeros
+      firebaseLoadFailed = true;
+      console.warn('Firebase load failed - using localStorage only, will NOT save to Firebase');
+      stats = getLocalStats();
+    } else {
+      // Firebase succeeded (null = no data, or actual stats)
+      const localStats = getLocalStats();
+      stats = mergeStats(firebaseStats, localStats);
+    }
+  } else {
+    stats = getLocalStats();
+  }
+  
+  // Only count if we haven't played today
+  if (stats.lastPlayedPuzzle !== todaysPuzzle.dayNum) {
+    stats.gamesPlayed++;
+    if (isPerfect) stats.perfectGames++;
+    stats.totalScore += score;
+    stats.bestScore = Math.max(stats.bestScore, score);
+    stats.lastPlayedPuzzle = todaysPuzzle.dayNum;
+    
+    saveLocalStats(stats);
+    
+    // Only save to Firebase if load didn't fail
+    if (!firebaseLoadFailed) {
+      saveStatsToFirebase(stats);
+    }
+  }
+}
+
+// ============================================
+// SHARE
+// ============================================
+window.shareResults = function() {
+  const found = gameState.foundPlayers.length;
+  const total = todaysPuzzle.players.length;
+  const pct = Math.round((found / total) * 100);
+  
+  const bars = [];
+  for (let i = 0; i < 10; i++) {
+    bars.push(i < Math.round(pct / 10) ? '🟩' : '⬜');
+  }
+  
+  const text = `🧠 Player Recall #${todaysPuzzle.dayNum}
+${todaysPuzzle.categoryName}
+${found}/${total} (${pct}%) | ${gameState.score} pts
+
+${bars.join('')}
+
+acessoftballreference.com/roster-recall.html`;
+  
+  if (navigator.share) {
+    navigator.share({ text }).catch(() => copyToClipboard(text));
+  } else {
+    copyToClipboard(text);
+  }
+};
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Copied to clipboard!');
+  }).catch(() => {
+    showToast('Could not copy');
+  });
+}
+
+function showToast(text) {
+  const toast = document.getElementById('toast');
+  toast.textContent = text;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ============================================
+// FIREBASE PERSISTENCE
+// ============================================
+async function saveStatsToFirebase(stats) {
+  if (!currentUser) return;
+  
+  try {
+    const statsRef = doc(db, 'acesRosterRecallGames', currentUser.uid);
+    await setDoc(statsRef, {
+      ...stats,
+      lastPlayedAt: serverTimestamp(),
+      displayName: currentUser.displayName || 'Anonymous'
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error saving stats:', error);
+  }
+}
+
+async function loadStatsFromFirebase() {
+  if (!currentUser) return null;
+  
+  try {
+    const statsRef = doc(db, 'acesRosterRecallGames', currentUser.uid);
+    const statsDoc = await getDoc(statsRef);
+    
+    if (statsDoc.exists()) {
+      const data = statsDoc.data();
+      return {
+        gamesPlayed: data.gamesPlayed || 0,
+        perfectGames: data.perfectGames || 0,
+        totalScore: data.totalScore || 0,
+        bestScore: data.bestScore || 0,
+        lastPlayedPuzzle: data.lastPlayedPuzzle || 0
+      };
+    }
+    return null; // No document exists
+  } catch (error) {
+    console.error('Error loading stats from Firebase:', error);
+    return undefined; // Error occurred - distinguish from no data
+  }
+}
+
+// Merge stats - keep the best values from Firebase and localStorage
+function mergeStats(firebaseStats, localStats) {
+  if (!firebaseStats && !localStats) return getDefaultStats();
+  if (!firebaseStats) return localStats;
+  if (!localStats) return firebaseStats;
+  
+  return {
+    gamesPlayed: Math.max(firebaseStats.gamesPlayed || 0, localStats.gamesPlayed || 0),
+    perfectGames: Math.max(firebaseStats.perfectGames || 0, localStats.perfectGames || 0),
+    totalScore: Math.max(firebaseStats.totalScore || 0, localStats.totalScore || 0),
+    bestScore: Math.max(firebaseStats.bestScore || 0, localStats.bestScore || 0),
+    lastPlayedPuzzle: Math.max(firebaseStats.lastPlayedPuzzle || 0, localStats.lastPlayedPuzzle || 0)
+  };
+}
+
+function getDefaultStats() {
+  return {
+    gamesPlayed: 0,
+    perfectGames: 0,
+    totalScore: 0,
+    bestScore: 0,
+    lastPlayedPuzzle: 0
+  };
+}
+
+function saveGameStateLocal() {
+  try {
+    localStorage.setItem('acesRosterRecall_game', JSON.stringify({
+      dayNum: todaysPuzzle.dayNum,
+      phase: gameState.phase,
+      foundPlayers: gameState.foundPlayers,
+      timeRemaining: gameState.timeRemaining,
+      totalTime: gameState.totalTime,
+      score: gameState.score
+    }));
+  } catch (e) {}
+}
+
+function loadGameStateLocal() {
+  try {
+    const stored = localStorage.getItem('acesRosterRecall_game');
+    if (stored) {
+      const data = JSON.parse(stored);
+      if (data.dayNum === todaysPuzzle.dayNum) {
+        gameState.phase = data.phase || 'pre';
+        gameState.foundPlayers = data.foundPlayers || [];
+        gameState.timeRemaining = data.timeRemaining || 0;
+        gameState.totalTime = data.totalTime || todaysPuzzle.totalTime;
+        gameState.score = data.score || 0;
+        return true;
+      }
+    }
+  } catch (e) {}
+  return false;
+}
+
+async function saveGameStateFirebase() {
+  if (!currentUser) return;
+  
+  try {
+    const gameRef = doc(db, 'acesRosterRecallGames', currentUser.uid, 'dailyGames', String(todaysPuzzle.dayNum));
+    await setDoc(gameRef, {
+      dayNum: todaysPuzzle.dayNum,
+      phase: gameState.phase,
+      foundPlayers: gameState.foundPlayers,
+      timeRemaining: gameState.timeRemaining,
+      totalTime: gameState.totalTime,
+      score: gameState.score,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error saving to Firebase:', error);
+  }
+}
+
+async function loadGameStateFirebase() {
+  if (!currentUser) return false;
+  
+  try {
+    const gameRef = doc(db, 'acesRosterRecallGames', currentUser.uid, 'dailyGames', String(todaysPuzzle.dayNum));
+    const gameDoc = await getDoc(gameRef);
+    
+    if (gameDoc.exists()) {
+      const data = gameDoc.data();
+      if (data.dayNum === todaysPuzzle.dayNum) {
+        gameState.phase = data.phase || 'pre';
+        gameState.foundPlayers = data.foundPlayers || [];
+        gameState.timeRemaining = data.timeRemaining || 0;
+        gameState.totalTime = data.totalTime || todaysPuzzle.totalTime;
+        gameState.score = data.score || 0;
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading from Firebase:', error);
+  }
+  return false;
+}
+
+function saveGameState() {
+  saveGameStateLocal();
+  if (currentUser) {
+    saveGameStateFirebase();
+  }
+}
+
+async function loadGameState() {
+  if (currentUser) {
+    const loaded = await loadGameStateFirebase();
+    if (loaded) return true;
+  }
+  return loadGameStateLocal();
+}
+
+// ============================================
+// USER STATS DISPLAY
+// ============================================
+async function updateUserStatsDisplay() {
+  const container = document.getElementById('userStatsContainer');
+  if (!container) return;
+  
+  if (!currentUser) {
+    container.innerHTML = `
+      <div class="user-stats-content">
+        <div class="sign-in-prompt">
+          <span>🔒</span>
+          <a href="signin.html">Sign in</a> to track your stats across devices
+        </div>
+      </div>
+    `;
+    return;
+  }
+  
+  // Load from Firebase first, merge with localStorage for best data
+  let stats;
+  const firebaseStats = await loadStatsFromFirebase();
+  const localStats = getLocalStats();
+  
+  if (firebaseStats === undefined) {
+    // Firebase failed - just use localStorage
+    stats = localStats;
+  } else {
+    // Merge for best of both
+    stats = mergeStats(firebaseStats, localStats);
+    
+    // If localStorage has better data, sync it to Firebase
+    if (firebaseStats && localStats && localStats.gamesPlayed > (firebaseStats.gamesPlayed || 0)) {
+      console.log('Syncing better localStorage stats to Firebase');
+      saveStatsToFirebase(stats);
+    }
+  }
+  
+  if (!stats) stats = getDefaultStats();
+  
+  const avgScore = stats.gamesPlayed > 0 ? Math.round(stats.totalScore / stats.gamesPlayed) : 0;
+  
+  container.innerHTML = `
+    <div class="user-stats-content">
+      <div class="user-greeting">👋 ${currentUser.displayName || 'Player'}</div>
+      <div class="lifetime-stats">
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${stats.gamesPlayed}</span>
+          <span class="lifetime-label">Played</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${stats.perfectGames}</span>
+          <span class="lifetime-label">Perfect</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${avgScore}</span>
+          <span class="lifetime-label">Avg Score</span>
+        </div>
+        <div class="lifetime-stat">
+          <span class="lifetime-value">${stats.bestScore}</span>
+          <span class="lifetime-label">Best</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================
+// AUTH STATE
+// ============================================
+function setupAuthListener() {
+  onAuthChange(async (user) => {
+    const wasLoggedOut = !currentUser;
+    currentUser = user;
+    
+    if (user) {
+      // User just signed in - migrate localStorage stats if they're better
+      if (wasLoggedOut) {
+        const localStats = getLocalStats();
+        const firebaseStats = await loadStatsFromFirebase();
+        
+        if (localStats.gamesPlayed > 0 && (firebaseStats === null || (firebaseStats && firebaseStats.gamesPlayed < localStats.gamesPlayed))) {
+          console.log('Migrating localStorage stats to Firebase on sign-in');
+          const merged = mergeStats(firebaseStats, localStats);
+          await saveStatsToFirebase(merged);
+        }
+      }
+      
+      if (todaysPuzzle) {
+        const firebaseHasState = await loadGameStateFirebase();
+        if (firebaseHasState) {
+          renderBasedOnPhase();
+        }
+      }
+    }
+    
+    await updateUserStatsDisplay();
+  });
+}
+
+function renderBasedOnPhase() {
+  if (gameState.phase === 'pre') {
+    renderPreGame();
+  } else if (gameState.phase === 'playing') {
+    // Game was in progress but page was closed - treat as finished
+    gameState.phase = 'finished';
+    renderFinished();
+  } else if (gameState.phase === 'finished') {
+    renderFinished();
+  }
+}
+
+// ============================================
+// HOW TO PLAY
+// ============================================
+window.toggleHowToPlay = function() {
+  const section = document.getElementById('howToPlay');
+  const toggle = document.getElementById('howToPlayToggle');
+  section.classList.toggle('expanded');
+  toggle.textContent = section.classList.contains('expanded') ? '▲' : '▼';
+};
+
+// ============================================
+// INITIALIZATION
+// ============================================
+async function init() {
+  try {
+    // Check if before launch
+    const launchDate = new Date(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY).setHours(0, 0, 0, 0);
+    const now = new Date().setHours(0, 0, 0, 0);
+    
+    if (now < launchDate) {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      const launchDateObj = new Date(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY);
+      document.getElementById('puzzleDate').textContent = `Launching ${launchDateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`;
+      document.getElementById('gameContent').innerHTML = `
+        <div class="pre-game">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">⏱️</div>
+          <h3 style="margin: 0;">Coming Soon!</h3>
+        </div>
+      `;
+      return;
+    }
+    
+    // Check for existing auth
+    currentUser = getCurrentUser();
+    
+    // Load players
+    console.log('Loading player data...');
+    const rawPlayers = await getAllPlayerStatsOptimized();
+    allPlayers = rawPlayers.filter(p => p.migrated !== true);
+    playerNames = allPlayers.map(p => p.name || p.playerName).filter(Boolean);
+    console.log(`Loaded ${allPlayers.length} players`);
+    
+    // Generate puzzle
+    todaysPuzzle = generateDailyPuzzle();
+    console.log('Today\'s puzzle:', todaysPuzzle.categoryName, `(${todaysPuzzle.players.length} players, ${todaysPuzzle.totalTime}s)`);
+    
+    // Display date
+    const today = new Date();
+    document.getElementById('puzzleDate').textContent = 
+      `Puzzle #${todaysPuzzle.dayNum} • ${today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}`;
+    
+    // Load saved state
+    await loadGameState();
+    
+    // Setup
+    setupAuthListener();
+    await updateUserStatsDisplay();
+    
+    // Render based on state
+    renderBasedOnPhase();
+    
+    // Hide loading
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    
+  } catch (error) {
+    console.error('Error initializing game:', error);
+    document.getElementById('loadingOverlay').innerHTML = `
+      <div style="text-align: center; padding: 2rem;">
+        <p>Error loading game</p>
+        <p style="color: var(--text-light); font-size: 0.9rem;">${error.message}</p>
+        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; cursor: pointer;">Retry</button>
+      </div>
+    `;
+  }
+}
+
+// Start
+init();
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

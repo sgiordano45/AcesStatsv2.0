@@ -1,0 +1,2672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Tracker Review - Mountainside Aces Admin</title>
+<meta name="theme-color" content="#6b21a8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --admin-color: #6b21a8;
+    --admin-secondary: #7c3aed;
+    --tracker-color: #0891b2;
+    --tracker-secondary: #06b6d4;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    --success-color: #22c55e;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --info-color: #3b82f6;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+
+  .loading-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .softball-spinner::before {
+    content: '📊';
+    font-size: 80px;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+
+  .loading-text {
+    margin-top: 1rem;
+    font-size: 1.125rem;
+    color: var(--text-dark);
+    font-weight: 600;
+  }
+
+  @keyframes spin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+  }
+
+  /* Auth Gate */
+  .auth-gate {
+    display: none;
+    max-width: 500px;
+    margin: 4rem auto;
+    padding: 3rem;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+  }
+
+  .auth-gate h2 {
+    color: var(--danger-color);
+    margin-bottom: 1rem;
+  }
+
+  .auth-gate p {
+    color: var(--text-light);
+    margin-bottom: 2rem;
+  }
+
+  .auth-gate a {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: var(--admin-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--tracker-color) 0%, var(--tracker-secondary) 100%);
+    color: white;
+    padding: 2rem 2rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .header::after {
+    content: '🎯';
+    position: absolute;
+    bottom: -40px;
+    left: -30px;
+    font-size: 180px;
+    opacity: 0.08;
+  }
+
+  .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+  }
+
+  .header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.95rem;
+  }
+
+  .admin-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+  }
+
+  .header-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .nav-btn {
+    padding: 0.75rem 1.25rem;
+    border: 2px solid white;
+    background: white;
+    color: var(--tracker-color);
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .nav-btn:hover {
+    background: var(--accent-color);
+    transform: translateY(-2px);
+  }
+
+  /* Main Content */
+  .main-content {
+    display: none;
+  }
+
+  .main-content.visible {
+    display: block;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* Info Boxes */
+  .info-box, .warning-box, .error-box, .success-box {
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .info-box {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border: 2px solid var(--info-color);
+  }
+
+  .warning-box {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 2px solid var(--warning-color);
+  }
+
+  .error-box {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border: 2px solid var(--danger-color);
+  }
+
+  .success-box {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    border: 2px solid var(--success-color);
+  }
+
+  .hidden { display: none !important; }
+
+  /* Section Cards */
+  .section {
+    background: var(--card-bg);
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+  }
+
+  .section-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1.25rem 1.5rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-body {
+    padding: 1.5rem;
+  }
+
+  /* Game Cards */
+  .game-list {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .game-card {
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .game-card:hover {
+    border-color: var(--tracker-color);
+    box-shadow: var(--shadow-md);
+  }
+
+  .game-card.selected {
+    border-color: var(--tracker-color);
+    background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+  }
+
+  .game-card.converted {
+    opacity: 0.6;
+    border-color: var(--success-color);
+    background: #f0fdf4;
+  }
+
+  .game-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .game-card-teams {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .game-card-score {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--tracker-color);
+  }
+
+  /* Linescore / scorecard */
+  .linescore-table {
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+  }
+  .linescore-table th,
+  .linescore-table td {
+    border: 1px solid var(--border-color);
+    padding: 0.3rem 0.6rem;
+    text-align: center;
+    min-width: 2rem;
+  }
+  .linescore-table th {
+    background: #f1f5f9;
+    font-weight: 600;
+    color: var(--text-light);
+  }
+  .linescore-table td.team-name {
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-dark);
+    padding-right: 1rem;
+    min-width: 7rem;
+  }
+  .linescore-table td.totals {
+    font-weight: 700;
+    background: #f8fafc;
+    border-left: 2px solid var(--border-color);
+  }
+  .linescore-table tr.your-team td {
+    background: #f0fdf4;
+  }
+  .linescore-table tr.your-team td.totals {
+    background: #dcfce7;
+    color: var(--primary-color);
+  }
+
+  .game-card-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-light);
+  }
+
+  .game-card-status {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .status-pending {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .status-converted {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  /* Review Panel */
+  .review-panel {
+    display: none;
+  }
+
+  .review-panel.visible {
+    display: block;
+  }
+
+  .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .review-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+
+  .review-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  /* Stats Table */
+  .stats-table-container {
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+  }
+
+  .stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .stats-table th,
+  .stats-table td {
+    padding: 0.75rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .stats-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: var(--text-light);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stats-table th:first-child,
+  .stats-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+  }
+
+  .stats-table tr:hover {
+    background: #f8fafc;
+  }
+
+  .stats-table .player-name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .stats-table .player-warning {
+    color: var(--warning-color);
+    font-size: 1rem;
+  }
+
+  .stats-table .player-matched {
+    color: var(--success-color);
+    font-size: 0.8rem;
+  }
+
+  /* Play by Play */
+  .play-by-play {
+    max-height: 400px;
+    overflow-y: auto;
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+  }
+
+  .play-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+  }
+
+  .play-item:last-child {
+    border-bottom: none;
+  }
+
+  .play-item select {
+    max-width: 160px;
+  }
+
+  .play-inning {
+    font-weight: 600;
+    color: var(--tracker-color);
+  }
+
+  .play-result {
+    color: var(--text-dark);
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background: var(--tracker-color);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--tracker-secondary);
+    transform: translateY(-2px);
+  }
+
+  .btn-success {
+    background: var(--success-color);
+    color: white;
+  }
+
+  .btn-success:hover {
+    background: #16a34a;
+    transform: translateY(-2px);
+  }
+
+  .btn-danger {
+    background: var(--danger-color);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #dc2626;
+  }
+
+  .btn-secondary {
+    background: #e2e8f0;
+    color: var(--text-dark);
+  }
+
+  .btn-secondary:hover {
+    background: #cbd5e1;
+  }
+
+  .btn-warning {
+    background: #f59e0b;
+    color: white;
+  }
+
+  .btn-warning:hover {
+    background: #d97706;
+    transform: translateY(-2px);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-light);
+  }
+
+  .empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  .empty-state h3 {
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  /* Player Matching */
+  .match-status {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+  }
+
+  .match-found {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .match-missing {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  /* Toast */
+  .toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .toast {
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .toast-success { background: var(--success-color); }
+  .toast-error { background: var(--danger-color); }
+  .toast-warning { background: var(--warning-color); }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* Play Editor */
+  .play-item-editable {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+  }
+  .play-item-editable:last-child { border-bottom: none; }
+  .play-index {
+    min-width: 24px;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    font-weight: 600;
+  }
+  .play-pitcher-badge {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.4rem;
+    border-radius: 4px;
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    white-space: nowrap;
+  }
+  .play-edit-btn {
+    margin-left: auto;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    color: var(--text-dark);
+    white-space: nowrap;
+  }
+  .play-edit-btn:hover { background: #f1f5f9; }
+
+  /* Inline play edit form */
+  .play-edit-row {
+    background: #f8fafc;
+    border: 1px solid var(--info-color);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin: 0.25rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .play-edit-row select, .play-edit-row input {
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.85rem;
+  }
+  .play-edit-row .save-play-btn {
+    padding: 0.35rem 0.75rem;
+    background: var(--info-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .play-edit-row .cancel-play-btn {
+    padding: 0.35rem 0.75rem;
+    background: #e2e8f0;
+    color: var(--text-dark);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  /* Pitcher reassign modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal-box {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal-box h3 { margin: 0 0 0.5rem; font-size: 1.2rem; }
+  .modal-box p { margin: 0 0 1.25rem; color: var(--text-light); font-size: 0.9rem; }
+  .modal-box label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem; }
+  .modal-box select, .modal-box input {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+  }
+  .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem; }
+
+  /* Pitching summary section */
+  .pitching-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 700px) { .pitching-grid { grid-template-columns: 1fr; } }
+  .pitcher-card {
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+  .pitcher-card h5 {
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-light);
+  }
+  .pitcher-stat-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+  }
+  .pitcher-stat-row label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+  }
+  .pitcher-stat-row input {
+    width: 70px;
+    padding: 0.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+  .pitcher-name-input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+  }
+  .pitcher-name-select {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+  }
+  .auto-calc-badge {
+    font-size: 0.75rem;
+    background: #dbeafe;
+    color: #1d4ed8;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header-content {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .header-buttons {
+      justify-content: center;
+    }
+    
+    .review-header {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .stats-table {
+      font-size: 0.8rem;
+    }
+    
+    .stats-table th,
+    .stats-table td {
+      padding: 0.5rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+  <div class="loading-text">Loading Game Tracker Data...</div>
+</div>
+
+<!-- Auth Gate -->
+<div class="auth-gate" id="authGate">
+  <h2>🔒 Admin Access Required</h2>
+  <p>You must be signed in as an administrator to access this page.</p>
+  <a href="signin.html">Sign In</a>
+  <a href="index.html" style="background: var(--text-light);">Back to Home</a>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Main Content -->
+<div class="main-content" id="mainContent">
+  <nav-component></nav-component>
+  
+  <header class="header">
+    <div class="header-content">
+      <div>
+        <h1>🎯 Game Tracker Review</h1>
+        <p>Convert tracked game stats to official records</p>
+        <span class="admin-badge">Admin Tool</span>
+      </div>
+      <div class="header-buttons">
+        <a href="aggregate-stats.html" class="nav-btn">📊 Aggregator</a>
+        <a href="submit-stats.html" class="nav-btn">📝 Submit Stats</a>
+        <a href="index.html" class="nav-btn">🏠 Home</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Info Messages -->
+    <div class="info-box" id="infoMessage">
+      <span>ℹ️</span>
+      <span id="infoMessageText">Select a game from the list to review and convert its tracked stats.</span>
+    </div>
+    <div class="warning-box hidden" id="warningMessage">
+      <span>⚠️</span>
+      <span id="warningMessageText"></span>
+    </div>
+    <div class="error-box hidden" id="errorMessage">
+      <span>❌</span>
+      <span id="errorMessageText"></span>
+    </div>
+    <div class="success-box hidden" id="successMessage">
+      <span>✅</span>
+      <span id="successMessageText"></span>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="section">
+      <div class="section-header">
+        <span>🔍</span> Filter Games
+      </div>
+      <div class="section-body">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+          <div>
+            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Season</label>
+            <select id="seasonFilter" style="padding: 0.75rem 1rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; min-width: 200px;">
+              <option value="">Loading...</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Team</label>
+            <select id="teamFilter" style="padding: 0.75rem 1rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; min-width: 200px;">
+              <option value="">All Teams</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Status</label>
+            <select id="statusFilter" style="padding: 0.75rem 1rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; min-width: 150px;">
+              <option value="pending">Pending Review</option>
+              <option value="converted">Already Converted</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="loadGameResults()">
+            🔄 Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game List Section -->
+    <div class="section">
+      <div class="section-header">
+        <span>📋</span> Tracked Games
+        <span id="gameCount" style="margin-left: auto; font-size: 0.9rem; color: var(--text-light);"></span>
+      </div>
+      <div class="section-body">
+        <div class="game-list" id="gameList">
+          <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <h3>No Games Found</h3>
+            <p>No tracked games match your filters.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Panel -->
+    <div class="review-panel" id="reviewPanel">
+      <div class="section">
+        <div class="section-header">
+          <span>📊</span> Review Stats
+        </div>
+        <div class="section-body">
+          <div class="review-header">
+            <div>
+              <div class="review-title" id="reviewTitle">Game Details</div>
+              <div style="color: var(--text-light); margin-top: 0.25rem;" id="reviewMeta"></div>
+              <div id="linescoreContainer" style="margin-top: 1rem;"></div>
+            </div>
+            <div class="review-actions">
+              <button class="btn btn-secondary" onclick="closeReview()">✕ Close</button>
+              <button class="btn btn-warning" id="forceReConvertBtn" onclick="forceReConvert()" style="display:none;">
+                ⚠️ Force Re-Convert
+              </button>
+              <button class="btn btn-success" id="convertBtn" onclick="convertToOfficial()">
+                ✅ Convert to Official Stats
+              </button>
+            </div>
+          </div>
+
+          <!-- Batting Stats Table -->
+          <h4 style="margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>⚾</span> Batting Stats
+            <span id="playerMatchSummary" style="font-size: 0.85rem; font-weight: 400; color: var(--text-light);"></span>
+          </h4>
+          <div class="stats-table-container">
+            <table class="stats-table" id="battingStatsTable">
+              <thead>
+                <tr>
+                  <th>Player</th>
+                  <th>AB</th>
+                  <th>H</th>
+                  <th>R</th>
+                  <th>BB</th>
+                  <th>1B</th>
+                  <th>2B</th>
+                  <th>3B</th>
+                  <th>HR</th>
+                  <th>RBI</th>
+                  <th>AVG</th>
+                  <th>OBP</th>
+                </tr>
+              </thead>
+              <tbody id="battingStatsBody">
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Play by Play -->
+          <h4 style="margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>&#x1F4DC;</span> Play-by-Play Log
+            <span style="font-size:0.8rem; font-weight:400; color:var(--text-light); margin-left:0.5rem;" id="playEditStatus"></span>
+          </h4>
+
+          <!-- Bulk Pitcher Reassign -->
+          <div id="pitcherReassignBar" style="display:none; background:#fef3c7; border:2px solid #f59e0b; border-radius:10px; padding:1rem; margin-bottom:1rem;">
+            <div style="font-weight:700; margin-bottom:0.75rem;">Reassign Opposing Pitcher From Play Onward</div>
+            <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:flex-end;">
+              <div>
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.25rem;">Starting at play #</label>
+                <input type="number" id="reassignFromIndex" min="1" style="width:80px; padding:0.5rem; border:2px solid var(--border-color); border-radius:6px; font-size:0.95rem;">
+              </div>
+              <div>
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.25rem;">New pitcher</label>
+                <select id="reassignPitcherSelect" style="padding:0.5rem; border:2px solid var(--border-color); border-radius:6px; font-size:0.95rem; min-width:200px;">
+                  <option value="">Select pitcher...</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" onclick="applyPitcherReassign()" style="padding:0.5rem 1rem;">Apply</button>
+              <button class="btn btn-secondary" onclick="document.getElementById('pitcherReassignBar').style.display='none'" style="padding:0.5rem 1rem;">Cancel</button>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem; flex-wrap:wrap;">
+            <button class="btn btn-secondary" onclick="togglePitcherReassign()" style="font-size:0.85rem; padding:0.5rem 1rem;">
+              Reassign Pitcher (Bulk)
+            </button>
+            <button class="btn btn-primary" id="savePlayEditsBtn" onclick="savePlayEdits()" style="font-size:0.85rem; padding:0.5rem 1rem; display:none;">
+              Save Play Edits &amp; Recalculate Stats
+            </button>
+          </div>
+
+          <div class="play-by-play" id="playByPlay">
+            <div class="empty-state" style="padding: 2rem;">
+              <p>No plays recorded</p>
+            </div>
+          </div>
+
+          <!-- Pitching Stats Section -->
+          <div id="pitchingSection" style="margin-top:2rem;">
+            <h4 style="margin: 0 0 1rem; display:flex; align-items:center; gap:0.5rem;">
+              <span>&#x26BE;</span> Pitching Stats
+            </h4>
+            <div id="pitchingContent"></div>
+          </div>
+
+          <!-- Hit Location Section -->
+          <div id="hitLocationSection" style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid var(--border-color);">
+            <h4 style="margin: 0 0 0.5rem; display:flex; align-items:center; gap:0.5rem;">
+              <span>📍</span> Hit Location Data
+              <span id="hitLocCoverage" style="font-size:0.8rem; font-weight:400; color:var(--text-light); margin-left:0.5rem;"></span>
+            </h4>
+            <p style="font-size:0.85rem; color:var(--text-light); margin:0 0 1rem;">
+              Batted-ball zones tagged during the game (LF / LCF / CF / RCF / RF / 3B / SS / 2B / 1B / P / C).
+              Writing stores a <code>hitLocations</code> array on each player's game doc for future spray charts.
+              Runs independently — safe to run on already-converted games.
+            </p>
+            <div id="hitLocPreview" style="margin-bottom:1rem;"></div>
+            <button class="btn btn-primary" id="writeHitLocsBtn" onclick="writeHitLocations()" style="font-size:0.875rem; padding:0.6rem 1.25rem;">
+              📍 Write Hit Locations to Player Docs
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import { db } from './firebase-data.js';
+import { getCurrentUser, onAuthChange, getUserProfile } from './firebase-auth.js';
+import { getCurrentSeason, getAllTeams } from './firebase-data.js';
+import { getTeamRosterForTracker } from './firebase_game_tracker.js';
+import { 
+  collection, 
+  getDocs, 
+  getDoc,
+  doc, 
+  setDoc,
+  updateDoc,
+  query, 
+  where, 
+  orderBy,
+  serverTimestamp 
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+// Make Firebase available globally
+window.db = db;
+window.collection = collection;
+window.getDocs = getDocs;
+window.getDoc = getDoc;
+window.doc = doc;
+window.setDoc = setDoc;
+window.updateDoc = updateDoc;
+window.query = query;
+window.where = where;
+window.orderBy = orderBy;
+window.serverTimestamp = serverTimestamp;
+
+let currentUser = null;
+let userProfile = null;
+let currentSeason = null;
+let allTeams = [];
+let gameResults = [];
+let selectedGame = null;
+let rosterPlayers = [];
+let opponentRosterPlayers = [];
+let pendingPlayEdits = null;
+
+// ============================================
+// INITIALIZATION
+// ============================================
+
+async function initializePage(user) {
+  if (!user) {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('authGate').style.display = 'block';
+    return;
+  }
+
+  console.log('🚀 Initializing game tracker review for:', user.displayName);
+
+  try {
+    currentUser = user;
+    
+    const profileResult = await getUserProfile(user.uid);
+    if (!profileResult.success) {
+      throw new Error('Could not load user profile');
+    }
+    
+    userProfile = profileResult.data;
+    
+    // Check admin access
+    const isAdmin = userProfile.isAdmin || 
+                    userProfile.userRole === 'admin' || 
+                    userProfile.userType === 'league-staff' ||
+                    userProfile.userRole === 'staff';
+    
+    if (!isAdmin) {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      document.getElementById('authGate').style.display = 'block';
+      return;
+    }
+
+    // Load current season
+    currentSeason = await getCurrentSeason();
+    if (!currentSeason) {
+      throw new Error('No active season found');
+    }
+
+    // Populate season filter
+    const seasonFilter = document.getElementById('seasonFilter');
+    seasonFilter.innerHTML = `<option value="${currentSeason.id}">${currentSeason.id}</option>`;
+    
+    // TODO: Could add past seasons here if needed
+
+    // Load teams
+    allTeams = await getAllTeams();
+    const teamFilter = document.getElementById('teamFilter');
+    teamFilter.innerHTML = '<option value="">All Teams</option>';
+    allTeams.forEach(team => {
+      const option = document.createElement('option');
+      option.value = team.id;
+      option.textContent = team.name;
+      teamFilter.appendChild(option);
+    });
+
+    // Show main content
+    document.getElementById('mainContent').classList.add('visible');
+    document.getElementById('loadingOverlay').classList.add('hidden');
+
+    // Load game results
+    await loadGameResults();
+
+    // Set up filter listeners
+    document.getElementById('seasonFilter').addEventListener('change', loadGameResults);
+    document.getElementById('teamFilter').addEventListener('change', filterGames);
+    document.getElementById('statusFilter').addEventListener('change', filterGames);
+
+  } catch (error) {
+    console.error('❌ Error initializing page:', error);
+    showMessage('error', `Error loading page: ${error.message}`);
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  }
+}
+
+// ============================================
+// LOAD GAME RESULTS
+// ============================================
+
+window.loadGameResults = async function() {
+  showMessage('info', 'Loading tracked games...');
+  
+  try {
+    const seasonId = document.getElementById('seasonFilter').value;
+    
+    // Query gameResults collection
+    const resultsRef = collection(db, 'gameResults');
+    const snapshot = await getDocs(resultsRef);
+    
+    gameResults = [];
+    
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      // Filter by season if specified
+      if (!seasonId || data.seasonId === seasonId) {
+        gameResults.push({
+          id: docSnap.id,
+          ...data
+        });
+      }
+    });
+
+    // Sort by completedAt (newest first)
+    gameResults.sort((a, b) => {
+      const aTime = a.completedAt?.toMillis?.() || 0;
+      const bTime = b.completedAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
+    console.log(`📊 Loaded ${gameResults.length} game results`);
+    
+    filterGames();
+    
+  } catch (error) {
+    console.error('❌ Error loading game results:', error);
+    showMessage('error', `Error loading games: ${error.message}`);
+  }
+};
+
+function filterGames() {
+  const teamFilter = document.getElementById('teamFilter').value;
+  const statusFilter = document.getElementById('statusFilter').value;
+  
+  let filtered = gameResults;
+  
+  // Filter by team
+  if (teamFilter) {
+    filtered = filtered.filter(g => g.teamId === teamFilter);
+  }
+  
+  // Filter by status
+  if (statusFilter === 'pending') {
+    filtered = filtered.filter(g => !g.convertedToOfficial);
+  } else if (statusFilter === 'converted') {
+    filtered = filtered.filter(g => g.convertedToOfficial);
+  }
+  
+  renderGameList(filtered);
+}
+
+function renderGameList(games) {
+  const container = document.getElementById('gameList');
+  const countEl = document.getElementById('gameCount');
+  
+  countEl.textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
+  
+  if (games.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <h3>No Games Found</h3>
+        <p>No tracked games match your filters.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = games.map(game => {
+    const isConverted = game.convertedToOfficial;
+    const completedDate = game.completedAt?.toDate?.() 
+      ? game.completedAt.toDate().toLocaleDateString('en-US', { 
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: 'numeric', minute: '2-digit'
+        })
+      : 'Unknown';
+    
+    const playerCount = game.battingStats?.length || 0;
+    const playCount = game.playByPlay?.length || 0;
+    
+    return `
+      <div class="game-card ${isConverted ? 'converted' : ''}" 
+           onclick="selectGame('${game.id}')"
+           data-game-id="${game.id}">
+        <div class="game-card-header">
+          <div class="game-card-teams">
+            ${game.teamId} vs ${game.opponentName || 'Unknown'}
+          </div>
+          <div class="game-card-score">
+            ${game.finalScore?.yourTeam || 0} - ${game.finalScore?.opponent || 0}
+          </div>
+        </div>
+        <div class="game-card-meta">
+          <span>📅 ${completedDate}</span>
+          <span>👥 ${playerCount} players</span>
+          <span>📜 ${playCount} plays</span>
+          <span class="game-card-status ${isConverted ? 'status-converted' : 'status-pending'}">
+            ${isConverted ? '✓ Converted' : '⏳ Pending'}
+          </span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============================================
+// SELECT & REVIEW GAME
+// ============================================
+
+window.selectGame = async function(gameId) {
+  selectedGame = gameResults.find(g => g.id === gameId);
+  if (!selectedGame) return;
+  
+  // Highlight selected card
+  document.querySelectorAll('.game-card').forEach(card => {
+    card.classList.toggle('selected', card.dataset.gameId === gameId);
+  });
+  
+  // Load roster for player matching
+  showMessage('info', 'Loading roster for player matching...');
+  
+  try {
+    const seasonId = selectedGame.seasonId;
+    rosterPlayers = await getTeamRosterForTracker(selectedGame.teamId, selectedGame.seasonId);
+    console.log(`📋 Loaded ${rosterPlayers.length} roster players for ${selectedGame.teamId}`);
+
+    // Load opponent roster for bulk pitcher reassign
+    try {
+      opponentRosterPlayers = await getTeamRosterForTracker(selectedGame.opponentName, selectedGame.seasonId);
+      console.log(`📋 Loaded ${opponentRosterPlayers.length} opponent roster players for ${selectedGame.opponentName}`);
+    } catch(e) {
+      console.warn('Could not load opponent roster:', e);
+      opponentRosterPlayers = [];
+    }
+    
+    renderReviewPanel();
+    
+  } catch (error) {
+    console.error('Error loading roster:', error);
+    showMessage('warning', 'Could not load roster for player matching. Conversion may require manual review.');
+    renderReviewPanel();
+  }
+};
+
+function renderLinescore() {
+  const container = document.getElementById('linescoreContainer');
+  if (!container) return;
+
+  const plays = selectedGame.playByPlay || [];
+  const isHome = selectedGame.isHome || false;
+  const yourTeamName = selectedGame.teamId || 'Your Team';
+  const oppTeamName = selectedGame.opponentName || 'Opponent';
+
+  if (plays.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-light);font-size:0.85rem;">No play data — linescore unavailable</div>';
+    return;
+  }
+
+  // Tally runs per inning for each team
+  const yourRuns = {};
+  const oppRuns = {};
+  plays.forEach(play => {
+    const inning = play.inning;
+    if (!inning) return;
+    let runs = 0;
+    if (play.type === 'manual-run-adjustment') {
+      runs = typeof play.adjustment === 'number' ? play.adjustment : 0;
+    } else {
+      runs = play.runsScored || 0;
+    }
+    if (runs === 0) return;
+    if (play.isYourTeam !== false) {
+      yourRuns[inning] = (yourRuns[inning] || 0) + runs;
+    } else {
+      oppRuns[inning] = (oppRuns[inning] || 0) + runs;
+    }
+  });
+
+  const maxInning = Math.max(
+    ...[...Object.keys(yourRuns), ...Object.keys(oppRuns)].map(Number),
+    selectedGame.innings || 1
+  );
+
+  // Build header row
+  let headerCells = '<th>Team</th>';
+  for (let i = 1; i <= maxInning; i++) headerCells += `<th>${i}</th>`;
+  headerCells += '<th class="totals">R</th>';
+
+  const yourTotal = selectedGame.finalScore?.yourTeam ?? Object.values(yourRuns).reduce((a, b) => a + b, 0);
+  const oppTotal = selectedGame.finalScore?.opponent ?? Object.values(oppRuns).reduce((a, b) => a + b, 0);
+
+  const yourCells = Array.from({ length: maxInning }, (_, i) => `<td>${yourRuns[i + 1] ?? '-'}</td>`).join('');
+  const oppCells  = Array.from({ length: maxInning }, (_, i) => `<td>${oppRuns[i + 1]  ?? '-'}</td>`).join('');
+
+  // Arrange home/away rows: away on top, home on bottom (standard scorecard)
+  const awayName = isHome ? oppTeamName : yourTeamName;
+  const homeName = isHome ? yourTeamName : oppTeamName;
+  const awayCells = isHome ? oppCells : yourCells;
+  const homeCells = isHome ? yourCells : oppCells;
+  const awayTotal = isHome ? oppTotal : yourTotal;
+  const homeTotal = isHome ? yourTotal : oppTotal;
+  const awayRowClass = isHome ? '' : 'your-team';
+  const homeRowClass = isHome ? 'your-team' : '';
+
+  container.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table class="linescore-table">
+        <thead><tr>${headerCells}</tr></thead>
+        <tbody>
+          <tr class="${awayRowClass}">
+            <td class="team-name">⬆ ${awayName}</td>
+            ${awayCells}
+            <td class="totals">${awayTotal}</td>
+          </tr>
+          <tr class="${homeRowClass}">
+            <td class="team-name">⬇ ${homeName}</td>
+            ${homeCells}
+            <td class="totals">${homeTotal}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function renderReviewPanel() {
+  const panel = document.getElementById('reviewPanel');
+  panel.classList.add('visible');
+  
+  // Update header
+  document.getElementById('reviewTitle').textContent = 
+    `${selectedGame.teamId} vs ${selectedGame.opponentName || 'Unknown'}`;
+  
+  const completedDate = selectedGame.completedAt?.toDate?.()
+    ? selectedGame.completedAt.toDate().toLocaleDateString('en-US', {
+        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+      })
+    : 'Unknown date';
+  
+  document.getElementById('reviewMeta').innerHTML = `
+    ${completedDate} • 
+    Final: <strong>${selectedGame.finalScore?.yourTeam || 0} - ${selectedGame.finalScore?.opponent || 0}</strong> • 
+    ${selectedGame.innings || '?'} innings • 
+    Season: ${selectedGame.seasonId}
+  `;
+  
+  // Update convert button state
+  const convertBtn = document.getElementById('convertBtn');
+  const forceReConvertBtn = document.getElementById('forceReConvertBtn');
+  if (selectedGame.convertedToOfficial) {
+    convertBtn.disabled = true;
+    convertBtn.innerHTML = '✓ Already Converted';
+    forceReConvertBtn.style.display = '';
+  } else {
+    convertBtn.disabled = false;
+    convertBtn.innerHTML = '✅ Convert to Official Stats';
+    forceReConvertBtn.style.display = 'none';
+  }
+  
+  // Render linescore
+  renderLinescore();
+
+  // Reset pending edits when switching games
+  pendingPlayEdits = null;
+
+  // Render batting stats with player matching
+  renderBattingStats();
+
+  // Render play-by-play (editable)
+  renderPlayByPlayEditable();
+
+  // Render pitching section
+  renderPitchingSection();
+
+  // Render hit location section
+  renderHitLocationSection();
+  
+  // Scroll to review panel
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderBattingStats() {
+  const tbody = document.getElementById('battingStatsBody');
+  const stats = selectedGame.battingStats || [];
+  
+  let matchedCount = 0;
+  let unmatchedCount = 0;
+  
+  tbody.innerHTML = stats.map(player => {
+    // Try to match player to roster
+    const match = findPlayerMatch(player.name || player.playerName);
+    
+    if (match) {
+      matchedCount++;
+    } else {
+      unmatchedCount++;
+    }
+    
+    const matchBadge = match 
+      ? `<span class="match-status match-found">✓ ${match.legacyId}</span>`
+      : `<span class="match-status match-missing">⚠ No match</span>`;
+    
+    return `
+      <tr>
+        <td>
+          <div class="player-name">
+            ${player.name || player.playerName || 'Unknown'}
+            ${matchBadge}
+          </div>
+        </td>
+        <td>${player.atBats || 0}</td>
+        <td>${player.hits || 0}</td>
+        <td>${player.runs || 0}</td>
+        <td>${player.walks || 0}</td>
+        <td>${player.singles || 0}</td>
+        <td>${player.doubles || 0}</td>
+        <td>${player.triples || 0}</td>
+        <td>${player.homeRuns || 0}</td>
+        <td>${player.rbi || 0}</td>
+        <td>${(player.battingAverage || 0).toFixed(3)}</td>
+        <td>${(player.onBasePercentage || 0).toFixed(3)}</td>
+      </tr>
+    `;
+  }).join('');
+  
+  // Update summary
+  document.getElementById('playerMatchSummary').textContent = 
+    `(${matchedCount} matched, ${unmatchedCount} unmatched)`;
+}
+
+function findPlayerMatch(playerName) {
+  if (!playerName) return null;
+  
+  const nameLower = playerName.toLowerCase().trim();
+  
+  // Try exact match first
+  let match = rosterPlayers.find(p => {
+    const rosterName = (p.name || p.playerName || '').toLowerCase().trim();
+    return rosterName === nameLower;
+  });
+  
+  if (match) {
+    return {
+      ...match,
+      legacyId: (match.name || match.playerName || '').toLowerCase().replace(/\./g, '').replace(/\s+/g, '_')
+    };
+  }
+  
+  // Try partial match (first + last name)
+  const nameParts = nameLower.split(' ');
+  if (nameParts.length >= 2) {
+    match = rosterPlayers.find(p => {
+      const rosterName = (p.name || p.playerName || '').toLowerCase().trim();
+      return rosterName.includes(nameParts[0]) && rosterName.includes(nameParts[nameParts.length - 1]);
+    });
+    
+    if (match) {
+      return {
+        ...match,
+        legacyId: (match.name || match.playerName || '').toLowerCase().replace(/\./g, '').replace(/\s+/g, '_')
+      };
+    }
+  }
+  
+  return null;
+}
+
+function renderPlayByPlay() {
+  const container = document.getElementById('playByPlay');
+  const plays = selectedGame.playByPlay || [];
+  
+  if (plays.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="padding: 2rem;">
+        <p>No plays recorded</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Group by inning
+  const byInning = {};
+  plays.forEach(play => {
+    const inning = play.inning || 1;
+    if (!byInning[inning]) byInning[inning] = [];
+    byInning[inning].push(play);
+  });
+  
+  container.innerHTML = Object.entries(byInning).map(([inning, inningPlays]) => `
+    <div style="margin-bottom: 1rem;">
+      <div class="play-inning">Inning ${inning}</div>
+      ${inningPlays.map(play => `
+        <div class="play-item">
+          <span class="play-result">
+            ${play.batter || 'Unknown'}: 
+            <strong>${formatPlayResult(play.result || play.playType)}</strong>
+            ${play.runsScored ? ` (${play.runsScored} run${play.runsScored > 1 ? 's' : ''})` : ''}
+          </span>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function formatPlayResult(result) {
+  const resultMap = {
+    'single': 'Single',
+    'double': 'Double',
+    'triple': 'Triple',
+    'homerun': 'Home Run',
+    'walk': 'Walk',
+    'out': 'Out',
+    'strikeout': 'Strikeout',
+    'flyout': 'Fly Out',
+    'groundout': 'Ground Out',
+    'error': 'Reached on Error',
+    'fielders_choice': "Fielder's Choice",
+    'sacrifice': 'Sacrifice'
+  };
+  return resultMap[result] || result || 'Unknown';
+}
+
+window.closeReview = function() {
+  document.getElementById('reviewPanel').classList.remove('visible');
+  selectedGame = null;
+  document.querySelectorAll('.game-card').forEach(card => {
+    card.classList.remove('selected');
+  });
+};
+
+// ============================================
+// CONVERT TO OFFICIAL STATS
+// ============================================
+
+window.convertToOfficial = async function() {
+  if (!selectedGame) return;
+  
+  if (selectedGame.convertedToOfficial) {
+    showMessage('warning', 'This game has already been converted.');
+    return;
+  }
+  
+  const stats = selectedGame.battingStats || [];
+  if (stats.length === 0) {
+    showMessage('error', 'No batting stats to convert.');
+    return;
+  }
+  
+  // Check for unmatched players
+  const unmatched = stats.filter(p => !findPlayerMatch(p.name || p.playerName));
+  
+  if (unmatched.length > 0) {
+    const names = unmatched.map(p => p.name || p.playerName).join(', ');
+    const proceed = confirm(
+      `Warning: ${unmatched.length} player(s) could not be matched to the roster:\n\n${names}\n\n` +
+      `These players will be skipped during conversion.\n\nContinue anyway?`
+    );
+    if (!proceed) return;
+  }
+  
+  const convertBtn = document.getElementById('convertBtn');
+  convertBtn.disabled = true;
+  convertBtn.innerHTML = '⏳ Converting...';
+  
+  try {
+    const seasonId = selectedGame.seasonId;
+    const gameId = selectedGame.gameId;
+    const gameDocId = `${seasonId}_${gameId}`;
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const player of stats) {
+      const match = findPlayerMatch(player.name || player.playerName);
+      if (!match) {
+        console.warn(`⚠️ Skipping unmatched player: ${player.name || player.playerName}`);
+        continue;
+      }
+      
+      try {
+        const legacyId = match.legacyId;
+        const battingRef = doc(db, 'playerStats', legacyId, 'games', gameDocId);
+        
+        await setDoc(battingRef, {
+          // Identification
+          gameId: gameId,
+          gameDocId: gameDocId,
+          playerId: legacyId,
+          playerName: match.name || match.playerName,
+          seasonId: seasonId,
+          teamId: selectedGame.teamId,
+          
+          // Game Context
+          gameDate: selectedGame.completedAt || null,
+          gameDateFormatted: selectedGame.completedAt?.toDate?.()?.toLocaleDateString() || '',
+          opponent: selectedGame.opponentName || 'Unknown',
+          isHome: selectedGame.isHome || false,
+          gameType: 'Regular',
+          isPlayoff: false,
+          
+          // Batting Statistics
+          atBats: player.atBats || 0,
+          hits: player.hits || 0,
+          runs: player.runs || 0,
+          walks: player.walks || 0,
+          doubles: player.doubles || 0,
+          triples: player.triples || 0,
+          homeRuns: player.homeRuns || 0,
+          rbi: player.rbi || 0,
+          strikeouts: player.strikeouts || 0,
+          stolenBases: 0,
+          caughtStealing: 0,
+          
+          // Metadata
+          submittedBy: currentUser.uid,
+          submittedByName: currentUser.displayName || currentUser.email,
+          submittedAt: serverTimestamp(),
+          lastModified: serverTimestamp(),
+          dataVersion: 1,
+          sourceType: 'gameTracker',
+          sourceDocId: selectedGame.id
+        }, { merge: true });
+        
+        successCount++;
+        console.log(`✅ Saved stats for ${match.name || match.playerName}`);
+        
+      } catch (error) {
+        console.error(`❌ Error saving stats for ${player.name}:`, error);
+        errorCount++;
+      }
+    }
+    
+    // Mark gameResults as converted
+    const gameResultRef = doc(db, 'gameResults', selectedGame.id);
+    await updateDoc(gameResultRef, {
+      convertedToOfficial: true,
+      convertedAt: serverTimestamp(),
+      convertedBy: currentUser.uid,
+      convertedByName: currentUser.displayName || currentUser.email,
+      conversionStats: {
+        playersConverted: successCount,
+        playersSkipped: stats.length - successCount - errorCount,
+        errors: errorCount
+      }
+    });
+    
+    // Update local state
+    selectedGame.convertedToOfficial = true;
+    
+    showMessage('success', `Successfully converted ${successCount} player stats to official records!`);
+    showToast(`Converted ${successCount} player stats`, 'success');
+    
+    // Refresh UI
+    renderReviewPanel();
+    filterGames();
+    
+  } catch (error) {
+    console.error('❌ Error during conversion:', error);
+    showMessage('error', `Error during conversion: ${error.message}`);
+    showToast('Conversion failed', 'error');
+  } finally {
+    convertBtn.disabled = false;
+    convertBtn.innerHTML = '✅ Convert to Official Stats';
+  }
+};
+
+window.forceReConvert = async function() {
+  if (!selectedGame) return;
+
+  const confirmed = window.confirm(
+    'This will overwrite existing playerStats docs for this game with the current gameResults values. ' +
+    'Stats written by submit-stats will be replaced. Continue?'
+  );
+  if (!confirmed) return;
+
+  const stats = selectedGame.battingStats || [];
+  if (stats.length === 0) {
+    showMessage('error', 'No batting stats to convert.');
+    return;
+  }
+
+  const forceBtn = document.getElementById('forceReConvertBtn');
+  forceBtn.disabled = true;
+  forceBtn.innerHTML = '⏳ Re-Converting...';
+
+  try {
+    const seasonId = selectedGame.seasonId;
+    const gameId = selectedGame.gameId;
+    const gameDocId = `${seasonId}_${gameId}`;
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const player of stats) {
+      const match = findPlayerMatch(player.name || player.playerName);
+      if (!match) {
+        console.warn(`⚠️ Skipping unmatched player: ${player.name || player.playerName}`);
+        continue;
+      }
+
+      try {
+        const legacyId = match.legacyId;
+        const battingRef = doc(db, 'playerStats', legacyId, 'games', gameDocId);
+
+        await setDoc(battingRef, {
+          gameId: gameId,
+          gameDocId: gameDocId,
+          playerId: legacyId,
+          playerName: match.name || match.playerName,
+          seasonId: seasonId,
+          teamId: selectedGame.teamId,
+          gameDate: selectedGame.completedAt || null,
+          gameDateFormatted: selectedGame.completedAt?.toDate?.()?.toLocaleDateString() || '',
+          opponent: selectedGame.opponentName || 'Unknown',
+          isHome: selectedGame.isHome || false,
+          gameType: 'Regular',
+          isPlayoff: false,
+          atBats: player.atBats || 0,
+          hits: player.hits || 0,
+          runs: player.runs || 0,
+          walks: player.walks || 0,
+          doubles: player.doubles || 0,
+          triples: player.triples || 0,
+          homeRuns: player.homeRuns || 0,
+          rbi: player.rbi || 0,
+          strikeouts: player.strikeouts || 0,
+          stolenBases: 0,
+          caughtStealing: 0,
+          submittedBy: currentUser.uid,
+          submittedByName: currentUser.displayName || currentUser.email,
+          submittedAt: serverTimestamp(),
+          lastModified: serverTimestamp(),
+          dataVersion: 1,
+          sourceType: 'gameTracker',
+          sourceDocId: selectedGame.id
+        }, { merge: true });
+
+        successCount++;
+        console.log(`✅ Force re-converted stats for ${match.name || match.playerName}`);
+
+      } catch (error) {
+        console.error(`❌ Error re-converting stats for ${player.name}:`, error);
+        errorCount++;
+      }
+    }
+
+    showMessage('success', `Force re-convert complete: ${successCount} player(s) updated${errorCount > 0 ? `, ${errorCount} failed` : ''}.`);
+    showToast(`Re-converted ${successCount} player stats`, 'success');
+
+    renderReviewPanel();
+    filterGames();
+
+  } catch (error) {
+    console.error('❌ Error during force re-convert:', error);
+    showMessage('error', `Error during force re-convert: ${error.message}`);
+    showToast('Force re-convert failed', 'error');
+  } finally {
+    forceBtn.disabled = false;
+    forceBtn.innerHTML = '⚠️ Force Re-Convert';
+  }
+};
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+
+function showMessage(type, text) {
+  ['infoMessage', 'warningMessage', 'errorMessage', 'successMessage'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+
+  const messageMap = {
+    'info': { box: 'infoMessage', text: 'infoMessageText' },
+    'warning': { box: 'warningMessage', text: 'warningMessageText' },
+    'error': { box: 'errorMessage', text: 'errorMessageText' },
+    'success': { box: 'successMessage', text: 'successMessageText' }
+  };
+
+  if (messageMap[type]) {
+    document.getElementById(messageMap[type].text).textContent = text;
+    document.getElementById(messageMap[type].box).classList.remove('hidden');
+  }
+}
+
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  
+  const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
+  toast.innerHTML = `<span>${icon}</span> ${message}`;
+  
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+// ============================================
+// EDITABLE PLAY-BY-PLAY
+// ============================================
+
+function getWorkingPlays() {
+  return pendingPlayEdits || selectedGame.playByPlay || [];
+}
+
+const PLAY_TYPE_OPTIONS = [
+  ['single','Single'], ['double','Double'], ['triple','Triple'], ['homerun','Home Run'],
+  ['walk','Walk'], ['strikeout','Strikeout'], ['flyout','Fly Out'], ['groundout','Ground Out'],
+  ['fielders_choice',"Fielder's Choice"], ['sacfly','Sac Fly'], ['doubleplay','Double Play'],
+  ['out','Out'], ['error','Reached on Error']
+];
+
+const PLAY_TYPE_LABEL_MAP = {
+  single:'1B', double:'2B', triple:'3B', homerun:'HR', walk:'BB',
+  strikeout:'K', flyout:'FO', groundout:'GO', fielders_choice:'FC',
+  sacfly:'SF', doubleplay:'DP', out:'OUT', error:'ROE'
+};
+
+function buildPlayRowHtml(play, idx) {
+  const pitcherName = (play.opposingPitcher && play.opposingPitcher.name) ? play.opposingPitcher.name : '';
+  const runs = play.runsScored || 0;
+  const runText = runs > 0 ? ' <span style="color:#dc2626;">(' + runs + ' run' + (runs > 1 ? 's' : '') + ')</span>' : '';
+  const pitcherText = pitcherName ? '<span style="color:var(--text-light); font-size:0.8rem;"> vs ' + pitcherName + '</span>' : '';
+  const playTypeOptionsHtml = PLAY_TYPE_OPTIONS.map(function(pair) {
+    return '<option value="' + pair[0] + '"' + (play.playType === pair[0] ? ' selected' : '') + '>' + pair[1] + '</option>';
+  }).join('');
+  const batterOptionsHtml = rosterPlayers.map(function(p) {
+    return '<option value="' + p.name + '"' + (play.batter === p.name ? ' selected' : '') + '>' + p.name + '</option>';
+  }).join('');
+
+  return '<div class="play-item" id="play-row-' + idx + '" style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">' +
+    '<span style="color:var(--text-light); font-size:0.8rem; min-width:22px;">#' + (idx + 1) + '</span>' +
+    '<span class="play-result" id="play-display-' + idx + '" style="flex:1;">' +
+      '<strong id="play-batter-label-' + idx + '">' + (play.batter || 'Unknown') + '</strong>: ' +
+      '<span id="play-label-' + idx + '">' + formatPlayResult(play.playType) + '</span>' + runText + pitcherText +
+    '</span>' +
+    '<span id="play-edit-controls-' + idx + '" style="display:none; flex:1; display:none; gap:0.4rem; align-items:center; flex-wrap:wrap;">' +
+      '<select id="play-batter-select-' + idx + '" style="padding:0.25rem; border:1px solid var(--border-color); border-radius:4px; font-size:0.85rem;"><option value="">-- Batter --</option>' + batterOptionsHtml + '</select>' +
+      '<select id="play-type-select-' + idx + '" style="padding:0.25rem; border:1px solid var(--border-color); border-radius:4px; font-size:0.85rem;">' + playTypeOptionsHtml + '</select>' +
+    '</span>' +
+    '<button onclick="togglePlayEdit(' + idx + ')" style="font-size:0.75rem; padding:0.2rem 0.5rem; border:1px solid var(--border-color); border-radius:4px; background:#f1f5f9; cursor:pointer;" id="play-edit-btn-' + idx + '">Edit</button>' +
+    '<button onclick="confirmPlayEdit(' + idx + ')" style="display:none; font-size:0.75rem; padding:0.2rem 0.5rem; border:1px solid var(--success-color); border-radius:4px; background:#dcfce7; cursor:pointer; color:#166534;" id="play-confirm-btn-' + idx + '">Save</button>' +
+    '<button onclick="deletePlay(' + idx + ')" style="font-size:0.75rem; padding:0.2rem 0.5rem; border:1px solid var(--danger-color); border-radius:4px; background:#fee2e2; cursor:pointer; color:#dc2626;" title="Delete this play">&#x1F5D1;</button>' +
+  '</div>';
+}
+
+function renderPlayByPlayEditable() {
+  const container = document.getElementById('playByPlay');
+  const plays = getWorkingPlays();
+  const hasPendingEdits = !!pendingPlayEdits;
+
+  document.getElementById('playEditStatus').textContent = hasPendingEdits ? '(unsaved edits)' : '';
+  document.getElementById('savePlayEditsBtn').style.display = hasPendingEdits ? 'inline-flex' : 'none';
+
+  if (plays.length === 0) {
+    container.innerHTML = '<div class="empty-state" style="padding:2rem;"><p>No plays recorded</p></div>';
+    return;
+  }
+
+  const byInning = {};
+  plays.forEach(function(play, idx) {
+    const inning = play.inning || 1;
+    if (!byInning[inning]) byInning[inning] = [];
+    byInning[inning].push({ play: play, idx: idx });
+  });
+
+  let html = '';
+  Object.keys(byInning).forEach(function(inning) {
+    html += '<div style="margin-bottom:1rem;">';
+    html += '<div class="play-inning">Inning ' + inning + '</div>';
+    byInning[inning].forEach(function(entry) {
+      html += buildPlayRowHtml(entry.play, entry.idx);
+    });
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+window.togglePlayEdit = function(idx) {
+  const displaySpan = document.getElementById('play-display-' + idx);
+  const controlsSpan = document.getElementById('play-edit-controls-' + idx);
+  const editBtn = document.getElementById('play-edit-btn-' + idx);
+  const confirmBtn = document.getElementById('play-confirm-btn-' + idx);
+  const isEditing = controlsSpan.style.display === 'flex';
+  displaySpan.style.display = isEditing ? '' : 'none';
+  controlsSpan.style.display = isEditing ? 'none' : 'flex';
+  editBtn.textContent = isEditing ? 'Edit' : 'Cancel';
+  confirmBtn.style.display = isEditing ? 'none' : 'inline-block';
+};
+
+window.confirmPlayEdit = function(idx) {
+  const typeSelect = document.getElementById('play-type-select-' + idx);
+  const batterSelect = document.getElementById('play-batter-select-' + idx);
+  const newType = typeSelect.value;
+  const newBatter = batterSelect.value;
+  const plays = pendingPlayEdits ? [...pendingPlayEdits] : [...(selectedGame.playByPlay || [])];
+  const updates = { playType: newType, playLabel: PLAY_TYPE_LABEL_MAP[newType] || newType };
+  if (newBatter) updates.batter = newBatter;
+  plays[idx] = Object.assign({}, plays[idx], updates);
+  pendingPlayEdits = plays;
+  renderPlayByPlayEditable();
+  renderPitchingSection();
+};
+
+window.deletePlay = function(idx) {
+  const plays = pendingPlayEdits ? [...pendingPlayEdits] : [...(selectedGame.playByPlay || [])];
+  const play = plays[idx];
+  const runNote = play.runsScored > 0 ? ` (removes ${play.runsScored} run${play.runsScored > 1 ? 's' : ''})` : '';
+  const label = formatPlayResult(play.playType);
+  if (!confirm(`Delete play #${idx + 1}: ${play.batter || 'Unknown'} – ${label}${runNote}?`)) return;
+  plays.splice(idx, 1);
+  pendingPlayEdits = plays;
+  renderPlayByPlayEditable();
+  renderPitchingSection();
+};
+
+// ============================================
+// BULK PITCHER REASSIGN
+// ============================================
+
+window.togglePitcherReassign = function() {
+  const bar = document.getElementById('pitcherReassignBar');
+  const isVisible = bar.style.display !== 'none';
+  bar.style.display = isVisible ? 'none' : 'block';
+
+  if (!isVisible) {
+    // Populate pitcher dropdown from opponent roster
+    const sel = document.getElementById('reassignPitcherSelect');
+    sel.innerHTML = '<option value="">Select pitcher...</option>';
+    opponentRosterPlayers.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = JSON.stringify({ id: p.id || p.authId || '', name: p.name });
+      opt.textContent = `${p.name}${p.number ? ' #' + p.number : ''}`;
+      sel.appendChild(opt);
+    });
+    if (opponentRosterPlayers.length === 0) {
+      sel.innerHTML = '<option value="">No opponent roster loaded</option>';
+    }
+  }
+};
+
+window.applyPitcherReassign = function() {
+  const fromIndexInput = document.getElementById('reassignFromIndex').value;
+  const pitcherSelectVal = document.getElementById('reassignPitcherSelect').value;
+
+  if (!fromIndexInput || !pitcherSelectVal) {
+    showToast('Select a starting play and pitcher', 'warning');
+    return;
+  }
+
+  const fromIndex = parseInt(fromIndexInput) - 1; // convert 1-based to 0-based
+  let newPitcher;
+  try { newPitcher = JSON.parse(pitcherSelectVal); } catch(e) { return; }
+
+  const plays = pendingPlayEdits ? [...pendingPlayEdits] : [...(selectedGame.playByPlay || [])];
+
+  if (fromIndex < 0 || fromIndex >= plays.length) {
+    showToast('Play number out of range', 'warning');
+    return;
+  }
+
+  for (let i = fromIndex; i < plays.length; i++) {
+    plays[i] = { ...plays[i], opposingPitcher: { id: newPitcher.id, name: newPitcher.name } };
+  }
+
+  pendingPlayEdits = plays;
+  document.getElementById('pitcherReassignBar').style.display = 'none';
+  renderPlayByPlayEditable();
+  renderPitchingSection();
+  showToast(`Reassigned ${plays.length - fromIndex} plays to ${newPitcher.name}`, 'success');
+};
+
+// ============================================
+// SAVE PLAY EDITS & RECALCULATE BATTING STATS
+// ============================================
+
+window.savePlayEdits = async function() {
+  if (!pendingPlayEdits) return;
+
+  const btn = document.getElementById('savePlayEditsBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    const newBattingStats = recalculateBattingStats(pendingPlayEdits);
+    const gameResultRef = doc(db, 'gameResults', selectedGame.id);
+
+    await updateDoc(gameResultRef, {
+      playByPlay: pendingPlayEdits,
+      battingStats: newBattingStats,
+      lastEditedAt: serverTimestamp(),
+      lastEditedBy: currentUser.uid,
+      lastEditedByName: currentUser.displayName || currentUser.email
+    });
+
+    // Update local state
+    selectedGame.playByPlay = pendingPlayEdits;
+    selectedGame.battingStats = newBattingStats;
+    pendingPlayEdits = null;
+
+    renderBattingStats();
+    renderPlayByPlayEditable();
+    renderPitchingSection();
+    showToast('Play edits saved, batting stats recalculated', 'success');
+
+  } catch(error) {
+    console.error('Error saving play edits:', error);
+    showToast('Error saving edits: ' + error.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save Play Edits & Recalculate Stats';
+  }
+};
+
+function recalculateBattingStats(plays) {
+  const statsMap = {};
+
+  plays.forEach(play => {
+    const name = play.batter;
+    if (!name) return;
+    if (!statsMap[name]) {
+      // Find playerId from rosterPlayers
+      const rp = rosterPlayers.find(p => p.name === name);
+      statsMap[name] = {
+        playerName: name,
+        playerId: rp?.id || '',
+        atBats: 0, hits: 0, singles: 0, doubles: 0, triples: 0,
+        homeRuns: 0, walks: 0, strikeouts: 0, rbi: 0, runs: 0,
+        battingAverage: 0, onBasePercentage: 0, sluggingPercentage: 0
+      };
+    }
+    const s = statsMap[name];
+    const t = play.playType;
+
+    if (t !== 'walk' && t !== 'sacfly') s.atBats++;
+    if (t === 'single')   { s.hits++; s.singles++; }
+    if (t === 'double')   { s.hits++; s.doubles++; }
+    if (t === 'triple')   { s.hits++; s.triples++; }
+    if (t === 'homerun')  { s.hits++; s.homeRuns++; }
+    if (t === 'walk')     s.walks++;
+    if (t === 'strikeout') s.strikeouts++;
+    s.rbi += (play.runsScored || 0);
+    if (play.runsScored > 0) {
+      // Batter gets RBI (already counted above), check if batter also scored
+      if (t === 'homerun') s.runs++;
+    }
+  });
+
+  // Count runs scored per player by tracking base movement
+  plays.forEach(play => {
+    if ((play.runsScored || 0) === 0) return;
+    const before = play.basesBefore || {};
+    const after = play.basesAfter || {};
+    ['first','second','third'].forEach(base => {
+      const runner = before[base];
+      if (!runner || !statsMap[runner]) return;
+      // Runner was on base before and either not on that base after, or a run scored
+      const wasAdvanced = after[base] !== runner;
+      if (wasAdvanced) {
+        // Check they didn't just move to another base — if they're gone from ALL bases, they scored
+        const stillOnBase = Object.values(after).includes(runner);
+        if (!stillOnBase && play.runsScored > 0) {
+          // Only count as run if they were actually among runners who scored
+          const runnersScored = play.runnersScored || [];
+          if (runnersScored.includes(runner)) {
+            statsMap[runner].runs++;
+          }
+        }
+      }
+    });
+  });
+
+  // Recalculate rate stats
+  return Object.values(statsMap).map(s => {
+    const pa = s.atBats + s.walks;
+    s.battingAverage = s.atBats > 0 ? s.hits / s.atBats : 0;
+    s.onBasePercentage = pa > 0 ? (s.hits + s.walks) / pa : 0;
+    const tb = s.singles + s.doubles * 2 + s.triples * 3 + s.homeRuns * 4;
+    s.sluggingPercentage = s.atBats > 0 ? tb / s.atBats : 0;
+    return s;
+  });
+}
+
+// ============================================
+// PITCHING STATS
+// ============================================
+
+function calculateOpposingPitcherStats(plays) {
+  const pitcherMap = {};
+
+  plays.forEach(play => {
+    const p = play.opposingPitcher;
+    if (!p || !p.id) return;
+    if (!pitcherMap[p.id]) {
+      pitcherMap[p.id] = {
+        id: p.id,
+        name: p.name,
+        outs: 0, hits: 0, runs: 0, walks: 0, strikeouts: 0, homeRuns: 0
+      };
+    }
+    const s = pitcherMap[p.id];
+    const t = play.playType;
+    const outsRecorded = (play.outsAfter || 0) - (play.outsBefore || 0);
+    s.outs += outsRecorded;
+    if (['single','double','triple','homerun'].includes(t)) s.hits++;
+    if (t === 'homerun') s.homeRuns++;
+    if (t === 'walk') s.walks++;
+    if (t === 'strikeout') s.strikeouts++;
+    s.runs += (play.runsScored || 0);
+  });
+
+  return Object.values(pitcherMap).map(p => {
+    const fullInnings = Math.floor(p.outs / 3);
+    const rem = p.outs % 3;
+    p.ip = rem === 0 ? `${fullInnings}` : `${fullInnings}.${rem}`;
+    p.ipNum = p.outs / 3;
+    return p;
+  });
+}
+
+async function resolvePitcherLegacyId(id, name) {
+  // If already looks like snake_case legacy ID (lowercase, underscores, no numbers >4)
+  if (/^[a-z][a-z_]+$/.test(id)) return id;
+
+  // Try fetching as Auth UID
+  try {
+    const userSnap = await getDoc(doc(db, 'users', id));
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      if (data.mergedFromProfile) return data.mergedFromProfile;
+      // Might be a placeholder pointing to real profile
+      if (data.migrated && data.migratedTo) {
+        const realSnap = await getDoc(doc(db, 'users', data.migratedTo));
+        if (realSnap.exists() && realSnap.data().mergedFromProfile) {
+          return realSnap.data().mergedFromProfile;
+        }
+      }
+    }
+  } catch(e) {
+    console.warn('Could not resolve pitcher legacy ID via Firestore:', e);
+  }
+
+  // Fallback: derive from name
+  return name.toLowerCase().replace(/\./g, '').replace(/'/g, '').replace(/\s+/g, '_');
+}
+
+function renderPitchingSection() {
+  const container = document.getElementById('pitchingContent');
+  const plays = getWorkingPlays();
+  const opposingPitchers = calculateOpposingPitcherStats(plays);
+  const gameInnings = selectedGame.innings || '?';
+  const opponentRuns = selectedGame.finalScore?.opponent || 0;
+
+  let html = `
+    <div style="display:grid; gap:1.5rem;">
+      <!-- Opposing Pitcher(s) -->
+      <div>
+        <div style="font-weight:700; margin-bottom:0.75rem; color:var(--text-dark);">
+          ${selectedGame.opponentName || 'Opponent'} Pitcher(s) <span style="font-size:0.8rem; font-weight:400; color:var(--text-light);">auto-calculated from play-by-play</span>
+        </div>
+        <table class="stats-table" style="margin-bottom:0.5rem;">
+          <thead><tr>
+            <th style="text-align:left;">Pitcher</th>
+            <th>IP</th><th>H</th><th>R</th><th>BB</th><th>K</th><th>HR</th>
+          </tr></thead>
+          <tbody>
+            ${opposingPitchers.length === 0
+              ? '<tr><td colspan="7" style="text-align:center; color:var(--text-light);">No opposing pitcher data in play-by-play</td></tr>'
+              : opposingPitchers.map((p, i) => `
+                <tr>
+                  <td style="text-align:left;">${p.name}
+                    <input type="hidden" id="opp-pitcher-id-${i}" value="${p.id}">
+                    <input type="hidden" id="opp-pitcher-name-${i}" value="${p.name}">
+                  </td>
+                  <td>${p.ip}</td>
+                  <td>${p.hits}</td>
+                  <td>${p.runs}</td>
+                  <td>${p.walks}</td>
+                  <td>${p.strikeouts}</td>
+                  <td>${p.homeRuns}</td>
+                </tr>`).join('')
+            }
+          </tbody>
+        </table>
+        <input type="hidden" id="oppPitcherCount" value="${opposingPitchers.length}">
+      </div>
+
+      <!-- Your Pitcher(s) -->
+      <div>
+        <div style="font-weight:700; margin-bottom:0.75rem; color:var(--text-dark);">
+          ${selectedGame.teamId} Pitcher(s) <span style="font-size:0.8rem; font-weight:400; color:var(--text-light);">manual entry</span>
+        </div>
+        <div id="yourPitcherRows">
+          ${buildYourPitcherRowHtml(0, gameInnings, opponentRuns)}
+        </div>
+        <button class="btn btn-secondary" onclick="addYourPitcher()" style="margin-top:0.75rem; font-size:0.85rem; padding:0.5rem 1rem;">+ Add Another Pitcher</button>
+      </div>
+
+      <div>
+        <button class="btn btn-success" onclick="savePitchingStats()">Save Pitching Stats</button>
+        <span id="pitchingSaveStatus" style="margin-left:1rem; font-size:0.9rem; color:var(--text-light);"></span>
+      </div>
+    </div>`;
+
+  container.innerHTML = html;
+}
+
+window.savePitchingStats = async function() {
+  const seasonId = selectedGame.seasonId;
+  const gameId = selectedGame.gameId;
+  const gameDocId = `${seasonId}_${gameId}`;
+  const gameDateFormatted = selectedGame.completedAt?.toDate?.()?.toLocaleDateString() || '';
+  const opponent = selectedGame.opponentName || 'Unknown';
+  const isHome = selectedGame.isHome || false;
+
+  const statusEl = document.getElementById('pitchingSaveStatus');
+  statusEl.textContent = 'Saving...';
+
+  const plays = getWorkingPlays();
+  const opposingPitchers = calculateOpposingPitcherStats(plays);
+  let savedCount = 0;
+  let errors = [];
+
+  // Save opposing pitcher(s)
+  for (let i = 0; i < opposingPitchers.length; i++) {
+    const p = opposingPitchers[i];
+    try {
+      const legacyId = await resolvePitcherLegacyId(p.id, p.name);
+      const pitchingRef = doc(db, 'pitchingStats', legacyId, 'games', gameDocId);
+      await setDoc(pitchingRef, {
+        gameId, gameDocId,
+        playerId: legacyId,
+        playerName: p.name,
+        seasonId,
+        teamId: selectedGame.opponentName || '',
+        gameDateFormatted,
+        opponent: selectedGame.teamId,
+        isHome: !isHome,
+        gameType: 'Regular',
+        isPlayoff: false,
+        inningsPitched: p.ipNum,
+        runsAllowed: p.runs,
+        earnedRuns: 0,
+        strikeouts: p.strikeouts,
+        walks: p.walks,
+        hits: p.hits,
+        homeRuns: p.homeRuns,
+        wins: 0, losses: 0, saves: 0,
+        submittedBy: currentUser.uid,
+        submittedByName: currentUser.displayName || currentUser.email,
+        submittedAt: serverTimestamp(),
+        lastModified: serverTimestamp(),
+        dataVersion: 1,
+        sourceType: 'gameTrackerReview'
+      }, { merge: true });
+      savedCount++;
+    } catch(e) {
+      console.error('Error saving opposing pitcher:', e);
+      errors.push(p.name);
+    }
+  }
+
+  // Save your pitcher(s) — loop through all rows by DOM (handles gaps from removes)
+  const yourPitcherRows = document.querySelectorAll('.your-pitcher-row');
+  for (let pi = 0; pi < yourPitcherRows.length; pi++) {
+    const row = yourPitcherRows[pi];
+    const selectEl = row.querySelector('select');
+    const ipEl = row.querySelectorAll('input[type="number"]')[0];
+    const raEl = row.querySelectorAll('input[type="number"]')[1];
+    const kEl = row.querySelectorAll('input[type="number"]')[2];
+    const yourPitcherVal = selectEl ? selectEl.value : '';
+    const yourIP = parseFloat(ipEl ? ipEl.value : 0) || 0;
+    const yourRA = parseInt(raEl ? raEl.value : 0) || 0;
+    const yourK = parseInt(kEl ? kEl.value : 0) || 0;
+    if (!yourPitcherVal) continue;
+    let yourPitcher;
+    try { yourPitcher = JSON.parse(decodeURIComponent(yourPitcherVal)); } catch(e) { yourPitcher = null; }
+    if (!yourPitcher || !yourPitcher.name) continue;
+    try {
+      const legacyId = await resolvePitcherLegacyId(yourPitcher.id, yourPitcher.name);
+      const pitchingRef = doc(db, 'pitchingStats', legacyId, 'games', gameDocId);
+      await setDoc(pitchingRef, {
+          gameId, gameDocId,
+          playerId: legacyId,
+          playerName: yourPitcher.name,
+          seasonId,
+          teamId: selectedGame.teamId,
+          gameDateFormatted,
+          opponent,
+          isHome,
+          gameType: 'Regular',
+          isPlayoff: false,
+          inningsPitched: yourIP,
+          runsAllowed: yourRA,
+          earnedRuns: 0,
+          strikeouts: yourK,
+          walks: 0, hits: 0,
+          wins: 0, losses: 0, saves: 0,
+          submittedBy: currentUser.uid,
+          submittedByName: currentUser.displayName || currentUser.email,
+          submittedAt: serverTimestamp(),
+          lastModified: serverTimestamp(),
+          dataVersion: 1,
+          sourceType: 'gameTrackerReview'
+        }, { merge: true });
+        savedCount++;
+      } catch(e) {
+        console.error('Error saving your pitcher:', e);
+        errors.push(yourPitcher.name);
+      }
+  } // end for loop
+
+  if (errors.length === 0) {
+    statusEl.textContent = `Saved ${savedCount} pitcher(s)`;
+    statusEl.style.color = 'var(--success-color)';
+    showToast(`Pitching stats saved for ${savedCount} pitcher(s)`, 'success');
+  } else {
+    statusEl.textContent = `Saved ${savedCount}, failed: ${errors.join(', ')}`;
+    statusEl.style.color = 'var(--danger-color)';
+    showToast('Some pitching saves failed', 'error');
+  }
+};
+
+// ============================================
+// YOUR PITCHER MULTI-ROW HELPERS
+// ============================================
+
+function buildYourPitcherRowHtml(idx, defaultIP, defaultRA) {
+  const optionsHtml = '<option value="">Select pitcher...</option>' +
+    rosterPlayers.map(function(p) {
+      var val = JSON.stringify({ id: p.id || p.authId || '', name: p.name });
+      var label = p.name + (p.number ? ' #' + p.number : '');
+      return '<option value="' + encodeURIComponent(val) + '">' + label + '</option>';
+    }).join('');
+
+  var removeBtn = idx > 0
+    ? '<button onclick="removeYourPitcher(' + idx + ')" style="font-size:0.75rem; padding:0.35rem 0.6rem; border:1px solid var(--danger-color); border-radius:4px; background:#fee2e2; color:#dc2626; cursor:pointer; align-self:flex-end; margin-bottom:2px;">Remove</button>'
+    : '';
+
+  return '<div class="your-pitcher-row" id="your-pitcher-row-' + idx + '" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-end; margin-bottom:0.75rem; padding-bottom:0.75rem; border-bottom:1px solid var(--border-color);">' +
+    '<div>' +
+      '<label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.25rem;">Pitcher</label>' +
+      '<select id="yourPitcherSelect-' + idx + '" style="padding:0.5rem; border:2px solid var(--border-color); border-radius:6px; font-size:0.95rem; min-width:200px;">' + optionsHtml + '</select>' +
+    '</div>' +
+    '<div>' +
+      '<label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.25rem;">IP</label>' +
+      '<input type="number" id="yourPitcherIP-' + idx + '" value="' + (idx === 0 ? defaultIP : 0) + '" min="0" step="0.1" style="width:70px; padding:0.5rem; border:2px solid var(--border-color); border-radius:6px; font-size:0.95rem;">' +
+    '</div>' +
+    '<div>' +
+      '<label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.25rem;">R (Allowed)</label>' +
+      '<input type="number" id="yourPitcherRA-' + idx + '" value="' + (idx === 0 ? defaultRA : 0) + '" min="0" style="width:70px; padding:0.5rem; border:2px solid var(--border-color); border-radius:6px; font-size:0.95rem;">' +
+    '</div>' +
+    '<div>' +
+      '<label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:0.25rem;">K</label>' +
+      '<input type="number" id="yourPitcherK-' + idx + '" value="0" min="0" style="width:70px; padding:0.5rem; border:2px solid var(--border-color); border-radius:6px; font-size:0.95rem;">' +
+    '</div>' +
+    removeBtn +
+  '</div>';
+}
+
+window.addYourPitcher = function() {
+  const container = document.getElementById('yourPitcherRows');
+  const currentRows = container.querySelectorAll('.your-pitcher-row').length;
+  const div = document.createElement('div');
+  div.innerHTML = buildYourPitcherRowHtml(currentRows, 0, 0);
+  container.appendChild(div.firstChild);
+};
+
+window.removeYourPitcher = function(idx) {
+  const row = document.getElementById('your-pitcher-row-' + idx);
+  if (row) row.remove();
+};
+
+// ============================================
+// HIT LOCATION SECTION
+// ============================================
+
+// Play types considered batted balls (location makes sense)
+const BATTED_BALL_TYPES = new Set([
+  'single','double','triple','homerun',
+  'out','flyout','groundout','lineout','popout',
+  'error','fielders_choice','sacfly','doubleplay','sacrifice'
+]);
+
+// Build per-player hit location arrays from playByPlay
+function buildPlayerHitLocations(plays) {
+  const byPlayer = {};
+
+  (plays || []).forEach(play => {
+    if (!play.location) return;                     // no zone tagged — skip
+    if (!BATTED_BALL_TYPES.has(play.playType)) return; // not a batted ball
+
+    const name = play.batter;
+    if (!name) return;
+
+    if (!byPlayer[name]) byPlayer[name] = [];
+    byPlayer[name].push({
+      playType: play.playType,
+      location: play.location,
+      inning:   play.inning   || null,
+      isYourTeam: play.isYourTeam !== false
+    });
+  });
+
+  return byPlayer;  // { "Will Klippel": [{playType, location, inning}, ...], ... }
+}
+
+function renderHitLocationSection() {
+  const plays    = getWorkingPlays();
+  const byPlayer = buildPlayerHitLocations(plays);
+  const names    = Object.keys(byPlayer);
+  const totalTagged = plays.filter(p => p.location && BATTED_BALL_TYPES.has(p.playType)).length;
+  const totalBatted = plays.filter(p => BATTED_BALL_TYPES.has(p.playType)).length;
+
+  const coverageEl = document.getElementById('hitLocCoverage');
+  const previewEl  = document.getElementById('hitLocPreview');
+  const writeBtn   = document.getElementById('writeHitLocsBtn');
+
+  if (totalTagged === 0) {
+    coverageEl.textContent = '— no location data in this game';
+    previewEl.innerHTML = `
+      <div style="color:var(--text-light); font-size:0.875rem; padding:0.75rem 0;">
+        No batted-ball zones were tagged during this game. Hit location buttons appear in the tracker when confirming a play.
+      </div>`;
+    writeBtn.disabled = true;
+    return;
+  }
+
+  coverageEl.textContent = `${totalTagged} of ${totalBatted} batted balls tagged (${Math.round(totalTagged/totalBatted*100)}%)`;
+  writeBtn.disabled = false;
+
+  // Zone color coding
+  const zoneClass = z => ['LF','LCF','CF','RCF','RF'].includes(z)
+    ? 'background:#dbeafe;color:#1e40af;'
+    : 'background:#dcfce7;color:#166534;';
+
+  const rows = names.map(name => {
+    const locs  = byPlayer[name];
+    const zones = locs.map(l =>
+      `<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.75rem;font-weight:700;margin:1px;${zoneClass(l.location)}">${l.location}</span>`
+    ).join('');
+    const match = findPlayerMatch(name);
+    const matchBadge = match
+      ? `<span style="font-size:0.72rem;background:#dcfce7;color:#166534;padding:1px 5px;border-radius:3px;margin-left:4px;">✓ ${match.legacyId}</span>`
+      : `<span style="font-size:0.72rem;background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:3px;margin-left:4px;">⚠ unmatched</span>`;
+    return `
+      <tr>
+        <td style="font-weight:600;">${name}${matchBadge}</td>
+        <td style="text-align:center;">${locs.length}</td>
+        <td style="line-height:1.8;">${zones}</td>
+      </tr>`;
+  }).join('');
+
+  previewEl.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+        <thead>
+          <tr style="background:#f1f5f9;">
+            <th style="padding:0.5rem 0.75rem;text-align:left;font-weight:600;color:var(--text-light);">Player</th>
+            <th style="padding:0.5rem 0.75rem;text-align:center;font-weight:600;color:var(--text-light);">Tagged Plays</th>
+            <th style="padding:0.5rem 0.75rem;text-align:left;font-weight:600;color:var(--text-light);">Zones</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+window.writeHitLocations = async function() {
+  if (!selectedGame) return;
+
+  const plays    = getWorkingPlays();
+  const byPlayer = buildPlayerHitLocations(plays);
+  const names    = Object.keys(byPlayer);
+
+  if (names.length === 0) {
+    showToast('No hit location data to write', 'warning');
+    return;
+  }
+
+  const seasonId  = selectedGame.seasonId;
+  const gameId    = selectedGame.gameId;
+  const gameDocId = `${seasonId}_${gameId}`;
+
+  const btn = document.getElementById('writeHitLocsBtn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Writing...';
+
+  let written = 0, skipped = 0, errors = 0;
+
+  for (const name of names) {
+    const match = findPlayerMatch(name);
+    if (!match) {
+      console.warn(`⚠️ No roster match for "${name}" — skipping hit locations`);
+      skipped++;
+      continue;
+    }
+
+    try {
+      const docRef = doc(db, 'playerStats', match.legacyId, 'games', gameDocId);
+      await setDoc(docRef, {
+        hitLocations: byPlayer[name],
+        hitLocationUpdatedAt: serverTimestamp()
+      }, { merge: true });
+
+      // Also write to unified sprayChartData collection for display on scouting-report / player pages
+      // Use authId (Firebase UID) → roster id (snake_case) → name-derived legacyId
+      // to match whatever key the users collection and intake page used
+      const sprayPlayerId = match.authId || match.id || match.legacyId;
+      const sprayRef = doc(db, 'sprayChartData', sprayPlayerId);
+      const gamePlays = byPlayer[name].map(l => ({
+        result:   ['single','double','triple','homerun'].includes(l.playType) ? 'Hit' : 'Out',
+        zone:     l.location,
+        playType: l.playType,
+        inning:   l.inning || null,
+        source:   'game-tracker',
+      }));
+      // Store per-game so re-running this doesn't duplicate plays
+      await setDoc(sprayRef, {
+        gamePlays: { [gameDocId]: gamePlays },
+        gameTrackerUpdatedAt: serverTimestamp(),
+      }, { merge: true });
+
+      written++;
+      console.log(`📍 Wrote ${byPlayer[name].length} location(s) for ${match.legacyId} → playerStats | sprayChartData → ${sprayPlayerId}`);
+    } catch (err) {
+      console.error(`❌ Error writing hit locations for ${name}:`, err);
+      errors++;
+    }
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '📍 Write Hit Locations to Player Docs';
+
+  if (errors === 0) {
+    showToast(`Hit locations written for ${written} player(s)${skipped ? `, ${skipped} skipped (unmatched)` : ''}`, 'success');
+    showMessage('success', `Hit location data written: ${written} player(s) updated.${skipped ? ` ${skipped} skipped (no roster match).` : ''}`);
+  } else {
+    showToast(`Written: ${written}, Errors: ${errors}`, 'error');
+  }
+};
+
+// ============================================
+// AUTH INIT
+// ============================================
+
+onAuthChange((user) => {
+  if (user) {
+    initializePage(user);
+  } else {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('authGate').style.display = 'block';
+  }
+});
+</script>
+
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+</script>
+<script src="mobile-enhancements.js"></script>
+</body>
+</html>

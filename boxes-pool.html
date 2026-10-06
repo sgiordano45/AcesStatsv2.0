@@ -1,0 +1,3162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!-- PWA Session Persistence -->
+<script>
+(function(){try{var p=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;if(p){var c=window.location.pathname+window.location.search;if(c!=='/'&&c!=='/index.html'){localStorage.setItem('pwa_last_page',c);localStorage.setItem('pwa_last_page_ts',Date.now().toString())}}}catch(e){}})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boxes Pool - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --pool-color: #1e40af;
+  --pool-secondary: #3b82f6;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --winner-color: #059669;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.softball-spinner::before {
+  content: '🏈';
+  font-size: 80px;
+  animation: spin 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+
+/* Auth Gate */
+.auth-gate {
+  max-width: 500px;
+  margin: 4rem auto;
+  padding: 3rem;
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  display: none;
+}
+
+.auth-gate h2 {
+  color: var(--pool-color);
+  margin-bottom: 1rem;
+}
+
+.auth-gate p {
+  color: var(--text-light);
+  margin-bottom: 2rem;
+}
+
+.auth-gate a {
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  background: var(--primary-color);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, var(--pool-color) 0%, var(--pool-secondary) 100%);
+  color: white;
+  padding: 2rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.header::after {
+  content: '🏈';
+  position: absolute;
+  bottom: -40px;
+  left: -30px;
+  font-size: 180px;
+  opacity: 0.08;
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.pool-title {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-top: 0.25rem;
+}
+
+.header-badges {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-locked {
+  background: var(--danger-color);
+  color: white;
+}
+
+.badge-open {
+  background: var(--success-color);
+  color: white;
+}
+
+.badge-admin {
+  background: var(--accent-color);
+  color: #1a1a1a;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.nav-btn {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.nav-btn:hover {
+  background: rgba(255,255,255,0.3);
+  transform: translateY(-2px);
+}
+
+/* Container */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Pool Selector */
+.pool-selector {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pool-selector label {
+  font-weight: 600;
+}
+
+.pool-selector select {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+  font-size: 1rem;
+  min-width: 200px;
+}
+
+.pool-selector select:focus {
+  outline: none;
+  border-color: var(--pool-color);
+}
+
+/* Grid Container */
+.grid-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-lg);
+  overflow-x: auto;
+}
+
+/* Team Labels */
+.grid-wrapper {
+  display: inline-block;
+  min-width: fit-content;
+}
+
+.team-label-top {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--pool-color);
+  margin-bottom: 0.5rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  border-radius: 8px;
+  margin-left: 60px;
+}
+
+.team-label-left {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--pool-color);
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+}
+
+.grid-with-label {
+  display: flex;
+  align-items: stretch;
+}
+
+/* Numbers Row */
+.numbers-container {
+  margin-left: 60px;  /* Same as team-label-left area */
+  margin-bottom: 2px;
+  padding-left: 57px;  /* Row numbers (55px) + gap (2px) */
+}
+
+.numbers-row {
+  display: grid;
+  grid-template-columns: repeat(10, 55px);
+  gap: 2px;
+}
+
+.number-cell {
+  width: 55px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--pool-color), var(--pool-secondary));
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 4px;
+}
+
+.number-cell.row-number {
+  height: 55px;
+  width: 55px;
+}
+
+/* Numbers not drawn yet */
+.number-cell.pending {
+  background: linear-gradient(135deg, #94a3b8, #64748b);
+  font-size: 0.9rem;
+}
+
+/* Row Numbers Column */
+.row-numbers-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: 2px;
+}
+
+/* The Grid */
+.boxes-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 55px);
+  gap: 2px;
+}
+
+.box {
+  width: 55px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 2px solid #bbf7d0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.7rem;
+  text-align: center;
+  padding: 2px;
+  word-break: break-word;
+  line-height: 1.1;
+}
+
+.box:hover:not(.taken):not(.locked) {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
+  border-color: var(--success-color);
+}
+
+.box.taken {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+  cursor: default;
+  font-weight: 500;
+  color: #92400e;
+}
+
+.box.my-box {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #3b82f6;
+  color: #1e40af;
+}
+
+.box.locked {
+  cursor: default;
+}
+
+.box.locked:not(.taken) {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-color: #cbd5e1;
+}
+
+/* Winner styling */
+.box.winner {
+  position: relative;
+  border-width: 3px;
+  font-weight: 700;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.box.winner-q1 { border-color: #ef4444 !important; }
+.box.winner-half { border-color: #a855f7 !important; }
+.box.winner-q3 { border-color: #22c55e !important; }
+.box.winner-final { border-color: #92400e !important; }
+
+.box.winner-count-1 {
+  background: var(--split-color-1, #fecaca);
+}
+
+.box.winner-count-2 {
+  background: linear-gradient(135deg, var(--split-color-1, #fecaca) 50%, var(--split-color-2, #d8b4fe) 50%);
+}
+
+.box.winner-count-3 {
+  background: conic-gradient(var(--split-color-1, #fecaca) 0deg 120deg, var(--split-color-2, #d8b4fe) 120deg 240deg, var(--split-color-3, #bbf7d0) 240deg 360deg);
+}
+
+.box.winner-count-4 {
+  background: conic-gradient(var(--split-color-1, #fecaca) 0deg 90deg, var(--split-color-2, #d8b4fe) 90deg 180deg, var(--split-color-3, #bbf7d0) 180deg 270deg, var(--split-color-4, #d4a574) 270deg 360deg);
+}
+
+.winner-indicators {
+  display: flex;
+  gap: 2px;
+  position: absolute;
+  bottom: 2px;
+}
+
+.winner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.3);
+}
+
+.winner-dot.q1 { background: #fecaca; }
+.winner-dot.half { background: #d8b4fe; }
+.winner-dot.q3 { background: #bbf7d0; }
+.winner-dot.final { background: #d4a574; }
+
+.winner-name {
+  font-size: 0.65rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Game Tabs */
+.game-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.game-tab {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.game-tab:hover {
+  border-color: var(--pool-color);
+}
+
+.game-tab.active {
+  background: var(--pool-color);
+  color: white;
+  border-color: var(--pool-color);
+}
+
+.game-tab.numbers-pending {
+  border-style: dashed;
+  opacity: 0.8;
+}
+
+.game-tab.numbers-pending::after {
+  content: '🎲';
+  font-size: 0.75rem;
+}
+
+.game-winner-badge {
+  background: var(--success-color);
+  color: white;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+}
+
+/* Pre-lock message */
+.pre-lock-message {
+  text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  border: 2px dashed var(--border-color);
+}
+
+.pre-lock-message.hidden {
+  display: none;
+}
+
+.pre-lock-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.pre-lock-message p {
+  margin: 0;
+  color: var(--text-light);
+}
+
+.pre-lock-subtitle {
+  font-size: 0.9rem;
+  margin-top: 0.5rem !important;
+}
+
+/* Numbers pending message for individual games */
+.numbers-pending-message {
+  text-align: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border: 2px dashed #f59e0b;
+}
+
+.numbers-pending-message p {
+  margin: 0;
+  color: #92400e;
+  font-weight: 500;
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.legend-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid;
+}
+
+.legend-box.available {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #bbf7d0;
+}
+
+.legend-box.taken {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+}
+
+.legend-box.mine {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #3b82f6;
+}
+
+/* Stats Cards */
+.pool-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--pool-color);
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-top: 0.25rem;
+}
+
+/* Admin Panel */
+.admin-panel {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  box-shadow: var(--shadow-lg);
+  display: none;
+}
+
+.admin-panel.visible {
+  display: block;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.admin-header h2 {
+  margin: 0;
+  color: var(--pool-color);
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-tab {
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.admin-tab:hover {
+  border-color: var(--pool-color);
+}
+
+.admin-tab.active {
+  background: var(--pool-color);
+  color: white;
+  border-color: var(--pool-color);
+}
+
+.admin-section {
+  display: none;
+}
+
+.admin-section.active {
+  display: block;
+}
+
+/* Form styles */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-dark);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--pool-color);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--pool-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #1e3a8a;
+}
+
+.btn-secondary {
+  background: var(--border-color);
+  color: var(--text-dark);
+}
+
+.btn-secondary:hover {
+  background: #cbd5e1;
+}
+
+.btn-success {
+  background: var(--success-color);
+  color: white;
+}
+
+.btn-success:hover {
+  background: #16a34a;
+}
+
+.btn-warning {
+  background: var(--warning-color);
+  color: white;
+}
+
+.btn-warning:hover {
+  background: #d97706;
+}
+
+.btn-danger {
+  background: var(--danger-color);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+/* Games Editor */
+.game-editor-item {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  border: 2px solid var(--border-color);
+}
+
+.game-editor-item.numbers-not-drawn {
+  border-style: dashed;
+  background: #fffbeb;
+}
+
+.game-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.game-editor-header h4 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.game-teams-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.vs-label {
+  font-weight: 700;
+  color: var(--text-light);
+  padding-bottom: 0.75rem;
+}
+
+.numbers-section {
+  margin-bottom: 1rem;
+}
+
+.numbers-section label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.numbers-grid {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.numbers-grid input {
+  width: 45px;
+  height: 40px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.numbers-grid input:focus {
+  outline: none;
+  border-color: var(--pool-color);
+}
+
+.numbers-grid input:disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+}
+
+.randomize-btn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.randomize-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.randomize-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Numbers Drawn Toggle */
+.numbers-drawn-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #eff6ff;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border: 2px solid #bfdbfe;
+}
+
+.numbers-drawn-toggle.not-drawn {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.numbers-drawn-toggle label {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.numbers-drawn-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.numbers-drawn-status {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-left: auto;
+}
+
+/* Game Winner Section */
+.game-winner-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  border: 1px solid var(--border-color);
+}
+
+.game-winner-section h5 {
+  margin: 0 0 1rem 0;
+  color: var(--text-dark);
+}
+
+.quarters-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.quarter-winner-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.quarter-label {
+  font-weight: 600;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quarter-label .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.quarter-winner-row.q1 .dot { background: #fecaca; border: 2px solid #ef4444; }
+.quarter-winner-row.half .dot { background: #d8b4fe; border: 2px solid #a855f7; }
+.quarter-winner-row.q3 .dot { background: #bbf7d0; border: 2px solid #22c55e; }
+.quarter-winner-row.final .dot { background: #d4a574; border: 2px solid #92400e; }
+
+.quarter-scores {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quarter-scores label {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin: 0;
+}
+
+.quarter-scores input {
+  width: 50px;
+  padding: 0.5rem;
+  text-align: center;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.quarter-winner-display {
+  background: var(--success-color);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+/* Entries List */
+.entries-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.entry-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.entry-item:last-child {
+  border-bottom: none;
+}
+
+.entry-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.entry-name {
+  font-weight: 600;
+}
+
+.entry-box {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.entry-badges {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.entry-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.entry-badge.paid {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.entry-badge.unpaid {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.entry-badge.manual {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: var(--danger-color);
+  cursor: pointer;
+  font-size: 1.25rem;
+  padding: 0.25rem;
+}
+
+.remove-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Link Type Tabs */
+.link-type-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.link-type-tab {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.link-type-tab:hover {
+  border-color: var(--pool-color);
+}
+
+.link-type-tab.active {
+  background: var(--pool-color);
+  color: white;
+  border-color: var(--pool-color);
+}
+
+/* User Search */
+.user-search-results {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  display: none;
+}
+
+.user-search-results.visible {
+  display: block;
+}
+
+.user-search-result {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.2s ease;
+}
+
+.user-search-result:hover {
+  background: #f8fafc;
+}
+
+.user-search-result:last-child {
+  border-bottom: none;
+}
+
+.user-search-result .user-name {
+  font-weight: 600;
+}
+
+.user-search-result .user-email {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.selected-user-badge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #dcfce7;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal h3 {
+  margin: 0 0 1.5rem 0;
+  color: var(--pool-color);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+/* Toast */
+.toast-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 10000;
+}
+
+.toast {
+  background: var(--text-dark);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  box-shadow: var(--shadow-lg);
+  animation: slideIn 0.3s ease;
+}
+
+.toast-success { background: var(--success-color); }
+.toast-warning { background: var(--warning-color); }
+.toast-error { background: var(--danger-color); }
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-buttons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .container {
+    padding: 1rem;
+  }
+  
+  .pool-selector {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .pool-selector select {
+    min-width: 100%;
+  }
+  
+  .boxes-grid {
+    grid-template-columns: repeat(10, 40px);
+  }
+  
+  .box {
+    width: 40px;
+    height: 40px;
+    font-size: 0.55rem;
+  }
+  
+  .numbers-row {
+    grid-template-columns: repeat(10, 40px);
+  }
+  
+  .number-cell {
+    width: 40px;
+    font-size: 0.85rem;
+  }
+  
+  .number-cell.row-number {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .numbers-container {
+    padding-left: 42px;
+  }
+  
+  .team-label-top {
+    margin-left: 50px;
+    font-size: 1rem;
+  }
+  
+  .admin-tabs {
+    flex-direction: column;
+  }
+  
+  .admin-tab {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .game-teams-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .vs-label {
+    text-align: center;
+    padding: 0;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="softball-spinner"></div>
+  <p style="margin-top: 1rem; color: var(--text-light);">Loading pool...</p>
+</div>
+
+<!-- Auth Gate -->
+<div class="auth-gate" id="authGate">
+  <h2>🏈 Boxes Pool</h2>
+  <p>Please sign in to view and participate in boxes pools.</p>
+  <a href="signin.html">Sign In</a>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-content">
+    <div>
+      <h1 id="poolTitle">🏈 Boxes Pool</h1>
+      <div class="pool-title" id="poolSubtitle">NFL Playoff Squares</div>
+      <div class="header-badges">
+        <span class="badge badge-open" id="poolStatusBadge">Open</span>
+        <span class="badge badge-admin" id="adminBadge" style="display: none;">Admin</span>
+      </div>
+    </div>
+    <div class="header-buttons">
+      <a href="index.html" class="nav-btn">← Back to Home</a>
+    </div>
+  </div>
+</header>
+
+<!-- Main Content -->
+<div class="container" id="mainContent" style="display: none;">
+  
+  <!-- Pool Selector -->
+  <div class="pool-selector">
+    <label for="poolSelect">Select Pool:</label>
+    <select id="poolSelect" onchange="loadPool()">
+      <option value="">-- Select a pool --</option>
+    </select>
+    <button class="btn btn-success" id="createPoolBtn" style="display: none;" onclick="showCreatePoolModal()">
+      ➕ Create New Pool
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="pool-stats" id="poolStats" style="display: none;">
+    <div class="stat-card">
+      <div class="stat-value" id="statClaimed">0</div>
+      <div class="stat-label">Claimed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statAvailable">100</div>
+      <div class="stat-label">Available</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statMyBoxes">0</div>
+      <div class="stat-label">My Boxes</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statPrizePool">$0</div>
+      <div class="stat-label">Prize Pool</div>
+    </div>
+  </div>
+
+  <!-- Grid Container -->
+  <div class="grid-container" id="gridContainer" style="display: none;">
+    
+    <!-- Game Tabs (only visible when locked) -->
+    <div class="game-tabs" id="gameTabs" style="display: none;">
+      <!-- Game tabs will be inserted here -->
+    </div>
+    
+    <!-- Pre-lock message -->
+    <div class="pre-lock-message" id="preLockMessage">
+      <div class="pre-lock-icon">🎲</div>
+      <p>Numbers will be revealed when the pool is locked!</p>
+      <p class="pre-lock-subtitle">Claim your boxes now - positions are what matter.</p>
+    </div>
+    
+    <!-- Numbers pending message (for individual games) -->
+    <div class="numbers-pending-message" id="numbersPendingMessage" style="display: none;">
+      <p>🎲 Numbers for this game haven't been drawn yet - check back closer to game time!</p>
+    </div>
+    
+    <div class="grid-wrapper">
+      <!-- Top Team Label -->
+      <div class="team-label-top" id="topTeamLabel">TEAM 1</div>
+      
+      <!-- Numbers for columns -->
+      <div class="numbers-container" id="columnNumbersContainer">
+        <!-- Number row will be inserted here -->
+      </div>
+      
+      <!-- Grid with left label and row numbers -->
+      <div class="grid-with-label">
+        <!-- Left Team Label -->
+        <div class="team-label-left" id="leftTeamLabel">TEAM 2</div>
+        
+        <!-- Row Numbers Column -->
+        <div id="rowNumbersContainer" style="display: flex; gap: 2px;">
+          <!-- Row numbers will be inserted here -->
+        </div>
+        
+        <!-- The 10x10 Grid -->
+        <div class="boxes-grid" id="boxesGrid">
+          <!-- Boxes will be generated by JavaScript -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-box available"></div>
+        <span>Available</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box taken"></div>
+        <span>Taken</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box mine"></div>
+        <span>My Boxes</span>
+      </div>
+    </div>
+    
+    <!-- Winner Legend (only when locked) -->
+    <div class="legend winner-legend" id="winnerLegend" style="display: none; margin-top: 0.75rem;">
+      <div class="legend-item">
+        <div class="legend-box" style="background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%); border-color: #ef4444;"></div>
+        <span>1st Qtr</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box" style="background: linear-gradient(135deg, #d8b4fe 0%, #c4b5fd 100%); border-color: #a855f7;"></div>
+        <span>Halftime</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box" style="background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%); border-color: #22c55e;"></div>
+        <span>3rd Qtr</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box" style="background: linear-gradient(135deg, #d4a574 0%, #c9976a 100%); border-color: #92400e;"></div>
+        <span>Final</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div class="admin-panel" id="adminPanel">
+    <div class="admin-header">
+      <h2>⚙️ Pool Management</h2>
+    </div>
+    
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="settings">Pool Settings</button>
+      <button class="admin-tab" data-tab="games">Games</button>
+      <button class="admin-tab" data-tab="entries">Manage Entries</button>
+      <button class="admin-tab" data-tab="manual">Manual Entry</button>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="admin-section active" id="tab-settings">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Pool Name</label>
+          <input type="text" id="adminPoolName" placeholder="e.g., Thanksgiving 2025">
+        </div>
+        <div class="form-group">
+          <label>Cost Per Box</label>
+          <input type="number" id="adminCostPerBox" placeholder="e.g., 10" min="0">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="adminDescription" rows="3" placeholder="Pool rules, payout structure..."></textarea>
+      </div>
+
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button class="btn btn-primary" onclick="savePoolSettings()">
+          💾 Save Settings
+        </button>
+        <button class="btn btn-warning" id="toggleLockBtn" onclick="togglePoolLock()">
+          🔒 Lock Pool
+        </button>
+        <button class="btn btn-danger" onclick="confirmDeletePool()">
+          🗑️ Delete Pool
+        </button>
+      </div>
+    </div>
+
+    <!-- Games Tab -->
+    <div class="admin-section" id="tab-games">
+      <p style="color: var(--text-light); margin-bottom: 1rem;">
+        Add games to this pool. Each game has its own teams and numbers. Use the "Numbers Drawn" checkbox to control when numbers are revealed for each game.
+      </p>
+      
+      <div class="games-editor" id="gamesEditor">
+        <!-- Game items will be generated here -->
+      </div>
+      
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem;">
+        <button class="btn btn-secondary" onclick="addGame()">
+          ➕ Add Game
+        </button>
+        <button class="btn btn-primary" onclick="saveGames()">
+          💾 Save Games
+        </button>
+      </div>
+    </div>
+
+    <!-- Entries Tab -->
+    <div class="admin-section" id="tab-entries">
+      <p style="color: var(--text-light); margin-bottom: 1rem;">
+        Manage pool entries. Remove unpaid entries or edit participant information.
+      </p>
+      
+      <div class="form-group">
+        <label>Filter Entries</label>
+        <input type="text" id="entryFilter" placeholder="Search by name..." oninput="filterEntries()">
+      </div>
+      
+      <div class="entries-list" id="entriesList">
+        <div style="padding: 2rem; text-align: center; color: var(--text-light);">
+          No entries yet
+        </div>
+      </div>
+      
+      <div style="margin-top: 1rem;">
+        <button class="btn btn-danger" onclick="removeAllUnpaid()">
+          🗑️ Remove All Unpaid
+        </button>
+      </div>
+    </div>
+
+    <!-- Manual Entry Tab -->
+    <div class="admin-section" id="tab-manual">
+      <p style="color: var(--text-light); margin-bottom: 1rem;">
+        Add entries for others. Link to existing users or enter an email for future matching.
+      </p>
+      
+      <div class="manual-entry-form">
+        <!-- Link Type Selection -->
+        <div class="form-group">
+          <label>Entry Type</label>
+          <div class="link-type-tabs">
+            <button type="button" class="link-type-tab active" data-type="search" onclick="setLinkType('search')">
+              🔍 Search Existing User
+            </button>
+            <button type="button" class="link-type-tab" data-type="email" onclick="setLinkType('email')">
+              ✉️ Enter Email (Future User)
+            </button>
+            <button type="button" class="link-type-tab" data-type="name" onclick="setLinkType('name')">
+              📝 Name Only
+            </button>
+          </div>
+        </div>
+        
+        <!-- Search Existing User -->
+        <div class="form-group link-type-section" id="linkTypeSearch">
+          <label>Search Users</label>
+          <input type="text" id="userSearchInput" placeholder="Type to search users..." oninput="searchUsers()">
+          <div class="user-search-results" id="userSearchResults"></div>
+          <input type="hidden" id="selectedUserId">
+          <input type="hidden" id="selectedUserName">
+          <input type="hidden" id="selectedUserEmail">
+        </div>
+        
+        <!-- Email for Future User -->
+        <div class="form-group link-type-section" id="linkTypeEmail" style="display: none;">
+          <label>Email Address</label>
+          <input type="email" id="manualEmail" placeholder="person@example.com">
+          <div class="form-group" style="margin-top: 0.75rem;">
+            <label>Display Name</label>
+            <input type="text" id="manualNameEmail" placeholder="Enter name...">
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-light); margin-top: 0.5rem;">
+            💡 When this person creates an account with this email, the box will automatically link to them.
+          </p>
+        </div>
+        
+        <!-- Name Only (no linking) -->
+        <div class="form-group link-type-section" id="linkTypeName" style="display: none;">
+          <label>Participant Name</label>
+          <input type="text" id="manualName" placeholder="Enter name...">
+          <p style="font-size: 0.8rem; color: var(--text-light); margin-top: 0.5rem;">
+            ⚠️ This entry won't be linked to any user account.
+          </p>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Paid?</label>
+            <select id="manualPaid">
+              <option value="true">Yes - Paid</option>
+              <option value="false">No - Not Paid</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Select Boxes</label>
+            <input type="text" id="manualCoords" placeholder="e.g., 0-0, 3-5 (or click grid)">
+          </div>
+        </div>
+        
+        <button class="btn btn-success" onclick="addManualEntry()">
+          ➕ Add Entry
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Create Pool Modal -->
+<div class="modal-overlay" id="createPoolModal">
+  <div class="modal">
+    <h3>➕ Create New Pool</h3>
+    
+    <div class="form-group">
+      <label>Pool Name</label>
+      <input type="text" id="newPoolName" placeholder="e.g., Thanksgiving 2025, Super Bowl LIX">
+    </div>
+    
+    <div class="form-group">
+      <label>Cost Per Box</label>
+      <input type="number" id="newCostPerBox" placeholder="10" min="0" value="10">
+    </div>
+    
+    <div class="form-group">
+      <label>Description (optional)</label>
+      <textarea id="newDescription" rows="2" placeholder="Pool rules, payout structure..."></textarea>
+    </div>
+    
+    <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 1rem;">
+      💡 After creating the pool, use the "Games" tab to add individual games with their teams and numbers.
+    </p>
+    
+    <div class="modal-buttons">
+      <button class="btn btn-secondary" onclick="hideCreatePoolModal()">Cancel</button>
+      <button class="btn btn-success" onclick="createPool()">Create Pool</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Box Modal -->
+<div class="modal-overlay" id="confirmBoxModal">
+  <div class="modal">
+    <h3>Claim This Box?</h3>
+    <p id="confirmBoxText">Are you sure you want to claim box (0, 0)?</p>
+    <p style="color: var(--text-light); font-size: 0.9rem;">
+      Cost: <strong id="confirmBoxCost">$10</strong>
+    </p>
+    <div class="modal-buttons">
+      <button class="btn btn-secondary" onclick="hideConfirmBoxModal()">Cancel</button>
+      <button class="btn btn-success" onclick="confirmClaimBox()">Claim Box</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Firebase Scripts -->
+<script type="module">
+  import { auth, getUserProfile, USER_ROLES } from './firebase-auth.js';
+  import { db } from './firebase-config.js';
+  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { 
+    collection, 
+    doc, 
+    getDoc, 
+    getDocs, 
+    setDoc, 
+    updateDoc, 
+    deleteDoc, 
+    addDoc,
+    query, 
+    where, 
+    orderBy,
+    serverTimestamp 
+  } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  // State
+  let currentUser = null;
+  let userProfile = null;
+  let isAdmin = false;
+  let currentPool = null;
+  let selectedGameIndex = 0;
+  let pendingBoxClaim = null;
+  let allUsers = [];
+  let currentLinkType = 'search';
+
+  // ========================================
+  // INITIALIZATION
+  // ========================================
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      await loadUserProfile();
+      await loadPoolsList();
+      
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      document.getElementById('mainContent').style.display = 'block';
+      
+      setupAdminTabs();
+      
+    } else {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      document.getElementById('authGate').style.display = 'block';
+    }
+  });
+
+  async function loadUserProfile() {
+    try {
+      const profileDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      if (profileDoc.exists()) {
+        userProfile = profileDoc.data();
+        
+        // Check admin status
+        checkAdminStatus();
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    }
+  }
+
+  function checkAdminStatus() {
+    if (!userProfile) {
+      isAdmin = false;
+      return;
+    }
+    
+    const userRole = (userProfile.userRole || '').toLowerCase();
+    
+    // Check for admin or oddsmaker special role
+    isAdmin = 
+      userProfile.isAdmin === true ||
+      userRole === 'admin' ||
+      (userProfile.specialRoles && userProfile.specialRoles.oddsmaker === true);
+    
+    if (isAdmin) {
+      document.getElementById('adminBadge').style.display = 'inline-block';
+      document.getElementById('adminBadge').textContent = userProfile.specialRoles?.oddsmaker ? 'Oddsmaker' : 'Admin';
+      document.getElementById('createPoolBtn').style.display = 'inline-flex';
+    }
+  }
+
+  async function loadPoolsList() {
+    try {
+      const poolsQuery = query(collection(db, 'boxesPools'), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(poolsQuery);
+      
+      const select = document.getElementById('poolSelect');
+      select.innerHTML = '<option value="">-- Select a pool --</option>';
+      
+      snapshot.forEach(doc => {
+        const pool = doc.data();
+        const option = document.createElement('option');
+        option.value = doc.id;
+        option.textContent = pool.name || 'Unnamed Pool';
+        select.appendChild(option);
+      });
+      
+    } catch (error) {
+      console.error('Error loading pools:', error);
+      showToast('Error loading pools', 'error');
+    }
+  }
+
+  window.loadPool = async function() {
+    const poolId = document.getElementById('poolSelect').value;
+    
+    if (!poolId) {
+      currentPool = null;
+      document.getElementById('gridContainer').style.display = 'none';
+      document.getElementById('poolStats').style.display = 'none';
+      document.getElementById('adminPanel').classList.remove('visible');
+      return;
+    }
+    
+    try {
+      const poolDoc = await getDoc(doc(db, 'boxesPools', poolId));
+      
+      if (!poolDoc.exists()) {
+        showToast('Pool not found', 'error');
+        return;
+      }
+      
+      currentPool = { id: poolId, ...poolDoc.data() };
+      selectedGameIndex = 0;
+      
+      // Show grid and stats
+      document.getElementById('gridContainer').style.display = 'block';
+      document.getElementById('poolStats').style.display = 'grid';
+      
+      // Show admin panel if admin
+      if (isAdmin) {
+        document.getElementById('adminPanel').classList.add('visible');
+        populateAdminFields();
+      }
+      
+      // Update displays
+      updatePoolDisplay();
+      renderGrid();
+      updateStats();
+      
+      // Check for pending entries to claim
+      await checkAndClaimPendingEntries();
+      
+    } catch (error) {
+      console.error('Error loading pool:', error);
+      showToast('Error loading pool', 'error');
+    }
+  };
+
+  async function checkAndClaimPendingEntries() {
+    if (!currentPool || !currentUser.email) return;
+    
+    const entries = currentPool.entries || {};
+    const userEmail = currentUser.email.toLowerCase();
+    const mergedFrom = userProfile?.mergedFromProfile;
+    const pendingMatches = [];
+    
+    // Find entries with matching pendingEmail OR mergedFromProfile
+    for (const [key, entry] of Object.entries(entries)) {
+      // Pending email match (not yet claimed)
+      if (entry.pendingEmail && entry.pendingEmail.toLowerCase() === userEmail && !entry.userId) {
+        pendingMatches.push({ key, reason: 'email' });
+      }
+      // Legacy profile match (entry linked to old profile ID)
+      else if (mergedFrom && entry.userId === mergedFrom) {
+        pendingMatches.push({ key, reason: 'migration' });
+      }
+    }
+    
+    if (pendingMatches.length === 0) return;
+    
+    try {
+      // Update all matching entries with user's ID
+      const updates = {};
+      const userName = userProfile?.displayName || currentUser.displayName || currentUser.email.split('@')[0];
+      
+      pendingMatches.forEach(({ key }) => {
+        updates[`entries.${key}.userId`] = currentUser.uid;
+        updates[`entries.${key}.name`] = userName; // Update name to their actual profile name
+        updates[`entries.${key}.email`] = currentUser.email;
+        updates[`entries.${key}.claimedByUserAt`] = serverTimestamp();
+      });
+      
+      await updateDoc(doc(db, 'boxesPools', currentPool.id), updates);
+      
+      // Update local state
+      pendingMatches.forEach(({ key }) => {
+        currentPool.entries[key].userId = currentUser.uid;
+        currentPool.entries[key].name = userName;
+      });
+      
+      const emailMatches = pendingMatches.filter(m => m.reason === 'email').length;
+      const migrationMatches = pendingMatches.filter(m => m.reason === 'migration').length;
+      
+      if (emailMatches > 0 && migrationMatches > 0) {
+        showToast(`🎉 ${pendingMatches.length} box(es) have been linked to your account!`, 'success');
+      } else if (emailMatches > 0) {
+        showToast(`🎉 ${emailMatches} box(es) have been linked to your account!`, 'success');
+      } else if (migrationMatches > 0) {
+        showToast(`🎉 ${migrationMatches} box(es) transferred from your old profile!`, 'success');
+      }
+      
+    } catch (error) {
+      console.error('Error claiming pending entries:', error);
+      // Don't show error to user - not critical
+    }
+  }
+
+  function updatePoolDisplay() {
+    document.getElementById('poolTitle').textContent = currentPool.name || 'Boxes Pool';
+    
+    const statusBadge = document.getElementById('poolStatusBadge');
+    const preLockMessage = document.getElementById('preLockMessage');
+    const numbersPendingMessage = document.getElementById('numbersPendingMessage');
+    const gameTabs = document.getElementById('gameTabs');
+    const colNumbersContainer = document.getElementById('columnNumbersContainer');
+    const rowNumbersContainer = document.getElementById('rowNumbersContainer');
+    
+    if (currentPool.locked) {
+      statusBadge.textContent = 'Locked';
+      statusBadge.className = 'badge badge-locked';
+      preLockMessage.classList.add('hidden');
+      
+      // Show game tabs if there are games
+      const games = currentPool.games || [];
+      if (games.length > 0) {
+        gameTabs.style.display = 'flex';
+        renderGameTabs();
+        
+        // Check if current game has numbers drawn
+        const currentGame = games[selectedGameIndex];
+        const numbersDrawn = currentGame?.numbersDrawn !== false; // Default to true for backward compat
+        
+        if (numbersDrawn) {
+          numbersPendingMessage.style.display = 'none';
+          colNumbersContainer.style.display = 'block';
+          rowNumbersContainer.style.display = 'flex';
+        } else {
+          numbersPendingMessage.style.display = 'block';
+          colNumbersContainer.style.display = 'block';
+          rowNumbersContainer.style.display = 'flex';
+        }
+      } else {
+        gameTabs.style.display = 'none';
+        numbersPendingMessage.style.display = 'none';
+        colNumbersContainer.style.display = 'block';
+        rowNumbersContainer.style.display = 'flex';
+      }
+    } else {
+      statusBadge.textContent = 'Open';
+      statusBadge.className = 'badge badge-open';
+      preLockMessage.classList.remove('hidden');
+      numbersPendingMessage.style.display = 'none';
+      gameTabs.style.display = 'none';
+      
+      // Hide numbers until locked
+      colNumbersContainer.style.display = 'none';
+      rowNumbersContainer.style.display = 'none';
+    }
+    
+    // Update team labels based on selected game or pool defaults
+    updateTeamLabels();
+  }
+
+  function renderGameTabs() {
+    const gameTabs = document.getElementById('gameTabs');
+    const games = currentPool.games || [];
+    
+    if (games.length === 0) {
+      gameTabs.innerHTML = '<p style="color: var(--text-light);">No games configured</p>';
+      return;
+    }
+    
+    gameTabs.innerHTML = games.map((game, idx) => {
+      const winners = game.winners || {};
+      const winnerCount = Object.keys(winners).filter(q => winners[q]?.box).length;
+      const numbersDrawn = game.numbersDrawn !== false; // Default to true for backward compat
+      
+      // Show team names when numbers are drawn (if both teams are set), otherwise show label
+      let displayLabel;
+      if (numbersDrawn && game.team1 && game.team2) {
+        displayLabel = `${game.team1} vs ${game.team2}`;
+      } else {
+        displayLabel = game.label || `Game ${idx + 1}`;
+      }
+      
+      return `
+        <button class="game-tab ${idx === selectedGameIndex ? 'active' : ''} ${!numbersDrawn ? 'numbers-pending' : ''}" 
+                onclick="selectGame(${idx})">
+          🏈 ${displayLabel}
+          ${winnerCount > 0 ? `<span class="game-winner-badge">🏆 ${winnerCount}/4</span>` : ''}
+        </button>
+      `;
+    }).join('');
+  }
+
+  window.selectGame = function(idx) {
+    selectedGameIndex = idx;
+    renderGameTabs();
+    updateTeamLabels();
+    updatePoolDisplay(); // This handles the numbers pending message
+    renderNumbers();
+    renderGrid();
+  };
+
+  function updateTeamLabels() {
+    const games = currentPool.games || [];
+    let team1 = 'TEAM 1';
+    let team2 = 'TEAM 2';
+    
+    // If locked and there are games, use the selected game's teams
+    if (currentPool.locked && games.length > 0 && games[selectedGameIndex]) {
+      const game = games[selectedGameIndex];
+      team1 = game.team1 || 'TBD';
+      team2 = game.team2 || 'TBD';
+    } else if (!currentPool.locked) {
+      // Before lock, show generic labels
+      team1 = '← Numbers Hidden →';
+      team2 = '↑';
+    }
+    
+    document.getElementById('topTeamLabel').textContent = team1;
+    document.getElementById('leftTeamLabel').textContent = team2;
+  }
+
+  // Helper function to abbreviate names for display
+  function abbreviateName(fullName) {
+    if (!fullName) return '?';
+    
+    const parts = fullName.trim().split(/\s+/);
+    
+    if (parts.length === 1) {
+      // Single name - show first 8 chars
+      return parts[0].length > 8 ? parts[0].substring(0, 7) + '.' : parts[0];
+    }
+    
+    // Multiple parts - show first initial + last name
+    const firstName = parts[0];
+    const lastName = parts[parts.length - 1];
+    
+    // With 55px boxes, we can fit about 9-10 chars comfortably
+    // "X. LastName" format
+    if (lastName.length <= 8) {
+      return `${firstName.charAt(0)}. ${lastName}`;
+    } else {
+      // Truncate long last names
+      return `${firstName.charAt(0)}. ${lastName.substring(0, 7)}`;
+    }
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('boxesGrid');
+    const entries = currentPool.entries || {};
+    const games = currentPool.games || [];
+    
+    // Get winners for the currently selected game
+    let gameWinners = {};
+    if (currentPool.locked && games.length > 0 && games[selectedGameIndex]) {
+      gameWinners = games[selectedGameIndex].winners || {};
+    }
+    
+    // Build a map of box -> which quarters won
+    const winnerMap = {};
+    const quarters = ['q1', 'half', 'q3', 'final'];
+    quarters.forEach(quarter => {
+      if (gameWinners[quarter]?.box) {
+        const box = gameWinners[quarter].box;
+        if (!winnerMap[box]) winnerMap[box] = [];
+        winnerMap[box].push(quarter);
+      }
+    });
+    
+    // Show/hide winner legend
+    const winnerLegend = document.getElementById('winnerLegend');
+    if (winnerLegend) {
+      winnerLegend.style.display = currentPool.locked ? 'flex' : 'none';
+    }
+    
+    grid.innerHTML = '';
+    
+    for (let row = 0; row < 10; row++) {
+      for (let col = 0; col < 10; col++) {
+        const box = document.createElement('div');
+        box.className = 'box';
+        box.dataset.row = row;
+        box.dataset.col = col;
+        
+        const key = `${row}-${col}`;
+        const entry = entries[key];
+        
+        if (entry) {
+          box.classList.add('taken');
+          
+          const fullName = entry.name || 'Unknown';
+          const displayName = abbreviateName(fullName);
+          
+          // Add tooltip for hover (title for native browser tooltip)
+          box.dataset.fullname = fullName;
+          box.title = fullName;
+          
+          // Check if it's my box:
+          // 1. Direct userId match
+          // 2. pendingEmail match
+          // 3. Entry's userId matches my mergedFromProfile (legacy profile I migrated from)
+          const isMyBox = entry.userId === currentUser.uid || 
+                          (entry.pendingEmail && entry.pendingEmail.toLowerCase() === currentUser.email?.toLowerCase()) ||
+                          (userProfile?.mergedFromProfile && entry.userId === userProfile.mergedFromProfile);
+          
+          if (isMyBox) {
+            box.classList.add('my-box');
+          }
+          
+          // Check if this box won any quarters
+          const wonQuarters = winnerMap[key] || [];
+          if (wonQuarters.length > 0) {
+            box.classList.add('winner');
+            box.classList.add(`winner-count-${wonQuarters.length}`);
+            
+            // Add individual quarter classes
+            wonQuarters.forEach(q => box.classList.add(`winner-${q}`));
+            
+            // Set CSS variables for split colors
+            const colorMap = {
+              q1: '#fecaca',
+              half: '#d8b4fe', 
+              q3: '#bbf7d0',
+              final: '#d4a574'
+            };
+            
+            wonQuarters.forEach((q, i) => {
+              box.style.setProperty(`--split-color-${i + 1}`, colorMap[q]);
+            });
+            
+            // Create name + indicator dots
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'winner-name';
+            nameSpan.textContent = displayName;
+            box.appendChild(nameSpan);
+            
+            const indicators = document.createElement('div');
+            indicators.className = 'winner-indicators';
+            wonQuarters.forEach(q => {
+              const dot = document.createElement('div');
+              dot.className = `winner-dot ${q}`;
+              dot.title = q === 'q1' ? '1st Qtr' : q === 'half' ? 'Halftime' : q === 'q3' ? '3rd Qtr' : 'Final';
+              indicators.appendChild(dot);
+            });
+            box.appendChild(indicators);
+          } else {
+            box.textContent = displayName;
+          }
+          
+          // Mobile tap handler to show full name
+          box.onclick = (e) => {
+            if (window.innerWidth <= 768 && entry) {
+              e.stopPropagation();
+              showToast(fullName, 'info');
+            }
+          };
+        }
+        
+        if (currentPool.locked) {
+          box.classList.add('locked');
+        }
+        
+        // Click handler for unclaimed boxes
+        if (!entry && !currentPool.locked) {
+          box.onclick = () => handleBoxClick(row, col);
+        }
+        
+        grid.appendChild(box);
+      }
+    }
+    
+    // Render numbers for selected game
+    renderNumbers();
+  }
+
+  function renderNumbers() {
+    const colContainer = document.getElementById('columnNumbersContainer');
+    const rowContainer = document.getElementById('rowNumbersContainer');
+    
+    // Clear existing
+    colContainer.innerHTML = '';
+    rowContainer.innerHTML = '';
+    
+    // Don't show numbers if not locked
+    if (!currentPool.locked) {
+      return;
+    }
+    
+    const games = currentPool.games || [];
+    
+    // If no games, nothing to show
+    if (games.length === 0) {
+      return;
+    }
+    
+    const game = games[selectedGameIndex];
+    if (!game) return;
+    
+    // Check if numbers have been drawn for this game
+    const numbersDrawn = game.numbersDrawn !== false; // Default to true for backward compat
+    
+    const numbers = game.numbers || [0,1,2,3,4,5,6,7,8,9];
+    const rowNumbers = game.rowNumbers || numbers;
+    
+    // Column numbers (single row for selected game)
+    const colRow = document.createElement('div');
+    colRow.className = 'numbers-row';
+    
+    for (let i = 0; i < 10; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'number-cell';
+      
+      if (numbersDrawn) {
+        cell.textContent = numbers[i] !== undefined ? numbers[i] : '?';
+      } else {
+        cell.textContent = '?';
+        cell.classList.add('pending');
+      }
+      
+      colRow.appendChild(cell);
+    }
+    colContainer.appendChild(colRow);
+    
+    // Row numbers
+    const rowCol = document.createElement('div');
+    rowCol.className = 'row-numbers-column';
+    rowCol.style.display = 'flex';
+    rowCol.style.flexDirection = 'column';
+    rowCol.style.gap = '2px';
+    
+    for (let i = 0; i < 10; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'number-cell row-number';
+      
+      if (numbersDrawn) {
+        cell.textContent = rowNumbers[i] !== undefined ? rowNumbers[i] : '?';
+      } else {
+        cell.textContent = '?';
+        cell.classList.add('pending');
+      }
+      
+      rowCol.appendChild(cell);
+    }
+    rowContainer.appendChild(rowCol);
+  }
+
+  // Legacy function - kept for compatibility
+  function renderNumberRows() {
+    renderNumbers();
+  }
+
+  function updateStats() {
+    const entries = currentPool.entries || {};
+    const entryCount = Object.keys(entries).length;
+    const userEmail = currentUser.email?.toLowerCase();
+    const mergedFrom = userProfile?.mergedFromProfile;
+    
+    const myBoxes = Object.values(entries).filter(e => 
+      e.userId === currentUser.uid || 
+      (e.pendingEmail && e.pendingEmail.toLowerCase() === userEmail) ||
+      (mergedFrom && e.userId === mergedFrom)
+    ).length;
+    const costPerBox = currentPool.costPerBox || 0;
+    
+    document.getElementById('statClaimed').textContent = entryCount;
+    document.getElementById('statAvailable').textContent = 100 - entryCount;
+    document.getElementById('statMyBoxes').textContent = myBoxes;
+    document.getElementById('statPrizePool').textContent = '$' + (entryCount * costPerBox);
+  }
+
+  // ========================================
+  // BOX CLAIMING
+  // ========================================
+
+  function handleBoxClick(row, col) {
+    if (currentPool.locked) {
+      showToast('Pool is locked', 'warning');
+      return;
+    }
+    
+    // Check if already taken
+    const key = `${row}-${col}`;
+    if (currentPool.entries && currentPool.entries[key]) {
+      showToast('This box is already taken', 'warning');
+      return;
+    }
+    
+    // If in manual entry mode for admin
+    if (isAdmin && document.getElementById('tab-manual').classList.contains('active')) {
+      const coordsInput = document.getElementById('manualCoords');
+      const current = coordsInput.value ? coordsInput.value + ', ' : '';
+      coordsInput.value = current + key;
+      return;
+    }
+    
+    // Show confirmation modal
+    pendingBoxClaim = { row, col };
+    document.getElementById('confirmBoxText').textContent = 
+      `Are you sure you want to claim box at row ${row}, column ${col}?`;
+    document.getElementById('confirmBoxCost').textContent = 
+      '$' + (currentPool.costPerBox || 0);
+    document.getElementById('confirmBoxModal').classList.add('visible');
+  }
+
+  window.hideConfirmBoxModal = function() {
+    document.getElementById('confirmBoxModal').classList.remove('visible');
+    pendingBoxClaim = null;
+  };
+
+  window.confirmClaimBox = async function() {
+    if (!pendingBoxClaim) return;
+    
+    const { row, col } = pendingBoxClaim;
+    const key = `${row}-${col}`;
+    
+    try {
+      // Update in Firestore
+      const poolRef = doc(db, 'boxesPools', currentPool.id);
+      
+      await updateDoc(poolRef, {
+        [`entries.${key}`]: {
+          userId: currentUser.uid,
+          name: userProfile?.displayName || currentUser.displayName || currentUser.email.split('@')[0],
+          email: currentUser.email,
+          claimedAt: serverTimestamp(),
+          paid: false
+        }
+      });
+      
+      // Update local state
+      if (!currentPool.entries) currentPool.entries = {};
+      currentPool.entries[key] = {
+        userId: currentUser.uid,
+        name: userProfile?.displayName || currentUser.displayName || currentUser.email.split('@')[0]
+      };
+      
+      // Refresh display
+      renderGrid();
+      updateStats();
+      hideConfirmBoxModal();
+      
+      showToast('Box claimed successfully!', 'success');
+      
+    } catch (error) {
+      console.error('Error claiming box:', error);
+      showToast('Error claiming box', 'error');
+    }
+  };
+
+  // ========================================
+  // ADMIN FUNCTIONS
+  // ========================================
+
+  function setupAdminTabs() {
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      };
+    });
+  }
+
+  function populateAdminFields() {
+    if (!currentPool) return;
+    
+    // Settings
+    document.getElementById('adminPoolName').value = currentPool.name || '';
+    document.getElementById('adminCostPerBox').value = currentPool.costPerBox || 0;
+    document.getElementById('adminDescription').value = currentPool.description || '';
+    
+    // Lock button
+    const lockBtn = document.getElementById('toggleLockBtn');
+    if (currentPool.locked) {
+      lockBtn.textContent = '🔓 Unlock Pool';
+      lockBtn.className = 'btn btn-success';
+    } else {
+      lockBtn.textContent = '🔒 Lock Pool';
+      lockBtn.className = 'btn btn-warning';
+    }
+    
+    // Load users for manual entry search
+    loadUsersForSearch();
+    
+    // Reset manual entry form to default state
+    setLinkType('search');
+    
+    // Games editor
+    renderGamesEditor();
+    
+    // Entries list
+    renderEntriesList();
+  }
+
+  window.savePoolSettings = async function() {
+    if (!currentPool || !isAdmin) return;
+    
+    try {
+      await updateDoc(doc(db, 'boxesPools', currentPool.id), {
+        name: document.getElementById('adminPoolName').value,
+        costPerBox: parseFloat(document.getElementById('adminCostPerBox').value) || 0,
+        description: document.getElementById('adminDescription').value,
+        updatedAt: serverTimestamp()
+      });
+      
+      // Reload
+      await loadPool();
+      showToast('Settings saved!', 'success');
+      
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      showToast('Error saving settings', 'error');
+    }
+  };
+
+  window.togglePoolLock = async function() {
+    if (!currentPool || !isAdmin) return;
+    
+    try {
+      await updateDoc(doc(db, 'boxesPools', currentPool.id), {
+        locked: !currentPool.locked,
+        updatedAt: serverTimestamp()
+      });
+      
+      await loadPool();
+      showToast(currentPool.locked ? 'Pool unlocked' : 'Pool locked', 'success');
+      
+    } catch (error) {
+      console.error('Error toggling lock:', error);
+      showToast('Error updating pool', 'error');
+    }
+  };
+
+  window.confirmDeletePool = function() {
+    if (!confirm('Are you sure you want to delete this pool? This cannot be undone!')) return;
+    if (!confirm('Really delete? All entries will be lost!')) return;
+    
+    deletePool();
+  };
+
+  async function deletePool() {
+    if (!currentPool || !isAdmin) return;
+    
+    try {
+      await deleteDoc(doc(db, 'boxesPools', currentPool.id));
+      currentPool = null;
+      
+      await loadPoolsList();
+      document.getElementById('gridContainer').style.display = 'none';
+      document.getElementById('poolStats').style.display = 'none';
+      document.getElementById('adminPanel').classList.remove('visible');
+      
+      showToast('Pool deleted', 'success');
+      
+    } catch (error) {
+      console.error('Error deleting pool:', error);
+      showToast('Error deleting pool', 'error');
+    }
+  }
+
+  // ========================================
+  // GAMES MANAGEMENT
+  // ========================================
+
+  function renderGamesEditor() {
+    const container = document.getElementById('gamesEditor');
+    const games = currentPool.games || [];
+    
+    if (games.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 2rem; background: #f8fafc; border-radius: 12px; border: 2px dashed var(--border-color);">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🏈</div>
+          <p style="color: var(--text-light); margin: 0;">No games added yet. Click "Add Game" to get started.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    container.innerHTML = games.map((game, idx) => {
+      const winners = game.winners || {};
+      const team1 = game.team1 || 'Team 1';
+      const team2 = game.team2 || 'Team 2';
+      const numbersDrawn = game.numbersDrawn !== false; // Default to true for backward compat
+      
+      // Helper to get winner name for a quarter
+      const getWinnerName = (quarter) => {
+        const box = winners[quarter]?.box;
+        return box ? currentPool.entries?.[box]?.name : null;
+      };
+      
+      return `
+        <div class="game-editor-item ${!numbersDrawn ? 'numbers-not-drawn' : ''}" data-idx="${idx}">
+          <div class="game-editor-header">
+            <h4>
+              <span>🏈</span>
+              <input type="text" value="${game.label || `Game ${idx + 1}`}" 
+                     class="game-label-input" 
+                     style="border: none; background: transparent; font-size: 1rem; font-weight: 600; width: 200px;"
+                     placeholder="Game name...">
+            </h4>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="randomize-btn" onclick="randomizeGameNumbers(${idx})" ${!numbersDrawn ? '' : ''}>
+                🎲 Randomize
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="removeGame(${idx})">
+                🗑️ Remove
+              </button>
+            </div>
+          </div>
+          
+          <!-- Numbers Drawn Toggle -->
+          <div class="numbers-drawn-toggle ${!numbersDrawn ? 'not-drawn' : ''}">
+            <input type="checkbox" id="numbersDrawn_${idx}" class="game-numbers-drawn" data-game="${idx}"
+                   ${numbersDrawn ? 'checked' : ''}>
+            <label for="numbersDrawn_${idx}">Numbers Drawn</label>
+            <span class="numbers-drawn-status">
+              ${numbersDrawn ? '✅ Numbers visible to participants' : '🎲 Numbers hidden until drawn'}
+            </span>
+          </div>
+          
+          <div class="game-teams-row">
+            <div class="form-group" style="margin: 0;">
+              <label style="font-size: 0.8rem;">Team 1 (Top)</label>
+              <input type="text" value="${game.team1 || ''}" 
+                     class="game-team1-input" placeholder="e.g., Lions (or TBD)">
+            </div>
+            <span class="vs-label">vs</span>
+            <div class="form-group" style="margin: 0;">
+              <label style="font-size: 0.8rem;">Team 2 (Left)</label>
+              <input type="text" value="${game.team2 || ''}" 
+                     class="game-team2-input" placeholder="e.g., Bears (or TBD)">
+            </div>
+          </div>
+          
+          <div class="numbers-section">
+            <label>${team1} Numbers (columns):</label>
+            <div class="numbers-grid">
+              ${[0,1,2,3,4,5,6,7,8,9].map(i => `
+                <input type="number" min="0" max="9" 
+                       value="${game.numbers ? game.numbers[i] : i}" 
+                       class="game-col-number" data-game="${idx}" data-pos="${i}">
+              `).join('')}
+            </div>
+          </div>
+          
+          <div class="numbers-section">
+            <label>${team2} Numbers (rows):</label>
+            <div class="numbers-grid">
+              ${[0,1,2,3,4,5,6,7,8,9].map(i => `
+                <input type="number" min="0" max="9" 
+                       value="${game.rowNumbers ? game.rowNumbers[i] : i}" 
+                       class="game-row-number" data-game="${idx}" data-pos="${i}">
+              `).join('')}
+            </div>
+          </div>
+          
+          <div class="game-winner-section">
+            <h5>🏆 Winners (enter score last digits for each quarter)</h5>
+            <div class="quarters-grid">
+              
+              <div class="quarter-winner-row q1">
+                <div class="quarter-label"><span class="dot"></span> 1st Quarter</div>
+                <div class="quarter-scores">
+                  <label>${team1}:</label>
+                  <input type="number" min="0" max="9" class="q1-score1" data-game="${idx}" 
+                         value="${winners.q1?.score1 ?? ''}" placeholder="-">
+                  <label>${team2}:</label>
+                  <input type="number" min="0" max="9" class="q1-score2" data-game="${idx}"
+                         value="${winners.q1?.score2 ?? ''}" placeholder="-">
+                </div>
+                ${getWinnerName('q1') ? `<div class="quarter-winner-display">🏆 ${getWinnerName('q1')}</div>` : ''}
+              </div>
+              
+              <div class="quarter-winner-row half">
+                <div class="quarter-label"><span class="dot"></span> Halftime</div>
+                <div class="quarter-scores">
+                  <label>${team1}:</label>
+                  <input type="number" min="0" max="9" class="half-score1" data-game="${idx}"
+                         value="${winners.half?.score1 ?? ''}" placeholder="-">
+                  <label>${team2}:</label>
+                  <input type="number" min="0" max="9" class="half-score2" data-game="${idx}"
+                         value="${winners.half?.score2 ?? ''}" placeholder="-">
+                </div>
+                ${getWinnerName('half') ? `<div class="quarter-winner-display">🏆 ${getWinnerName('half')}</div>` : ''}
+              </div>
+              
+              <div class="quarter-winner-row q3">
+                <div class="quarter-label"><span class="dot"></span> 3rd Quarter</div>
+                <div class="quarter-scores">
+                  <label>${team1}:</label>
+                  <input type="number" min="0" max="9" class="q3-score1" data-game="${idx}"
+                         value="${winners.q3?.score1 ?? ''}" placeholder="-">
+                  <label>${team2}:</label>
+                  <input type="number" min="0" max="9" class="q3-score2" data-game="${idx}"
+                         value="${winners.q3?.score2 ?? ''}" placeholder="-">
+                </div>
+                ${getWinnerName('q3') ? `<div class="quarter-winner-display">🏆 ${getWinnerName('q3')}</div>` : ''}
+              </div>
+              
+              <div class="quarter-winner-row final">
+                <div class="quarter-label"><span class="dot"></span> Final</div>
+                <div class="quarter-scores">
+                  <label>${team1}:</label>
+                  <input type="number" min="0" max="9" class="final-score1" data-game="${idx}"
+                         value="${winners.final?.score1 ?? ''}" placeholder="-">
+                  <label>${team2}:</label>
+                  <input type="number" min="0" max="9" class="final-score2" data-game="${idx}"
+                         value="${winners.final?.score2 ?? ''}" placeholder="-">
+                </div>
+                ${getWinnerName('final') ? `<div class="quarter-winner-display">🏆 ${getWinnerName('final')}</div>` : ''}
+              </div>
+              
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.addGame = function() {
+    if (!currentPool) return;
+    
+    const games = currentPool.games || [];
+    games.push({
+      label: `Game ${games.length + 1}`,
+      team1: '',
+      team2: '',
+      numbers: [0,1,2,3,4,5,6,7,8,9],
+      rowNumbers: [0,1,2,3,4,5,6,7,8,9],
+      numbersDrawn: false,  // NEW: Default to not drawn
+      winners: {}  // { q1: {score1, score2, box}, half: {...}, q3: {...}, final: {...} }
+    });
+    currentPool.games = games;
+    
+    renderGamesEditor();
+  };
+
+  window.removeGame = function(idx) {
+    if (!currentPool || !currentPool.games) return;
+    if (!confirm('Remove this game?')) return;
+    
+    currentPool.games.splice(idx, 1);
+    renderGamesEditor();
+  };
+
+  window.randomizeGameNumbers = function(idx) {
+    const container = document.getElementById('gamesEditor');
+    const gameItem = container.querySelectorAll('.game-editor-item')[idx];
+    
+    if (!gameItem) return;
+    
+    // Randomize column numbers
+    const colNums = shuffle([0,1,2,3,4,5,6,7,8,9]);
+    gameItem.querySelectorAll('.game-col-number').forEach((input, i) => {
+      input.value = colNums[i];
+    });
+    
+    // Randomize row numbers
+    const rowNums = shuffle([0,1,2,3,4,5,6,7,8,9]);
+    gameItem.querySelectorAll('.game-row-number').forEach((input, i) => {
+      input.value = rowNums[i];
+    });
+    
+    showToast('Numbers randomized! Click Save to apply.', 'success');
+  };
+
+  function shuffle(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  window.saveGames = async function() {
+    if (!currentPool || !isAdmin) return;
+    
+    const container = document.getElementById('gamesEditor');
+    const gameItems = container.querySelectorAll('.game-editor-item');
+    
+    const games = [];
+    
+    gameItems.forEach((item, idx) => {
+      const label = item.querySelector('.game-label-input').value;
+      const team1 = item.querySelector('.game-team1-input').value;
+      const team2 = item.querySelector('.game-team2-input').value;
+      const colNumbers = Array.from(item.querySelectorAll('.game-col-number')).map(i => parseInt(i.value));
+      const rowNumbers = Array.from(item.querySelectorAll('.game-row-number')).map(i => parseInt(i.value));
+      const numbersDrawn = item.querySelector('.game-numbers-drawn').checked;
+      
+      // Calculate winners for each quarter
+      const winners = {};
+      const quarters = ['q1', 'half', 'q3', 'final'];
+      
+      quarters.forEach(quarter => {
+        const score1Input = item.querySelector(`.${quarter}-score1`);
+        const score2Input = item.querySelector(`.${quarter}-score2`);
+        
+        const score1 = score1Input?.value !== '' ? parseInt(score1Input.value) : null;
+        const score2 = score2Input?.value !== '' ? parseInt(score2Input.value) : null;
+        
+        if (score1 !== null && !isNaN(score1) && score2 !== null && !isNaN(score2)) {
+          const colIdx = colNumbers.indexOf(score1);
+          const rowIdx = rowNumbers.indexOf(score2);
+          
+          if (colIdx !== -1 && rowIdx !== -1) {
+            winners[quarter] = {
+              score1,
+              score2,
+              box: `${rowIdx}-${colIdx}`
+            };
+          }
+        }
+      });
+      
+      games.push({
+        label,
+        team1,
+        team2,
+        numbers: colNumbers,
+        rowNumbers: rowNumbers,
+        numbersDrawn,  // NEW: Include the flag
+        winners
+      });
+    });
+    
+    try {
+      await updateDoc(doc(db, 'boxesPools', currentPool.id), {
+        games,
+        updatedAt: serverTimestamp()
+      });
+      
+      currentPool.games = games;
+      
+      // Update displays
+      updatePoolDisplay();
+      renderGrid();
+      renderGamesEditor();
+      
+      showToast('Games saved!', 'success');
+      
+    } catch (error) {
+      console.error('Error saving games:', error);
+      showToast('Error saving games', 'error');
+    }
+  };
+
+  // ========================================
+  // ENTRIES MANAGEMENT
+  // ========================================
+
+  function renderEntriesList() {
+    const container = document.getElementById('entriesList');
+    const entries = currentPool.entries || {};
+    const filter = (document.getElementById('entryFilter')?.value || '').toLowerCase();
+    
+    const entryList = Object.entries(entries)
+      .map(([key, entry]) => ({ key, ...entry }))
+      .filter(e => !filter || (e.name && e.name.toLowerCase().includes(filter)))
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    
+    if (entryList.length === 0) {
+      container.innerHTML = `
+        <div style="padding: 2rem; text-align: center; color: var(--text-light);">
+          ${filter ? 'No matching entries' : 'No entries yet'}
+        </div>
+      `;
+      return;
+    }
+    
+    container.innerHTML = entryList.map(entry => `
+      <div class="entry-item">
+        <div class="entry-info">
+          <span class="entry-name">${entry.name || 'Unknown'}</span>
+          <span class="entry-box">Box: ${entry.key}</span>
+        </div>
+        <div class="entry-badges">
+          <span class="entry-badge ${entry.paid ? 'paid' : 'unpaid'}">
+            ${entry.paid ? '✓ Paid' : '✗ Unpaid'}
+          </span>
+          ${entry.manual ? '<span class="entry-badge manual">Manual</span>' : ''}
+          <button class="btn btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" 
+                  onclick="togglePaid('${entry.key}', ${!entry.paid})">
+            ${entry.paid ? 'Mark Unpaid' : 'Mark Paid'}
+          </button>
+          <button class="remove-btn" onclick="removeEntry('${entry.key}')" title="Remove">
+            ✕
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.filterEntries = function() {
+    renderEntriesList();
+  };
+
+  window.togglePaid = async function(key, paid) {
+    if (!currentPool || !isAdmin) return;
+    
+    try {
+      await updateDoc(doc(db, 'boxesPools', currentPool.id), {
+        [`entries.${key}.paid`]: paid
+      });
+      
+      currentPool.entries[key].paid = paid;
+      renderEntriesList();
+      showToast(`Entry marked as ${paid ? 'paid' : 'unpaid'}`, 'success');
+      
+    } catch (error) {
+      console.error('Error updating entry:', error);
+      showToast('Error updating entry', 'error');
+    }
+  };
+
+  window.removeEntry = async function(key) {
+    if (!currentPool || !isAdmin) return;
+    if (!confirm(`Remove entry at box ${key}?`)) return;
+    
+    try {
+      const { [key]: removed, ...remaining } = currentPool.entries;
+      
+      await updateDoc(doc(db, 'boxesPools', currentPool.id), {
+        entries: remaining
+      });
+      
+      currentPool.entries = remaining;
+      renderEntriesList();
+      renderGrid();
+      updateStats();
+      showToast('Entry removed', 'success');
+      
+    } catch (error) {
+      console.error('Error removing entry:', error);
+      showToast('Error removing entry', 'error');
+    }
+  };
+
+  window.removeAllUnpaid = async function() {
+    if (!currentPool || !isAdmin) return;
+    
+    const unpaidCount = Object.values(currentPool.entries || {}).filter(e => !e.paid).length;
+    
+    if (unpaidCount === 0) {
+      showToast('No unpaid entries to remove', 'info');
+      return;
+    }
+    
+    if (!confirm(`Remove all ${unpaidCount} unpaid entries?`)) return;
+    
+    try {
+      const remaining = {};
+      Object.entries(currentPool.entries || {}).forEach(([key, entry]) => {
+        if (entry.paid) {
+          remaining[key] = entry;
+        }
+      });
+      
+      await updateDoc(doc(db, 'boxesPools', currentPool.id), {
+        entries: remaining
+      });
+      
+      currentPool.entries = remaining;
+      renderEntriesList();
+      renderGrid();
+      updateStats();
+      showToast(`Removed ${unpaidCount} unpaid entries`, 'success');
+      
+    } catch (error) {
+      console.error('Error removing unpaid entries:', error);
+      showToast('Error removing entries', 'error');
+    }
+  };
+
+  // ========================================
+  // MANUAL ENTRY
+  // ========================================
+
+  window.setLinkType = function(type) {
+    currentLinkType = type;
+    
+    // Update tab styling
+    document.querySelectorAll('.link-type-tab').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.type === type);
+    });
+    
+    // Show/hide sections
+    document.getElementById('linkTypeSearch').style.display = type === 'search' ? 'block' : 'none';
+    document.getElementById('linkTypeEmail').style.display = type === 'email' ? 'block' : 'none';
+    document.getElementById('linkTypeName').style.display = type === 'name' ? 'block' : 'none';
+    
+    // Clear selections
+    clearUserSelection();
+  };
+  
+  function clearUserSelection() {
+    document.getElementById('selectedUserId').value = '';
+    document.getElementById('selectedUserName').value = '';
+    document.getElementById('selectedUserEmail').value = '';
+    document.getElementById('userSearchInput').value = '';
+    document.getElementById('userSearchResults').innerHTML = '';
+    document.getElementById('userSearchResults').classList.remove('visible');
+  }
+  
+  // Load all users for search (called once when admin panel opens)
+  async function loadUsersForSearch() {
+    if (allUsers.length > 0) return; // Already loaded
+    
+    try {
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      allUsers = [];
+      usersSnapshot.forEach(doc => {
+        const data = doc.data();
+        
+        // Skip migrated/legacy accounts
+        if (data.migrated === true) return;
+        if (data.isLegacyProfile === true) return;
+        
+        // Skip accounts without email (likely legacy profiles)
+        if (!data.email) return;
+        
+        allUsers.push({
+          id: doc.id,
+          name: data.displayName || data.name || 'Unknown',
+          email: data.email || ''
+        });
+      });
+      // Sort alphabetically
+      allUsers.sort((a, b) => a.name.localeCompare(b.name));
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  }
+  
+  window.searchUsers = function() {
+    const query = document.getElementById('userSearchInput').value.toLowerCase().trim();
+    const resultsContainer = document.getElementById('userSearchResults');
+    
+    if (query.length < 2) {
+      resultsContainer.classList.remove('visible');
+      return;
+    }
+    
+    const matches = allUsers.filter(u => 
+      u.name.toLowerCase().includes(query) || 
+      u.email.toLowerCase().includes(query)
+    ).slice(0, 10); // Limit to 10 results
+    
+    if (matches.length === 0) {
+      resultsContainer.innerHTML = '<div style="padding: 1rem; color: var(--text-light); text-align: center;">No users found</div>';
+    } else {
+      resultsContainer.innerHTML = matches.map(u => `
+        <div class="user-search-result" onclick="selectUser('${u.id}', '${u.name.replace(/'/g, "\\'")}', '${u.email.replace(/'/g, "\\'")}')">
+          <div>
+            <div class="user-name">${u.name}</div>
+            <div class="user-email">${u.email}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    resultsContainer.classList.add('visible');
+  };
+  
+  window.selectUser = function(userId, name, email) {
+    document.getElementById('selectedUserId').value = userId;
+    document.getElementById('selectedUserName').value = name;
+    document.getElementById('selectedUserEmail').value = email;
+    
+    // Show selection and hide search results
+    document.getElementById('userSearchInput').value = '';
+    document.getElementById('userSearchResults').innerHTML = `
+      <div class="selected-user-badge">
+        <span>✅ <strong>${name}</strong> (${email})</span>
+        <button class="remove-btn" onclick="clearUserSelection()">✕</button>
+      </div>
+    `;
+  };
+
+  window.addManualEntry = async function() {
+    if (!currentPool || !isAdmin) return;
+    
+    let name = '';
+    let userId = null;
+    let email = null;
+    let pendingEmail = null;
+    
+    // Get data based on link type
+    if (currentLinkType === 'search') {
+      userId = document.getElementById('selectedUserId').value;
+      name = document.getElementById('selectedUserName').value;
+      email = document.getElementById('selectedUserEmail').value;
+      
+      if (!userId) {
+        showToast('Please select a user from the search', 'warning');
+        return;
+      }
+    } else if (currentLinkType === 'email') {
+      pendingEmail = document.getElementById('manualEmail').value.trim().toLowerCase();
+      name = document.getElementById('manualNameEmail').value.trim();
+      
+      if (!pendingEmail || !pendingEmail.includes('@')) {
+        showToast('Please enter a valid email address', 'warning');
+        return;
+      }
+      if (!name) {
+        showToast('Please enter a display name', 'warning');
+        return;
+      }
+    } else {
+      // Name only
+      name = document.getElementById('manualName').value.trim();
+      if (!name) {
+        showToast('Please enter a name', 'warning');
+        return;
+      }
+    }
+    
+    const paid = document.getElementById('manualPaid').value === 'true';
+    const coordsStr = document.getElementById('manualCoords').value.trim();
+    
+    if (!coordsStr) {
+      showToast('Please select at least one box', 'warning');
+      return;
+    }
+    
+    // Parse coordinates
+    const coords = coordsStr.split(',').map(c => c.trim()).filter(c => c);
+    const validCoords = [];
+    
+    for (const coord of coords) {
+      const match = coord.match(/^(\d+)-(\d+)$/);
+      if (!match) {
+        showToast(`Invalid coordinate: ${coord}`, 'warning');
+        return;
+      }
+      const row = parseInt(match[1]);
+      const col = parseInt(match[2]);
+      if (row < 0 || row > 9 || col < 0 || col > 9) {
+        showToast(`Coordinate out of range: ${coord}`, 'warning');
+        return;
+      }
+      if (currentPool.entries && currentPool.entries[coord]) {
+        showToast(`Box ${coord} is already taken`, 'warning');
+        return;
+      }
+      validCoords.push(coord);
+    }
+    
+    try {
+      const updates = {};
+      validCoords.forEach(key => {
+        const entryData = {
+          name: name,
+          manual: true,
+          paid: paid,
+          claimedAt: serverTimestamp(),
+          addedBy: currentUser.uid
+        };
+        
+        // Add linking info based on type
+        if (userId) {
+          entryData.userId = userId;
+          entryData.email = email;
+        } else if (pendingEmail) {
+          entryData.userId = null;
+          entryData.pendingEmail = pendingEmail;
+        } else {
+          entryData.userId = null;
+        }
+        
+        updates[`entries.${key}`] = entryData;
+      });
+      
+      await updateDoc(doc(db, 'boxesPools', currentPool.id), updates);
+      
+      // Update local state
+      if (!currentPool.entries) currentPool.entries = {};
+      validCoords.forEach(key => {
+        currentPool.entries[key] = { 
+          name, 
+          paid, 
+          manual: true,
+          userId: userId || null,
+          pendingEmail: pendingEmail || null
+        };
+      });
+      
+      // Clear form
+      document.getElementById('manualCoords').value = '';
+      if (currentLinkType === 'search') {
+        clearUserSelection();
+      } else if (currentLinkType === 'email') {
+        document.getElementById('manualEmail').value = '';
+        document.getElementById('manualNameEmail').value = '';
+      } else {
+        document.getElementById('manualName').value = '';
+      }
+      
+      renderGrid();
+      updateStats();
+      renderEntriesList();
+      
+      const linkInfo = userId ? ' (linked to user)' : pendingEmail ? ' (will link when they sign up)' : '';
+      showToast(`Added ${validCoords.length} box(es) for ${name}${linkInfo}`, 'success');
+      
+    } catch (error) {
+      console.error('Error adding manual entry:', error);
+      showToast('Error adding entry', 'error');
+    }
+  };
+
+  // ========================================
+  // CREATE POOL
+  // ========================================
+
+  window.showCreatePoolModal = function() {
+    document.getElementById('createPoolModal').classList.add('visible');
+  };
+
+  window.hideCreatePoolModal = function() {
+    document.getElementById('createPoolModal').classList.remove('visible');
+  };
+
+  window.createPool = async function() {
+    const name = document.getElementById('newPoolName').value.trim();
+    const costPerBox = parseFloat(document.getElementById('newCostPerBox').value) || 0;
+    const description = document.getElementById('newDescription').value.trim();
+    
+    if (!name) {
+      showToast('Please enter a pool name', 'warning');
+      return;
+    }
+    
+    try {
+      const docRef = await addDoc(collection(db, 'boxesPools'), {
+        name,
+        costPerBox,
+        description,
+        games: [],  // Games added separately after creation
+        entries: {},
+        locked: false,
+        createdBy: currentUser.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      
+      hideCreatePoolModal();
+      
+      // Clear form
+      document.getElementById('newPoolName').value = '';
+      document.getElementById('newDescription').value = '';
+      
+      // Reload pools and select the new one
+      await loadPoolsList();
+      document.getElementById('poolSelect').value = docRef.id;
+      await loadPool();
+      
+      showToast('Pool created! Now add games in the Games tab.', 'success');
+      
+    } catch (error) {
+      console.error('Error creating pool:', error);
+      showToast('Error creating pool', 'error');
+    }
+  };
+
+  // ========================================
+  // UTILITY FUNCTIONS
+  // ========================================
+
+  function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+</script>
+<script src="mobile-enhancements.js"></script>
+<script src="theme-toggle.js"></script>
+
+</body>
+</html>

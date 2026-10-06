@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aceys Admin — Aces</title>
+  <link rel="stylesheet" href="nav-styles.css">
+  <style>
+    :root {
+      --gold: #c9a227;
+      --gold-light: #f0d060;
+      --gold-dim: #7a5c10;
+      --dark: #12100e;
+      --dark2: #1e1a16;
+      --dark3: #2a2520;
+      --border: #3a342c;
+      --text: #f0e8d8;
+      --text-dim: #9a8c7a;
+      --primary: #2d5016;
+      --radius: 10px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.4);
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 0; background: #1a1a1a; color: #f0e8d8; }
+    .page-header { background: linear-gradient(135deg, #1e1a16, #2a2218); border-bottom: 1px solid var(--border); padding: 1.5rem 2rem; }
+    .page-header h1 { margin: 0; font-size: 1.5rem; color: var(--gold); }
+    .page-header p { margin: 0.25rem 0 0; opacity: 0.7; font-size: 0.875rem; }
+    .container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    .card { background: var(--dark2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
+    .card h2 { margin: 0 0 1.25rem; font-size: 1rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; }
+    .btn-gold { background: var(--gold); color: #12100e; }
+    .btn-gold:hover:not(:disabled) { background: var(--gold-light); }
+    .btn-danger { background: #7f1d1d; color: #fecaca; }
+    .btn-danger:hover:not(:disabled) { background: #991b1b; }
+    .btn-secondary { background: var(--dark3); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover:not(:disabled) { background: #3a342c; }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .hidden { display: none !important; }
+    .auth-gate { display: flex; align-items: center; justify-content: center; min-height: 60vh; }
+    .auth-gate-inner { text-align: center; background: var(--dark2); border: 1px solid var(--border); border-radius: 12px; padding: 2.5rem; }
+    .auth-gate-inner h2 { color: var(--gold); }
+    .auth-gate-inner p { color: var(--text-dim); }
+
+    /* Award category list */
+    .award-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .award-item { background: var(--dark3); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 1rem; transition: border-color 0.2s; }
+    .award-item.revealed { border-color: var(--gold); }
+    .award-item.inactive-award { opacity: 0.55; }
+    .award-item.has-winner { border-color: #4a7c2e; }
+    .award-icon { font-size: 1.5rem; flex-shrink: 0; width: 2.5rem; text-align: center; }
+    .award-icon img { width: 2.5rem; height: 2.5rem; object-fit: contain; }
+    .award-info { flex: 1; min-width: 0; }
+    .award-label { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+    .award-sublabel { font-size: 0.78rem; color: var(--text-dim); margin-top: 2px; }
+    .award-winner { font-size: 0.85rem; color: var(--gold); margin-top: 4px; font-weight: 600; }
+    .award-actions { display: flex; gap: 0.5rem; flex-shrink: 0; flex-wrap: wrap; }
+    .award-status { font-size: 0.75rem; padding: 2px 8px; border-radius: 20px; font-weight: 700; }
+    .award-status.hidden-status { background: #3a342c; color: var(--text-dim); }
+    .award-status.revealed-status { background: #78350f; color: #fcd34d; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .modal { background: var(--dark2); border: 1px solid var(--border); border-radius: 12px; padding: 1.75rem; width: 100%; max-width: 520px; box-shadow: 0 8px 40px rgba(0,0,0,0.6); }
+    .modal h3 { margin: 0 0 1.25rem; color: var(--gold); font-size: 1.1rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.4rem; font-weight: 600; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.55rem 0.75rem; border: 1px solid var(--border); border-radius: 7px; background: var(--dark3); color: var(--text); font-size: 0.9rem; font-family: inherit; }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--gold); }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-hint { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.3rem; }
+    .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; justify-content: flex-end; }
+
+    /* Player search */
+    .player-search-wrap { position: relative; }
+    .player-search-wrap input { width: 100%; }
+    .player-dropdown { position: absolute; left: 0; right: 0; top: 100%; background: var(--dark3); border: 1px solid var(--gold); border-top: none; border-radius: 0 0 8px 8px; z-index: 100; max-height: 220px; overflow-y: auto; }
+    .player-dropdown-item { padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.875rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem; }
+    .player-dropdown-item:last-child { border-bottom: none; }
+    .player-dropdown-item:hover, .player-dropdown-item.active { background: rgba(201,162,39,0.15); }
+    .player-dropdown-item .p-name { font-weight: 600; color: var(--text); }
+    .player-dropdown-item .p-team { font-size: 0.75rem; color: var(--text-dim); margin-left: auto; }
+    .player-selected-tag { display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(201,162,39,0.2); border: 1px solid var(--gold); border-radius: 6px; padding: 0.25rem 0.6rem; font-size: 0.8rem; margin-top: 0.4rem; color: var(--gold-light); }
+    .player-selected-tag button { background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 0; font-size: 0.9rem; line-height: 1; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--gold); color: #12100e; padding: 0.85rem 1.25rem; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); font-weight: 700; z-index: 9999; animation: slideIn 0.3s ease; }
+    .toast.error { background: #991b1b; color: white; }
+    @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* Danger zone */
+    .danger-zone { border-color: #7f1d1d; }
+    .danger-zone h2 { color: #f87171; }
+
+    .section-divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+    /* Team MVPs subsection */
+    .team-section-label { font-size: 0.8rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; margin: 1.25rem 0 0.5rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+
+    /* Supreme Leader toggle */
+    .supreme-toggle {
+      position: fixed; bottom: 1.25rem; left: 1.25rem; z-index: 9998;
+      background: rgba(13,11,8,0.9); border: 1px solid var(--border);
+      color: var(--text-dim); font-family: 'Inter', sans-serif;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 0.5rem 0.9rem; border-radius: 999px;
+      cursor: pointer; transition: all 0.2s; opacity: 0.55;
+    }
+    .supreme-toggle:hover { opacity: 1; border-color: var(--gold); color: var(--gold); }
+  </style>
+</head>
+<body>
+  <div id="supremeOverlay" onclick="window.toggleSupreme()" style="display:none;position:fixed;inset:0;z-index:99999;background:#000;cursor:pointer;align-items:center;justify-content:center;"><img src="assets/supreme%20leader.jpeg" alt="Supreme Leader" style="max-width:100%;max-height:100%;object-fit:contain;"></div>
+  <button class="supreme-toggle" onclick="window.toggleSupreme()" id="supremeBtn">&#9654; Supreme</button>
+
+
+<div id="authGate" class="auth-gate hidden">
+  <div class="auth-gate-inner">
+    <div style="font-size:2rem;margin-bottom:0.5rem;">🔐</div>
+    <h2>League Staff Only</h2>
+    <p>Sign in with a league staff or admin account to access the Aceys admin panel.</p>
+    <a href="signin.html" class="btn btn-gold" style="margin-top:1rem;">Sign In</a>
+  </div>
+</div>
+
+<div id="mainContent" class="hidden">
+  <div class="page-header">
+    <h1>🏆 Aceys Admin</h1>
+    <p>Set winners and control the reveal for the Aceys ceremony</p>
+  </div>
+
+  <div class="container">
+
+    <!-- Status bar -->
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+      <div>
+        <div style="font-size:0.85rem;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Ceremony Status</div>
+        <div id="statusSummary" style="color:var(--text);margin-top:0.25rem;font-size:0.95rem;">Loading…</div>
+      </div>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="resetAllReveals()">🔒 Hide All Reveals</button>
+        <button class="btn btn-gold" onclick="location.href='aceys-2026.html'" target="_blank">👁 Preview Public Page</button>
+      </div>
+    </div>
+
+    <!-- Individual Awards -->
+    <div class="card">
+      <h2>🏅 Individual Awards</h2>
+      <div class="award-list" id="awardList">
+        <div style="color:var(--text-dim);font-size:0.9rem;padding:1rem 0;">Loading awards…</div>
+      </div>
+    </div>
+
+    <!-- Team MVPs -->
+    <div class="card">
+      <h2>🦁 Team MVPs</h2>
+      <div class="award-list" id="teamMvpList">
+        <div style="color:var(--text-dim);font-size:0.9rem;padding:1rem 0;">Loading teams…</div>
+      </div>
+    </div>
+
+    <!-- Multi-winner Awards -->
+    <div class="card">
+      <h2>⭐ All Aces &amp; Gold Gloves</h2>
+      <div class="award-list" id="multiAwardList">
+        <div style="color:var(--text-dim);font-size:0.9rem;padding:1rem 0;">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Write-in / Custom Awards -->
+    <div class="card">
+      <h2 style="display:flex;align-items:center;justify-content:space-between;">
+        <span>✍️ Write-In Awards</span>
+        <button class="btn btn-gold btn-sm" onclick="openCreateWriteIn()">+ Add Award</button>
+      </h2>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin:0 0 1rem;">Custom awards beyond the defaults. These show on the public page once marked active.</p>
+      <div class="award-list" id="writeInList">
+        <div style="color:var(--text-dim);font-size:0.9rem;padding:0.5rem 0;">No write-in awards yet.</div>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+</div>
+
+<!-- ── Show Music Player ──────────────────────────────────────────────────── -->
+<div style="position:fixed;bottom:0;left:0;right:0;z-index:888;background:#111;border-top:2px solid #c9a227;padding:0.75rem 1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+  <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#c9a227;white-space:nowrap;">🎵 Show Music</span>
+
+  <div style="display:flex;align-items:center;gap:0.6rem;flex:1;min-width:260px;flex-wrap:wrap;">
+    <button onclick="playTrack(0)" id="btn0"
+      style="background:#3a3020;color:#f0d060;border:1px solid #c9a227;border-radius:6px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+      ▶ Peters Entrance
+    </button>
+    <button onclick="playTrack(1)" id="btn1"
+      style="background:#3a3020;color:#f0d060;border:1px solid #c9a227;border-radius:6px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+      ▶ Leo Entrance
+    </button>
+    <button onclick="playTrack(2)" id="btn2"
+      style="background:#3a3020;color:#f0d060;border:1px solid #c9a227;border-radius:6px;padding:0.4rem 0.9rem;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+      ▶ Podcast Theme
+    </button>
+    <button onclick="stopMusic()"
+      style="background:#2a2020;color:#c66;border:1px solid #c66;border-radius:6px;padding:0.4rem 0.75rem;font-size:0.78rem;font-weight:700;cursor:pointer;">
+      ■ Stop
+    </button>
+  </div>
+
+  <!-- Hidden YouTube iframes — muted=0 so audio plays; enablejsapi=1 for control -->
+  <div style="display:none;">
+    <iframe id="yt0" width="1" height="1"
+      src="https://www.youtube.com/embed/7wRHBLwpASw?enablejsapi=1&autoplay=0&loop=1&playlist=7wRHBLwpASw"
+      allow="autoplay" frameborder="0"></iframe>
+    <iframe id="yt1" width="1" height="1"
+      src="https://www.youtube.com/embed/-bzWSJG93P8?enablejsapi=1&autoplay=0&loop=1&playlist=-bzWSJG93P8"
+      allow="autoplay" frameborder="0"></iframe>
+    <iframe id="yt2" width="1" height="1"
+      src="https://www.youtube.com/embed/sj9Rk2LTWFY?enablejsapi=1&autoplay=0&loop=1&playlist=sj9Rk2LTWFY&start=72"
+      allow="autoplay" frameborder="0"></iframe>
+  </div>
+</div>
+
+<script>
+  const TRACKS = ['yt0','yt1','yt2'];
+  const BTNS   = ['btn0','btn1','btn2'];
+  const LABELS = ['▶ Peters Entrance','▶ Leo Entrance','▶ Podcast Theme'];
+  let currentTrack = null;
+
+  function postCmd(iframeId, cmd) {
+    const iframe = document.getElementById(iframeId);
+    if (!iframe) return;
+    iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: cmd, args: [] }), '*');
+  }
+
+  function playTrack(idx) {
+    // Stop any currently playing track
+    if (currentTrack !== null && currentTrack !== idx) {
+      postCmd(TRACKS[currentTrack], 'pauseVideo');
+      document.getElementById(BTNS[currentTrack]).textContent = LABELS[currentTrack];
+      document.getElementById(BTNS[currentTrack]).style.background = '#3a3020';
+      document.getElementById(BTNS[currentTrack]).style.color = '#f0d060';
+    }
+    if (currentTrack === idx) {
+      // Toggle pause
+      postCmd(TRACKS[idx], 'pauseVideo');
+      document.getElementById(BTNS[idx]).textContent = LABELS[idx];
+      document.getElementById(BTNS[idx]).style.background = '#3a3020';
+      document.getElementById(BTNS[idx]).style.color = '#f0d060';
+      currentTrack = null;
+    } else {
+      postCmd(TRACKS[idx], 'playVideo');
+      currentTrack = idx;
+      document.getElementById(BTNS[idx]).textContent = '⏸ ' + LABELS[idx].slice(2);
+      document.getElementById(BTNS[idx]).style.background = '#c9a227';
+      document.getElementById(BTNS[idx]).style.color = '#000';
+    }
+  }
+
+  function stopMusic() {
+    TRACKS.forEach((t, i) => {
+      postCmd(t, 'pauseVideo');
+      document.getElementById(BTNS[i]).textContent = LABELS[i];
+      document.getElementById(BTNS[i]).style.background = '#3a3020';
+      document.getElementById(BTNS[i]).style.color = '#f0d060';
+    });
+    currentTrack = null;
+  }
+</script>
+
+<!-- Create write-in modal -->
+<div class="modal-overlay hidden" id="writeInModal">
+  <div class="modal">
+    <h3>✍️ Add Write-In Award</h3>
+    <div class="form-group">
+      <label>Award Name</label>
+      <input type="text" id="wiNameInput" placeholder="e.g. Best Trash Talk">
+    </div>
+    <div class="form-group">
+      <label>Winner</label>
+      <div class="player-search-wrap">
+        <input type="text" id="wiWinnerInput" placeholder="Search player…" autocomplete="off" oninput="searchPlayers(this.value, 'wiDropdown', 'wi')">
+        <div class="player-dropdown hidden" id="wiDropdown"></div>
+      </div>
+      <div id="wiSelectedPlayer"></div>
+    </div>
+    <div class="form-group">
+      <label>Note (optional)</label>
+      <input type="text" id="wiNoteInput" placeholder="e.g. voted unanimously">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeWriteInModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveWriteIn()">💾 Create Award</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-overlay hidden" id="editModal">
+  <div class="modal">
+    <h3 id="modalTitle">Edit Award</h3>
+    <div id="modalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveAward()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { auth } from './firebase-auth.js';
+import { db } from './firebase-config.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import {
+  collection, getDocs, doc, getDoc, setDoc, updateDoc, onSnapshot, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+// ── Auth (mirrors league-staff-admin.html pattern) ───────────────────────────
+let currentUser = null;
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { showGate(); return; }
+  currentUser = user;
+
+  try {
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    if (!userDoc.exists()) { showGate(); return; }
+
+    const p = userDoc.data();
+    const isAdmin      = p.isAdmin === true
+                      || p.userRole === 'admin'
+                      || p.role    === 'admin';
+    const isLeagueStaff = p.isLeagueStaff === true
+                       || p.userRole === 'league-staff'
+                       || p.role    === 'league-staff'
+                       || p.userRole === 'league_staff'
+                       || p.role    === 'league_staff';
+
+    if (!isAdmin && !isLeagueStaff) { showGate(); return; }
+
+    document.getElementById('mainContent').classList.remove('hidden');
+    // Only start Firestore listeners AFTER auth confirms — prevents permission-denied errors
+    init();
+  } catch(e) { console.error('Auth check failed:', e); showGate(); }
+});
+
+function showGate() { document.getElementById('authGate').classList.remove('hidden'); }
+
+// ── Award definitions ─────────────────────────────────────────────────────────
+const INDIVIDUAL_AWARDS = [
+  { id: '2026_mvp',           label: 'MVP',                         img: 'awards/mvp.png',                          multi: false },
+  { id: '2026_pitcher',       label: 'Pitcher of the Year',         img: 'awards/pitcher_of_the_year.png',          multi: false },
+  { id: '2026_rookie',        label: 'Rookie of the Year',          img: 'awards/rookie_of_the_year.png',           multi: false },
+  { id: '2026_comeback',      label: 'Comeback Player of the Year', img: 'awards/comeback_player_of_the_year.png',  multi: false },
+  { id: '2026_slugger',       label: 'Slugger of the Year',         img: 'awards/slugger_of_the_year.png',          multi: false },
+  { id: '2026_most-improved', label: 'Most Improved Ace',           img: 'awards/most_improved_ace.png',            multi: false },
+  { id: '2026_iron-man',      label: 'Iron Man Award',              img: 'awards/iron_man_award.png',               multi: false },
+  { id: '2026_captain',       label: 'Captain of the Year',         img: 'awards/captain_of_the_year.png',          multi: false },
+  { id: '2026_sub',           label: 'Sub of the Year',             img: 'awards/sub_of_the_year.png',              multi: false },
+  { id: '2026_good-guy',      label: 'Al Pineda Good Guy Award',    img: 'awards/al_pineda_good_guy_award.png',     multi: false },
+  { id: '2026_lund',          label: 'Erik Lund Perseverance Award',img: 'awards/erik_lund_perservenance_award.png',multi: false },
+  { id: '2026_streaman',      label: 'Mr. Streaman Award for Excellence',          img: 'awards/mr_streaman_award_for_excellence.png', multi: false },
+  { id: '2026_boner',         label: 'Andrew Streaman Boner of the Year', img: 'awards/andrew_streaman_boner_award.png',           multi: false },
+];
+
+const MULTI_AWARDS = [
+  { id: '2026_all-aces',   label: 'All Aces Team',  img: 'awards/all_aces.png',  multi: true },
+  { id: '2026_gold-glove', label: 'Gold Glove Team', img: 'awards/gold_glove.png', multi: true },
+];
+
+// Teams — will be populated from Firestore
+let TEAMS = [];
+
+// Current awards state from Firestore
+let awardsCache = {};
+let unsubscribe = null;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  // Load players for search (background, non-blocking)
+  loadPlayers();
+
+  // Load teams
+  try {
+    const teamsSnap = await getDocs(collection(db, 'teams'));
+    const EXCLUDED_TEAMS = ['kings', 'white'];
+    TEAMS = teamsSnap.docs
+      .map(d => ({ id: d.id, name: d.data().teamName || d.data().name || d.id }))
+      .filter(t => !EXCLUDED_TEAMS.includes(t.name.toLowerCase()))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  } catch(e) {
+    console.error('Could not load teams', e);
+    TEAMS = [];
+  }
+
+  // Real-time listener on aceyAwards
+  if (unsubscribe) unsubscribe();
+  unsubscribe = onSnapshot(collection(db, 'aceyAwards'), snap => {
+    awardsCache = {};
+    snap.docs.forEach(d => { awardsCache[d.id] = d.data(); });
+    renderAll();
+  });
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderList('awardList', INDIVIDUAL_AWARDS);
+  renderTeamMvps();
+  renderList('multiAwardList', MULTI_AWARDS);
+  renderWriteIns();
+  updateStatusSummary();
+}
+
+function renderWriteIns() {
+  const el = document.getElementById('writeInList');
+  if (!el) return;
+  // Write-ins are any aceyAwards docs with source === 'write-in'
+  const writeIns = Object.entries(awardsCache)
+    .filter(([, d]) => d.source === 'write-in')
+    .map(([id, d]) => ({ id, label: d.label || id, multi: false, icon: '🏆' }));
+  if (!writeIns.length) {
+    el.innerHTML = '<div style="color:var(--text-dim);font-size:0.9rem;padding:0.5rem 0;">No write-in awards yet.</div>';
+    return;
+  }
+  el.innerHTML = writeIns.map(a => awardItemHtml(a, { deletable: true })).join('');
+}
+
+function renderList(containerId, awards) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = awards.map(a => awardItemHtml(a)).join('');
+}
+
+function renderTeamMvps() {
+  const el = document.getElementById('teamMvpList');
+  if (!el) return;
+  if (!TEAMS.length) {
+    el.innerHTML = '<div style="color:var(--text-dim);font-size:0.9rem;padding:1rem 0;">No teams found in Firestore.</div>';
+    return;
+  }
+  el.innerHTML = TEAMS.map(team => {
+    const awardDef = { id: `2026_team-mvp_${team.id}`, label: `${team.name} MVP`, img: 'awards/team_mvp.png', multi: false, team: team.name };
+    return awardItemHtml(awardDef);
+  }).join('');
+}
+
+function awardItemHtml(a, opts = {}) {
+  const data = awardsCache[a.id] || {};
+  const hasWinner = a.multi ? (data.playerNames && data.playerNames.length > 0)
+    : (data.players?.length > 0 || !!data.playerName);
+  const isRevealed = !!data.revealed;
+  // active defaults to true for built-in awards; for write-ins stored in Firestore it's explicit
+  const isActive = data.active !== false;
+  const winnerText = a.multi
+    ? (data.playerNames || []).join(', ')
+    : (data.players?.length > 0 ? data.players.map(p => p.name).join(', ') : (data.playerName || ''));
+
+  const activeToggle = `
+    <label style="display:flex;align-items:center;gap:0.35rem;font-size:0.78rem;color:var(--text-dim);cursor:pointer;">
+      <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleActive('${a.id}', this.checked)" style="accent-color:var(--gold);">
+      Active this year
+    </label>`;
+
+  return `
+    <div class="award-item ${isRevealed ? 'revealed' : hasWinner ? 'has-winner' : ''} ${!isActive ? 'inactive-award' : ''}" data-id="${a.id}">
+      <div class="award-icon">${a.img ? `<img src="${a.img}" alt="${a.label}">` : a.icon || '🏆'}</div>
+      <div class="award-info">
+        <div class="award-label" style="${!isActive ? 'opacity:0.45;' : ''}">${a.label}</div>
+        ${a.team ? `<div class="award-sublabel">Team MVP — ${a.team}</div>` : ''}
+        ${winnerText ? `<div class="award-winner">🏆 ${winnerText}</div>` : `<div class="award-sublabel" style="margin-top:4px;">No winner set yet</div>`}
+        ${data.note ? `<div class="award-sublabel" style="margin-top:3px;">📝 ${data.note}</div>` : ''}
+        ${activeToggle}
+      </div>
+      <div class="award-actions">
+        <span class="award-status ${isRevealed ? 'revealed-status' : 'hidden-status'}">${isRevealed ? '✨ Revealed' : '🔒 Hidden'}</span>
+        <button class="btn btn-secondary btn-sm" onclick="openEdit('${a.id}')">✏️ Edit</button>
+        ${isRevealed
+          ? `<button class="btn btn-secondary btn-sm" onclick="toggleReveal('${a.id}', false)">🔒 Hide</button>`
+          : `<button class="btn btn-gold btn-sm" onclick="toggleReveal('${a.id}', true)" ${!hasWinner || !isActive ? 'disabled title="' + (!isActive ? 'Mark active first' : 'Set a winner first') + '"' : ''}>✨ Reveal</button>`
+        }
+        ${opts.deletable ? `<button class="btn btn-danger btn-sm" onclick="deleteWriteIn('${a.id}')">🗑</button>` : ''}
+      </div>
+    </div>`;
+}
+
+function updateStatusSummary() {
+  const allIds = [
+    ...INDIVIDUAL_AWARDS.map(a => a.id),
+    ...MULTI_AWARDS.map(a => a.id),
+    ...TEAMS.map(t => `2026_team-mvp_${t.id}`),
+  ];
+  const total = allIds.length;
+  const withWinner = allIds.filter(id => {
+    const d = awardsCache[id];
+    if (!d) return false;
+    return d.playerName || (d.playerNames && d.playerNames.length > 0);
+  }).length;
+  const revealed = allIds.filter(id => awardsCache[id]?.revealed).length;
+  document.getElementById('statusSummary').textContent =
+    `${withWinner}/${total} winners set · ${revealed} revealed`;
+}
+
+// ── Edit modal ────────────────────────────────────────────────────────────────
+let currentEditId = null;
+let currentEditMulti = false;
+
+function openEdit(awardId) {
+  currentEditId = awardId;
+  // Find award def
+  const allDefs = [
+    ...INDIVIDUAL_AWARDS,
+    ...MULTI_AWARDS,
+    ...TEAMS.map(t => ({ id: `2026_team-mvp_${t.id}`, label: `${t.name} MVP`, img: 'awards/team_mvp.png', multi: false }))
+  ];
+  // Also check write-ins stored in Firestore cache
+  const cachedData = awardsCache[awardId] || {};
+  const def = allDefs.find(a => a.id === awardId)
+    || { label: cachedData.label || awardId, multi: cachedData.multi || false };
+  currentEditMulti = def.multi;
+
+  const data = awardsCache[awardId] || {};
+  document.getElementById('modalTitle').textContent = `✏️ ${def.label}`;
+
+  const winnerVal = def.multi
+    ? (data.playerNames || []).join('\n')
+    : '';
+
+  // Pre-load existing players for non-multi awards
+  if (!def.multi) {
+    _editSelectedPlayers = data.players?.length > 0
+      ? data.players.map(p => ({ name: p.name, playerId: p.playerId || null, legacyId: p.legacyId || null, team: '' }))
+      : (data.playerName ? [{ name: data.playerName, playerId: data.playerId || null, legacyId: data.legacyId || null, team: '' }] : []);
+  }
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-group">
+      <label>${def.multi ? 'Winners (one per line)' : 'Winner(s)'}</label>
+      ${def.multi
+        ? `<textarea id="winnerInput" rows="5" placeholder="Player Name\nPlayer Name\n...">${winnerVal}</textarea><div class="form-hint">Enter one player per line — no player link for multi-winner awards</div>`
+        : `<div class="player-search-wrap">
+             <input type="text" id="winnerInput" placeholder="Search and select player(s)…" autocomplete="off"
+               oninput="searchPlayers(this.value, 'editDropdown', 'edit')"
+               onkeydown="addEditPlayerFromInput(event)">
+             <div class="player-dropdown hidden" id="editDropdown"></div>
+           </div>
+           <div id="editSelectedPlayers" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.5rem;"></div>
+           <div class="form-hint">Search and click to add. Multiple co-winners supported. Press Enter to add without a player link.</div>`
+      }
+    </div>
+    <div class="form-group">
+      <label>Note (optional)</label>
+      <input type="text" id="noteInput" placeholder="e.g. unanimous vote" value="${data.note || ''}">
+    </div>
+  `;
+  if (!def.multi) renderEditPlayerTags();
+
+  document.getElementById('editModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('winnerInput').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('editModal').classList.add('hidden');
+  currentEditId = null;
+  _editSelectedPlayers = [];
+}
+
+async function saveAward() {
+  if (!currentEditId) return;
+  const winnerRaw = document.getElementById('winnerInput').value.trim();
+  const note = document.getElementById('noteInput').value.trim();
+
+  const payload = { note };
+  if (currentEditMulti) {
+    payload.playerNames = winnerRaw ? winnerRaw.split('\n').map(s => s.trim()).filter(Boolean) : [];
+    payload.playerName = '';
+    payload.playerId = null;
+    payload.legacyId = null;
+  } else {
+    // If there's text in the input not yet added, include it
+    if (winnerRaw && !_editSelectedPlayers.find(p => p.name === winnerRaw)) {
+      _editSelectedPlayers.push({ name: winnerRaw, playerId: null, legacyId: null, team: '' });
+    }
+    payload.players = _editSelectedPlayers.map(p => ({
+      name: p.name,
+      playerId: p.playerId || p.id || null,
+      legacyId: p.legacyId || null,
+    }));
+    payload.playerNames = [];
+    // Backward-compat: primary winner = first player
+    const primary = _editSelectedPlayers[0] || null;
+    payload.playerName = primary?.name || '';
+    payload.playerId   = primary?.playerId || null;
+    payload.legacyId   = primary?.legacyId || null;
+  }
+
+  try {
+    await setDoc(doc(db, 'aceyAwards', currentEditId), payload, { merge: true });
+    closeModal();
+    showToast('Winner saved!');
+  } catch(e) {
+    console.error(e);
+    showToast('Save failed: ' + e.message, true);
+  }
+}
+
+async function toggleReveal(awardId, reveal) {
+  try {
+    await setDoc(doc(db, 'aceyAwards', awardId), {
+      revealed: reveal,
+      revealedAt: reveal ? serverTimestamp() : null,
+    }, { merge: true });
+    showToast(reveal ? '✨ Revealed!' : '🔒 Hidden');
+  } catch(e) {
+    showToast('Error: ' + e.message, true);
+  }
+}
+
+async function toggleActive(awardId, active) {
+  try {
+    await setDoc(doc(db, 'aceyAwards', awardId), { active }, { merge: true });
+    showToast(active ? '✅ Marked active' : '⛔ Marked inactive');
+  } catch(e) { showToast('Error: ' + e.message, true); }
+}
+
+// ── Write-in awards ───────────────────────────────────────────────────────────
+function openCreateWriteIn() {
+  _wiSelectedPlayer = null;
+  document.getElementById('wiNameInput').value = '';
+  document.getElementById('wiWinnerInput').value = '';
+  document.getElementById('wiNoteInput').value = '';
+  document.getElementById('wiSelectedPlayer').innerHTML = '';
+  document.getElementById('writeInModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('wiNameInput').focus(), 100);
+}
+
+function closeWriteInModal() {
+  document.getElementById('writeInModal').classList.add('hidden');
+  _wiSelectedPlayer = null;
+}
+
+async function saveWriteIn() {
+  const label = document.getElementById('wiNameInput').value.trim();
+  const playerName = document.getElementById('wiWinnerInput').value.trim();
+  const note = document.getElementById('wiNoteInput').value.trim();
+  if (!label) { showToast('Award name is required', true); return; }
+
+  const id = '2026_writein_' + label.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '_' + Date.now();
+  try {
+    await setDoc(doc(db, 'aceyAwards', id), {
+      label, playerName, note, source: 'write-in',
+      active: true, revealed: false, multi: false,
+      playerNames: [], revealedAt: null,
+      playerId:  _wiSelectedPlayer?.id       || null,
+      legacyId:  _wiSelectedPlayer?.legacyId || null,
+    });
+    closeWriteInModal();
+    showToast('Write-in award created!');
+  } catch(e) { showToast('Error: ' + e.message, true); }
+}
+
+async function deleteWriteIn(awardId) {
+  if (!confirm('Delete this write-in award? This cannot be undone.')) return;
+  try {
+    const { deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await deleteDoc(doc(db, 'aceyAwards', awardId));
+    showToast('Award deleted');
+  } catch(e) { showToast('Error: ' + e.message, true); }
+}
+
+async function resetAllReveals() {
+  if (!confirm('Hide all reveals on the public page? This cannot be undone automatically.')) return;
+  const allIds = [
+    ...INDIVIDUAL_AWARDS.map(a => a.id),
+    ...MULTI_AWARDS.map(a => a.id),
+    ...TEAMS.map(t => `2026_team-mvp_${t.id}`),
+  ];
+  try {
+    await Promise.all(allIds.map(id =>
+      setDoc(doc(db, 'aceyAwards', id), { revealed: false, revealedAt: null }, { merge: true })
+    ));
+    showToast('All awards hidden');
+  } catch(e) {
+    showToast('Error: ' + e.message, true);
+  }
+}
+
+// ── Player search ─────────────────────────────────────────────────────────────
+let allPlayers = [];          // loaded once after auth
+let _editSelectedPlayers = [];
+let _wiSelectedPlayer    = null;
+
+async function loadPlayers() {
+  try {
+    const snap = await getDocs(collection(db, 'users'));
+    const raw = snap.docs.map(d => ({
+      id: d.id,
+      displayName: d.data().displayName || d.data().name || idToName(d.id),
+      currentTeam: d.data().currentTeam || d.data().linkedTeam || '',
+      legacyId: d.data().legacyId || d.data().linkedPlayer?.replace(/\s+/g, '_').toLowerCase() || null,
+      isAuthUser: d.data().isAuthUser || d.data().authId || false,
+      migrated: d.data().migrated || false,
+    })).filter(p => !p.migrated && p.id && !p.id.startsWith('anon'));
+
+    // Deduplicate: prefer auth accounts — if a player has both, keep the auth doc
+    const byName = new Map();
+    raw.forEach(p => {
+      const key = p.displayName.toLowerCase();
+      const existing = byName.get(key);
+      if (!existing) { byName.set(key, p); return; }
+      // Keep the one with the longer UID (Firebase UIDs are 28 chars; legacy IDs are snake_case)
+      if (p.id.length > existing.id.length) byName.set(key, p);
+    });
+    allPlayers = Array.from(byName.values()).sort((a, b) => a.displayName.localeCompare(b.displayName));
+  } catch(e) { console.error('loadPlayers error', e); }
+}
+
+function idToName(id) {
+  return id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function searchPlayers(query, dropdownId, context) {
+  const dropdown = document.getElementById(dropdownId);
+  if (!dropdown) return;
+  const q = query.trim().toLowerCase();
+  if (!q) { dropdown.classList.add('hidden'); return; }
+
+  const matches = allPlayers
+    .filter(p => p.displayName.toLowerCase().includes(q))
+    .slice(0, 10);
+
+  if (!matches.length) { dropdown.classList.add('hidden'); return; }
+
+  dropdown.innerHTML = matches.map((p, i) => `
+    <div class="player-dropdown-item" onclick="selectPlayer('${p.id}', '${p.displayName.replace(/'/g,"\\'")}', '${p.legacyId || ''}', '${p.currentTeam}', '${context}')">
+      <span class="p-name">${p.displayName}</span>
+      <span class="p-team">${p.currentTeam}</span>
+    </div>`).join('');
+  dropdown.classList.remove('hidden');
+}
+
+function selectPlayer(id, name, legacyId, team, context) {
+  const player = { id, name, playerId: id || null, legacyId: legacyId || null, team };
+  if (context === 'edit') {
+    if (!_editSelectedPlayers.find(p => p.name === name)) {
+      _editSelectedPlayers.push(player);
+    }
+    document.getElementById('winnerInput').value = '';
+    document.getElementById('editDropdown').classList.add('hidden');
+    renderEditPlayerTags();
+  } else if (context === 'wi') {
+    _wiSelectedPlayer = player;
+    document.getElementById('wiWinnerInput').value = name;
+    document.getElementById('wiDropdown').classList.add('hidden');
+    document.getElementById('wiSelectedPlayer').innerHTML =
+      `<span class="player-selected-tag">✅ ${name} — ${team} <button onclick="clearWiPlayer()">×</button></span>`;
+  }
+}
+
+function renderEditPlayerTags() {
+  const el = document.getElementById('editSelectedPlayers');
+  if (!el) return;
+  el.innerHTML = _editSelectedPlayers.map((p, i) =>
+    `<span class="player-selected-tag">✅ ${p.name}${p.team ? ` — ${p.team}` : ''} <button onclick="removeEditPlayer(${i})">×</button></span>`
+  ).join('');
+}
+
+function removeEditPlayer(idx) {
+  _editSelectedPlayers.splice(idx, 1);
+  renderEditPlayerTags();
+}
+
+function addEditPlayerFromInput(e) {
+  if (e.key !== 'Enter') return;
+  const val = e.target.value.trim();
+  if (!val) return;
+  if (!_editSelectedPlayers.find(p => p.name === val)) {
+    _editSelectedPlayers.push({ name: val, playerId: null, legacyId: null, team: '' });
+    renderEditPlayerTags();
+  }
+  e.target.value = '';
+  document.getElementById('editDropdown').classList.add('hidden');
+  e.preventDefault();
+}
+
+function clearWiPlayer() {
+  _wiSelectedPlayer = null;
+  document.getElementById('wiSelectedPlayer').innerHTML = '';
+  document.getElementById('wiWinnerInput').value = '';
+  document.getElementById('wiWinnerInput').focus();
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.player-search-wrap')) {
+    document.querySelectorAll('.player-dropdown').forEach(d => d.classList.add('hidden'));
+  }
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function showToast(msg, isError = false) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// Expose globals
+window.openEdit = openEdit;
+window.closeModal = closeModal;
+window.saveAward = saveAward;
+window.toggleReveal = toggleReveal;
+window.toggleActive = toggleActive;
+window.resetAllReveals = resetAllReveals;
+window.openCreateWriteIn = openCreateWriteIn;
+window.closeWriteInModal = closeWriteInModal;
+window.saveWriteIn = saveWriteIn;
+window.deleteWriteIn = deleteWriteIn;
+window.searchPlayers = searchPlayers;
+window.selectPlayer = selectPlayer;
+window.renderEditPlayerTags = renderEditPlayerTags;
+window.removeEditPlayer = removeEditPlayer;
+window.addEditPlayerFromInput = addEditPlayerFromInput;
+window.clearWiPlayer = clearWiPlayer;
+
+// Close modals on overlay click
+document.getElementById('editModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('editModal')) closeModal();
+});
+document.getElementById('writeInModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('writeInModal')) closeWriteInModal();
+});
+
+window.toggleSupreme = async function() {
+  const overlay = document.getElementById('supremeOverlay');
+  const btn = document.getElementById('supremeBtn');
+  const on = overlay.classList.toggle('active');
+  overlay.style.display = on ? 'flex' : 'none';
+  if (btn) btn.textContent = (on ? '⏸ ' : '▶ ') + 'Supreme';
+  try {
+    await setDoc(doc(db, 'aceyControl', 'display'), { supreme: on }, { merge: true });
+  } catch(e) { console.warn('Supreme sync failed', e); }
+};
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('supremeOverlay').classList.contains('active')) {
+    window.toggleSupreme();
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leaders - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+:root {
+  --primary-color: #2d5016;
+  --secondary-color: #1a6b4a;
+  --accent-color: #ffd700;
+  --card-bg: #ffffff;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  min-height: 100vh;
+  line-height: 1.6;
+  color: var(--text-dark);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.softball-spinner {
+  position: relative;
+}
+
+.softball-spinner::before {
+  content: '⚾';
+  font-size: 80px;
+  animation: spin 1.5s ease-in-out infinite;
+  display: block;
+}
+
+@keyframes spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+
+/* Page Container */
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Page Header */
+.page-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  text-align: center;
+  padding: 4rem 2rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.page-header::after {
+  content: '👑';
+  position: absolute;
+  bottom: -40px;
+  left: -40px;
+  font-size: 200px;
+  opacity: 0.05;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 3.5rem;
+  font-weight: 800;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.page-header p {
+  margin: 1rem 0 0 0;
+  font-size: 1.2rem;
+  opacity: 0.95;
+  position: relative;
+  z-index: 1;
+}
+
+/* Navigation */
+.filters-nav {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.nav-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-link {
+  padding: 1rem 1.75rem;
+  border: 2px solid var(--primary-color);
+  background: white;
+  color: var(--primary-color);
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: var(--primary-color);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: -1;
+}
+
+.nav-link:hover::before,
+.nav-link.active::before {
+  transform: translateX(0);
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.nav-link.pitching {
+  border-color: #11998e;
+  color: #11998e;
+}
+
+.nav-link.pitching::before {
+  background: #11998e;
+}
+
+.nav-link.pitching:hover {
+  color: white;
+}
+
+.nav-link.batting {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* View Selector */
+.view-selector {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.view-selector h3 {
+  margin: 0 0 1.5rem 0;
+  color: var(--text-dark);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.toggle-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.toggle-btn {
+  padding: 1rem 2rem;
+  border: 2px solid var(--border-color);
+  background: white;
+  color: var(--text-dark);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.toggle-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: -1;
+}
+
+.toggle-btn.batting {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.toggle-btn.batting::before {
+  background: var(--primary-color);
+}
+
+.toggle-btn.batting.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-md);
+}
+
+.toggle-btn.pitching {
+  border-color: #11998e;
+  color: #11998e;
+}
+
+.toggle-btn.pitching::before {
+  background: #11998e;
+}
+
+.toggle-btn.pitching.active {
+  background: #11998e;
+  color: white;
+  border-color: #11998e;
+  box-shadow: var(--shadow-md);
+}
+
+.toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.toggle-btn:hover::before {
+  transform: translateX(0);
+}
+
+.toggle-btn:hover {
+  color: white;
+}
+
+/* Scope Selector (Career vs Season) */
+.scope-selector {
+  background: white;
+  padding: 1.5rem 2rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.scope-selector h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-dark);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.scope-toggle {
+  display: inline-flex;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.scope-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: transparent;
+  color: var(--text-light);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.scope-btn:hover {
+  color: var(--text-dark);
+}
+
+.scope-btn.active {
+  background: white;
+  color: var(--primary-color);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.scope-description {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+/* Leaders Container */
+.leaders-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+  gap: 2rem;
+}
+
+/* Leader Section */
+.leader-section {
+  background: var(--card-bg);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.leader-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.leader-section.pitching::before {
+  background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
+}
+
+.leader-section::after {
+  content: '⚾';
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  font-size: 120px;
+  opacity: 0;
+  color: var(--primary-color);
+  transition: all 0.4s ease;
+  pointer-events: none;
+}
+
+.leader-section.pitching::after {
+  color: #11998e;
+}
+
+.leader-section:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
+}
+
+.leader-section.pitching:hover {
+  border-color: #11998e;
+}
+
+.leader-section:hover::before {
+  opacity: 1;
+}
+
+.leader-section:hover::after {
+  opacity: 0.05;
+  bottom: -10px;
+  right: -10px;
+}
+
+.leader-section h3 {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  margin: 0;
+  padding: 1.75rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.leader-section.pitching h3 {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+/* Leader Table */
+.leader-table {
+  width: 100%;
+  margin: 0;
+  background: white;
+}
+
+.leader-table th,
+.leader-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.leader-table th {
+  background: #f8f9fa;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.leader-table tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.leader-table tr:hover {
+  background: linear-gradient(90deg, rgba(45, 80, 22, 0.05) 0%, rgba(26, 107, 74, 0.05) 100%);
+  transition: background 0.2s ease;
+}
+
+.leader-section.pitching .leader-table tr:hover {
+  background: linear-gradient(90deg, rgba(17, 153, 142, 0.05) 0%, rgba(56, 239, 125, 0.05) 100%);
+}
+
+.leader-table a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.leader-table a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--primary-color);
+  transition: width 0.3s ease;
+}
+
+.leader-section.pitching .leader-table a {
+  color: #11998e;
+}
+
+.leader-section.pitching .leader-table a::after {
+  background: #11998e;
+}
+
+.leader-table a:hover {
+  color: var(--secondary-color);
+}
+
+.leader-section.pitching .leader-table a:hover {
+  color: #0f8a80;
+}
+
+.leader-table a:hover::after {
+  width: 100%;
+}
+
+.rank {
+  text-align: center;
+  font-weight: 700;
+  color: var(--text-light);
+  width: 80px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  font-size: 1rem;
+}
+
+.stat-value {
+  text-align: center;
+  font-weight: 700;
+  min-width: 100px;
+  color: var(--text-dark);
+  font-size: 1.05rem;
+}
+
+.season-cell {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  min-width: 90px;
+}
+
+.minimum-note {
+  font-style: italic;
+  color: var(--text-light);
+  text-align: center;
+  padding: 1rem 1.5rem;
+  font-size: 0.9rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+}
+
+/* Achievement badges for top performers */
+.rank-1 .rank {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #333;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(255, 215, 0, 0.3);
+}
+
+.rank-1 .rank::after {
+  content: " 🥇";
+}
+
+.rank-1:hover {
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 237, 78, 0.1) 100%);
+}
+
+.rank-2 .rank {
+  background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+  color: #333;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(192, 192, 192, 0.3);
+}
+
+.rank-2 .rank::after {
+  content: " 🥈";
+}
+
+.rank-2:hover {
+  background: linear-gradient(90deg, rgba(192, 192, 192, 0.1) 0%, rgba(232, 232, 232, 0.1) 100%);
+}
+
+.rank-3 .rank {
+  background: linear-gradient(135deg, #cd7f32 0%, #daa560 100%);
+  color: white;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(205, 127, 50, 0.3);
+}
+
+.rank-3 .rank::after {
+  content: " 🥉";
+}
+
+.rank-3:hover {
+  background: linear-gradient(90deg, rgba(205, 127, 50, 0.1) 0%, rgba(218, 165, 96, 0.1) 100%);
+}
+
+/* Loading state */
+.loading {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-light);
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  font-size: 1.1rem;
+}
+
+.loading::before {
+  content: "⚾";
+  display: block;
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.1); }
+}
+
+/* Fade in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.leader-section {
+  animation: fadeInUp 0.6s ease backwards;
+}
+
+.leader-section:nth-child(1) { animation-delay: 0.05s; }
+.leader-section:nth-child(2) { animation-delay: 0.1s; }
+.leader-section:nth-child(3) { animation-delay: 0.15s; }
+.leader-section:nth-child(4) { animation-delay: 0.2s; }
+.leader-section:nth-child(5) { animation-delay: 0.25s; }
+.leader-section:nth-child(6) { animation-delay: 0.3s; }
+.leader-section:nth-child(7) { animation-delay: 0.35s; }
+.leader-section:nth-child(8) { animation-delay: 0.4s; }
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 1rem;
+  }
+  
+  .page-header {
+    padding: 2rem 1rem;
+  }
+  
+  .page-header h1 {
+    font-size: 2.5rem;
+  }
+  
+  .nav-container {
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .nav-link {
+    padding: 0.8rem 1.25rem;
+    font-size: 0.95rem;
+    text-align: center;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .toggle-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .toggle-btn {
+    width: 100%;
+  }
+  
+  .leaders-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .leader-section h3 {
+    padding: 1.25rem;
+    font-size: 1.2rem;
+  }
+  
+  .leader-table th,
+  .leader-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .rank {
+    width: 60px;
+    font-size: 0.9rem;
+  }
+  
+  .stat-value {
+    min-width: 80px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 2rem;
+  }
+  
+  .leader-table th,
+  .leader-table td {
+    padding: 0.6rem 0.3rem;
+    font-size: 0.85rem;
+  }
+  
+  .leader-section h3 {
+    font-size: 1.1rem;
+    padding: 1rem;
+  }
+  
+  .rank {
+    width: 50px;
+    font-size: 0.85rem;
+  }
+  
+  .stat-value {
+    min-width: 70px;
+    font-size: 0.9rem;
+  }
+  
+  .minimum-note {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+  }
+}
+</style>
+</head>
+<body>
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="softball-spinner"></div>
+</div>
+
+<div class="page-container">
+  <div class="page-header">
+    <h1 id="pageTitle">⚾ Batting Career Leaders</h1>
+    <p>Top 10 leaders in major statistical categories</p>
+  </div>
+
+  <div class="filters-nav">
+
+  </div>
+
+  <div class="scope-selector">
+    <h3>Leader Type</h3>
+    <div class="scope-toggle">
+      <button id="careerScopeBtn" class="scope-btn active" onclick="switchToScope('career')">
+        🏆 Career Leaders
+      </button>
+      <button id="seasonScopeBtn" class="scope-btn" onclick="switchToScope('season')">
+        📅 Season Leaders
+      </button>
+    </div>
+    <p id="scopeDescription" class="scope-description">All-time career totals and averages</p>
+  </div>
+
+  <div class="view-selector">
+    <h3>Select Leader Category</h3>
+    <div class="toggle-buttons">
+      <button id="battingLeadersBtn" class="toggle-btn batting active" onclick="switchToView('batting')">
+        ⚾ Batting Leaders
+      </button>
+      <button id="pitchingLeadersBtn" class="toggle-btn pitching" onclick="switchToView('pitching')">
+        🥎 Pitching Leaders
+      </button>
+    </div>
+  </div>
+
+
+
+  <div id="leaders-container" class="leaders-container">
+    <div class="loading">Loading career leaders from optimized collection...</div>
+  </div>
+</div>
+
+<script type="module">
+import { getAllPlayerStatsOptimized, seasonsObjectToArray, pitchingSeasonsObjectToArray } from './firebase-data.js';
+
+let allBattingData = [];
+let allPitchingData = [];
+let seasonBattingData = [];
+let seasonPitchingData = [];
+let currentView = 'batting';
+let currentScope = 'career';
+
+// Mobile menu toggle
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobileNavMenu');
+  menu.classList.toggle('open');
+}
+window.toggleMobileMenu = toggleMobileMenu;
+
+// Hide loading overlay after page loads
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  }, 800);
+});
+
+function formatPlayerName(name) {
+  if (!name) return "";
+  
+  // If name already has spaces, capitalize each word properly
+  if (name.includes(' ')) {
+    return name.split(' ')
+      .map(word => {
+        // Handle special cases like DelleDonne, McDonald, etc.
+        if (word.toLowerCase() === 'delledonne') return 'DelleDonne';
+        if (word.toLowerCase() === 'mcdonald') return 'McDonald';
+        if (word.toLowerCase() === 'mccarthy') return 'McCarthy';
+		if (word.toLowerCase() === 'lacasse') return 'LaCasse';
+		if (word.toLowerCase() === 'mccabe') return 'McCabe';
+		if (word.toLowerCase() === "o'grady") return "O'Grady";
+		if (word.toLowerCase() === 'mcmahon') return 'McMahon';
+		if (word.toLowerCase() === 'mccorkell') return 'McCorkell';
+		if (word.toLowerCase() === 'denoble') return 'DeNoble';
+		if (word.toLowerCase() === 'digiacomo') return 'DiGiacomo';
+        // Add more special cases as needed
+        
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(' ');
+  }
+  
+  // If name has underscores, replace with spaces and capitalize
+  if (name.includes('_')) {
+    return name.split('_')
+      .map(word => {
+        // Handle special cases
+        if (word.toLowerCase() === 'delledonne') return 'DelleDonne';
+        if (word.toLowerCase() === 'mcdonald') return 'McDonald';
+        if (word.toLowerCase() === 'mccarthy') return 'McCarthy';
+        if (word.toLowerCase() === 'mccabe') return 'McCabe';
+		if (word.toLowerCase() === 'lacasse') return 'LaCasse';
+		        if (word.toLowerCase() === "o'grady") return "O'Grady";
+		if (word.toLowerCase() === 'mcmahon') return 'McMahon';
+				if (word.toLowerCase() === 'mccorkell') return 'McCorkell';
+		if (word.toLowerCase() === 'denoble') return 'DeNoble';
+		if (word.toLowerCase() === 'digiacomo') return 'DiGiacomo';
+		
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(' ');
+  }
+  
+  // Handle special cases for single words
+  if (name.toLowerCase() === 'delledonne') return 'DelleDonne';
+  if (name.toLowerCase() === 'mcdonald') return 'McDonald';
+  if (name.toLowerCase() === 'mccarthy') return 'McCarthy';
+  if (name.toLowerCase() === 'mccabe') return 'McCabe';
+  if (name.toLowerCase() === 'lacasse') return 'LaCasse';
+  if (name.toLowerCase() === "o'grady") return "O'Grady";
+  if (name.toLowerCase() === 'mcmahon') return 'McMahon';
+  		if (name.toLowerCase() === 'mccorkell') return 'McCorkell';
+		if (name.toLowerCase() === 'denoble') return 'DeNoble';
+		if (name.toLowerCase() === 'digiacomo') return 'DiGiacomo';
+  
+  
+  // Otherwise just capitalize the single name
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+}
+
+window.switchToView = function(view) {
+  currentView = view;
+  
+  const battingBtn = document.getElementById('battingLeadersBtn');
+  const pitchingBtn = document.getElementById('pitchingLeadersBtn');
+  
+  if (view === 'batting') {
+    battingBtn.classList.add('active');
+    pitchingBtn.classList.remove('active');
+  } else {
+    pitchingBtn.classList.add('active');
+    battingBtn.classList.remove('active');
+  }
+  
+  updatePageTitle();
+  generateLeaderboards();
+}
+
+window.switchToScope = function(scope) {
+  currentScope = scope;
+  
+  const careerBtn = document.getElementById('careerScopeBtn');
+  const seasonBtn = document.getElementById('seasonScopeBtn');
+  const description = document.getElementById('scopeDescription');
+  
+  if (scope === 'career') {
+    careerBtn.classList.add('active');
+    seasonBtn.classList.remove('active');
+    description.textContent = 'All-time career totals and averages';
+  } else {
+    seasonBtn.classList.add('active');
+    careerBtn.classList.remove('active');
+    description.textContent = 'Best single-season performances ever';
+  }
+  
+  updatePageTitle();
+  generateLeaderboards();
+}
+
+function updatePageTitle() {
+  const scopeText = currentScope === 'career' ? 'Career' : 'Season';
+  const typeEmoji = currentView === 'batting' ? '⚾' : '🥎';
+  const typeText = currentView === 'batting' ? 'Batting' : 'Pitching';
+  document.getElementById('pageTitle').textContent = `${typeEmoji} ${typeText} ${scopeText} Leaders`;
+}
+
+async function loadData() {
+  const loadStartTime = performance.now();
+  console.log('📊 Loading career leaders data from aggregated collection...');
+  
+  try {
+    console.time('Fetch Aggregated Data');
+    const players = await getAllPlayerStatsOptimized();
+    console.timeEnd('Fetch Aggregated Data');
+    
+    console.log(`✅ Loaded ${players?.length || 0} players from aggregated collection`);
+    
+    if (!players || players.length === 0) {
+      console.warn('⚠️ No player data found');
+      document.getElementById("leaders-container").innerHTML = 
+        '<div class="loading">No player data available.</div>';
+      return;
+    }
+    
+    // Filter out migrated entries (old documents that have been moved to aggregatedPlayerStats)
+    const activePlayers = players.filter(player => !player.migrated);
+    console.log(`🔄 Filtered to ${activePlayers.length} active players (excluded migrated entries)`);
+    
+    // Aggregate career stats for each player (batting)
+    console.time('Process Career Stats');
+    allBattingData = activePlayers.map(player => {
+      const career = {
+        id: player.id || player.userId || player.playerId,
+        playerId: player.id || player.userId || player.playerId,
+        name: formatPlayerName(player.name || player.displayName || player.userId),
+        games: 0,
+        atBats: 0,
+        hits: 0,
+        runs: 0,
+        walks: 0,
+        plateAppearances: 0,
+        acesWarValues: []
+      };
+      
+      if (player.seasons && typeof player.seasons === 'object') {
+        const seasonsArray = seasonsObjectToArray(player);
+        
+        seasonsArray.forEach(season => {
+          career.games += Number(season.games) || 0;
+          career.atBats += Number(season.atBats) || 0;
+          career.hits += Number(season.hits) || 0;
+          career.runs += Number(season.runs) || 0;
+          career.walks += Number(season.walks) || 0;
+          career.plateAppearances += (Number(season.atBats) || 0) + (Number(season.walks) || 0);
+          
+          const acesBPI = Number(season.acesBPI);
+          if (!isNaN(acesBPI) && acesBPI !== 0) {
+            career.acesWarValues.push(acesBPI);
+          }
+        });
+      }
+      
+      career.battingAverage = career.atBats > 0 ? career.hits / career.atBats : 0;
+      career.onBasePercentage = career.plateAppearances > 0 ? 
+        (career.hits + career.walks) / career.plateAppearances : 0;
+      career.avgAcesWar = career.acesWarValues.length > 0 ? 
+        career.acesWarValues.reduce((a, b) => a + b, 0) / career.acesWarValues.length : 0;
+      
+      return career;
+    });
+    
+    // Process pitching data
+    allPitchingData = activePlayers
+      .filter(player => player.pitchingSeasons && Object.keys(player.pitchingSeasons).length > 0)
+      .map(player => {
+        const career = {
+          id: player.id || player.playerId,
+          playerId: player.id || player.playerId,
+          name: formatPlayerName(player.name || player.displayName || player.id),
+          games: 0,
+          totalIP: 0,
+          runsAllowed: 0,
+          earnedRuns: 0
+        };
+        
+        const pitchingSeasonsArray = pitchingSeasonsObjectToArray(player);
+        pitchingSeasonsArray.forEach(season => {
+          career.games += Number(season.games) || 0;
+          career.totalIP += parseFloat(season.inningsPitched || season.IP) || 0;
+          career.runsAllowed += Number(season.runsAllowed) || 0;
+          
+          if (season.earnedRuns) {
+            career.earnedRuns += Number(season.earnedRuns) || 0;
+          } else if (season.earnedRunAverage && season.inningsPitched) {
+            const ip = parseFloat(season.inningsPitched || season.IP) || 0;
+            const era = parseFloat(season.earnedRunAverage) || 0;
+            career.earnedRuns += (era * ip) / 7;
+          }
+        });
+        
+        career.careerERA = career.totalIP > 0 ? (career.earnedRuns * 7) / career.totalIP : 0;
+        
+        return career;
+      });
+    
+    // Build season-level batting data (individual season entries)
+    seasonBattingData = [];
+    activePlayers.forEach(player => {
+      if (player.seasons && typeof player.seasons === 'object') {
+        const seasonsArray = seasonsObjectToArray(player);
+        const playerId = player.id || player.userId || player.playerId;
+        const playerName = formatPlayerName(player.name || player.displayName || player.userId);
+        
+        seasonsArray.forEach(season => {
+          const games = Number(season.games) || 0;
+          const atBats = Number(season.atBats) || 0;
+          const hits = Number(season.hits) || 0;
+          const runs = Number(season.runs) || 0;
+          const walks = Number(season.walks) || 0;
+          const plateAppearances = atBats + walks;
+          const acesBPI = Number(season.acesBPI) || 0;
+          
+          // Only include seasons with actual games played
+          if (games > 0) {
+            seasonBattingData.push({
+              id: playerId,
+              playerId: playerId,
+              name: playerName,
+              seasonId: season.seasonId || 'Unknown',
+              games: games,
+              atBats: atBats,
+              hits: hits,
+              runs: runs,
+              walks: walks,
+              plateAppearances: plateAppearances,
+              battingAverage: atBats > 0 ? hits / atBats : 0,
+              onBasePercentage: plateAppearances > 0 ? (hits + walks) / plateAppearances : 0,
+              acesBPI: acesBPI
+            });
+          }
+        });
+      }
+    });
+    
+    // Build season-level pitching data
+    seasonPitchingData = [];
+    activePlayers.forEach(player => {
+      if (player.pitchingSeasons && Object.keys(player.pitchingSeasons).length > 0) {
+        const pitchingSeasonsArray = pitchingSeasonsObjectToArray(player);
+        const playerId = player.id || player.playerId;
+        const playerName = formatPlayerName(player.name || player.displayName || player.id);
+        
+        pitchingSeasonsArray.forEach(season => {
+          const games = Number(season.games) || 0;
+          const totalIP = parseFloat(season.inningsPitched || season.IP) || 0;
+          const runsAllowed = Number(season.runsAllowed) || 0;
+          
+          let earnedRuns = 0;
+          if (season.earnedRuns) {
+            earnedRuns = Number(season.earnedRuns) || 0;
+          } else if (season.earnedRunAverage && (season.inningsPitched || season.IP)) {
+            const ip = parseFloat(season.inningsPitched || season.IP) || 0;
+            const era = parseFloat(season.earnedRunAverage) || 0;
+            earnedRuns = (era * ip) / 7;
+          }
+          
+          // Only include seasons with actual games pitched
+          if (games > 0) {
+            seasonPitchingData.push({
+              id: playerId,
+              playerId: playerId,
+              name: playerName,
+              seasonId: season.seasonId || 'Unknown',
+              games: games,
+              totalIP: totalIP,
+              runsAllowed: runsAllowed,
+              earnedRuns: earnedRuns,
+              seasonERA: totalIP > 0 ? (earnedRuns * 7) / totalIP : 0
+            });
+          }
+        });
+      }
+    });
+    
+    console.timeEnd('Process Career Stats');
+    
+    const loadEndTime = performance.now();
+    console.log(`✅ Total load time: ${(loadEndTime - loadStartTime).toFixed(0)}ms`);
+    console.log(`✅ Processed ${allBattingData.length} batters and ${allPitchingData.length} pitchers`);
+    console.log(`✅ Processed ${seasonBattingData.length} season batting entries and ${seasonPitchingData.length} season pitching entries`);
+    
+    generateLeaderboards();
+    
+  } catch (error) {
+    console.error("❌ Error loading data:", error);
+    document.getElementById("leaders-container").innerHTML = 
+      '<div class="loading">Error loading career leaders data. Please try again.</div>';
+  }
+}
+
+function generateLeaderboards() {
+  const container = document.getElementById("leaders-container");
+  
+  if (currentView === 'batting') {
+    generateBattingLeaderboards(container);
+  } else {
+    generatePitchingLeaderboards(container);
+  }
+}
+
+function generateBattingLeaderboards(container) {
+  const isSeasonMode = currentScope === 'season';
+  const data = isSeasonMode ? seasonBattingData : allBattingData;
+  
+  const careerCategories = [
+    {
+      title: "Games Played",
+      icon: "🎮",
+      stat: "games",
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "At-Bats",
+      icon: "⚾",
+      stat: "atBats", 
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "Hits",
+      icon: "🎯",
+      stat: "hits",
+      format: (val) => val.toString(), 
+      minimum: 0
+    },
+    {
+      title: "Runs Scored",
+      icon: "🏃",
+      stat: "runs",
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "Walks",
+      icon: "🚶",
+      stat: "walks",
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "Batting Average",
+      icon: "📊",
+      stat: "battingAverage",
+      format: (val) => val.toFixed(3),
+      minimum: 150,
+      minimumField: "plateAppearances",
+      minimumNote: "Minimum 150 plate appearances"
+    },
+    {
+      title: "On-Base Percentage",
+      icon: "🎯",
+      stat: "onBasePercentage",
+      format: (val) => val.toFixed(3),
+      minimum: 150,
+      minimumField: "plateAppearances", 
+      minimumNote: "Minimum 150 plate appearances"
+    },
+    {
+      title: "AcesBPI (Average)",
+      icon: "⭐",
+      stat: "avgAcesWar",
+      format: (val) => val.toFixed(2),
+      minimum: 0,
+      filter: (p) => p.acesWarValues.length > 0
+    }
+  ];
+  
+  const seasonCategories = [
+    {
+      title: "Games Played",
+      icon: "🎮",
+      stat: "games",
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "At-Bats",
+      icon: "⚾",
+      stat: "atBats", 
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "Hits",
+      icon: "🎯",
+      stat: "hits",
+      format: (val) => val.toString(), 
+      minimum: 0
+    },
+    {
+      title: "Runs Scored",
+      icon: "🏃",
+      stat: "runs",
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "Walks",
+      icon: "🚶",
+      stat: "walks",
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "Batting Average",
+      icon: "📊",
+      stat: "battingAverage",
+      format: (val) => val.toFixed(3),
+      minimum: 20,
+      minimumField: "plateAppearances",
+      minimumNote: "Minimum 20 plate appearances"
+    },
+    {
+      title: "On-Base Percentage",
+      icon: "🎯",
+      stat: "onBasePercentage",
+      format: (val) => val.toFixed(3),
+      minimum: 20,
+      minimumField: "plateAppearances", 
+      minimumNote: "Minimum 20 plate appearances"
+    },
+    {
+      title: "AcesBPI",
+      icon: "⭐",
+      stat: "acesBPI",
+      format: (val) => val.toFixed(2),
+      minimum: 20,
+      minimumField: "plateAppearances",
+      minimumNote: "Minimum 20 plate appearances",
+      filter: (p) => p.acesBPI !== 0
+    }
+  ];
+  
+  const categories = isSeasonMode ? seasonCategories : careerCategories;
+  
+  let html = '';
+  categories.forEach(category => {
+    const leaderHTML = generateLeaderTable(data, category, 'batting', isSeasonMode);
+    html += leaderHTML;
+  });
+  
+  container.innerHTML = html;
+}
+
+function generatePitchingLeaderboards(container) {
+  const isSeasonMode = currentScope === 'season';
+  const data = isSeasonMode ? seasonPitchingData : allPitchingData;
+  
+  const careerCategories = [
+    {
+      title: "Games Pitched",
+      icon: "🎮",
+      stat: "games",
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "Innings Pitched",
+      icon: "⏱️",
+      stat: "totalIP", 
+      format: (val) => val.toFixed(1),
+      minimum: 0
+    },
+    {
+      title: "Runs Allowed (Fewest)",
+      icon: "🛡️",
+      stat: "runsAllowed",
+      format: (val) => val.toString(), 
+      minimum: 40,
+      minimumField: "totalIP",
+      minimumNote: "Minimum 40 innings pitched",
+      sortAscending: true,
+      extraColumn: {
+        title: "IP",
+        stat: "totalIP",
+        format: (val) => val.toFixed(1)
+      }
+    },
+    {
+      title: "Career ERA",
+      icon: "📉",
+      stat: "careerERA",
+      format: (val) => val.toFixed(2),
+      minimum: 15,
+      minimumField: "totalIP",
+      minimumNote: "Minimum 15 innings pitched",
+      sortAscending: true
+    }
+  ];
+  
+  const seasonCategories = [
+    {
+      title: "Games Pitched",
+      icon: "🎮",
+      stat: "games",
+      format: (val) => val.toString(),
+      minimum: 0
+    },
+    {
+      title: "Innings Pitched",
+      icon: "⏱️",
+      stat: "totalIP", 
+      format: (val) => val.toFixed(1),
+      minimum: 0
+    },
+    {
+      title: "Season ERA",
+      icon: "📉",
+      stat: "seasonERA",
+      format: (val) => val.toFixed(2),
+      minimum: 10,
+      minimumField: "totalIP",
+      minimumNote: "Minimum 10 innings pitched",
+      sortAscending: true
+    },
+    {
+      title: "Fewest Runs",
+      icon: "🛡️",
+      stat: "runsAllowed",
+      format: (val) => val.toString(), 
+      minimum: 10,
+      minimumField: "totalIP",
+      minimumNote: "Minimum 10 innings pitched",
+      sortAscending: true,
+      extraColumn: {
+        title: "IP",
+        stat: "totalIP",
+        format: (val) => val.toFixed(1)
+      }
+    }
+  ];
+  
+  const categories = isSeasonMode ? seasonCategories : careerCategories;
+  
+  let html = '';
+  categories.forEach(category => {
+    const leaderHTML = generateLeaderTable(data, category, 'pitching', isSeasonMode);
+    html += leaderHTML;
+  });
+  
+  container.innerHTML = html;
+}
+
+function generateLeaderTable(players, category, type, isSeasonMode = false) {
+  let qualifyingPlayers = players.filter(p => {
+    if (category.filter && !category.filter(p)) return false;
+    if (category.minimumField) {
+      return p[category.minimumField] >= category.minimum;
+    }
+    return p[category.stat] >= category.minimum;
+  });
+  
+  const sortAscending = category.sortAscending || false;
+  qualifyingPlayers.sort((a, b) => {
+    if (sortAscending) {
+      return a[category.stat] - b[category.stat];
+    } else {
+      return b[category.stat] - a[category.stat];
+    }
+  });
+  
+  const top10 = qualifyingPlayers.slice(0, 10);
+  
+  // Calculate ranks with tie handling
+  const rankedPlayers = [];
+  let currentRank = 1;
+  for (let i = 0; i < top10.length; i++) {
+    if (i > 0 && top10[i][category.stat] !== top10[i-1][category.stat]) {
+      currentRank = i + 1;
+    }
+    rankedPlayers.push({
+      ...top10[i],
+      displayRank: currentRank
+    });
+  }
+  
+  const sectionClass = type === 'pitching' ? 'pitching' : '';
+  const hasExtraColumn = category.extraColumn !== undefined;
+  
+  let html = `
+    <div class="leader-section ${sectionClass}">
+      <h3>${category.icon} ${category.title}</h3>
+      ${category.minimumNote ? `<div class="minimum-note">${category.minimumNote}</div>` : ''}
+      <table class="leader-table">
+        <thead>
+          <tr>
+            <th class="rank">Rank</th>
+            <th>Player</th>
+            <th class="stat-value">${category.title}</th>
+            ${hasExtraColumn ? `<th class="stat-value">${category.extraColumn.title}</th>` : ''}
+            ${isSeasonMode ? '<th class="stat-value">Season</th>' : ''}
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  rankedPlayers.forEach((player) => {
+    const rank = player.displayRank;
+    const statValue = category.format(player[category.stat]);
+    const rankClass = rank <= 3 ? `rank-${rank}` : '';
+    
+    const playerLink = type === 'pitching' ? 
+      `pitcher.html?id=${encodeURIComponent(player.playerId || player.id)}` :
+      `player.html?id=${encodeURIComponent(player.playerId || player.id)}`;
+    
+    // Format season ID nicely (e.g., "2025-summer" -> "Summer 2025")
+    const seasonDisplay = isSeasonMode ? formatSeasonId(player.seasonId) : '';
+    
+    html += `
+      <tr class="${rankClass}">
+        <td class="rank">${rank}</td>
+        <td><a href="${playerLink}">${player.name}</a></td>
+        <td class="stat-value">${statValue}</td>
+        ${hasExtraColumn ? `<td class="stat-value">${category.extraColumn.format(player[category.extraColumn.stat])}</td>` : ''}
+        ${isSeasonMode ? `<td class="stat-value season-cell">${seasonDisplay}</td>` : ''}
+      </tr>
+    `;
+  });
+  
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+  
+  return html;
+}
+
+function formatSeasonId(seasonId) {
+  if (!seasonId || seasonId === 'Unknown') return 'Unknown';
+  
+  // Handle format like "2025-summer" or "2024-fall"
+  const parts = seasonId.split('-');
+  if (parts.length >= 2) {
+    const year = parts[0];
+    const season = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+    return `${season} ${year}`;
+  }
+  
+  return seasonId;
+}
+
+// Initialize on page load
+loadData();
+</script>
+<script type="module">
+  import { NavigationComponent } from './nav-component.js';
+  // Navigation auto-initializes on load!
+</script>
+<script src="team-colors.js"></script>
+<script src="mobile-enhancements.js"></script>
+<script src="stat-tooltips.js"></script>
+<script src="theme-toggle.js"></script>
+</body>
+</html>

@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="mobile-enhancements.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Link Player Account - Mountainside Aces</title>
+  <meta name="theme-color" content="#2d5016">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mountainside Aces">
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --secondary-color: #1a6b4a;
+      --accent-color: #ffd700;
+      --card-bg: #ffffff;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+      --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      padding: 2rem;
+      border-radius: 16px;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    
+    .header::after {
+      content: '⚾';
+      position: absolute;
+      bottom: -40px;
+      left: -30px;
+      font-size: 200px;
+      opacity: 0.05;
+    }
+    
+    .header-left {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header-left h1 {
+      color: white;
+      margin-bottom: 0.5rem;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    
+    .header-left p {
+      color: rgba(255,255,255,0.9);
+      font-size: 14px;
+    }
+    
+    .header-buttons {
+      display: flex;
+      gap: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .home-btn, .logout-btn {
+      padding: 1rem 1.75rem;
+      background: white;
+      color: var(--primary-color);
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .home-btn::before, .logout-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--accent-color);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: -1;
+    }
+    
+    .home-btn:hover::before, .logout-btn:hover::before {
+      transform: translateX(0);
+    }
+    
+    .home-btn:hover, .logout-btn:hover {
+      color: var(--primary-color);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
+    
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      border-radius: 16px 16px 0 0;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border-color);
+    }
+    
+    .user-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 4px solid var(--primary-color);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .user-details h3 {
+      margin-bottom: 0.25rem;
+      color: var(--text-dark);
+      font-size: 20px;
+      font-weight: 700;
+    }
+    
+    .user-details p {
+      color: var(--text-light);
+      font-size: 14px;
+    }
+    
+    .user-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+    
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .section-title::before {
+      content: "";
+      width: 8px;
+      height: 36px;
+      background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      border-radius: 4px;
+    }
+    
+    .search-box {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 16px;
+      margin-bottom: 1.5rem;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    
+    .search-box:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+    }
+    
+    .team-section {
+      margin-bottom: 1.5rem;
+      animation: fadeInUp 0.6s ease backwards;
+    }
+    
+    .team-section:nth-child(1) { animation-delay: 0.1s; }
+    .team-section:nth-child(2) { animation-delay: 0.2s; }
+    .team-section:nth-child(3) { animation-delay: 0.3s; }
+    .team-section:nth-child(4) { animation-delay: 0.4s; }
+    .team-section:nth-child(5) { animation-delay: 0.5s; }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .team-header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .team-header:hover {
+      transform: translateX(8px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .team-count {
+      background: rgba(255,255,255,0.2);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+    
+    .player-list {
+      display: grid;
+      gap: 0.75rem;
+    }
+    
+    .player-item {
+      padding: 1.25rem;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .player-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--primary-color);
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+    }
+    
+    .player-item:hover {
+      border-color: var(--primary-color);
+      background: #f7fafc;
+      transform: translateX(8px);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .player-item:hover::before {
+      transform: scaleY(1);
+    }
+    
+    .player-item.selected {
+      border-color: var(--primary-color);
+      background: linear-gradient(135deg, rgba(45, 80, 22, 0.05) 0%, rgba(26, 107, 74, 0.05) 100%);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .player-item.selected::before {
+      transform: scaleY(1);
+    }
+    
+    .player-item.suggested {
+      border-color: var(--accent-color);
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+    }
+    
+    .player-item.suggested::before {
+      background: var(--accent-color);
+      transform: scaleY(1);
+    }
+    
+    .player-name {
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 0.25rem;
+      font-size: 16px;
+    }
+    
+    .player-stats {
+      font-size: 13px;
+      color: var(--text-light);
+    }
+    
+    .suggestion-badge {
+      background: var(--accent-color);
+      color: var(--primary-color);
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .btn {
+      padding: 14px 28px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .btn-primary:hover:not(:disabled)::before {
+      opacity: 1;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn-primary span {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .btn-secondary {
+      background: var(--text-light);
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: var(--text-dark);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .linked-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .linked-buttons .btn {
+      flex: 1;
+    }
+    
+    .btn-profile {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-profile::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .btn-profile:hover::before {
+      opacity: 1;
+    }
+    
+    .btn-profile:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-profile span {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .alert {
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      animation: slideIn 0.3s ease;
+      border: 2px solid;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .alert-success {
+      background: #d1fae5;
+      border-color: #10b981;
+      color: #065f46;
+    }
+    
+    .alert-info {
+      background: #dbeafe;
+      border-color: #3b82f6;
+      color: #1e40af;
+    }
+    
+    .alert-warning {
+      background: #fef3c7;
+      border-color: #f59e0b;
+      color: #92400e;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-light);
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--border-color);
+      border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 1rem;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--text-light);
+    }
+    
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 1rem;
+    }
+    
+    .empty-state h3 {
+      color: var(--text-dark);
+      margin-bottom: 0.5rem;
+    }
+    
+    .linked-player-card {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .linked-player-card::after {
+      content: '⚾';
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      font-size: 120px;
+      opacity: 0.1;
+    }
+    
+    .linked-player-card h3 {
+      margin-bottom: 0.75rem;
+      font-size: 22px;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .linked-player-card p {
+      opacity: 0.95;
+      font-size: 15px;
+      margin-bottom: 0.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .pending-request-card {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+      border: 2px solid #f59e0b;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+    }
+    
+    .pending-request-card h3 {
+      color: var(--text-dark);
+      margin-bottom: 1rem;
+      font-size: 20px;
+    }
+    
+    .pending-request-card p {
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+    }
+    
+    .pending-request-card strong {
+      color: var(--text-dark);
+    }
+    
+    .request-status {
+      display: inline-block;
+      padding: 6px 14px;
+      background: #fef3c7;
+      color: #92400e;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+    
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      
+      .header-left h1 {
+        font-size: 1.6rem;
+      }
+      
+      .header, .card {
+        padding: 1.5rem;
+      }
+      
+      .header-buttons {
+        width: 100%;
+        flex-direction: column;
+      }
+      
+      .home-btn, .logout-btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .user-info {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .section-title {
+        font-size: 1.6rem;
+      }
+      
+      .section-title::after {
+        display: none;
+      }
+      
+      .linked-buttons {
+        flex-direction: column;
+      }
+    }
+	suggested-player-highlight {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+  border: 3px solid var(--accent-color);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 215, 0, 0); }
+}
+
+/* CORRECTED CSS - Replace lines around 680 in your file */
+
+/* Add DOT before suggested-player-highlight */
+.suggested-player-highlight {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+  border: 3px solid var(--accent-color);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 215, 0, 0); }
+}
+
+.suggested-player-highlight:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.suggested-player-highlight h4 {
+  color: var(--text-dark);
+  margin-bottom: 0.75rem;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.suggested-player-highlight .player-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.suggested-player-highlight .player-name-large {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.suggested-player-highlight .player-stats-large {
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.confidence-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--accent-color);
+  color: var(--primary-color);
+}
+
+.suggested-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-yes {
+  flex: 1;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-yes:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-no {
+  flex: 1;
+  background: white;
+  color: var(--text-dark);
+  padding: 12px 24px;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-no:hover {
+  border-color: var(--text-dark);
+  background: #f7fafc;
+}
+
+/* Skip button styling */
+.skip-link-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--border-color);
+  text-align: center;
+}
+
+.skip-link-section p {
+  color: var(--text-light);
+  margin-bottom: 1rem;
+  font-size: 14px;
+}
+
+.btn-skip {
+  background: white;
+  color: var(--text-dark);
+  border: 2px solid var(--border-color);
+  padding: 12px 32px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.btn-skip:hover {
+  border-color: var(--text-dark);
+  background: #f7fafc;
+  transform: translateY(-2px);
+}
+
+.security-notice {
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  font-size: 13px;
+  color: #856404;
+}
+
+.security-notice strong {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+/* Confirmation Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  padding: 1rem;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  transform: translateY(20px) scale(0.95);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.modal-overlay.active .modal-content {
+  transform: translateY(0) scale(1);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+}
+
+.modal-header h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.account-comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.account-type {
+  padding: 1rem;
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+}
+
+.account-type.fan {
+  background: #f8fafc;
+}
+
+.account-type.player {
+  background: linear-gradient(135deg, rgba(45, 80, 22, 0.05) 0%, rgba(26, 107, 74, 0.05) 100%);
+  border-color: var(--primary-color);
+}
+
+.account-type-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.account-type.fan .account-type-header {
+  color: var(--text-dark);
+}
+
+.account-type.player .account-type-header {
+  color: var(--primary-color);
+}
+
+.account-type ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.account-type li {
+  padding: 0.375rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+}
+
+.account-type li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--success-color);
+  font-weight: 700;
+}
+
+.account-type.player li::before {
+  color: var(--primary-color);
+}
+
+.modal-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.modal-btn {
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  text-align: center;
+}
+
+.modal-btn-player {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+}
+
+.modal-btn-player:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(45, 80, 22, 0.3);
+}
+
+.modal-btn-fan {
+  background: #f1f5f9;
+  color: var(--text-dark);
+  border: 2px solid var(--border-color);
+}
+
+.modal-btn-fan:hover {
+  background: #e2e8f0;
+}
+
+@media (max-width: 480px) {
+  .modal-content {
+    margin: 0.5rem;
+  }
+  
+  .modal-body {
+    padding: 1.25rem;
+  }
+  
+  .account-type {
+    padding: 0.875rem;
+  }
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <h1>🔗 Link Player Account</h1>
+        <p>Connect your Google account to your player profile</p>
+      </div>
+      <div class="header-buttons">
+        <a href="index.html" class="home-btn">← Home</a>
+        <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
+      </div>
+    </div>
+    
+    <div id="loadingState" class="card">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p>Loading your profile...</p>
+      </div>
+    </div>
+    
+    <div id="notLoggedIn" class="card" style="display: none;">
+      <div class="empty-state">
+        <div class="empty-state-icon">🔒</div>
+        <h3>Please Sign In</h3>
+        <p style="margin-bottom: 1.5rem;">You need to sign in with Google to link your player account</p>
+        <button class="btn btn-primary" onclick="window.location.href='signin.html'">
+          <span>Sign In with Google</span>
+        </button>
+      </div>
+    </div>
+    
+    <div id="mainContent" style="display: none;">
+      <!-- Current User Info -->
+      <div class="card">
+        <div class="user-info">
+          <img id="userAvatar" class="user-avatar" src="" alt="User">
+          <div class="user-details">
+            <h3 id="userName"></h3>
+            <p id="userEmail"></p>
+            <span class="user-badge">✓ Google Account</span>
+          </div>
+        </div>
+        <!-- Email Verification Banner (for unverified email/password users) -->
+  <div id="verificationBanner" class="alert alert-warning" style="display: none; margin-top: 1rem;">
+    <strong>📧 Email Verification Required</strong>
+    <p style="margin: 0.5rem 0;">
+      You must verify your email address before linking a player account.
+    </p>
+    <button class="btn btn-primary" onclick="window.location.href='verify-email.html'" style="margin-top: 0.5rem;">
+      <span>Verify Email Now →</span>
+    </button>
+  </div>
+        <!-- Pending Request Section -->
+        <div id="pendingRequestSection" style="display: none;">
+          <div class="pending-request-card">
+            <h3>⏳ Link Request Pending</h3>
+            <p><strong>Player:</strong> <span id="pendingPlayerName"></span></p>
+            <p><strong>Team:</strong> <span id="pendingTeamName"></span></p>
+            <p><strong>Requested:</strong> <span id="pendingRequestDate"></span></p>
+            <p><strong>Status:</strong> <span id="pendingRequestStatus" class="request-status">Awaiting Approval</span></p>
+            <p style="margin-top: 1rem; font-size: 14px;">
+              Your request is being reviewed by the team captain or league staff. 
+              You'll receive an email once it's approved.
+            </p>
+          </div>
+          <div class="linked-buttons">
+            <button class="btn btn-secondary" onclick="cancelPendingRequest()">
+              ✖️ Cancel Request
+            </button>
+          </div>
+        </div>
+        
+        <!-- Already Linked Section -->
+        <div id="alreadyLinkedSection" style="display: none;">
+          <div class="linked-player-card">
+            <h3>✅ Account Linked</h3>
+            <p><strong>Player:</strong> <span id="linkedPlayerName"></span></p>
+            <p><strong>Team:</strong> <span id="linkedTeamName"></span></p>
+          </div>
+          <div class="linked-buttons">
+            <button class="btn btn-profile" id="profileButton">
+              <span>Go to Profile Page →</span>
+            </button>
+            <button class="btn btn-secondary" onclick="unlinkPlayer()">
+              Change Player Link
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Player Selection -->
+<div id="selectionSection" class="card" style="display: none;">
+  <div class="section-title">
+    👤 Select Your Player Profile
+  </div>
+  
+  <!-- Security Notice for Email/Password users -->
+  <div id="securityNotice" class="security-notice" style="display: none;">
+    <strong>🔒 Security Notice:</strong>
+    To prevent fraudulent account linking, your request will be reviewed by your team captain or league staff based on how well your registered name matches the player name.
+  </div>
+  
+  <!-- Skip Link Section - MOVED TO TOP -->
+  <div class="skip-link-section" style="margin-top: 0; margin-bottom: 2rem; padding-top: 0; padding-bottom: 1.5rem; border-top: none; border-bottom: 2px solid var(--border-color);">
+    <p style="font-size: 15px; margin-bottom: 1rem;">
+      <strong>Not a player?</strong> You can browse stats and follow teams without linking a player account.
+    </p>
+    <button class="btn-skip" onclick="showSkipConfirmation()">
+      Skip Player Linking →
+    </button>
+  </div>
+  
+  <!-- Suggested Player Highlight Box -->
+  <div id="suggestedPlayerBox" style="display: none;">
+    <div class="suggested-player-highlight" onclick="selectSuggestedPlayer()">
+      <h4>💡 We found a match for you!</h4>
+      <div class="player-info">
+        <div>
+          <div class="player-name-large" id="suggestedPlayerNameLarge"></div>
+          <div class="player-stats-large" id="suggestedPlayerStatsLarge"></div>
+        </div>
+        <span class="confidence-badge" id="confidenceBadge"></span>
+      </div>
+      <div class="suggested-actions">
+        <button class="btn-yes" onclick="event.stopPropagation(); selectSuggestedPlayer()">
+          ✓ Yes, that's me!
+        </button>
+        <button class="btn-no" onclick="event.stopPropagation(); dismissSuggestion()">
+          ✗ Not me, show all players
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="approvalInfoAlert" class="alert alert-warning" style="display: none;">
+    <strong>ℹ️ Approval Required:</strong> 
+    <span id="approvalInfoText"></span>
+  </div>
+  
+  <input 
+    type="text" 
+    id="searchBox" 
+    class="search-box" 
+    placeholder="🔍 Search for your name..."
+  >
+  
+  <!-- Confirm button at the top -->
+  <button id="confirmBtn" class="btn btn-primary" disabled onclick="confirmLink()" style="margin-bottom: 2rem;">
+    <span>Submit Link Request</span>
+  </button>
+  
+  <div id="playersContainer">
+    <!-- Players will be loaded here -->
+  </div>
+  
+
+</div>
+    </div>
+  </div>
+  
+  <script type="module">
+    import { 
+      getCurrentUser, 
+      onAuthChange, 
+      getUserProfile,
+	  updateUserProfile,	  
+      logoutUser,
+      requestPlayerLink,
+      cancelPlayerLinkRequest,
+      requestPlayerUnlink,
+      processPlayerLinkRequest
+    } from './firebase-auth.js';
+    import { getAllPlayerStatsOptimized } from './firebase-data.js';
+    
+    let currentUser = null;
+    let userProfile = null;
+    let selectedPlayer = null;
+    let allPlayers = [];
+    let pendingRequestId = null;
+    
+	// Add these variables at the top with other declarations
+	let suggestedPlayer = null;
+	let userAuthMethod = 'unknown'; // 'google' or 'email'
+	
+    // Helper function to check if profile setup is complete
+    function isProfileSetupComplete(profileData) {
+      if (!profileData) return false;
+      
+      const progress = profileData.profileSetupProgress || {};
+      
+      // Step 1: Player Info
+      const step1Done = !!(profileData.position || profileData.primaryPosition || 
+                           (profileData.bats && profileData.throws)) || progress.playerInfoDismissed;
+      // Step 2: App Install
+      const step2Done = progress.appInstallComplete || progress.appInstallDismissed;
+      // Step 3: Notifications - check for actual FCM tokens, not just the flag
+      const step3Done = (profileData.fcmTokens && profileData.fcmTokens.length > 0) || progress.notificationsDismissed;
+      // Step 4: Directory
+      const step4Done = profileData.directoryOptIn === true || progress.directoryDismissed;
+      
+      return step1Done && step2Done && step3Done && step4Done;
+    }
+	
+	
+    // Initialize
+    onAuthChange(async (user) => {
+      currentUser = user;
+      
+      if (user) {
+        await handleUserLoggedIn(user);
+      } else {
+        handleUserLoggedOut();
+      }
+    });
+    
+async function handleUserLoggedIn(user) {
+  console.log('✓ User logged in:', user.email);
+  
+  // Detect authentication method
+  const providerData = user.providerData[0];
+  userAuthMethod = providerData?.providerId === 'google.com' ? 'google' : 'email';
+  console.log('Auth method:', userAuthMethod);
+  
+  // Check email verification for email/password users
+  if (userAuthMethod === 'email' && !user.emailVerified) {
+    console.log('⚠️ User email not verified');
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('notLoggedIn').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    
+    // Show user info
+    document.getElementById('userName').textContent = user.displayName || 'User';
+    document.getElementById('userEmail').textContent = user.email;
+    document.getElementById('userAvatar').src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.email);
+    
+    // Show verification banner and hide everything else
+    document.getElementById('verificationBanner').style.display = 'block';
+    document.getElementById('alreadyLinkedSection').style.display = 'none';
+    document.getElementById('pendingRequestSection').style.display = 'none';
+    document.getElementById('selectionSection').style.display = 'none';
+    return; // Stop here - don't allow linking
+  }
+  
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('notLoggedIn').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+  
+  // Display user info
+  document.getElementById('userName').textContent = user.displayName || 'Google User';
+  document.getElementById('userEmail').textContent = user.email;
+  document.getElementById('userAvatar').src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.email);
+  
+  // Check if already linked or has pending request
+  try {
+    const profile = await getUserProfile(user.uid);
+    if (profile.success && profile.data) {
+      userProfile = profile.data;
+      
+      // Check for already linked player
+      if (profile.data.linkedPlayer) {
+        console.log('✓ User already linked to:', profile.data.linkedPlayer);
+        showAlreadyLinked(profile.data);
+        return;
+      }
+      
+      // Check for pending link requests
+      const pendingRequests = profile.data.playerLinkRequests || [];
+      const activePending = pendingRequests.find(r => r.status === 'pending');
+      
+      if (activePending) {
+        console.log('⏳ User has pending request:', activePending);
+        showPendingRequest(activePending);
+        return;
+      }
+    }
+    
+    // No link and no pending request, show selection
+    console.log('→ User not linked, showing selection');
+    await showPlayerSelection();
+    
+  } catch (error) {
+    console.error('Error checking profile:', error);
+    await showPlayerSelection();
+  }
+}
+    
+    function handleUserLoggedOut() {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('notLoggedIn').style.display = 'block';
+      document.getElementById('mainContent').style.display = 'none';
+    }
+    
+    function showAlreadyLinked(profileData) {
+      document.getElementById('alreadyLinkedSection').style.display = 'block';
+      document.getElementById('pendingRequestSection').style.display = 'none';
+      document.getElementById('selectionSection').style.display = 'none';
+      document.getElementById('linkedPlayerName').textContent = profileData.linkedPlayer || 'Unknown';
+      document.getElementById('linkedTeamName').textContent = profileData.linkedTeam || 'Unknown';
+      
+      // Check if profile setup is complete and update button accordingly
+      const profileBtn = document.getElementById('profileButton');
+      if (isProfileSetupComplete(profileData)) {
+        profileBtn.innerHTML = '<span>Go to Profile Page →</span>';
+        profileBtn.onclick = () => window.location.href = 'profile.html';
+      } else {
+        profileBtn.innerHTML = '<span>Continue Profile Setup →</span>';
+        profileBtn.onclick = () => window.location.href = 'profile-setup-guide.html';
+      }
+    }
+    
+    function showPendingRequest(request) {
+      document.getElementById('pendingRequestSection').style.display = 'block';
+      document.getElementById('alreadyLinkedSection').style.display = 'none';
+      document.getElementById('selectionSection').style.display = 'none';
+      
+      document.getElementById('pendingPlayerName').textContent = request.playerName || 'Unknown';
+      document.getElementById('pendingTeamName').textContent = request.teamId || 'Unknown';
+      
+      const requestDate = request.requestedAt?.seconds 
+        ? new Date(request.requestedAt.seconds * 1000).toLocaleString()
+        : 'Unknown';
+      document.getElementById('pendingRequestDate').textContent = requestDate;
+      
+      // Set status text based on approval level
+      const statusElement = document.getElementById('pendingRequestStatus');
+      if (request.approvalLevel === 'auto') {
+        statusElement.textContent = '✅ Auto-Approved - Processing';
+        statusElement.style.background = '#d1fae5';
+        statusElement.style.color = '#065f46';
+      } else if (request.approvalLevel === 'captain') {
+        statusElement.textContent = '⏳ Awaiting Captain Approval';
+      } else {
+        statusElement.textContent = '⏳ Awaiting League Staff Approval';
+      }
+      
+      pendingRequestId = request.requestId;
+      
+      // Process auto-approve if applicable
+      if (request.approvalLevel === 'auto') {
+        processAutoApproval(request.requestId);
+      }
+    }
+    
+    async function processAutoApproval(requestId) {
+      try {
+        console.log('Processing auto-approval for request:', requestId);
+        const result = await processPlayerLinkRequest(requestId);
+        
+        if (result.success) {
+          console.log('✅ Auto-approval processed');
+          // Redirect to profile setup guide
+          setTimeout(() => {
+            window.location.href = 'profile-setup-guide.html';
+          }, 2000);
+        }
+      } catch (error) {
+        console.error('Error processing auto-approval:', error);
+      }
+    }
+    
+async function showPlayerSelection() {
+  document.getElementById('alreadyLinkedSection').style.display = 'none';
+  document.getElementById('pendingRequestSection').style.display = 'none';
+  document.getElementById('selectionSection').style.display = 'block';
+  
+  // Show security notice for email/password users
+  if (userAuthMethod === 'email') {
+    document.getElementById('securityNotice').style.display = 'block';
+  }
+  
+  // Load all players
+  try {
+    console.log('Loading all players...');
+    allPlayers = await getAllPlayerStatsOptimized();
+    console.log(`✓ Loaded ${allPlayers.length} players`);
+    
+    // Group by current team
+    const playersByTeam = groupPlayersByTeam(allPlayers);
+    
+    // Try to find matching player
+    suggestedPlayer = findMatchingPlayer(currentUser.displayName, allPlayers);
+    if (suggestedPlayer) {
+      console.log('✓ Found suggested player:', suggestedPlayer.name);
+      showSuggestedPlayerBox(suggestedPlayer);
+    }
+    
+    renderPlayers(playersByTeam, suggestedPlayer);
+    setupSearch();
+    
+  } catch (error) {
+    console.error('Error loading players:', error);
+    document.getElementById('playersContainer').innerHTML = 
+      '<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>Error loading players. Please refresh the page.</p></div>';
+  }
+}
+
+// NEW FUNCTION: Show suggested player in highlight box
+function showSuggestedPlayerBox(player) {
+  const box = document.getElementById('suggestedPlayerBox');
+  const nameLarge = document.getElementById('suggestedPlayerNameLarge');
+  const statsLarge = document.getElementById('suggestedPlayerStatsLarge');
+  const badge = document.getElementById('confidenceBadge');
+  
+  nameLarge.textContent = player.name || 'Unknown Player';
+  
+  const careerGames = player.career?.games || 0;
+  const careerBA = player.career?.battingAverage 
+    ? player.career.battingAverage.toFixed(3) 
+    : '0.000';
+  statsLarge.textContent = `${player.currentTeam} • ${careerGames} games • BA: ${careerBA}`;
+  
+  // Calculate confidence
+  const similarity = calculateNameSimilarity(currentUser.displayName, player.name);
+  if (similarity >= 0.9) {
+    badge.textContent = '✓ High Confidence Match';
+    badge.style.background = '#10b981';
+    badge.style.color = 'white';
+  } else if (similarity >= 0.6) {
+    badge.textContent = '~ Likely Match';
+    badge.style.background = '#fbbf24';
+    badge.style.color = '#78350f';
+  } else {
+    badge.textContent = '? Possible Match';
+    badge.style.background = '#e5e7eb';
+    badge.style.color = '#1f2937';
+  }
+  
+  box.style.display = 'block';
+}
+
+// NEW FUNCTION: Select suggested player
+function selectSuggestedPlayer() {
+  if (!suggestedPlayer) return;
+  
+  // Calculate similarity to determine flow
+  const similarity = calculateNameSimilarity(currentUser.displayName, suggestedPlayer.name);
+  
+  // Hide the suggestion box
+  document.getElementById('suggestedPlayerBox').style.display = 'none';
+  
+  // Find the player item in the list and select it
+  const playerItem = document.querySelector(`[data-player-id="${suggestedPlayer.id}"]`);
+  if (playerItem) {
+    selectPlayer(playerItem, suggestedPlayer);
+  }
+  
+  // High-confidence match (90%+): Auto-submit immediately
+  if (similarity >= 0.9) {
+    // Small delay for UI feedback, then auto-submit
+    setTimeout(() => {
+      confirmLink();
+    }, 300);
+    return;
+  }
+  
+  // Lower confidence: Scroll to confirm button and highlight it
+  const confirmBtn = document.getElementById('confirmBtn');
+  confirmBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  
+  // Pulse animation on the button to draw attention
+  confirmBtn.style.animation = 'buttonPulse 0.6s ease 2';
+  setTimeout(() => {
+    confirmBtn.style.animation = '';
+  }, 1200);
+  
+  // Show approval info
+  showApprovalInfo(suggestedPlayer);
+}
+
+// NEW FUNCTION: Dismiss suggestion
+function dismissSuggestion() {
+  document.getElementById('suggestedPlayerBox').style.display = 'none';
+}
+
+// NEW FUNCTION: Skip linking
+// NEW FUNCTION: Skip linking
+async function skipLinking() {
+  if (!confirm('Are you sure you want to skip player linking?\n\nYou can link a player later from your profile page, but you won\'t have access to player-specific features until you do.')) {
+    return;
+  }
+  
+  try {
+    console.log('🎯 Skipping player linking for user:', currentUser.uid);
+    
+    // Import serverTimestamp at the start
+    const { doc, setDoc, getDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const { db } = await import('./firebase-data.js');
+    
+    // Make sure user profile exists first
+    const userRef = doc(db, 'users', currentUser.uid);
+    const userDoc = await getDoc(userRef);
+    
+    if (!userDoc.exists()) {
+      console.log('📝 Creating initial user profile...');
+      // Create a basic profile if it doesn't exist
+      await setDoc(userRef, {
+        email: currentUser.email,
+        displayName: currentUser.displayName,
+        photoURL: currentUser.photoURL,
+        createdAt: serverTimestamp(),
+        emailVerified: currentUser.emailVerified,
+        userRole: 'fan',
+        linkedPlayer: null,
+        linkedTeam: null,
+        linkingSkipped: true,
+        linkingSkippedAt: serverTimestamp(),
+        favoriteTeams: [],
+        favoritePlayers: [],
+        preferences: {
+          emailGameReminders: true,
+          emailScoreUpdates: false,
+          favoriteTeamNotifications: true,
+          favoritePlayerAlerts: true,
+          publicFavorites: false
+        },
+        updatedAt: serverTimestamp()
+      });
+      
+      console.log('✅ User profile created with skip flag');
+    } else {
+      // Profile exists, just update it with merge
+      console.log('📝 Updating existing profile with skip flag...');
+      await setDoc(userRef, {
+        linkingSkipped: true,
+        linkingSkippedAt: serverTimestamp(),
+        userRole: 'fan',
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      
+      console.log('✅ User profile updated with skip flag');
+    }
+    
+    // Redirect to fan profile
+    console.log('➡️ Redirecting to fan profile...');
+    window.location.href = 'profile-fan.html';
+    
+  } catch (error) {
+    console.error('❌ Error skipping linking:', error);
+    alert('Error saving preferences. Please try again.');
+  }
+}
+    
+    function showApprovalInfo(player) {
+      const similarity = calculateNameSimilarity(currentUser.displayName, player.name);
+      const approvalAlert = document.getElementById('approvalInfoAlert');
+      const approvalText = document.getElementById('approvalInfoText');
+      
+      if (similarity >= 0.9) {
+        approvalText.textContent = 'High name match detected! Your request will be auto-approved instantly.';
+        approvalAlert.style.background = '#d1fae5';
+        approvalAlert.style.borderColor = '#10b981';
+        approvalAlert.style.color = '#065f46';
+      } else if (similarity >= 0.6) {
+        approvalText.textContent = 'Your request will require approval from your team captain.';
+      } else {
+        approvalText.textContent = 'Low name match. Your request will require approval from league staff.';
+      }
+      
+      approvalAlert.style.display = 'block';
+    }
+    
+    function groupPlayersByTeam(players) {
+      const teams = {};
+      
+      players.forEach(player => {
+        const team = player.currentTeam || 'Unknown';
+        if (!teams[team]) {
+          teams[team] = [];
+        }
+        teams[team].push(player);
+      });
+      
+      // Sort players within each team by name
+      Object.keys(teams).forEach(team => {
+        teams[team].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      });
+      
+      return teams;
+    }
+    
+    function calculateNameSimilarity(name1, name2) {
+      if (!name1 || !name2) return 0;
+      
+      const clean1 = name1.toLowerCase().trim();
+      const clean2 = name2.toLowerCase().trim();
+      
+      if (clean1 === clean2) return 1.0;
+      
+      const parts1 = clean1.split(/\s+/);
+      const parts2 = clean2.split(/\s+/);
+      
+      const shorter = parts1.length <= parts2.length ? parts1 : parts2;
+      const longer = parts1.length > parts2.length ? parts1 : parts2;
+      
+      let matches = 0;
+      shorter.forEach(part => {
+        if (longer.some(p => p.includes(part) || part.includes(p))) {
+          matches++;
+        }
+      });
+      
+      return matches / Math.max(parts1.length, parts2.length);
+    }
+    
+    function findMatchingPlayer(googleName, players) {
+      if (!googleName || googleName.trim() === '') {
+        return null;
+      }
+      
+      const nameLower = googleName.toLowerCase();
+      const nameParts = nameLower.split(' ');
+      
+      // Try exact match first
+      let match = players.find(p =>
+        p.name && p.name.toLowerCase() === nameLower
+      );
+      
+      if (match) return match;
+      
+      // Try partial match (at least 2 matching parts)
+      if (nameParts.length >= 2) {
+        match = players.find(p => {
+          if (!p.name) return false;
+          const playerNameLower = p.name.toLowerCase();
+          const matchCount = nameParts.filter(part => playerNameLower.includes(part)).length;
+          return matchCount >= 2;
+        });
+      }
+      
+      return match;
+    }
+    
+    function renderPlayers(playersByTeam, suggestedPlayer) {
+      const container = document.getElementById('playersContainer');
+      container.innerHTML = '';
+      
+      const teams = Object.keys(playersByTeam).sort();
+      
+      teams.forEach(team => {
+        const teamSection = document.createElement('div');
+        teamSection.className = 'team-section';
+        
+        const teamHeader = document.createElement('div');
+        teamHeader.className = 'team-header';
+        teamHeader.innerHTML = `
+          <span>${team}</span>
+          <span class="team-count">${playersByTeam[team].length} players</span>
+        `;
+        
+        const playerList = document.createElement('div');
+        playerList.className = 'player-list';
+        
+        playersByTeam[team].forEach(player => {
+          const playerItem = createPlayerItem(player, suggestedPlayer);
+          playerList.appendChild(playerItem);
+        });
+        
+        teamSection.appendChild(teamHeader);
+        teamSection.appendChild(playerList);
+        container.appendChild(teamSection);
+      });
+    }
+    
+    function createPlayerItem(player, suggestedPlayer) {
+      const item = document.createElement('div');
+      item.className = 'player-item';
+      
+      if (suggestedPlayer && player.id === suggestedPlayer.id) {
+        item.classList.add('suggested');
+      }
+      
+      item.dataset.playerId = player.id;
+      item.dataset.playerName = player.name;
+      item.dataset.team = player.currentTeam;
+      
+      const info = document.createElement('div');
+      
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'player-name';
+      nameDiv.textContent = player.name || 'Unknown Player';
+      
+      const statsDiv = document.createElement('div');
+      statsDiv.className = 'player-stats';
+      
+      const careerGames = player.career?.games || 0;
+      const careerBA = player.career?.battingAverage 
+        ? player.career.battingAverage.toFixed(3) 
+        : '0.000';
+      
+      statsDiv.textContent = `${careerGames} career games • BA: ${careerBA}`;
+      
+      info.appendChild(nameDiv);
+      info.appendChild(statsDiv);
+      item.appendChild(info);
+      
+      if (suggestedPlayer && player.id === suggestedPlayer.id) {
+        const badge = document.createElement('span');
+        badge.className = 'suggestion-badge';
+        badge.textContent = 'Suggested';
+        item.appendChild(badge);
+      }
+      
+      item.addEventListener('click', () => selectPlayer(item, player));
+      
+      return item;
+    }
+    
+    function selectPlayer(element, player) {
+      // Remove previous selection
+      document.querySelectorAll('.player-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      
+      // Select this one
+      element.classList.add('selected');
+      selectedPlayer = player;
+      
+      // Enable confirm button
+      document.getElementById('confirmBtn').disabled = false;
+      
+      // Update approval info for this player
+      showApprovalInfo(player);
+      
+      console.log('Selected player:', player.name);
+    }
+    
+    function setupSearch() {
+      const searchBox = document.getElementById('searchBox');
+      searchBox.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        
+        document.querySelectorAll('.player-item').forEach(item => {
+          const playerName = item.dataset.playerName.toLowerCase();
+          if (playerName.includes(term)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+        
+        // Hide empty team sections
+        document.querySelectorAll('.team-section').forEach(section => {
+          const visiblePlayers = section.querySelectorAll('.player-item[style="display: flex;"]');
+          section.style.display = visiblePlayers.length > 0 ? 'block' : 'none';
+        });
+      });
+    }
+    
+    async function confirmLink() {
+      if (!selectedPlayer || !currentUser) return;
+      
+      const confirmBtn = document.getElementById('confirmBtn');
+      const btnText = confirmBtn.querySelector('span');
+      confirmBtn.disabled = true;
+      btnText.textContent = 'Submitting Request...';
+      
+      try {
+        console.log('Requesting link to player:', selectedPlayer.name);
+        
+        const result = await requestPlayerLink(
+          currentUser.uid,
+          selectedPlayer.name,
+          selectedPlayer.currentTeam,
+          'Linking my player account'
+        );
+        
+        if (result.success) {
+          console.log('✅ Request submitted successfully');
+          
+          // Check if auto-approved
+          const similarity = calculateNameSimilarity(currentUser.displayName, selectedPlayer.name);
+          
+          if (similarity >= 0.9) {
+            alert('✅ Perfect name match! Your account is being linked automatically...');
+            // Wait a moment for the approval to process, then reload
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          } else if (similarity >= 0.6) {
+            alert('✅ Link request submitted!\n\nYour team captain will review and approve your request. You\'ll receive an email notification once approved.');
+            window.location.reload();
+          } else {
+            alert('✅ Link request submitted!\n\nDue to name mismatch, this request requires league staff approval. You\'ll receive an email notification once approved.');
+            window.location.reload();
+          }
+        } else {
+          throw new Error(result.message || 'Request failed');
+        }
+        
+      } catch (error) {
+        console.error('Error requesting link:', error);
+        alert(`❌ ${error.message || 'Failed to submit request. Please try again.'}`);
+        confirmBtn.disabled = false;
+        btnText.textContent = 'Submit Link Request';
+      }
+    }
+    
+    async function cancelPendingRequest() {
+      if (!confirm('Are you sure you want to cancel your pending link request?')) {
+        return;
+      }
+      
+      try {
+        console.log('Cancelling pending request:', pendingRequestId);
+        const result = await cancelPlayerLinkRequest(currentUser.uid, pendingRequestId);
+        
+        if (result.success) {
+          alert('✅ Request cancelled successfully.');
+          window.location.reload();
+        } else {
+          throw new Error(result.message || 'Failed to cancel');
+        }
+      } catch (error) {
+        console.error('Error cancelling request:', error);
+        alert('❌ Failed to cancel request. Please try again.');
+      }
+    }
+    
+    async function unlinkPlayer() {
+      if (!confirm('Are you sure you want to change your linked player?\n\nThis will require approval if you have game statistics.')) {
+        return;
+      }
+      
+      try {
+        console.log('Requesting player unlink...');
+        const result = await requestPlayerUnlink(currentUser.uid, 'Changing linked player');
+        
+        if (result.success) {
+          if (result.message.includes('unlinked successfully')) {
+            alert('✅ Player unlinked successfully. You can now select a new player.');
+          } else {
+            alert('✅ Unlink request submitted.\n\nYour captain or league staff will review this request.');
+          }
+          window.location.reload();
+        } else {
+          throw new Error(result.message || 'Unlink failed');
+        }
+      } catch (error) {
+        console.error('Error unlinking:', error);
+        alert('❌ Failed to unlink. Please try again.');
+      }
+    }
+    
+    async function handleLogout() {
+      if (!confirm('Are you sure you want to sign out?')) {
+        return;
+      }
+      
+      try {
+        await logoutUser();
+        window.location.href = 'signin.html';
+      } catch (error) {
+        console.error('Error signing out:', error);
+        alert('Error signing out. Please try again.');
+      }
+    }
+    
+	const style = document.createElement('style');
+style.textContent = `
+  @keyframes flash {
+    0%, 100% { background: white; }
+    50% { background: rgba(255, 215, 0, 0.3); }
+  }
+  @keyframes buttonPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+    50% { transform: scale(1.05); box-shadow: 0 8px 24px rgba(45, 80, 22, 0.4); }
+  }
+`;
+document.head.appendChild(style);
+	
+	
+    // Make functions available globally
+    window.confirmLink = confirmLink;
+    window.cancelPendingRequest = cancelPendingRequest;
+    window.unlinkPlayer = unlinkPlayer;
+    window.handleLogout = handleLogout;
+	window.selectSuggestedPlayer = selectSuggestedPlayer;
+	window.dismissSuggestion = dismissSuggestion;
+	window.skipLinking = skipLinking;
+    window.showSkipConfirmation = showSkipConfirmation;
+    window.closeSkipModal = closeSkipModal;
+    
+    // Show skip confirmation modal
+    function showSkipConfirmation() {
+      document.getElementById('skipConfirmModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    // Close skip confirmation modal
+    function closeSkipModal() {
+      document.getElementById('skipConfirmModal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  </script>
+  
+  <!-- Skip Confirmation Modal -->
+  <div class="modal-overlay" id="skipConfirmModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>⚠️ Are you sure?</h3>
+      </div>
+      <div class="modal-body">
+        <div class="account-comparison">
+          <div class="account-type fan">
+            <div class="account-type-header">
+              🏟️ Fan Account
+            </div>
+            <ul>
+              <li>View stats and standings</li>
+              <li>Follow favorite teams & players</li>
+              <li>Receive score updates</li>
+            </ul>
+          </div>
+          
+          <div class="account-type player">
+            <div class="account-type-header">
+              ⚾ Player Account (includes all above, plus...)
+            </div>
+            <ul>
+              <li>RSVP for games</li>
+              <li>Game reminders & lineup notifications</li>
+              <li>Your personal stats on your profile</li>
+              <li>Join the Aces Directory</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button class="modal-btn modal-btn-player" onclick="closeSkipModal()">
+            ⚾ I'm a Player – Go Back
+          </button>
+          <button class="modal-btn modal-btn-fan" onclick="closeSkipModal(); skipLinking();">
+            🏟️ Continue as Fan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="mobile-enhancements.js"></script>
+  <script src="theme-toggle.js"></script>
+</body>
+</html>
