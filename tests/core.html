@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Core check</title>
+<script type="module" src="../js/core/preview-guard.js"></script>
+<style>
+  body { margin: 0; font: 15px/1.5 Inter, system-ui, -apple-system, sans-serif; background: var(--bg-primary, #f7fafc); color: var(--text-dark, #1f2937); }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 96px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 8px; }
+  .card { background: var(--card-bg, #fff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px 16px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  button { min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--border-color, #cbd5e1); background: var(--card-bg, #fff); color: inherit; font: inherit; cursor: pointer; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  td { padding: 4px 8px; border-top: 1px solid var(--border-color, #e2e8f0); vertical-align: top; }
+  td:first-child { white-space: nowrap; color: var(--text-light, #64748b); }
+  code { font-size: 12px; }
+  .pass { color: #2d5016; font-weight: 700; }
+  .fail { color: #b91c1c; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="page-container">
+<div class="filters-nav"></div>
+<main>
+  <h1>Core check</h1>
+  <p>Exercises js/core and js/ui on this host, with the shared nav loaded alongside. Nothing here writes to Firestore except the usual signed-in visit tracking on your users doc.</p>
+
+  <div data-page-loading class="card">Loading auth and site config...</div>
+
+  <div data-page-content hidden>
+    <h2>Site config</h2>
+    <div class="card"><table id="config"></table></div>
+
+    <h2>Auth and roles</h2>
+    <div class="card"><table id="auth"></table></div>
+
+    <h2>Format checks</h2>
+    <div class="card"><p id="formatSummary"></p><table id="format"></table></div>
+
+    <h2>Toasts</h2>
+    <div class="row">
+      <button type="button" data-action="toast" data-type="success">Success</button>
+      <button type="button" data-action="toast" data-type="error">Error</button>
+      <button type="button" data-action="toast" data-type="warning">Warning</button>
+      <button type="button" data-action="toast" data-type="info">Info with action</button>
+    </div>
+
+    <h2>Dialogs</h2>
+    <div class="row">
+      <button type="button" data-action="alert">Alert</button>
+      <button type="button" data-action="confirm">Confirm</button>
+      <button type="button" data-action="danger">Danger confirm</button>
+      <button type="button" data-action="prompt">Prompt</button>
+    </div>
+
+    <h2>States</h2>
+    <div class="row">
+      <button type="button" data-action="throw">Throw in an action</button>
+      <button type="button" data-action="pageError">Show page error</button>
+    </div>
+  </div>
+</main>
+</div>
+
+<script type="module">
+  import { initPage, pageReady, bindActions, showPageError, SITE_ROOT } from '../js/core/app.js';
+  import { IS_LIVE, IS_PREVIEW, SANDBOX_ACTIVE, SDK_VERSION } from '../js/core/firebase.js';
+  import {
+    hasRole, isAdmin, isLeagueStaff, isUserCaptain, getUserTeamIds, getCaptainTeams, getPrimaryDisplayRole, onAuthChange
+  } from '../js/core/auth.js';
+  import { formatSeasonLabel } from '../js/core/config.js';
+  import * as fmt from '../js/ui/format.js';
+  import { showToast, toast } from '../js/ui/toast.js';
+  import { alertModal, confirmModal, promptModal } from '../js/ui/modal.js';
+
+  const rows = (el, pairs) => {
+    el.replaceChildren(...pairs.map(([k, v]) => {
+      const tr = document.createElement('tr');
+      const a = document.createElement('td'); a.textContent = k;
+      const b = document.createElement('td'); b.textContent = typeof v === 'string' ? v : JSON.stringify(v);
+      tr.append(a, b);
+      return tr;
+    }));
+  };
+
+  try {
+    const t0 = performance.now();
+    const { user, profile, config } = await initPage({ title: 'Core check' });
+    const ms = Math.round(performance.now() - t0);
+
+    rows(document.getElementById('config'), [
+      ['host', `${location.host} (live: ${IS_LIVE}, preview: ${IS_PREVIEW}, sandbox: ${SANDBOX_ACTIVE})`],
+      ['site root', SITE_ROOT],
+      ['SDK', SDK_VERSION],
+      ['current season', `${config.currentSeasonId} (${formatSeasonLabel(config.currentSeasonId)})`],
+      ['previous season', String(config.previousSeasonId)],
+      ['phase', config.phase],
+      ['opening day', String(config.openingDay)],
+      ['source', config.source],
+      ['initPage time', `${ms} ms`]
+    ]);
+
+    const renderAuth = (u, p) => rows(document.getElementById('auth'), [
+      ['user', u ? `${u.displayName || ''} <${u.email}>` : 'signed out'],
+      ['profile', p ? `users/${p.id} loaded` : 'none'],
+      ['display role', getPrimaryDisplayRole(p)],
+      ['isAdmin / isLeagueStaff / isUserCaptain', [isAdmin(p), isLeagueStaff(p), isUserCaptain(p)]],
+      ['hasRole admin / league-staff / captain / team-staff', ['admin', 'league-staff', 'captain', 'team-staff'].map((r) => hasRole(p, r))],
+      ['team IDs / captain of', [getUserTeamIds(p), getCaptainTeams(p)]],
+      ['window.auth set for legacy nav', String(window.auth?.app?.name === '[DEFAULT]')]
+    ]);
+    renderAuth(user, profile);
+    onAuthChange(renderAuth);
+
+    const checks = [
+      ['escapeHtml', fmt.escapeHtml('<b>"Tom" & O\'Neil</b>'), '&lt;b&gt;&quot;Tom&quot; &amp; O&#39;Neil&lt;/b&gt;'],
+      ['formatPlayerName', fmt.formatPlayerName('john_mcdonald'), 'John McDonald'],
+      ['formatTeamName', fmt.formatTeamName('army'), 'Army'],
+      ['fmtAvg', fmt.fmtAvg(0.3456), '.346'],
+      ['fmtAvg 1', fmt.fmtAvg(1), '1.000'],
+      ['avgFrom 0/0', fmt.avgFrom(0, 0), '.000'],
+      ['fmtRate', fmt.fmtRate(2.5), '2.50'],
+      ['formatIP 5.6667', fmt.formatIP(5.6667), '5.2'],
+      ['ordinal 22', fmt.ordinal(22), '22nd'],
+      ['formatSigned', fmt.formatSigned(4), '+4'],
+      ['playerUrl', fmt.playerUrl({ id: 'steve_giordano' }), 'player.html?id=steve_giordano'],
+      ['teamUrl', fmt.teamUrl('Teal', { season: '2026-fall' }), 'team.html?team=Teal&season=2026-fall']
+    ];
+    const failed = checks.filter(([, got, want]) => got !== want).length;
+    const summary = document.getElementById('formatSummary');
+    summary.className = failed ? 'fail' : 'pass';
+    summary.textContent = failed ? `${failed} of ${checks.length} failed` : `All ${checks.length} passed`;
+    rows(document.getElementById('format'), checks.map(([name, got, want]) => [name, got === want ? got : `${got}  (expected ${want})`]));
+
+    bindActions({
+      toast(el) {
+        const type = el.dataset.type;
+        if (type === 'info') toast.info('New version available', { action: { label: 'Refresh', onClick: () => showToast('Refresh clicked', 'success') } });
+        else showToast(`This is a ${type} toast <b>not bold</b>`, type);
+      },
+      async alert() { await alertModal('Stats submitted for Teal vs Gold.', { title: 'Done' }); showToast('Alert closed', 'info'); },
+      async confirm() { showToast(`confirm -> ${await confirmModal('Save these changes?')}`, 'info'); },
+      async danger() { showToast(`danger -> ${await confirmModal('Delete this game? This cannot be undone.', { title: 'Delete game', confirmLabel: 'Delete', danger: true })}`, 'info'); },
+      async prompt() { showToast(`prompt -> ${JSON.stringify(await promptModal('Reason for the change', { required: true, placeholder: 'Required' }))}`, 'info'); },
+      throw() { throw new Error('Test error from a data-action handler'); },
+      pageError() { showPageError(new Error('Test page error')); }
+    });
+
+    pageReady();
+  } catch (err) {
+    showPageError(err);
+  }
+</script>
+</body>
+</html>
