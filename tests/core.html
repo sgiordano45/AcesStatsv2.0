@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Core check</title>
 <script type="module" src="../js/core/preview-guard.js"></script>
+<link rel="stylesheet" href="../mobile-enhancements.css">
+<link rel="stylesheet" href="../nav-styles.css">
+<link rel="stylesheet" href="../dark-mode.css">
 <style>
   body { margin: 0; font: 15px/1.5 Inter, system-ui, -apple-system, sans-serif; background: var(--bg-primary, #f7fafc); color: var(--text-dark, #1f2937); }
   main { max-width: 760px; margin: 0 auto; padding: 24px 16px 96px; }
@@ -41,6 +44,7 @@
     <div class="card"><p id="formatSummary"></p><table id="format"></table></div>
 
     <h2>Toasts</h2>
+    <p>Expected: the tags in the message show as plain text. That's the escaping working.</p>
     <div class="row">
       <button type="button" data-action="toast" data-type="success">Success</button>
       <button type="button" data-action="toast" data-type="error">Error</button>
@@ -57,6 +61,7 @@
     </div>
 
     <h2>States</h2>
+    <p>Expected: Throw shows a red "That didn't work" toast (the error safety net). Page error replaces the page with a "Something went wrong" card; reload to get the page back.</p>
     <div class="row">
       <button type="button" data-action="throw">Throw in an action</button>
       <button type="button" data-action="pageError">Show page error</button>
@@ -139,7 +144,7 @@
       toast(el) {
         const type = el.dataset.type;
         if (type === 'info') toast.info('New version available', { action: { label: 'Refresh', onClick: () => showToast('Refresh clicked', 'success') } });
-        else showToast(`This is a ${type} toast <b>not bold</b>`, type);
+        else showToast(`${type} toast. These tags should show as text, not bold: <b>bold?</b>`, type);
       },
       async alert() { await alertModal('Stats submitted for Teal vs Gold.', { title: 'Done' }); showToast('Alert closed', 'info'); },
       async confirm() { showToast(`confirm -> ${await confirmModal('Save these changes?')}`, 'info'); },
