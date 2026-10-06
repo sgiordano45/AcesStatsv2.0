@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title id="pageTitle">Player Stats</title>
+<title id="pageTitle">Player Stats - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2527,7 +2527,7 @@
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -3713,13 +3713,18 @@
     db
   } from './firebase-data.js';
   
-  import { auth, getUserProfile } from './firebase-auth.js';
+  import { getUserProfile } from './firebase-auth.js';
   import { uploadPlayerPhoto, deleteOldPlayerPhoto } from './firebase-storage.js';
   import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  // Core modules after firebase-data.js, so js/core/firebase.js reuses the
+  // app firebase-config.js created.
+  import { initPage, pageReady, showPageState, showPageError, onAuthChange, siteUrl } from './js/core/app.js';
+  import { isAdmin } from './js/core/auth.js';
+  import { capitalize, formatPlayerName } from './js/ui/format.js';
 
   // Track current user and whether they can edit this player's photo
   let currentUser = null;
+  let currentProfile = null;
   let canEditPhoto = false;
   let linkedUserId = null; // The user ID that owns this player page
   
@@ -3757,38 +3762,20 @@
     'Grey': '#757575'
   };
 
-  const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
-
-  function formatPlayerName(name) {
-    if (!name) return "";
-    if (name.includes(' ')) {
-      return name.split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
-    }
-    if (name.includes('_')) {
-      return name.split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
-    }
-    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-  }
-
   const urlParams = new URLSearchParams(window.location.search);
   const playerId = urlParams.get('id');
   const playerName = urlParams.get('name');
 
-  if (!playerId && !playerName) {
-    document.getElementById('loadingOverlay').classList.remove('hidden');
-    document.getElementById('playerName').textContent = 'No player specified';
-    throw new Error('No player identifier in URL');
+  function showPlayerMissing(title, message) {
+    showPageState({
+      title,
+      message,
+      actions: [{ label: 'Browse players', href: siteUrl('players.html'), primary: true }]
+    });
   }
 
   function hideLoadingIndicator() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-      overlay.classList.add('hidden');
-    }
+    pageReady();
     
     document.getElementById('playerHeader').style.display = 'block';
     document.getElementById('statsContainer').style.display = 'block';
@@ -4064,9 +4051,7 @@
       
       if (!resolvedPlayer) {
         console.error('❌ Could not resolve player');
-        hideLoadingIndicator();
-        document.getElementById('playerHeader').style.display = 'flex';
-        document.getElementById('playerName').textContent = `Player "${playerName || playerId}" not found`;
+        showPlayerMissing('Player not found', `We couldn't find a player matching "${playerName || playerId}".`);
         return;
       }
       
@@ -4225,8 +4210,7 @@
       console.log(`🎯 Page loaded in ${(loadEndTime - loadStartTime).toFixed(0)}ms`);
 
     } catch (error) {
-      console.error('❌ Error loading player data:', error);
-      hideLoadingIndicator();
+      showPageError(error);
     }
   }
 
@@ -6304,9 +6288,9 @@
   // ========================================
   
   // Listen for auth state changes
-  onAuthStateChanged(auth, async (user) => {
+  onAuthChange((user, profile) => {
     currentUser = user;
-    console.log('🔐 Auth state changed:', user ? user.uid : 'logged out');
+    currentProfile = profile;
     checkPhotoEditPermission();
   });
   
@@ -6326,15 +6310,8 @@
         canEditPhoto = true;
         console.log('✅ User can edit their own player photo');
       } else {
-        // Check if current user is admin
-        const currentUserDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        if (currentUserDoc.exists()) {
-          const userData = currentUserDoc.data();
-          canEditPhoto = userData.userRole === 'admin' || userData.role === 'admin';
-          if (canEditPhoto) {
-            console.log('✅ Admin can edit any player photo');
-          }
-        }
+        // Admins can edit any player's photo (profile comes from core/auth)
+        canEditPhoto = isAdmin(currentProfile) || currentProfile?.role === 'admin';
       }
       
       if (canEditPhoto) {
@@ -6451,18 +6428,19 @@
   // Initialize photo upload handler when DOM is ready
   setupPhotoUploadHandler();
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadPlayerData);
-  } else {
-    loadPlayerData();
+  async function main() {
+    await initPage({ title: 'Player Stats' });
+    if (!playerId && !playerName) {
+      showPlayerMissing('No player picked', 'Choose a player from the players page.');
+      return;
+    }
+    await loadPlayerData();
   }
 
-</script>
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
+  main().catch((err) => showPageError(err));
+
 </script>
 <script src="mobile-enhancements.js"></script>
 <script src="stat-tooltips.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>
