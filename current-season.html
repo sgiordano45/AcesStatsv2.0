@@ -1599,6 +1599,9 @@
       import { db, collection, getDocs, query, where } from './firebase-config.js';
       import { initPage, pageReady } from './js/core/app.js';
       import { capitalize } from './js/ui/format.js';
+      import { parseGameDate as parseDomainDate, timeSortValue, todayKey } from './js/domain/dates.js';
+      import { computeStandings } from './js/domain/standings.js';
+      import { battingAverage, onBasePct, isQualifiedBatter, isQualifiedPitcher } from './js/domain/stats.js';
 
       function toggleMobileMenu() {
         const menu = document.getElementById('mobileNavMenu');
@@ -1616,6 +1619,7 @@
       });
 
       let allGames = [];
+      let rawSeasonGames = []; // game docs as stored; js/domain/standings.js reads these
       let playerData = [];
       let pitchingData = [];
       const today = new Date();
@@ -1689,6 +1693,8 @@
             console.warn('Could not fetch active streak leaders:', e);
           }
           
+          rawSeasonGames = games || [];
+
           allGames = (games || []).map(g => {
             let dateString = "";
             
@@ -1799,32 +1805,14 @@
         }
       }
 
+      // Dates and times come from js/domain/dates.js. A missing date sorts as
+      // the epoch and a missing time as 9999, as before.
       function parseGameDate(dateStr) {
-        if (!dateStr) return new Date(0);
-        const s = String(dateStr).split('T')[0];
-        // YYYY-MM-DD (ISO / regular season format)
-        const isoParts = s.split('-');
-        if (isoParts.length === 3 && isoParts[0].length === 4) {
-          return new Date(Number(isoParts[0]), Number(isoParts[1]) - 1, Number(isoParts[2]));
-        }
-        // M/D/YYYY or MM/DD/YYYY (toLocaleDateString output from Timestamp dates)
-        const slashParts = s.split('/');
-        if (slashParts.length === 3) {
-          return new Date(Number(slashParts[2]), Number(slashParts[0]) - 1, Number(slashParts[1]));
-        }
-        return new Date(dateStr);
+        return parseDomainDate(dateStr) ?? new Date(0);
       }
 
       function parseTimeMinutes(timeStr) {
-        if (!timeStr) return 9999;
-        const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-        if (!match) return 9999;
-        let hours = parseInt(match[1]);
-        const mins = parseInt(match[2]);
-        const meridiem = match[3].toUpperCase();
-        if (meridiem === 'PM' && hours !== 12) hours += 12;
-        if (meridiem === 'AM' && hours === 12) hours = 0;
-        return hours * 60 + mins;
+        return timeSortValue(timeStr);
       }
 
       function updateSeasonSummary(games) {
@@ -1916,21 +1904,9 @@
                 const teamGames = teamGamesPlayed[p.team] || 0;
                 
                 if (category.field === 'BA') {
-                  const plateAppearances = p.atBats + p.walks;
-                  const minPlateAppearances = teamGames * 2;
-                  return {
-                    ...p,
-                    BA: p.atBats > 0 ? p.hits / p.atBats : 0,
-                    qualified: plateAppearances >= minPlateAppearances
-                  };
+                  return { ...p, BA: battingAverage(p.hits, p.atBats), qualified: isQualifiedBatter(p, teamGames) };
                 } else if (category.field === 'OBP') {
-                  const plateAppearances = p.atBats + p.walks;
-                  const minPlateAppearances = teamGames * 2;
-                  return {
-                    ...p,
-                    OBP: plateAppearances > 0 ? (p.hits + p.walks) / plateAppearances : 0,
-                    qualified: plateAppearances >= minPlateAppearances
-                  };
+                  return { ...p, OBP: onBasePct(p.hits, p.walks, p.atBats), qualified: isQualifiedBatter(p, teamGames) };
                 }
                 return p;
               })
@@ -2053,8 +2029,7 @@
           pitchingCategories.forEach(category => {
             let allLeaders = cleanPitchingData.filter(p => {
               if (category.field === 'ERA') {
-                const minIP = (teamGamesPlayed[p.team] || 0) * 2;
-                return p.IP >= minIP && p.ERA !== "N/A" && !isNaN(p.ERA);
+                return isQualifiedPitcher(p, teamGamesPlayed[p.team] || 0) && p.ERA !== "N/A" && !isNaN(p.ERA);
               }
               return p[category.field] > category.minQualifier;
             });
@@ -2202,277 +2177,21 @@
           return;
         }
 
-        const standings = calculateStandings(regularGames, games);
+        const standings = calculateStandings();
         const html = generateStandingsTable('Regular Season Standings', standings);
         standingsElement.innerHTML = html;
         window.applyTeamColors?.();
       }
 
-      function calculateScheduleStrength(teamName, games, allStandings) {
-        const teamGames = games.filter(game =>
-          (game["home team"] === teamName || game["away team"] === teamName)
-        );
-
-        if (teamGames.length === 0) return 0;
-
-        let totalOpponentWins = 0;
-        let totalOpponentLosses = 0;
-
-        teamGames.forEach(game => {
-          const opponent = game["home team"] === teamName ? game["away team"] : game["home team"];
-          const oppStanding = allStandings.find(team => team.name === opponent);
-          
-          if (oppStanding) {
-            const oppGamesVsTeam = games.filter(g =>
-              (g["home team"] === opponent && g["away team"] === teamName) ||
-              (g["away team"] === opponent && g["home team"] === teamName)
-            );
-
-            let oppWinsExcludingTeam = oppStanding.wins;
-            let oppLossesExcludingTeam = oppStanding.losses;
-
-            oppGamesVsTeam.forEach(g => {
-              if (g.winner === opponent) oppWinsExcludingTeam--;
-              else if (g.winner !== "Tie" && g.winner !== "") oppLossesExcludingTeam--;
-            });
-
-            totalOpponentWins += oppWinsExcludingTeam;
-            totalOpponentLosses += oppLossesExcludingTeam;
-          }
-        });
-
-        const totalOpponentDecidedGames = totalOpponentWins + totalOpponentLosses;
-        return totalOpponentDecidedGames > 0 ? (totalOpponentWins / totalOpponentDecidedGames) : 0;
-      }
-
-      function calculateRemainingScheduleStrength(teamName, games, allStandings) {
-        const remainingGames = games.filter(game => {
-          const gameDate = parseGameDate(game.date);
-          const isFuture = gameDate >= today;
-          const noWinner = !game.winner || game.winner.trim() === "";
-          const isRegularSeason = game.game_type === 'Regular';
-          const teamInvolved = (game["home team"] === teamName || game["away team"] === teamName);
-          
-          return isFuture && noWinner && isRegularSeason && teamInvolved;
-        });
-
-        if (remainingGames.length === 0) return 0;
-
-        let totalOpponentWinPct = 0;
-        let opponentCount = 0;
-
-        remainingGames.forEach(game => {
-          const opponent = game["home team"] === teamName ? game["away team"] : game["home team"];
-          const oppStanding = allStandings.find(team => team.name === opponent);
-          
-          if (oppStanding) {
-            const oppTotalDecided = oppStanding.wins + oppStanding.losses;
-            const oppWinPct = oppTotalDecided > 0 ? (oppStanding.wins / oppTotalDecided) : 0;
-            
-            totalOpponentWinPct += oppWinPct;
-            opponentCount++;
-          }
-        });
-
-        return opponentCount > 0 ? (totalOpponentWinPct / opponentCount) : 0;
-      }
-
-      function calculateStandings(games, allSeasonGames = games) {
-        const teamStats = {};
-
-        games.forEach(game => {
-          const homeTeam = game["home team"];
-          const awayTeam = game["away team"];
-          const winner = game.winner;
-          const homeScore = parseInt(game["home score"]) || 0;
-          const awayScore = parseInt(game["away score"]) || 0;
-
-          if (!teamStats[homeTeam]) {
-            teamStats[homeTeam] = {
-              name: homeTeam, wins: 0, losses: 0, ties: 0,
-              runsFor: 0, runsAgainst: 0, h2h: {}, gameHistory: []
-            };
-          }
-          if (!teamStats[awayTeam]) {
-            teamStats[awayTeam] = {
-              name: awayTeam, wins: 0, losses: 0, ties: 0,
-              runsFor: 0, runsAgainst: 0, h2h: {}, gameHistory: []
-            };
-          }
-
-          teamStats[homeTeam].runsFor += homeScore;
-          teamStats[homeTeam].runsAgainst += awayScore;
-          teamStats[awayTeam].runsFor += awayScore;
-          teamStats[awayTeam].runsAgainst += homeScore;
-
-          if (!teamStats[homeTeam].h2h[awayTeam]) {
-            teamStats[homeTeam].h2h[awayTeam] = { wins: 0, losses: 0, ties: 0 };
-          }
-          if (!teamStats[awayTeam].h2h[homeTeam]) {
-            teamStats[awayTeam].h2h[homeTeam] = { wins: 0, losses: 0, ties: 0 };
-          }
-
-          if (winner === "Tie") {
-            teamStats[homeTeam].ties++;
-            teamStats[awayTeam].ties++;
-            teamStats[homeTeam].h2h[awayTeam].ties++;
-            teamStats[awayTeam].h2h[homeTeam].ties++;
-            teamStats[homeTeam].gameHistory.push({ date: game.date, result: 'T' });
-            teamStats[awayTeam].gameHistory.push({ date: game.date, result: 'T' });
-          } else if (winner === homeTeam) {
-            teamStats[homeTeam].wins++;
-            teamStats[awayTeam].losses++;
-            teamStats[homeTeam].h2h[awayTeam].wins++;
-            teamStats[awayTeam].h2h[homeTeam].losses++;
-            teamStats[homeTeam].gameHistory.push({ date: game.date, result: 'W' });
-            teamStats[awayTeam].gameHistory.push({ date: game.date, result: 'L' });
-          } else if (winner === awayTeam) {
-            teamStats[awayTeam].wins++;
-            teamStats[homeTeam].losses++;
-            teamStats[awayTeam].h2h[homeTeam].wins++;
-            teamStats[homeTeam].h2h[awayTeam].losses++;
-            teamStats[awayTeam].gameHistory.push({ date: game.date, result: 'W' });
-            teamStats[homeTeam].gameHistory.push({ date: game.date, result: 'L' });
-          }
-        });
-
-        const preliminaryStandings = Object.values(teamStats)
-          .map(team => {
-            const totalGames = team.wins + team.losses + team.ties;
-            team.winPct = totalGames > 0 ? (team.wins + team.ties * 0.5) / totalGames : 0;
-            team.runDifferential = team.runsFor - team.runsAgainst;
-            return team;
-          });
-
-        const standingsWithSOS = preliminaryStandings.map(team => {
-          team.scheduleStrength = calculateScheduleStrength(team.name, games, preliminaryStandings);
-          team.remainingScheduleStrength = calculateRemainingScheduleStrength(team.name, allSeasonGames, preliminaryStandings);
-          return team;
-        });
-
-        const sorted = standingsWithSOS.sort((a, b) => {
-          // First: Win percentage (ties count as half-win)
-          if (Math.abs(a.winPct - b.winPct) > 0.00001) return b.winPct - a.winPct;
-
-          // Second: H2H — only if exactly 2 teams tied on win%
-          const teamsAtSamePct = standingsWithSOS.filter(t =>
-            Math.abs(t.winPct - a.winPct) <= 0.00001
-          );
-          if (teamsAtSamePct.length === 2) {
-            const h2hComp = compareHeadToHead(a, b);
-            if (h2hComp !== 0) return h2hComp;
-          }
-
-          // Third: Runs Against (fewest runs allowed)
-          if (a.runsAgainst !== b.runsAgainst) return a.runsAgainst - b.runsAgainst;
-
-          // Fourth: Run Differential
-          return b.runDifferential - a.runDifferential;
-        });
-
-        // --- Last 5 games ---
-        sorted.forEach(team => {
-          const history = (team.gameHistory || [])
-            .slice()
-            .sort((a, b) => parseGameDate(b.date) - parseGameDate(a.date))
-            .slice(0, 5);
-          const w = history.filter(g => g.result === 'W').length;
-          const l = history.filter(g => g.result === 'L').length;
-          team.last5 = history.length > 0 ? `${w}-${l}` : '—';
-        });
-
-        // --- Remaining regular season games per team ---
-        const regularRemaining = (allSeasonGames || games).filter(g =>
-          (!g.winner || g.winner.trim() === '') && g.game_type === 'Regular'
-        );
-        sorted.forEach(team => {
-          team.remainingCount = regularRemaining.filter(g =>
-            g["home team"] === team.name || g["away team"] === team.name
-          ).length;
-        });
-
-        // --- Clinched seed: locked from both above AND below (worst-case vs best-case) ---
-        sorted.forEach((team, idx) => {
-          const teamTotal = team.wins + team.losses + team.ties + team.remainingCount;
-          // Worst case: team loses all remaining games
-          const teamMinWinPct = teamTotal > 0
-            ? (team.wins + team.ties * 0.5) / teamTotal
-            : 0;
-          // Best case: team wins all remaining games
-          const teamMaxWinPct = teamTotal > 0
-            ? (team.wins + team.remainingCount + team.ties * 0.5) / teamTotal
-            : 0;
-
-          // Can't be passed by any team below:
-          // Even if team loses all remaining AND team below wins all remaining,
-          // team's min win% must STRICTLY exceed team below's max win%.
-          // If they can match win%, check tiebreakers — if those are also locked, still clinched.
-          const cantFall = idx < sorted.length - 1
-            ? sorted.slice(idx + 1).every(other => {
-                const otherTotal = other.wins + other.losses + other.ties + other.remainingCount;
-                const otherMaxWinPct = otherTotal > 0
-                  ? (other.wins + other.remainingCount + other.ties * 0.5) / otherTotal
-                  : 0;
-                // If team's min win% is clearly better, clinched over this opponent
-                if (teamMinWinPct - otherMaxWinPct > 0.0001) return true;
-                // Win% could tie — check if tiebreakers are deterministic
-                if (Math.abs(teamMinWinPct - otherMaxWinPct) <= 0.0001) {
-                  // Only 2-team tiebreakers are handled here (most common case)
-                  // H2H tiebreaker first
-                  const h2hComp = compareHeadToHead(team, other);
-                  if (h2hComp < 0) return true;  // team wins H2H → safe
-                  if (h2hComp > 0) return false; // other wins H2H → not safe
-                  // H2H tied → Runs Allowed tiebreaker
-                  // RA can only increase (never decrease), so if other already allows more runs
-                  // than team, other can never catch up — tiebreaker is locked
-                  if (other.runsAgainst > team.runsAgainst) return true;
-                }
-                return false;
-              })
-            : true; // Last place has no one below — can't fall further
-
-          // Can't rise above any team above:
-          // Even if team wins all remaining AND team above loses all remaining,
-          // team's max win% must remain strictly below team above's min win%.
-          // Equal win% = check tiebreakers before calling it unlocked.
-          const cantRise = idx > 0
-            ? sorted.slice(0, idx).every(other => {
-                const otherTotal = other.wins + other.losses + other.ties + other.remainingCount;
-                const otherMinWinPct = otherTotal > 0
-                  ? (other.wins + other.ties * 0.5) / otherTotal
-                  : 0;
-                // If team's best case is clearly below the other, can't rise — safe
-                if (teamMaxWinPct - otherMinWinPct < -0.0001) return true;
-                // Win% could tie — check if tiebreakers prevent team from jumping above other
-                if (Math.abs(teamMaxWinPct - otherMinWinPct) <= 0.0001) {
-                  // H2H tiebreaker: if other wins H2H, team can't pass them
-                  const h2hComp = compareHeadToHead(team, other);
-                  if (h2hComp > 0) return true;  // other wins H2H → team can't rise above
-                  if (h2hComp < 0) return false; // team wins H2H → could rise above
-                  // H2H tied → Runs Allowed: RA only increases, so if team already allows
-                  // more runs than other, team can never beat other on RA → can't rise above
-                  if (team.runsAgainst > other.runsAgainst) return true;
-                }
-                return false;
-              })
-            : true; // First place has no one above
-
-          team.clinched = cantFall && cantRise;
-        });
-
-        return sorted;
-      }
-
-      function compareHeadToHead(teamA, teamB) {
-        const aVsB = teamA.h2h[teamB.name];
-        const bVsA = teamB.h2h[teamA.name];
-        
-        if (!aVsB || !bVsA) return 0;
-        
-        const aH2HWinPct = (aVsB.wins + aVsB.losses) > 0 ? aVsB.wins / (aVsB.wins + aVsB.losses) : 0;
-        const bH2HWinPct = (bVsA.wins + bVsA.losses) > 0 ? bVsA.wins / (bVsA.wins + bVsA.losses) : 0;
-        
-        return bH2HWinPct - aH2HWinPct;
+      // Standings come from js/domain/standings.js (tests/domain.html checks it
+      // against the old code on every season). Rows keep the field names the
+      // standings table and the projected bracket read.
+      function calculateStandings() {
+        return computeStandings(rawSeasonGames, { asOf: todayKey() }).map((row) => ({
+          ...row,
+          name: row.team,
+          runDifferential: row.runDiff
+        }));
       }
 
       function formatScheduleStrength(sos) {
@@ -2707,12 +2426,7 @@
         const bracketElement = document.getElementById('bracketContent');
         bracketElement.classList.remove('loading');
         
-        const completedGames = games.filter(g =>
-          g.winner && g.winner.trim() !== "" && parseGameDate(g.date) < today
-        );
-        
-        const regularGames = completedGames.filter(g => g.game_type === 'Regular');
-        const standings = calculateStandings(regularGames);
+        const standings = calculateStandings();
         
         if (standings.length < 10) {
           bracketElement.innerHTML = `
