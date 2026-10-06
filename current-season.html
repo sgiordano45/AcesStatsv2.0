@@ -1078,38 +1078,6 @@
   .section:nth-child(5) { animation-delay: 0.5s; }
   .section:nth-child(6) { animation-delay: 0.6s; }
   
-/* Connection Status Indicator */
-.connection-status {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: #ffc107;
-  color: #856404;
-  padding: 10px 16px;
-  border-radius: 25px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  z-index: 9999;
-  font-size: 0.85rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-}
-
-.connection-status.hidden {
-  display: none;
-}
-
-.connection-status.online {
-  background: #28a745;
-  color: white;
-}
-
-.connection-status .status-icon {
-  font-size: 1rem;
-}
-
   /* ========================================
      DARK MODE OVERRIDES
      ======================================== */
@@ -1432,12 +1400,8 @@
 </style>
 </head>
 <body>
-<div id="connectionStatus" class="connection-status hidden">
-  <span class="status-icon">📡</span>
-  <span class="status-text">You're offline</span>
-</div>
   <!-- Loading Spinner -->
-  <div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-overlay" id="loadingOverlay" data-page-loading>
     <div class="softball-spinner"></div>
   </div>
 
@@ -1619,18 +1583,9 @@
     </div>
   </div>
 
-  <script>
-    // Hide loading spinner after page loads
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        document.getElementById('loadingOverlay').classList.add('hidden');
-      }, 800);
-    });
-  </script>
-
   <script type="module">
-      console.log('Script started - checking imports...');
-      
+      // firebase-data.js first: its firebase-config.js creates the Firebase app,
+      // and js/core/firebase.js (loaded through app.js) reuses it.
       import {
         getSeasonGames,
         getSeasonPlayerStatsOptimized,
@@ -1639,8 +1594,8 @@
         getAllPlayerStatsOptimized
       } from './firebase-data.js';
       import { db, collection, getDocs, query, where } from './firebase-config.js';
-
-      console.log('Imports successful!');
+      import { initPage, pageReady } from './js/core/app.js';
+      import { capitalize } from './js/ui/format.js';
 
       function toggleMobileMenu() {
         const menu = document.getElementById('mobileNavMenu');
@@ -1666,8 +1621,6 @@
       async function loadData() {
         try {
           console.log('📊 Loading season data from Firebase...');
-          
-          const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
           
           const currentSeasonData = await getCurrentSeason();
           console.log('✅ Current season:', currentSeasonData);
@@ -2995,44 +2948,17 @@
         });
       }
 
-      // Initialize data on page load
-      document.addEventListener('DOMContentLoaded', loadData);
+      // loadData() handles its own errors (showError() fills each section),
+      // so the spinner always clears.
+      async function main() {
+        await initPage({ title: 'Season' });
+        await loadData();
+        pageReady();
+      }
+      main();
 	  
 	  
-function updateConnectionStatus() {
-  const status = document.getElementById('connectionStatus');
-  if (!status) return;
-  
-  const icon = status.querySelector('.status-icon');
-  const text = status.querySelector('.status-text');
-  
-  if (navigator.onLine) {
-    // Show "Back online" message
-    status.classList.remove('hidden');  // SHOW IT FIRST
-    status.classList.add('online');
-    icon.textContent = '✅';
-    text.textContent = 'Back online';
-    
-    // Hide after 3 seconds
-    setTimeout(() => {
-      status.classList.add('hidden');
-    }, 3000);
-  } else {
-    // Show "You're offline" message
-    status.classList.remove('hidden', 'online');
-    icon.textContent = '📡';
-    text.textContent = "You're offline";
-  }
-}
-
-window.addEventListener('online', updateConnectionStatus);
-window.addEventListener('offline', updateConnectionStatus);
-if (!navigator.onLine) updateConnectionStatus();
     </script>
-	<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
-</script>
 
   <script type="module">
     import { db } from './firebase-config.js';
@@ -3117,7 +3043,6 @@ if (!navigator.onLine) updateConnectionStatus();
   <script src="team-colors.js"></script>
   <script src="mobile-enhancements.js"></script>
   <script src="stat-tooltips.js"></script>
-  <script src="theme-toggle.js"></script>
   <!-- Share Standings Modal -->
   <div id="shareStandingsModal" class="share-modal-overlay" style="display:none;" onclick="if(event.target===this) closeShareStandingsModal()">
     <div class="share-modal">
