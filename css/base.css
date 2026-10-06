@@ -1,0 +1,255 @@
+/* ==========================================================================
+   css/base.css - Mountainside Aces v2.0 base styles
+   --------------------------------------------------------------------------
+   Load after tokens.css:
+     <link rel="stylesheet" href="css/tokens.css">
+     <link rel="stylesheet" href="css/base.css">
+     <link rel="stylesheet" href="css/components.css">
+
+   Element defaults (reset, type, links, focus, forms) apply only inside an
+   element with class "aces-v2", normally <body class="aces-v2">. A page opts
+   in when it is redesigned in Phase 2; legacy pages can link this file and
+   look exactly as before. Every scoped rule is wrapped in :where(), so it adds
+   no specificity and any component or page class beats it.
+
+   The u-* utility classes at the bottom work on any page.
+   ========================================================================== */
+
+/* ---- Reset --------------------------------------------------------------- */
+
+:where(.aces-v2),
+:where(.aces-v2) *,
+:where(.aces-v2) *::before,
+:where(.aces-v2) *::after {
+  box-sizing: border-box;
+}
+
+:where(.aces-v2) {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-page);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
+  line-height: var(--lh-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(.aces-v2) :where(h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd) {
+  margin: 0;
+}
+
+:where(.aces-v2) :where(ul, ol)[role="list"],
+:where(.aces-v2) :where(ul, ol).is-plain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+:where(.aces-v2) :where(img, svg, video, canvas, picture) {
+  display: block;
+  max-width: 100%;
+}
+
+:where(.aces-v2) :where(img, video) {
+  height: auto;
+}
+
+/* Inline icons stay inline. */
+:where(.aces-v2) :where(svg.aces-icon) {
+  display: inline-block;
+}
+
+:where(.aces-v2) [hidden] {
+  display: none !important;
+}
+
+/* ---- Type ---------------------------------------------------------------- */
+
+:where(.aces-v2) :where(h1, h2, h3, h4) {
+  line-height: var(--lh-snug);
+  font-weight: var(--fw-bold);
+  text-wrap: balance;
+}
+
+:where(.aces-v2) :where(h1) {
+  font-family: var(--font-display);
+  font-weight: 400;              /* Bebas Neue has one weight */
+  font-size: var(--fs-xl);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-display);
+}
+
+:where(.aces-v2) :where(h2) { font-size: var(--fs-lg); }
+:where(.aces-v2) :where(h3) { font-size: var(--fs-md); }
+:where(.aces-v2) :where(h4) { font-size: var(--fs-sm); }
+
+:where(.aces-v2) :where(p, li) {
+  text-wrap: pretty;
+}
+
+:where(.aces-v2) :where(small) {
+  font-size: var(--fs-xs);
+}
+
+:where(.aces-v2) :where(strong, b) {
+  font-weight: var(--fw-semibold);
+}
+
+:where(.aces-v2) :where(code, kbd, samp, pre) {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+:where(.aces-v2) :where(kbd) {
+  padding: 1px 6px;
+  border: 1px solid var(--color-border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: var(--fs-xs);
+}
+
+:where(.aces-v2) :where(hr) {
+  height: 0;
+  margin: var(--space-6) 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Every stat lines up: numbers in tables, scores and stat tiles. */
+:where(.aces-v2) :where(table, output, time, data) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Links --------------------------------------------------------------- */
+
+:where(.aces-v2) :where(a) {
+  color: var(--color-link);
+  text-decoration: none;
+  text-underline-offset: 0.18em;
+}
+
+:where(.aces-v2) :where(a):hover {
+  text-decoration: underline;
+}
+
+/* ---- Focus: visible for keyboards, quiet for taps ------------------------ */
+
+:where(.aces-v2) :focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+:where(.aces-v2) :focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ---- Forms --------------------------------------------------------------- */
+
+:where(.aces-v2) :where(button, input, select, textarea) {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+:where(.aces-v2) :where(button, [role="button"], label[for], select, summary) {
+  cursor: pointer;
+}
+
+:where(.aces-v2) :where(button:disabled, [aria-disabled="true"]) {
+  cursor: not-allowed;
+}
+
+:where(.aces-v2) :where(input, select, textarea) {
+  font-size: max(16px, 1em);     /* under 16px, iOS zooms the page on focus */
+}
+
+:where(.aces-v2) :where(input[type="checkbox"], input[type="radio"], input[type="range"], progress) {
+  accent-color: var(--color-brand);
+}
+
+:where(.aces-v2) :where(fieldset) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+:where(.aces-v2) ::placeholder {
+  color: var(--color-text-faint);
+  opacity: 1;
+}
+
+/* ---- Tables -------------------------------------------------------------- */
+
+:where(.aces-v2) :where(table) {
+  border-collapse: collapse;
+}
+
+:where(.aces-v2) :where(th) {
+  text-align: left;
+  font-weight: var(--fw-semibold);
+}
+
+/* ---- Selection, scroll --------------------------------------------------- */
+
+:where(.aces-v2) ::selection {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(html:has(body.aces-v2)) {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ==========================================================================
+   Utilities (any page)
+   ========================================================================== */
+
+/* Hidden on screen, still read by screen readers. */
+.u-sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.u-tnum { font-variant-numeric: tabular-nums; }
+.u-num { font-variant-numeric: tabular-nums; text-align: right; }
+.u-display { font-family: var(--font-display); font-weight: 400; letter-spacing: var(--tracking-display); }
+.u-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.u-muted { color: var(--color-text-muted); }
+.u-nowrap { white-space: nowrap; }
+.u-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Show only on phones / only on larger screens (breakpoint 720px). */
+@media (min-width: 720px) {
+  .u-phone-only { display: none !important; }
+}
+@media (max-width: 719.98px) {
+  .u-wide-only { display: none !important; }
+}

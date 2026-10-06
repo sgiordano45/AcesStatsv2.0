@@ -1,0 +1,948 @@
+/* ==========================================================================
+   css/components.css - Mountainside Aces v2.0 components
+   --------------------------------------------------------------------------
+   Needs tokens.css. Every class is prefixed aces- (u- for utilities in
+   base.css), because legacy pages already use .card, .btn, .badge, .chip,
+   .tab-*, .icon, .stat-* and friends. Each component sets its own font and
+   box-sizing, so it renders the same on a legacy page as on an .aces-v2 one.
+
+   Modifiers are is-* classes on the component itself (.aces-btn.is-primary),
+   the same pattern js/ui/modal.js and toast.js use. Toggle state reads ARIA
+   where it exists (aria-pressed, aria-selected, aria-current), with .is-active
+   as the fallback.
+
+   Contents
+     Layout ........ container, stack, cluster, grid
+     Icon .......... aces-icon (SVG sprite: icons.svg, js/ui/icons.js)
+     Button ........ aces-btn
+     Card .......... aces-card, aces-section-head
+     Page head ..... aces-page-head
+     Badge ......... aces-badge, aces-live
+     Chip .......... aces-chip, aces-chip-row
+     Team .......... aces-team-chip, aces-team-dot, [data-team-color]
+     Tabs .......... aces-tabs, aces-tab
+     Segmented ..... aces-segmented, aces-segment
+     Form .......... aces-field, aces-label, aces-input, aces-select
+     Table ......... aces-table-wrap, aces-table
+     Stat .......... aces-stats, aces-stat
+     Results ....... aces-results, aces-result
+     Score card .... aces-score
+     Avatar ........ aces-avatar
+     Notice ........ aces-notice
+     Empty ......... aces-empty
+     Loading ....... aces-skeleton, aces-spinner
+   ========================================================================== */
+
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+
+.aces-container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.aces-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-gap, var(--space-4));
+}
+.aces-stack.is-tight { --stack-gap: var(--space-2); }
+.aces-stack.is-loose { --stack-gap: var(--space-8); }
+
+.aces-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cluster-gap, var(--space-2));
+}
+.aces-cluster.is-between { justify-content: space-between; }
+
+/* Cards that wrap to fit: one column on phones, more as room allows. */
+.aces-grid {
+  display: grid;
+  gap: var(--grid-gap, var(--space-4));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grid-min, 280px)), 1fr));
+}
+.aces-grid.is-narrow { --grid-min: 160px; }
+
+/* ==========================================================================
+   Icon
+   <svg class="aces-icon" aria-hidden="true"><use href="icons.svg#icon-trophy"></use></svg>
+   Sized in em so it matches the text beside it; color is currentColor.
+   ========================================================================== */
+
+.aces-icon {
+  display: inline-block;
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+  vertical-align: -0.25em;
+  overflow: visible;
+}
+.aces-icon.is-sm { width: 1em; height: 1em; vertical-align: -0.125em; }
+.aces-icon.is-lg { width: 1.5em; height: 1.5em; vertical-align: -0.3em; }
+.aces-icon.is-muted { color: var(--color-text-faint); }
+
+/* ==========================================================================
+   Button
+   ========================================================================== */
+
+.aces-btn {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  margin: 0;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--fw-semibold) var(--fs-sm) / 1 var(--font-sans);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out);
+}
+.aces-btn:hover { background: var(--color-surface-2); text-decoration: none; }
+.aces-btn:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.aces-btn:disabled,
+.aces-btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+.aces-btn.is-primary { background: var(--color-brand); border-color: transparent; color: var(--color-on-brand); }
+.aces-btn.is-primary:hover { background: var(--color-brand-hover); }
+.aces-btn.is-accent { background: var(--color-accent); border-color: transparent; color: var(--color-on-accent); }
+.aces-btn.is-accent:hover { filter: brightness(0.95); }
+.aces-btn.is-danger { background: var(--color-loss); border-color: transparent; color: var(--color-on-status); }
+.aces-btn.is-danger:hover { filter: brightness(1.08); }
+.aces-btn.is-ghost { background: transparent; border-color: transparent; }
+.aces-btn.is-ghost:hover { background: var(--color-surface-2); }
+
+.aces-btn.is-block { display: flex; width: 100%; }
+.aces-btn.is-icon { width: var(--tap-min); padding: 0; }
+
+/* Small: 32px to the eye, 44px to the finger. */
+.aces-btn.is-sm { min-height: 32px; padding: 0 var(--space-3); font-size: var(--fs-xs); }
+.aces-btn.is-sm.is-icon { width: 32px; padding: 0; }
+.aces-btn.is-sm::after { content: ""; position: absolute; inset: -6px 0; }
+
+/* ==========================================================================
+   Card
+   ========================================================================== */
+
+.aces-card {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+.aces-card.is-flush { padding: 0; overflow: hidden; }   /* for a table or list edge to edge */
+.aces-card[data-team-color] { border-top: 3px solid var(--team); }
+
+/* Whole card is a link. */
+a.aces-card,
+.aces-card.is-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+a.aces-card:hover,
+.aces-card.is-link:hover { border-color: var(--color-border-strong); text-decoration: none; }
+
+.aces-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.aces-card.is-flush > .aces-card-head { margin: 0; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); }
+.aces-card-title {
+  margin: 0;
+  font: var(--fw-semibold) var(--fs-md) / var(--lh-snug) var(--font-sans);
+}
+
+/* Section heading with an optional "See all" link on the right. */
+.aces-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+.aces-section-title {
+  margin: 0;
+  color: var(--color-text-muted);
+  font: var(--fw-bold) var(--fs-xs) / var(--lh-snug) var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.aces-section-link {
+  color: var(--color-link);
+  font: var(--fw-semibold) var(--fs-sm) / 1 var(--font-sans);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.aces-section-link:hover { text-decoration: underline; }
+
+/* ==========================================================================
+   Page head: kicker, title, and a control (season picker) on the right
+   ========================================================================== */
+
+.aces-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+  margin: var(--space-6) 0 var(--space-4);
+  font-family: var(--font-sans);
+}
+.aces-page-kicker {
+  display: block;
+  margin: 0 0 var(--space-1);
+  color: var(--color-text-muted);
+  font: var(--fw-semibold) var(--fs-xs) / 1.2 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.aces-page-title {
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(var(--fs-xl), 7vw, var(--fs-2xl));
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-display);
+}
+
+/* ==========================================================================
+   Badge: short status labels (Final, Clinched, Eliminated, W, L)
+   ========================================================================== */
+
+.aces-badge {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  font: var(--fw-semibold) var(--fs-xs) / 1.4 var(--font-sans);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.aces-badge.is-win { background: var(--color-win-soft); color: var(--color-win); }
+.aces-badge.is-loss { background: var(--color-loss-soft); color: var(--color-loss); }
+.aces-badge.is-alert { background: var(--color-alert-soft); color: var(--color-alert); }
+.aces-badge.is-brand { background: var(--color-brand); color: var(--color-on-brand); }
+.aces-badge.is-accent { background: var(--color-accent); color: var(--color-on-accent); }
+.aces-badge.is-outline { background: transparent; box-shadow: inset 0 0 0 1px var(--color-border-strong); }
+
+/* "Live" with a pulsing dot. */
+.aces-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-loss);
+  font: var(--fw-bold) var(--fs-xs) / 1 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.aces-live::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: aces-pulse 1.6s ease-in-out infinite;
+}
+@keyframes aces-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* ==========================================================================
+   Chip: filter toggles. <button class="aces-chip" aria-pressed="true">
+   ========================================================================== */
+
+.aces-chip {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--fw-medium) var(--fs-sm) / 1 var(--font-sans);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+.aces-chip::after { content: ""; position: absolute; inset: -4px 0; }   /* 44px tap target */
+.aces-chip:hover { border-color: var(--color-text-faint); text-decoration: none; }
+.aces-chip:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.aces-chip[aria-pressed="true"],
+.aces-chip[aria-selected="true"],
+.aces-chip.is-active {
+  border-color: transparent;
+  background: var(--color-text);
+  color: var(--color-surface);
+}
+
+/* One scrollable row of chips on phones. */
+.aces-chip-row {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.aces-chip-row::-webkit-scrollbar { display: none; }
+.aces-chip-row > * { flex: none; }
+
+/* ==========================================================================
+   Team chip and dot
+   <a class="aces-team-chip" data-team-color="teal" href="..."><span class="aces-team-dot"></span>Teal</a>
+   Keep the dot span even on .is-solid (it is hidden there): team-colors.js
+   recolors any element whose only content is a team name, and an element
+   with a child is skipped. Don't use data-team on these for the same reason.
+   ========================================================================== */
+
+[data-team-color="black"]    { --team: var(--team-black);    --team-ink: var(--team-black-ink); }
+[data-team-color="green"]    { --team: var(--team-green);    --team-ink: var(--team-green-ink); }
+[data-team-color="red"]      { --team: var(--team-red);      --team-ink: var(--team-red-ink); }
+[data-team-color="blue"]     { --team: var(--team-blue);     --team-ink: var(--team-blue-ink); }
+[data-team-color="white"]    { --team: var(--team-white-fill); --team-ink: var(--team-white-ink); }
+[data-team-color="orange"]   { --team: var(--team-orange);   --team-ink: var(--team-orange-ink); }
+[data-team-color="silver"]   { --team: var(--team-silver);   --team-ink: var(--team-silver-ink); }
+[data-team-color="purple"]   { --team: var(--team-purple);   --team-ink: var(--team-purple-ink); }
+[data-team-color="gold"]     { --team: var(--team-gold);     --team-ink: var(--team-gold-ink); }
+[data-team-color="carolina"] { --team: var(--team-carolina); --team-ink: var(--team-carolina-ink); }
+[data-team-color="army"]     { --team: var(--team-army);     --team-ink: var(--team-army-ink); }
+[data-team-color="teal"]     { --team: var(--team-teal);     --team-ink: var(--team-teal-ink); }
+
+.aces-team-dot {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--team, var(--color-text-faint));
+  box-shadow: inset 0 0 0 1px var(--team-ring);
+  vertical-align: middle;
+}
+.aces-team-dot.is-lg { width: 14px; height: 14px; }
+
+.aces-team-chip {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: 24px;
+  padding: 0 10px 0 8px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--fw-semibold) var(--fs-xs) / 1 var(--font-sans);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+a.aces-team-chip:hover { border-color: var(--color-text-faint); text-decoration: none; }
+.aces-team-chip.is-solid {
+  padding: 0 10px;
+  border-color: transparent;
+  background: var(--team, var(--color-surface-2));
+  color: var(--team-ink, var(--color-text));
+  box-shadow: inset 0 0 0 1px var(--team-ring);
+}
+.aces-team-chip.is-solid > .aces-team-dot { display: none; }
+.aces-team-chip.is-lg { min-height: 32px; padding-inline: 12px 14px; font-size: var(--fs-sm); }
+
+/* ==========================================================================
+   Tabs: hub and page tabs.
+   <nav class="aces-tabs"><a class="aces-tab" aria-current="page">Standings</a>...
+   or role="tablist" with <button role="tab" aria-selected="true">.
+   ========================================================================== */
+
+.aces-tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.aces-tabs::-webkit-scrollbar { display: none; }
+
+.aces-tab {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap-min);
+  margin: 0 0 -1px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--color-text-muted);
+  font: var(--fw-semibold) var(--fs-sm) / 1 var(--font-sans);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+.aces-tab:hover { color: var(--color-text); text-decoration: none; }
+.aces-tab:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; border-radius: var(--radius-sm); }
+.aces-tab[aria-selected="true"],
+.aces-tab[aria-current="page"],
+.aces-tab.is-active {
+  border-bottom-color: var(--color-brand);
+  color: var(--color-text);
+}
+
+/* ==========================================================================
+   Segmented control: Season / Career, Standard / Advanced / Counting.
+   <div class="aces-segmented" role="group"><button class="aces-segment" aria-pressed="true">
+   ========================================================================== */
+
+.aces-segmented {
+  box-sizing: border-box;
+  display: inline-flex;
+  gap: 2px;
+  max-width: 100%;
+  padding: 2px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.aces-segmented::-webkit-scrollbar { display: none; }
+.aces-segmented.is-block { display: flex; width: 100%; }
+.aces-segmented.is-block > .aces-segment { flex: 1; }
+
+.aces-segment {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;                         /* 44 with the track */
+  margin: 0;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: var(--fw-semibold) var(--fs-sm) / 1 var(--font-sans);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.aces-segment:hover { color: var(--color-text); }
+.aces-segment:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 0; }
+.aces-segment[aria-pressed="true"],
+.aces-segment[aria-checked="true"],
+.aces-segment[aria-selected="true"],
+.aces-segment.is-active {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--elev-1);
+}
+
+/* ==========================================================================
+   Form
+   ========================================================================== */
+
+.aces-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font-family: var(--font-sans);
+}
+.aces-label {
+  color: var(--color-text);
+  font: var(--fw-semibold) var(--fs-sm) / var(--lh-snug) var(--font-sans);
+}
+.aces-hint {
+  color: var(--color-text-muted);
+  font: var(--fw-regular) var(--fs-xs) / var(--lh-snug) var(--font-sans);
+}
+.aces-field.is-invalid .aces-hint { color: var(--color-loss); }
+
+.aces-input,
+.aces-select,
+.aces-textarea {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: var(--tap-min);
+  margin: 0;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--fw-regular) 16px / var(--lh-snug) var(--font-sans);   /* 16px: no iOS zoom */
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.aces-textarea { min-height: 96px; padding: 10px var(--space-3); resize: vertical; }
+.aces-input::placeholder,
+.aces-textarea::placeholder { color: var(--color-text-faint); opacity: 1; }
+.aces-input:hover,
+.aces-select:hover,
+.aces-textarea:hover { border-color: var(--color-text-muted); }
+.aces-input:focus-visible,
+.aces-select:focus-visible,
+.aces-textarea:focus-visible {
+  border-color: var(--color-focus);
+  outline: 1px solid var(--color-focus);
+  outline-offset: 0;
+}
+.aces-input[aria-invalid="true"],
+.aces-select[aria-invalid="true"],
+.aces-textarea[aria-invalid="true"] { border-color: var(--color-loss); }
+.aces-input:disabled,
+.aces-select:disabled,
+.aces-textarea:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Native select with a drawn chevron. The chevron is a mask, so it takes
+   the text color in both themes. */
+.aces-select {
+  padding-right: 36px;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: none;
+  cursor: pointer;
+}
+.aces-select-wrap {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+.aces-select-wrap.is-inline { display: inline-block; }
+.aces-select-wrap::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  background: var(--color-text-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  pointer-events: none;
+}
+/* Compact select for a page head or table toolbar (season picker). */
+.aces-select.is-sm { min-height: 36px; padding-left: 10px; font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+
+/* ==========================================================================
+   Table: the base ui/table.js (Phase 2) builds on.
+   <div class="aces-table-wrap"><table class="aces-table is-sticky-first">...
+   Numbers: class="is-num" on th and td. Rank shading: is-top / is-bottom on
+   a td. The signed-in player's row: class="is-me" on the tr.
+   ========================================================================== */
+
+.aces-table-wrap {
+  position: relative;
+  max-width: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.aces-table-wrap.is-tall { max-height: min(70vh, 720px); }   /* header sticks inside */
+
+.aces-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--color-text);
+  font: var(--fw-regular) var(--fs-sm) / var(--lh-snug) var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.aces-table th,
+.aces-table td {
+  padding: var(--space-2) 10px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.aces-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.02em;          /* no uppercase: bWAR, acesBPI keep their case */
+}
+.aces-table .is-num { text-align: right; }
+.aces-table .is-center { text-align: center; }
+.aces-table .is-wrap { white-space: normal; min-width: 160px; }
+.aces-table tbody tr:last-child > * { border-bottom: 0; }
+.aces-table tbody tr:hover > * { background: var(--color-surface-2); }
+
+/* Sticky first column: the player name stays put while you scroll sideways. */
+.aces-table.is-sticky-first th:first-child,
+.aces-table.is-sticky-first td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  box-shadow: inset -1px 0 0 var(--color-border);
+}
+.aces-table.is-sticky-first thead th:first-child { z-index: 3; }
+
+/* Rank column. */
+.aces-table .is-rank { width: 1%; color: var(--color-text-muted); text-align: right; }
+
+/* Top 10% / bottom 10% of a column. */
+.aces-table td.is-top { background: var(--color-rank-top); font-weight: var(--fw-semibold); }
+.aces-table td.is-bottom { background: var(--color-rank-bottom); color: var(--color-text-muted); }
+
+/* "You are here" row. */
+.aces-table tr.is-me > * { background: var(--color-accent-soft); }
+.aces-table tr.is-me > :first-child { box-shadow: inset 3px 0 0 var(--color-accent); }
+.aces-table.is-sticky-first tr.is-me > :first-child { box-shadow: inset 3px 0 0 var(--color-accent), inset -1px 0 0 var(--color-border); }
+
+/* Totals. */
+.aces-table tfoot td,
+.aces-table tfoot th { border-top: 2px solid var(--color-border-strong); border-bottom: 0; font-weight: var(--fw-semibold); }
+
+.aces-table.is-compact th,
+.aces-table.is-compact td { padding: 6px var(--space-2); }
+
+/* Sortable headers: <th aria-sort="descending"><button class="aces-sort">AVG</button></th> */
+.aces-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+.aces-table .is-num .aces-sort { flex-direction: row-reverse; }
+.aces-sort::after {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  opacity: 0;
+}
+.aces-sort:hover::after { opacity: 0.35; }
+.aces-sort:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: 2px; }
+th[aria-sort="descending"] .aces-sort,
+th[aria-sort="ascending"] .aces-sort { color: var(--color-text); }
+th[aria-sort="descending"] .aces-sort::after { opacity: 1; }
+th[aria-sort="ascending"] .aces-sort::after { opacity: 1; transform: rotate(180deg); }
+
+/* ==========================================================================
+   Stat tiles: a number in the display face over a small label.
+   <div class="aces-stats"><div class="aces-stat"><span class="aces-stat-value">.412</span>
+     <span class="aces-stat-label">AVG</span><span class="aces-stat-meta">3rd in league</span></div>
+   ========================================================================== */
+
+.aces-stats {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+}
+.aces-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-family: var(--font-sans);
+}
+.aces-stat-value {
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-xl);
+  line-height: 1;
+  letter-spacing: var(--tracking-display);
+  font-variant-numeric: tabular-nums;
+}
+.aces-stat.is-lg .aces-stat-value { font-size: var(--fs-2xl); }
+.aces-stat-label {
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  letter-spacing: 0.02em;          /* no uppercase: bWAR, acesBPI keep their case */
+}
+.aces-stat-meta {
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.3;
+}
+
+/* ==========================================================================
+   Results strip: one square per game.
+   <ol class="aces-results"><li class="aces-result is-win" title="W 12-7 vs Gold">W</li>...
+   ========================================================================== */
+
+.aces-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.aces-result {
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  font: var(--fw-bold) 11px / 1 var(--font-sans);
+}
+.aces-result.is-win { background: var(--color-win); color: var(--color-on-status); }
+.aces-result.is-loss { background: var(--color-loss); color: var(--color-on-status); }
+.aces-result.is-tie { background: var(--color-text-faint); color: var(--color-surface); }
+.aces-result.is-upcoming { background: transparent; box-shadow: inset 0 0 0 1px var(--color-border-strong); }
+
+/* ==========================================================================
+   Score card: one game, compact.
+   <a class="aces-score" href="game.html?id=...">
+     <div class="aces-score-status"><span class="aces-live">Live</span><span>Top 5</span></div>
+     <div class="aces-score-row is-winner"><span class="aces-team-chip" ...>Teal</span><span class="aces-score-runs">12</span></div>
+     <div class="aces-score-row"><span class="aces-team-chip" ...>Gold</span><span class="aces-score-runs">7</span></div>
+   </a>
+   ========================================================================== */
+
+.aces-score {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  text-decoration: none;
+}
+a.aces-score:hover { border-color: var(--color-border-strong); text-decoration: none; }
+.aces-score-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 16px;
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+.aces-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--color-text-muted);
+}
+.aces-score-row.is-winner { color: var(--color-text); }
+.aces-score-runs {
+  min-width: 2ch;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-xl);
+  line-height: 1;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.aces-score-meta {
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+}
+
+/* Swipeable row of score cards on phones. */
+.aces-score-strip {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.aces-score-strip::-webkit-scrollbar { display: none; }
+.aces-score-strip > * { flex: none; scroll-snap-align: start; }
+
+/* ==========================================================================
+   Avatar
+   ========================================================================== */
+
+.aces-avatar {
+  box-sizing: border-box;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  font: var(--fw-semibold) var(--fs-xs) / 1 var(--font-sans);
+  object-fit: cover;
+  vertical-align: middle;
+}
+.aces-avatar > img { width: 100%; height: 100%; object-fit: cover; }
+.aces-avatar.is-lg { width: 64px; height: 64px; font-size: var(--fs-lg); }
+.aces-avatar.is-xl { width: 96px; height: 96px; font-size: var(--fs-xl); }
+
+/* ==========================================================================
+   Notice: an inline message inside the page (not a toast).
+   ========================================================================== */
+
+.aces-notice {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: var(--space-3) 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font: var(--fw-regular) var(--fs-sm) / var(--lh-base) var(--font-sans);
+}
+.aces-notice > .aces-icon { margin-top: 0.15em; color: var(--color-text-muted); }
+.aces-notice.is-success { border-color: transparent; background: var(--color-win-soft); }
+.aces-notice.is-success > .aces-icon { color: var(--color-win); }
+.aces-notice.is-error { border-color: transparent; background: var(--color-loss-soft); }
+.aces-notice.is-error > .aces-icon { color: var(--color-loss); }
+.aces-notice.is-warning { border-color: transparent; background: var(--color-alert-soft); }
+.aces-notice.is-warning > .aces-icon { color: var(--color-alert); }
+
+/* ==========================================================================
+   Empty state inside a card or table ("No games played yet this season").
+   Page-level empty and error states come from showPageState in js/core/app.js.
+   ========================================================================== */
+
+.aces-empty {
+  padding: var(--space-8) var(--space-4);
+  color: var(--color-text-muted);
+  font: var(--fw-regular) var(--fs-sm) / var(--lh-base) var(--font-sans);
+  text-align: center;
+}
+.aces-empty > .aces-icon {
+  display: block;
+  width: 32px;
+  height: 32px;
+  margin: 0 auto var(--space-2);
+  color: var(--color-text-faint);
+}
+.aces-empty-title {
+  display: block;
+  margin: 0 0 var(--space-1);
+  color: var(--color-text);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+}
+
+/* ==========================================================================
+   Loading: skeletons shaped like the content, and a small inline spinner
+   ========================================================================== */
+
+.aces-skeleton {
+  position: relative;
+  display: block;
+  height: 1em;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--color-skeleton);
+}
+.aces-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--color-skeleton-shine), transparent);
+  animation: aces-shimmer 1.4s ease-in-out infinite;
+}
+.aces-skeleton.is-text { height: 0.8em; margin: 0.35em 0; }
+.aces-skeleton.is-title { width: 40%; height: 28px; }
+.aces-skeleton.is-row { height: 36px; margin-bottom: 2px; border-radius: 0; }
+.aces-skeleton.is-card { height: 120px; border-radius: var(--radius-md); }
+.aces-skeleton.is-circle { width: 32px; height: 32px; border-radius: 50%; }
+.aces-skeleton.is-w-25 { width: 25%; }
+.aces-skeleton.is-w-50 { width: 50%; }
+.aces-skeleton.is-w-75 { width: 75%; }
+
+@keyframes aces-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+.aces-spinner {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -0.125em;
+  animation: aces-spin 0.7s linear infinite;
+}
+@keyframes aces-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aces-skeleton::after { animation: none; }
+  .aces-live::before { animation: none; }
+  .aces-spinner { animation-duration: 1.6s; }
+}

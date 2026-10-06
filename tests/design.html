@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design check</title>
+<script type="module" src="../js/core/preview-guard.js"></script>
+<script>
+  // Same theme choice as js/core/app.js, before first paint.
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('aces-theme'); } catch (e) {}
+    if (!t) t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<style>
+  /* Layout of this check page only. */
+  .dc-section { margin: 0 0 var(--space-8); }
+  .dc-swatches { display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .dc-swatch { display: flex; align-items: center; gap: var(--space-2); font-size: var(--fs-xs); }
+  .dc-chip { flex: none; width: 32px; height: 32px; border-radius: var(--radius-sm); box-shadow: inset 0 0 0 1px var(--team-ring); }
+  .dc-swatch code { display: block; color: var(--color-text-muted); }
+  .dc-icons { display: grid; gap: var(--space-1); grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+  .dc-icon { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: var(--space-3) var(--space-1); border-radius: var(--radius-md); font-size: 11px; color: var(--color-text-muted); }
+  .dc-icon .aces-icon { width: 24px; height: 24px; color: var(--color-text); }
+  .dc-type > * + * { margin-top: var(--space-2); }
+  .dc-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+  .dc-checks li { margin: 2px 0; }
+</style>
+</head>
+<body class="aces-v2">
+<main class="aces-container">
+
+  <header class="aces-page-head">
+    <div>
+      <span class="aces-page-kicker">Phase 0 &middot; tests</span>
+      <h1 class="aces-page-title">Design check</h1>
+    </div>
+    <div class="aces-cluster">
+      <span class="aces-select-wrap is-inline">
+        <select class="aces-select is-sm" aria-label="Season">
+          <option>2026 Summer</option><option>2026 Spring</option><option>2025 Fall</option>
+        </select>
+      </span>
+      <button class="aces-btn" type="button" data-action="theme" id="themeBtn"></button>
+    </div>
+  </header>
+
+  <p class="u-muted" style="margin-bottom: var(--space-6)">Renders css/tokens.css, base.css, components.css and icons.svg. Use the button to compare light and dark. Nothing here reads or writes Firestore.</p>
+
+  <section class="dc-section">
+    <div class="aces-section-head"><h2 class="aces-section-title">Self-checks</h2></div>
+    <div class="aces-card"><ul class="dc-checks" id="checks"><li>Running...</li></ul></div>
+  </section>
+
+  <section class="dc-section">
+    <div class="aces-section-head"><h2 class="aces-section-title">Color</h2></div>
+    <div class="aces-card aces-stack">
+      <div class="dc-swatches" id="swatches"></div>
+      <div class="dc-swatches" id="teamSwatches"></div>
+    </div>
+  </section>
+
+  <section class="dc-section">
+    <div class="aces-section-head"><h2 class="aces-section-title">Type</h2></div>
+    <div class="aces-card dc-type">
+      <div class="u-display" style="font-size: var(--fs-2xl); line-height: 1">40 Standings 12-7</div>
+      <div class="u-display" style="font-size: var(--fs-xl); line-height: 1">28 Teal clinches .412</div>
+      <h2>20 Section heading</h2>
+      <p>16 Body. The home page should answer what's happening in the league right now, in one screen.</p>
+      <p style="font-size: var(--fs-sm)">14 Table and button text. <a href="#">A link</a>, <strong>strong</strong>, <kbd>/</kbd> to search.</p>
+      <p class="u-label u-muted">12 Uppercase label</p>
+    </div>
+  </section>
+
+  <section class="dc-section">
+    <div class="aces-section-head"><h2 class="aces-section-title">Buttons</h2></div>
+    <div class="aces-card aces-stack is-tight">
+      <div class="dc-row">
+        <button class="aces-btn is-primary" type="button"><svg class="aces-icon" aria-hidden="true"><use href="../icons.svg#icon-check"></use></svg>Submit stats</button>
+        <button class="aces-btn" type="button">Secondary</button>
+        <button class="aces-btn is-accent" type="button"><svg class="aces-icon" aria-hidden="true"><use href="../icons.svg#icon-trophy"></use></svg>Vote</button>
+        <button class="aces-btn is-danger" type="button">Delete game</button>
+        <button class="aces-btn is-ghost" type="button">Ghost</button>
+        <button class="aces-btn" type="button" disabled>Disabled</button>
+      </div>
+      <div class="dc-row">
+        <button class="aces-btn is-icon" type="button" aria-label="Search"><svg class="aces-icon" aria-hidden="true"><use href="../icons.svg#icon-search"></use></svg></button>
+        <button class="aces-btn is-sm" type="button"><svg class="aces-icon is-sm" aria-hidden="true"><use href="../icons.svg#icon-download"></use></svg>CSV</button>
+        <button class="aces-btn is-sm is-icon is-ghost" type="button" aria-label="More"><svg class="aces-icon" aria-hidden="true"><use href="../icons.svg#icon-more"></use></svg></button>
+        <button class="aces-btn" type="button"><span class="aces-spinner"></span>Saving</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="dc-section">
+    <div class="aces-section-head"><h2 class="aces-section-title">Badges, chips, team chips</h2></div>
+    <div class="aces-card aces-stack">
+      <div class="dc-row">
+        <span class="aces-badge">Final</span>
+        <span class="aces-badge is-win">Clinched</span>
+        <span class="aces-badge is-loss">Eliminated</span>
+        <span class="aces-badge is-alert">Rain delay</span>
+        <span class="aces-badge is-brand">Captain</span>
+        <span class="aces-badge is-accent">MVP</span>
+        <span class="aces-badge is-outline">Sub</span>
+        <span class="aces-live">Live</span>
+      </div>
+      <div class="aces-chip-row" role="group" aria-label="Filter">
+        <button class="aces-chip" type="button" aria-pressed="true">All teams</button>
+        <button class="aces-chip" type="button" aria-pressed="false">Qualified</button>
+        <button class="aces-chip" type="button" aria-pressed="false"><svg class="aces-icon is-sm" aria-hidden="true"><use href="../icons.svg#icon-filter"></use></svg>Field 1</button>
+        <button class="aces-chip" type="button" aria-pressed="false">Per game</button>
+        <button class="aces-chip" type="button" aria-pressed="false">Last 10</button>
+      </div>
+      <div class="dc-row" id="teamChips"></div>
+      <div class="dc-row" id="teamChipsSolid"></div>
+    </div>
+  </section>
+
+  <section class="dc-section">
+    <div class="aces-section-head"><h2 class="aces-section-title">Tabs and segmented</h2></div>
+    <div class="aces-card aces-stack">
+      <nav class="aces-tabs" aria-label="Season">
+        <a class="aces-tab" href="#" aria-current="page">Standings</a>
+        <a class="aces-tab" href="#">Schedule</a>
+        <a class="aces-tab" href="#">Scores</a>
+        <a class="aces-tab" href="#">Playoffs</a>
+        <a class="aces-tab" href="#">Preview</a>
+      </nav>
+      <div class="dc-row">
+        <div class="aces-segmented" role="group" aria-label="Range">
+          <button class="aces-segment" type="button" aria-pressed="true">Season</button>
+          <button class="aces-segment" type="button" aria-pressed="false">Career</button>
+        </div>
+        <div class="aces-segmented" role="group" aria-label="Columns">
+          <button class="aces-segment" type="button" aria-pressed="false">Standard</button>
+          <button class="aces-segment" type="button" aria-pressed="true">Advanced</button>
+          <button class="aces-segment" type="button" aria-pressed="false">Counting</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dc-section">
+    <div class="aces-section-head"><h2 class="aces-section-title">Stat table</h2><a class="aces-section-link" href="#">Full stats</a></div>
+    <div class="aces-card is-flush">
+      <div class="aces-table-wrap">
+        <table class="aces-table is-sticky-first">
+          <thead>
+            <tr>
+              <th>Player</th><th>Team</th>
+              <th class="is-num">G</th><th class="is-num">PA</th><th class="is-num">H</th><th class="is-num">HR</th>
+              <th class="is-num" aria-sort="descending"><button class="aces-sort" type="button">AVG</button></th>
+              <th class="is-num"><button class="aces-sort" type="button">OBP</button></th>
+              <th class="is-num"><button class="aces-sort" type="button">OPS</button></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+          <tfoot><tr><td>Team totals</td><td></td><td class="is-num">12</td><td class="is-num">402</td><td class="is-num">161</td><td class="is-num">14</td><td class="is-num">.401</td><td class="is-num">.455</td><td class="is-num">.983</td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="dc-section">
+    <div class="aces-section-head"><h2 class="aces-section-title">Stat tiles and results</h2></div>
+    <div class="aces-grid">
+      <div class="aces-card aces-stack">
+        <div class="aces-stats">
+          <div class="aces-stat"><span class="aces-stat-value">.412</span><span class="aces-stat-label">AVG</span><span class="aces-stat-meta">3rd in league</span></div>
+          <div class="aces-stat"><span class="aces-stat-value">.988</span><span class="aces-stat-label">OPS</span><span class="aces-stat-meta">1st</span></div>
+          <div class="aces-stat"><span class="aces-stat-value">14</span><span class="aces-stat-label">RBI</span></div>
+          <div class="aces-stat"><span class="aces-stat-value">3.2</span><span class="aces-stat-label">bWAR</span></div>
+        </div>
+      </div>
+      <div class="aces-card aces-stack is-tight">
+        <div class="aces-cluster is-between"><span class="aces-team-chip" data-team-color="teal"><span class="aces-team-dot"></span>Teal</span><span class="u-muted" style="font-size: var(--fs-sm)">9-3</span></div>
+        <ol class="aces-results" aria-label="Results">
+          <li class="aces-result is-win" title="W 12-7">W</li><li class="aces-result is-win">W</li><li class="aces-result is-loss">L</li>
+          <li class="aces-result is-win">W</li><li class="aces-result is-tie">T</li><li class="aces-result is-loss">L</li>
+          <li class="aces-result is-win">W</li><li class="aces-result is-win">W</li><li class="aces-result is-upcoming"></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="dc-section">
+    <div class="aces-section-head"><h2 class="aces-section-title">Score cards</h2></div>
+    <div class="aces-score-strip">
+      <a class="aces-score" href="#">
+        <div class="aces-score-status"><span class="aces-live">Live</span><span>Top 5</span></div>
+        <div class="aces-score-row is-winner"><span class="aces-team-chip" data-team-color="black"><span class="aces-team-dot"></span>Black</span><span class="aces-score-runs">8</span></div>
+        <div class="aces-score-row"><span class="aces-team-chip" data-team-color="white"><span class="aces-team-dot"></span>White</span><span class="aces-score-runs">6</span></div>
+      </a>
+      <a class="aces-score" href="#">
+        <div class="aces-score-status"><span>Final</span><span class="aces-badge is-win">W</span></div>
+        <div class="aces-score-row is-winner"><span class="aces-team-chip" data-team-color="gold"><span class="aces-team-dot"></span>Gold</span><span class="aces-score-runs">12</span></div>
+        <div class="aces-score-row"><span class="aces-team-chip" data-team-color="army"><span class="aces-team-dot"></span>Army</span><span class="aces-score-runs">7</span></div>
+      </a>
+      <a class="aces-score" href="#">
+        <div class="aces-score-status"><span>Sat 9:00 AM</span><span>Field 2</span></div>
+        <div class="aces-score-row is-winner"><span class="aces-team-chip" data-team-color="carolina"><span class="aces-team-dot"></span>Carolina</span><span class="aces-score-runs">-</span></div>
+        <div class="aces-score-row is-winner"><span class="aces-team-chip" data-team-color="purple"><span class="aces-team-dot"></span>Purple</span><span class="aces-score-runs">-</span></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="dc-section">
+    <div class="aces-section-head"><h2 class="aces-section-title">Form, notices, empty, loading</h2></div>
+    <div class="aces-grid">
+      <div class="aces-card aces-stack">
+        <div class="aces-field">
+          <label class="aces-label" for="dcName">Player name</label>
+          <input class="aces-input" id="dcName" placeholder="Search players">
+          <span class="aces-hint">First and last name.</span>
+        </div>
+        <div class="aces-field is-invalid">
+          <label class="aces-label" for="dcRuns">Runs</label>
+          <input class="aces-input" id="dcRuns" value="-1" aria-invalid="true" inputmode="numeric">
+          <span class="aces-hint">Runs can't be negative.</span>
+        </div>
+        <div class="aces-field">
+          <label class="aces-label" for="dcTeam">Team</label>
+          <span class="aces-select-wrap"><select class="aces-select" id="dcTeam"><option>Teal</option><option>Gold</option></select></span>
+        </div>
+        <div class="aces-field">
+          <label class="aces-label" for="dcNote">Note</label>
+          <textarea class="aces-textarea" id="dcNote"></textarea>
+        </div>
+        <label class="dc-row"><input type="checkbox" checked> Qualified only</label>
+      </div>
+      <div class="aces-stack">
+        <div class="aces-notice"><svg class="aces-icon" aria-hidden="true"><use href="../icons.svg#icon-info"></use></svg><div>Standings update after the commissioner approves scores.</div></div>
+        <div class="aces-notice is-success"><svg class="aces-icon" aria-hidden="true"><use href="../icons.svg#icon-check-circle"></use></svg><div>Stats submitted for Teal vs Gold.</div></div>
+        <div class="aces-notice is-warning"><svg class="aces-icon" aria-hidden="true"><use href="../icons.svg#icon-alert"></use></svg><div>Two games are missing scores.</div></div>
+        <div class="aces-notice is-error"><svg class="aces-icon" aria-hidden="true"><use href="../icons.svg#icon-x-circle"></use></svg><div>Couldn't save the lineup.</div></div>
+        <div class="aces-card"><div class="aces-empty"><svg class="aces-icon" aria-hidden="true"><use href="../icons.svg#icon-calendar"></use></svg><span class="aces-empty-title">No games played yet</span>The 2027 Spring season starts in April. <a href="#">See 2026 Summer</a></div></div>
+        <div class="aces-card">
+          <div class="aces-cluster" style="margin-bottom: var(--space-3)"><span class="aces-skeleton is-circle"></span><span class="aces-skeleton is-title"></span></div>
+          <span class="aces-skeleton is-row"></span><span class="aces-skeleton is-row"></span><span class="aces-skeleton is-row is-w-75"></span>
+        </div>
+        <div class="aces-card aces-cluster">
+          <span class="aces-avatar">SG</span><span class="aces-avatar is-lg">SG</span>
+          <span class="aces-skeleton is-text is-w-50" style="flex: 1"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dc-section">
+    <div class="aces-section-head"><h2 class="aces-section-title" id="iconCount">Icons</h2></div>
+    <div class="aces-card"><div class="dc-icons" id="icons"></div></div>
+  </section>
+
+</main>
+
+<script type="module">
+  import { icon, ICON_NAMES, SPRITE_URL } from '../js/ui/icons.js';
+  import { escapeHtml } from '../js/ui/format.js';
+
+  const TEAMS = ['black', 'green', 'red', 'blue', 'white', 'orange', 'silver', 'purple', 'gold', 'carolina', 'army', 'teal'];
+  const COLORS = ['page', 'surface', 'surface-2', 'border', 'border-strong', 'border-input', 'text', 'text-muted', 'text-faint', 'link',
+    'brand', 'brand-hover', 'brand-soft', 'on-brand', 'accent', 'accent-soft', 'accent-ink', 'on-accent',
+    'win', 'win-soft', 'loss', 'loss-soft', 'alert', 'alert-soft', 'focus', 'rank-top', 'rank-bottom'];
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const root = document.documentElement;
+
+  // Theme toggle (same storage key as theme-toggle.js).
+  const themeBtn = document.getElementById('themeBtn');
+  const paintThemeBtn = () => {
+    const dark = root.getAttribute('data-theme') === 'dark';
+    themeBtn.innerHTML = `${icon(dark ? 'sun' : 'moon')}${dark ? 'Light' : 'Dark'}`;
+  };
+  themeBtn.addEventListener('click', () => {
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('aces-theme', next); } catch { /* ignore */ }
+    paintThemeBtn();
+    paintSwatchValues();
+  });
+  paintThemeBtn();
+
+  // Toggle groups.
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('.aces-chip, .aces-segment');
+    if (!b) return;
+    if (b.classList.contains('aces-segment')) {
+      b.parentElement.querySelectorAll('.aces-segment').forEach((s) => s.setAttribute('aria-pressed', String(s === b)));
+    } else {
+      b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+    }
+  });
+  document.querySelectorAll('a[href="#"]').forEach((a) => a.addEventListener('click', (e) => e.preventDefault()));
+
+  // Swatches.
+  document.getElementById('swatches').innerHTML = COLORS.map((c) =>
+    `<div class="dc-swatch"><span class="dc-chip" style="background: var(--color-${c})"></span><span>${c}<code data-var="--color-${c}"></code></span></div>`).join('');
+  document.getElementById('teamSwatches').innerHTML = TEAMS.map((t) =>
+    `<div class="dc-swatch" data-team-color="${t}"><span class="dc-chip" style="background: var(--team); color: var(--team-ink); display: grid; place-items: center; font-weight: 700">Aa</span><span>${t}<code data-var="--team-${t}"></code></span></div>`).join('');
+  function paintSwatchValues() {
+    const cs = getComputedStyle(root);
+    document.querySelectorAll('code[data-var]').forEach((el) => { el.textContent = cs.getPropertyValue(el.dataset.var).trim(); });
+  }
+  paintSwatchValues();
+
+  // Team chips.
+  document.getElementById('teamChips').innerHTML = TEAMS.map((t) =>
+    `<a class="aces-team-chip" data-team-color="${t}" href="#"><span class="aces-team-dot"></span>${cap(t)}</a>`).join('');
+  document.getElementById('teamChipsSolid').innerHTML = TEAMS.map((t) =>
+    `<span class="aces-team-chip is-solid" data-team-color="${t}"><span class="aces-team-dot"></span>${cap(t)}</span>`).join('');
+
+  // Table.
+  const rows = [
+    ['Sam Ortiz', 'teal', 12, 44, 21, 4, '.512', '.568', '1.341', true],
+    ['Chris Vela', 'gold', 12, 41, 18, 2, '.474', '.512', '1.120'],
+    ['Stephen G.', 'black', 11, 38, 15, 1, '.441', '.474', '1.002', false, true],
+    ['Mike Russo', 'white', 12, 40, 14, 3, '.389', '.425', '.968'],
+    ['Dan Kim', 'carolina', 10, 33, 11, 0, '.367', '.394', '.821'],
+    ['Joe Pratt', 'orange', 12, 42, 12, 1, '.316', '.357', '.744'],
+    ['Al Brandt', 'army', 9, 29, 7, 0, '.250', '.276', '.571', false, false, true]
+  ];
+  document.getElementById('tableBody').innerHTML = rows.map(([n, t, g, pa, h, hr, avg, obp, ops, top, me, bottom]) => `
+    <tr${me ? ' class="is-me"' : ''}>
+      <td><a href="#">${escapeHtml(n)}</a></td>
+      <td><span class="aces-team-chip" data-team-color="${t}"><span class="aces-team-dot"></span>${cap(t)}</span></td>
+      <td class="is-num">${g}</td><td class="is-num">${pa}</td><td class="is-num">${h}</td><td class="is-num">${hr}</td>
+      <td class="is-num${top ? ' is-top' : bottom ? ' is-bottom' : ''}">${avg}</td><td class="is-num">${obp}</td><td class="is-num">${ops}</td>
+    </tr>`).join('');
+
+  // Icons.
+  document.getElementById('icons').innerHTML = ICON_NAMES.map((n) =>
+    `<div class="dc-icon">${icon(n)}<span>${n}</span></div>`).join('');
+  document.getElementById('iconCount').textContent = `Icons (${ICON_NAMES.length})`;
+
+  // Self-checks: sprite ids match ICON_NAMES; tokens resolved.
+  (async () => {
+    const out = [];
+    const ok = (pass, text) => out.push(`<li><strong style="color: var(--color-${pass ? 'win' : 'loss'})">${pass ? 'PASS' : 'FAIL'}</strong> ${escapeHtml(text)}</li>`);
+    try {
+      const txt = await (await fetch(SPRITE_URL, { cache: 'no-store' })).text();
+      const ids = [...txt.matchAll(/<symbol id="icon-([\w-]+)"/g)].map((m) => m[1]);
+      const missing = ICON_NAMES.filter((n) => !ids.includes(n));
+      const extra = ids.filter((n) => !ICON_NAMES.includes(n));
+      ok(!missing.length && !extra.length, `icons.svg has ${ids.length} symbols; ICON_NAMES has ${ICON_NAMES.length}` +
+        (missing.length ? `; missing in sprite: ${missing.join(', ')}` : '') + (extra.length ? `; not in ICON_NAMES: ${extra.join(', ')}` : ''));
+      ok(/^[\x00-\x7F]*$/.test(txt), 'icons.svg is plain ASCII');
+    } catch (err) {
+      ok(false, `could not fetch icons.svg: ${err.message}`);
+    }
+    const cs = getComputedStyle(root);
+    const empty = [...COLORS.map((c) => `--color-${c}`), ...TEAMS.map((t) => `--team-${t}`)].filter((v) => !cs.getPropertyValue(v).trim());
+    ok(!empty.length, empty.length ? `unset tokens: ${empty.join(', ')}` : 'all color and team tokens resolve');
+    const ff = getComputedStyle(document.querySelector('.aces-page-title')).fontFamily;
+    out.push(`<li><strong>INFO</strong> display font: ${escapeHtml(ff.split(',')[0])}${[...document.fonts].some((f) => f.family.includes('Bebas') && f.status === 'loaded') ? ' (loaded)' : ' (not loaded; fallback in use)'}</li>`);
+    document.getElementById('checks').innerHTML = out.join('');
+  })();
+</script>
+</body>
+</html>
