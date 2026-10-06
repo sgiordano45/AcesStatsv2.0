@@ -2,10 +2,11 @@
 // Firebase connection configuration for Mountainside Aces
 
 // Import Firebase SDK from CDN
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
 import {
   initializeFirestore,
+  getFirestore,
   memoryLocalCache,
   persistentLocalCache,
   collection,
@@ -33,8 +34,9 @@ const firebaseConfig = {
   measurementId: "G-1F8JKZH6DZ"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase, or reuse the app if js/core/firebase.js created it first
+// (v2.0: load order between this file and js/core/ no longer matters).
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 // Analytics — safe to fail silently
 let analytics = null;
@@ -49,9 +51,15 @@ const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
 // Initialize Firestore with appropriate cache based on browser.
 // Safari desktop has unreliable IndexedDB under ITP — use memory cache there.
-const db = initializeFirestore(app, {
-  localCache: isSafari ? memoryLocalCache() : persistentLocalCache()
-});
+// If js/core/firebase.js already set Firestore up (same cache choice), reuse it.
+let db;
+try {
+  db = initializeFirestore(app, {
+    localCache: isSafari ? memoryLocalCache() : persistentLocalCache()
+  });
+} catch (e) {
+  db = getFirestore(app);
+}
 
 console.log(`✅ Firestore initialized with ${isSafari ? 'Memory' : 'IndexedDB'} cache`);
 

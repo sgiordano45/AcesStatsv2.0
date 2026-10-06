@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Data check</title>
+<script type="module" src="../js/core/preview-guard.js"></script>
+<link rel="stylesheet" href="../mobile-enhancements.css">
+<link rel="stylesheet" href="../nav-styles.css">
+<link rel="stylesheet" href="../dark-mode.css">
+<style>
+  body { margin: 0; font: 15px/1.5 Inter, system-ui, -apple-system, sans-serif; background: var(--bg-primary, #f7fafc); color: var(--text-dark, #1f2937); }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 96px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 28px 0 8px; }
+  .muted { color: var(--text-light, #64748b); font-size: 13px; }
+  .card { background: var(--card-bg, #fff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: 4px 8px; border-top: 1px solid var(--border-color, #e2e8f0); vertical-align: top; text-align: left; }
+  th { color: var(--text-light, #64748b); font-weight: 600; border-top: 0; }
+  td.wrap { white-space: normal; word-break: break-word; }
+  .pass { color: #2d6a16; font-weight: 700; }
+  .fail { color: #b91c1c; font-weight: 700; }
+  button { min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--border-color, #cbd5e1); background: var(--card-bg, #fff); color: inherit; font: inherit; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="page-container">
+<div class="filters-nav"></div>
+<main>
+  <h1>Data check</h1>
+  <p class="muted">Calls every read in js/data/ and the same function in the pre-split firebase-data.js (tests/legacy/firebase-data-legacy.js) with the same arguments, and compares the results. Read-only. Also checks that firebase-data.js (the shim) hands out the js/data/ functions.</p>
+
+  <div data-page-loading class="card" id="progress">Loading...</div>
+
+  <div data-page-content hidden>
+    <div class="card"><b id="summary"></b> <span class="muted" id="args"></span></div>
+    <p><button type="button" id="runSlow">Also run the slow subcollection reads (several hundred reads each)</button></p>
+    <h2>Results</h2>
+    <div class="card"><table id="results"></table></div>
+  </div>
+</main>
+</div>
+
+<script type="module">
+  import { initPage, pageReady, showPageError } from '../js/core/app.js';
+  import { escapeHtml as esc } from '../js/ui/format.js';
+  import * as legacy from './legacy/firebase-data-legacy.js';
+  import * as data from '../js/data/index.js';
+  import * as shim from '../firebase-data.js';
+
+  const $ = (id) => document.getElementById(id);
+  const rows = [];
+  let failed = 0;
+
+  // Stable JSON: object keys sorted, so field order can't cause a false difference.
+  const stable = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x))
+    ? Object.fromEntries(Object.keys(x).sort().map((key) => [key, x[key]])) : x);
+
+  function firstDiff(a, b) {
+    let i = 0;
+    while (i < a.length && a[i] === b[i]) i++;
+    return `at char ${i}: old "${a.slice(Math.max(0, i - 40), i + 60)}" / new "${b.slice(Math.max(0, i - 40), i + 60)}"`;
+  }
+
+  function describe(v) {
+    if (Array.isArray(v)) return `${v.length} items`;
+    if (v === null || v === undefined) return String(v);
+    if (typeof v === 'object') return `object (${Object.keys(v).length} fields)`;
+    return String(v).slice(0, 40);
+  }
+
+  async function check(name, args) {
+    let oldVal, newVal, oldErr = null, newErr = null;
+    try { oldVal = await legacy[name](...args); } catch (e) { oldErr = e?.message || String(e); }
+    try { newVal = await data[name](...args); } catch (e) { newErr = e?.message || String(e); }
+    const a = oldErr ? `ERROR ${oldErr}` : stable(oldVal);
+    const b = newErr ? `ERROR ${newErr}` : stable(newVal);
+    const ok = a === b;
+    if (!ok) failed++;
+    rows.push(`<tr><td>${esc(name)}</td><td class="wrap muted">${esc(args.map((x) => JSON.stringify(x)).join(', '))}</td><td>${esc(oldErr ? 'error' : describe(newVal))}</td><td>${ok ? '<span class="pass">same</span>' : `<span class="fail">DIFFERENT</span><div class="muted">${esc(firstDiff(a, b))}</div>`}</td></tr>`);
+    $('results').innerHTML = '<tr><th>Function</th><th>Arguments</th><th>Result</th><th>Old vs new</th></tr>' + rows.join('');
+    $('summary').textContent = failed ? `${failed} of ${rows.length} differ` : `All ${rows.length} match`;
+    $('summary').className = failed ? 'fail' : 'pass';
+    return newVal;
+  }
+
+  try {
+    await initPage({ title: 'Data check' });
+
+    // The shim must hand out the very same functions, plus app/db/doc/getDoc.
+    const legacyNames = Object.keys(legacy).filter((k) => typeof legacy[k] === 'function' && !['doc', 'getDoc'].includes(k));
+    const shimMissing = legacyNames.filter((k) => shim[k] !== data[k]);
+    const shimExtras = ['app', 'db', 'doc', 'getDoc'].filter((k) => !shim[k]);
+    rows.push(`<tr><td>firebase-data.js shim</td><td class="muted">${legacyNames.length} functions + app, db, doc, getDoc</td><td></td><td>${!shimMissing.length && !shimExtras.length ? '<span class="pass">same</span>' : `<span class="fail">MISSING ${esc([...shimMissing, ...shimExtras].join(', '))}</span>`}</td></tr>`);
+    if (shimMissing.length || shimExtras.length) failed++;
+
+    progress('Seasons and games...');
+    const current = await check('getCurrentSeason', []);
+    await check('getAllSeasons', []);
+    const sid = current?.id || '2026-fall';
+    const games = await check('getSeasonGames', [sid]);
+    await check('getGame', [sid, games?.[0]?.id || 'none']);
+    await check('getSeasonPreviews', [sid]);
+
+    progress('Teams and players...');
+    await check('getAllTeams', []);
+    await check('getTeam', ['teal']);
+    await check('getPlayersByTeamOptimized', ['Teal']);
+    const users = await check('getAllPlayers', []);
+    const someUser = users?.find((u) => u.displayName) || users?.[0];
+    await check('getPlayer', [someUser?.id || 'none']);
+    await check('searchPlayers', ['an']);
+    await check('getPlayerInfo', [someUser?.displayName || 'none']);
+
+    progress('Player stats...');
+    const all = await check('getAllPlayerStatsOptimized', []);
+    await check('getAllPitchingStatsOptimized', []);
+    const sample = all?.find((p) => p.pitchingSeasons && Object.keys(p.pitchingSeasons).length) || all?.[0];
+    const legacyId = all?.find((p) => /^[a-z]+_[a-z_]+$/.test(p.id))?.id || 'none';
+    await check('getPlayerStatsOptimized', [sample?.id || 'none']);
+    await check('getPlayerByIdentifier', [sample?.id || 'none']);
+    await check('getPlayerByIdentifier', [sample?.name || 'none']);
+    await check('resolvePlayerName', [sample?.name || 'none']);
+    await check('searchPlayersOptimized', ['an']);
+    await check('getSeasonPlayerStatsOptimized', [sid]);
+    await check('getSeasonPitchingStatsOptimized', [sid]);
+    await check('getTopPlayersByStat', ['career.hits', 10]);
+    await check('getTopPlayersByStat', ['career.battingAverage', 10, 20]);
+    await check('getTopSeasonPlayersByStat', [sid, 'hits', 10]);
+    await check('getTopSeasonPlayersByStat', [sid, 'battingAverage', 10, 10]);
+    await check('getPlayerCareerStats', [legacyId]);
+    await check('getPlayerSeasonStats', [legacyId, sid]);
+    await check('getPlayerCareerPitching', [legacyId]);
+    await check('getPlayerSeasonPitching', [legacyId, sid]);
+    for (const fn of ['getSeasonFromPlayer', 'getPitchingSeasonFromPlayer']) {
+      const key = Object.keys((fn === 'getSeasonFromPlayer' ? sample?.seasons : sample?.pitchingSeasons) || {})[0] || 'none';
+      await check(fn, [sample, key]);
+    }
+    for (const fn of ['getPlayerSeasonIds', 'seasonsObjectToArray', 'pitchingSeasonsObjectToArray']) await check(fn, [sample]);
+
+    progress('Awards...');
+    await check('getAllAwards', []);
+    await check('getSeasonAwards', [sid]);
+    const awards = await legacy.getAllAwards();
+    await check('getPlayerAwards', [awards?.[0]?.playerName || 'none']);
+
+    $('args').textContent = `season ${sid}; sample player ${sample?.name || '-'} (${sample?.id || '-'}); legacy ID ${legacyId}`;
+
+    $('runSlow').addEventListener('click', async (e) => {
+      e.target.disabled = true;
+      e.target.textContent = 'Running slow reads...';
+      await check('getSeasonPlayerStats', [sid]);
+      await check('getSeasonPitchingStats', [sid]);
+      await check('getAllPlayerStats', []);
+      e.target.textContent = 'Slow reads done';
+    });
+
+    window.__dataReport = () => ({ failed, total: rows.length, text: $('results').innerText });
+    pageReady();
+  } catch (err) {
+    showPageError(err);
+  }
+
+  function progress(msg) { const el = $('progress'); if (el) el.textContent = msg; }
+</script>
+</body>
+</html>
