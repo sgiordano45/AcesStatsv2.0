@@ -8,6 +8,8 @@ import {
   seasonsObjectToArray,
   pitchingSeasonsObjectToArray
 } from './firebase-data.js';
+import { initPage, pageReady, showPageState, showPageError, siteUrl } from './js/core/app.js';
+import { capitalize } from './js/ui/format.js';
 
 let teamData = [];
 let teamPitchingData = [];
@@ -22,9 +24,7 @@ let currentView = 'batting';
 const params = new URLSearchParams(window.location.search);
 currentTeam = params.get("team");
 
-if (!currentTeam) {
-  document.body.innerHTML = '<h1>Error: No team specified</h1><p><a href="index.html">Return to main page</a></p>';
-} else {
+if (currentTeam) {
   document.getElementById("team-name").textContent = currentTeam;
   // Set team logo
   const logoElement = document.getElementById("team-logo");
@@ -33,11 +33,24 @@ if (!currentTeam) {
     logoElement.alt = `${currentTeam} Logo`;
     logoElement.classList.add('loaded');
   }
-  loadTeamData();
 }
 
+async function main() {
+  await initPage({ title: currentTeam ? `${currentTeam} Team Stats` : 'Team Stats' });
+  if (!currentTeam) {
+    showPageState({
+      title: 'No team picked',
+      message: 'Choose a team from the teams page.',
+      actions: [{ label: 'Go to teams', href: siteUrl('teams.html'), primary: true }]
+    });
+    return;
+  }
+  await loadTeamData();
+}
+
+main().catch((err) => showPageError(err));
+
 async function loadTeamData() {
-  try {
     console.log('Loading team data from optimized aggregated collections...');
     
     // Load player stats from optimized collection
@@ -58,7 +71,7 @@ async function loadTeamData() {
             
             if (parts.length >= 2) {
               const year = parts[0];
-              const season = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+              const season = capitalize(parts[1]);
               
               teamData.push({
                 id: playerData.id || playerData.userId || playerData.playerId,  // ← ADD THIS LINE
@@ -100,7 +113,7 @@ async function loadTeamData() {
             
             if (parts.length >= 2) {
               const year = parts[0];
-              const season = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+              const season = capitalize(parts[1]);
               
               teamPitchingData.push({
                 id: playerData.id || playerData.userId || playerData.playerId,
@@ -150,8 +163,8 @@ async function loadTeamData() {
         // Convert team IDs to capitalized team names
         const homeTeamId = game.homeTeamId || '';
         const awayTeamId = game.awayTeamId || '';
-        const homeTeamName = homeTeamId ? homeTeamId.charAt(0).toUpperCase() + homeTeamId.slice(1) : '';
-        const awayTeamName = awayTeamId ? awayTeamId.charAt(0).toUpperCase() + awayTeamId.slice(1) : '';
+        const homeTeamName = capitalize(homeTeamId);
+        const awayTeamName = capitalize(awayTeamId);
         
         // Normalize game type
         const gameType = game.gameType || game.game_type || '';
@@ -159,7 +172,7 @@ async function loadTeamData() {
         
         // Normalize winner
         const winnerId = game.winner || '';
-        const normalizedWinner = winnerId ? winnerId.charAt(0).toUpperCase() + winnerId.slice(1) : '';
+        const normalizedWinner = capitalize(winnerId);
         
         const gameData = {
           id: gameDoc.id,
@@ -169,7 +182,7 @@ async function loadTeamData() {
           "away score": game.awayScore || game["away score"] || game.away_score || 0,
           winner: normalizedWinner,
           year: year,
-          season: season.charAt(0).toUpperCase() + season.slice(1),
+          season: capitalize(season),
           game_type: normalizedGameType
         };
         
@@ -185,10 +198,11 @@ async function loadTeamData() {
     console.log(`Loaded ${allGames.length} total games, ${teamGames.length} for ${currentTeam}`);
     
     if (teamData.length === 0 && teamPitchingData.length === 0) {
-      document.body.innerHTML = `
-        <h1>Team "${currentTeam}" not found</h1>
-        <p><a href="teams.html">Return to teams page</a></p>
-      `;
+      showPageState({
+        title: 'Team not found',
+        message: `We don't have stats for "${currentTeam}".`,
+        actions: [{ label: 'Go to teams', href: siteUrl('teams.html'), primary: true }]
+      });
       return;
     }
 
@@ -198,15 +212,7 @@ async function loadTeamData() {
     renderSummary();
     populateFilters();
     switchToView('batting');
-    
-  } catch (error) {
-    console.error("Error loading team data:", error);
-    document.body.innerHTML = `
-      <h1>Error loading team data</h1>
-      <p>Could not load statistics: ${error.message}</p>
-      <p><a href="teams.html">Return to teams page</a></p>
-    `;
-  }
+    pageReady();
 }
 
 function renderSummary() {

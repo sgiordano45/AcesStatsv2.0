@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Team Stats - Aces Stats</title>
+<title>Team Stats - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -966,7 +966,7 @@
 </head>
 <body>
 <!-- Loading Overlay -->
-<div id="loadingOverlay" class="loading-overlay">
+<div id="loadingOverlay" class="loading-overlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -977,6 +977,7 @@
 
   
 
+  <div data-page-content>
   <div class="team-header">
     <img id="team-logo" class="team-logo" src="" alt="" onerror="this.style.display='none';">
     
@@ -1045,6 +1046,7 @@
         <tr><td colspan="12" class="loading">Loading statistics...</td></tr>
       </tbody>
     </table>
+  </div>
   </div>
 </div>
 
@@ -1191,13 +1193,6 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="team-colors.js"></script>
 
 <script>
-// Hide loading overlay when page loads
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    document.getElementById('loadingOverlay').classList.add('hidden');
-  }, 800);
-});
-
 // Update the current season team link with the team parameter
 document.addEventListener('DOMContentLoaded', function() {
   const params = new URLSearchParams(window.location.search);
@@ -1399,12 +1394,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }, 1000);
 });
 </script>
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
-</script>
 <script src="mobile-enhancements.js"></script>
 <script src="stat-tooltips.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>
