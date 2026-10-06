@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mountainside Aces - Batting Statistics</title>
+<title>Batting Statistics - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -489,7 +489,7 @@ td a:hover {
 </head>
 <body>
 <!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -504,12 +504,14 @@ td a:hover {
 <div class="page-container">
   <!-- Summary Section -->
   <div id="summary" class="summary">
-    <div id="loadingIndicator" style="text-align: center; padding: 2rem;">
+    <div id="loadingIndicator" data-page-loading>
       <p style="font-size: 1.2rem; color: var(--primary-color);">⏳ Loading batting statistics...</p>
       <p style="color: var(--text-light); margin-top: 0.5rem;">Using optimized aggregated collection (fast!)</p>
     </div>
-    <p id="totalsText" style="display: none;"></p>
-    <p id="leadersText" style="display: none;"></p>
+    <div data-page-content hidden>
+      <p id="totalsText"></p>
+      <p id="leadersText"></p>
+    </div>
   </div>
 
   <!-- Filters and Navigation -->
@@ -532,7 +534,7 @@ td a:hover {
   </div>
 
   <!-- Statistics Table -->
-  <div class="table-container">
+  <div class="table-container" data-page-content hidden>
     <div class="swipe-indicator">← Swipe left/right to see all columns →</div>
     <table id="statsTable">
       <thead>
@@ -562,110 +564,34 @@ td a:hover {
 
 <script src="team-colors.js"></script>
 <script type="module">
-  console.log('📄 Script started - checking Firebase imports...');
-  
-  // Import optimized functions and season helpers
+  // firebase-data.js first: its firebase-config.js creates the Firebase app,
+  // and js/core/firebase.js (loaded through app.js) reuses it.
   import {
     getAllPlayerStatsOptimized,
     seasonsObjectToArray
   } from './firebase-data.js';
-  
-  console.log('✅ Firebase imports successful!');
+  import { initPage, pageReady, showPageState, showPageError } from './js/core/app.js';
+  import { capitalize, formatPlayerName } from './js/ui/format.js';
 
   // Global variables
   let allPlayerData = [];
   let currentSortField = null;
   let currentSortDirection = 'desc';
 
-  // Helper function for capitalization
-  const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
-
-function formatPlayerName(name) {
-  if (!name) return "";
-  
-  // If name already has spaces, capitalize each word properly
-  if (name.includes(' ')) {
-    return name.split(' ')
-      .map(word => {
-        // Handle special cases like DelleDonne, McDonald, etc.
-        if (word.toLowerCase() === 'delledonne') return 'DelleDonne';
-        if (word.toLowerCase() === 'mcdonald') return 'McDonald';
-        if (word.toLowerCase() === 'mccarthy') return 'McCarthy';
-		if (word.toLowerCase() === 'lacasse') return 'LaCasse';
-		if (word.toLowerCase() === 'mccabe') return 'McCabe';
-		if (word.toLowerCase() === "o'grady") return "O'Grady";
-		if (word.toLowerCase() === 'mcmahon') return 'McMahon';
-		if (word.toLowerCase() === 'mccorkell') return 'McCorkell';
-		if (word.toLowerCase() === 'denoble') return 'DeNoble';
-		if (word.toLowerCase() === 'digiacomo') return 'DiGiacomo';
-        // Add more special cases as needed
-        
-        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-      })
-      .join(' ');
-  }
-  
-  // If name has underscores, replace with spaces and capitalize
-  if (name.includes('_')) {
-    return name.split('_')
-      .map(word => {
-        // Handle special cases
-        if (word.toLowerCase() === 'delledonne') return 'DelleDonne';
-        if (word.toLowerCase() === 'mcdonald') return 'McDonald';
-        if (word.toLowerCase() === 'mccarthy') return 'McCarthy';
-        if (word.toLowerCase() === 'mccabe') return 'McCabe';
-		if (word.toLowerCase() === 'lacasse') return 'LaCasse';
-		        if (word.toLowerCase() === "o'grady") return "O'Grady";
-		if (word.toLowerCase() === 'mcmahon') return 'McMahon';
-				if (word.toLowerCase() === 'mccorkell') return 'McCorkell';
-		if (word.toLowerCase() === 'denoble') return 'DeNoble';
-		if (word.toLowerCase() === 'digiacomo') return 'DiGiacomo';
-		
-        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-      })
-      .join(' ');
-  }
-  
-  // Handle special cases for single words
-  if (name.toLowerCase() === 'delledonne') return 'DelleDonne';
-  if (name.toLowerCase() === 'mcdonald') return 'McDonald';
-  if (name.toLowerCase() === 'mccarthy') return 'McCarthy';
-  if (name.toLowerCase() === 'mccabe') return 'McCabe';
-  if (name.toLowerCase() === 'lacasse') return 'LaCasse';
-  if (name.toLowerCase() === "o'grady") return "O'Grady";
-  if (name.toLowerCase() === 'mcmahon') return 'McMahon';
-  		if (name.toLowerCase() === 'mccorkell') return 'McCorkell';
-		if (name.toLowerCase() === 'denoble') return 'DeNoble';
-		if (name.toLowerCase() === 'digiacomo') return 'DiGiacomo';
-  
-  
-  // Otherwise just capitalize the single name
-  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-}
-
   // Load data using optimized aggregated collection with object-keyed seasons
   async function loadData() {
-    const loadStartTime = performance.now();
-    console.log('⚡ Loading batting data from aggregated collection (OPTIMIZED)...');
-    console.time('Total Load Time');
-    
-    try {
-      console.time('Fetch Aggregated Data');
-      const players = await getAllPlayerStatsOptimized();
-      console.timeEnd('Fetch Aggregated Data');
-      console.log(`✅ Loaded ${players?.length || 0} players from aggregated collection`);
-      
-      if (!players || players.length === 0) {
-        console.warn('No player data found');
-        document.getElementById('totalsText').textContent = 'No player data available.';
-        document.getElementById('loadingIndicator').style.display = 'none';
-        document.getElementById('totalsText').style.display = 'block';
-        document.getElementById('loadingOverlay').classList.add('hidden');
-        return;
-      }
-      
+    const players = await getAllPlayerStatsOptimized();
+
+    if (!players || players.length === 0) {
+      showPageState({
+        title: 'No batting stats yet',
+        message: 'Stats show up here once games have been entered.',
+        container: '#summary'
+      });
+      return;
+    }
+
       // Process seasons from OBJECT format (not array)
-      console.time('Process Data');
       const allStats = [];
 
       players.forEach(player => {
@@ -715,43 +641,11 @@ function formatPlayerName(name) {
         }
       });
       
-      console.log(`✅ Processed ${allStats.length} season records from ${players.length} players`);
       allPlayerData = allStats;
-      console.timeEnd('Process Data');
-      
-      // Hide loading indicator and show data
-      const loadingIndicator = document.getElementById('loadingIndicator');
-      const totalsText = document.getElementById('totalsText');
-      const leadersText = document.getElementById('leadersText');
-      
-      if (loadingIndicator) loadingIndicator.style.display = 'none';
-      if (totalsText) totalsText.style.display = 'block';
-      if (leadersText) leadersText.style.display = 'block';
-      
-      console.time('Render UI');
+
       populateFilters();
       filterAndDisplayStats();
-      updateSummary();
-      console.timeEnd('Render UI');
-      
-      const loadEndTime = performance.now();
-      console.timeEnd('Total Load Time');
-      console.log(`🎉 Page loaded in ${(loadEndTime - loadStartTime).toFixed(0)}ms`);
-      
-      // Hide loading overlay
-      document.getElementById('loadingOverlay').classList.add('hidden');
-      
-    } catch (error) {
-      console.error('❌ Error loading data:', error);
-      const totalsEl = document.getElementById('totalsText');
-      if (totalsEl) {
-        totalsEl.textContent = 'Error loading data. Please refresh the page.';
-        totalsEl.style.display = 'block';
-      }
-      const loadingIndicator = document.getElementById('loadingIndicator');
-      if (loadingIndicator) loadingIndicator.style.display = 'none';
-      document.getElementById('loadingOverlay').classList.add('hidden');
-    }
+      pageReady();
   }
 
   // Populate year and season filters
@@ -921,7 +815,7 @@ function formatPlayerName(name) {
       // AcesBPI leader
       const topAcesWar = allTimeData.filter(p => typeof p.AcesWar === 'number').reduce((max, p) => p.AcesWar > max.AcesWar ? p : max, {AcesWar: 0});
       
-      leadersText.innerHTML = `All-Time Single Season Leaders — Games: ${topGames.name} (${topGames.games}) | At Bats: ${topAtBats.name} (${topAtBats.atBats}) | Hits: ${topHits.name} (${topHits.hits}) | Runs: ${topRuns.name} (${topRuns.runs}) | Walks: ${topWalks.name} (${topWalks.walks}) | BA: ${topBA.name} (${topBA.BA.toFixed(3)}) | OBP: ${topOBP.name} (${topOBP.OBP.toFixed(3)}) | AcesBPI: ${topAcesWar.name} (${topAcesWar.AcesWar.toFixed(2)})`;
+      leadersText.textContent = `All-Time Single Season Leaders — Games: ${topGames.name} (${topGames.games}) | At Bats: ${topAtBats.name} (${topAtBats.atBats}) | Hits: ${topHits.name} (${topHits.hits}) | Runs: ${topRuns.name} (${topRuns.runs}) | Walks: ${topWalks.name} (${topWalks.walks}) | BA: ${topBA.name} (${topBA.BA.toFixed(3)}) | OBP: ${topOBP.name} (${topOBP.OBP.toFixed(3)}) | AcesBPI: ${topAcesWar.name} (${topAcesWar.AcesWar.toFixed(2)})`;
     } else {
       leadersText.textContent = '';
     }
@@ -1058,29 +952,15 @@ function formatPlayerName(name) {
     });
   }
 
-  // Initialize page when DOM is ready
-  function initPage() {
-    console.log('📄 Initializing page...');
+  async function main() {
+    await initPage({ title: 'Batting Statistics' });
     initializeSorting();
-    loadData();
+    await loadData();
   }
-  
-  // Wait for DOM to be fully ready
-  if (document.readyState === 'loading') {
-    console.log('⏳ Waiting for DOM to load...');
-    document.addEventListener('DOMContentLoaded', initPage);
-  } else {
-    // DOM is already loaded
-    console.log('✅ DOM already loaded');
-    initPage();
-  }
-</script>
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
+
+  main().catch((err) => showPageError(err, { container: '#summary' }));
 </script>
 <script src="mobile-enhancements.js"></script>
 <script src="stat-tooltips.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

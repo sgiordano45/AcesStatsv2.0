@@ -87,6 +87,7 @@ async function runInit({
   deniedMessage
 } = {}) {
   installErrorBoundary();
+  ensureStateStyles(); // so [hidden] wins over page CSS like display:flex
   if (title) document.title = `${title} - ${SITE_NAME}`;
   applySavedTheme();
   loadScriptOnce('theme-toggle.js', () => !!window.ThemeManager);
@@ -122,6 +123,7 @@ export function redirectToSignIn() {
 // ---------------------------------------------------------------------------
 
 const STATE_CSS = `
+[data-page-loading][hidden],[data-page-content][hidden]{display:none!important}
 .aces-state{max-width:480px;margin:48px auto;padding:24px;text-align:center;border-radius:8px;
   background:var(--card-bg,#fff);color:var(--text-dark,#1f2937);border:1px solid var(--border-color,#e2e8f0);
   font:400 15px/1.5 Inter,system-ui,-apple-system,sans-serif}
