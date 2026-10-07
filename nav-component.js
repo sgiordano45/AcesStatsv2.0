@@ -363,29 +363,13 @@ export class NavigationComponent {
     });
     
     const { mobile, desktop } = nav.render();
-
-    // The phone menu needs nav-styles.css; some pages never linked it.
-    const navCss = new URL('./nav-styles.css', import.meta.url).href;
-    if (![...document.querySelectorAll('link[rel="stylesheet"]')].some((l) => l.href === navCss)) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = navCss;
-      document.head.appendChild(link);
-    }
     
-    // Insert mobile nav BEFORE page-container (not inside it)
-    const pageContainer = document.querySelector('.page-container');
-    if (pageContainer) {
-      // Insert before the page-container, not inside it
-      pageContainer.insertAdjacentHTML('beforebegin', mobile);
-    } else {
-      // Fallback: insert at start of body if page-container not found
-      document.body.insertAdjacentHTML('afterbegin', mobile);
-    }
+    // v2.0: the old hamburger menu is no longer drawn. Phones get the bottom
+    // bar and Me sheet from js/ui/nav.js (mounted below) instead.
     
-    // v2.0: desktop uses the site header from js/ui/nav.js (hubs, tab rows,
-    // avatar menu) in place of the old link row in .filters-nav. Phones keep
-    // the mobile menu above until push 5c. mountHeader() runs once per page.
+    // v2.0: the site header from js/ui/nav.js (hubs, tab rows, avatar menu,
+    // and on phones the bottom bar and Me sheet) replaces the old link row in
+    // .filters-nav. mountHeader() runs once per page.
     document.querySelector('.filters-nav .nav-container')?.remove();
     import('./js/ui/nav.js')
       .then((m) => m.mountHeader())
@@ -537,9 +521,7 @@ export class NavigationComponent {
         console.log('👁️ App became visible - checking nav state');
         // Small delay to let iOS settle
         setTimeout(() => {
-          const btn = document.getElementById('mobileMenuBtn');
-          const menu = document.getElementById('mobileNavMenu');
-          if (btn && menu) {
+          if (document.getElementById('aces-header')) {
             console.log('✅ Nav elements present after visibility change');
           } else {
             console.warn('⚠️ Nav elements missing after visibility change, reinitializing...');

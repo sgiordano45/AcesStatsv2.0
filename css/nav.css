@@ -218,7 +218,7 @@
 /* The old desktop link card, now empty on most pages */
 .filters-nav.aces-nav-empty { display: none; }
 
-/* --- Narrower screens ---------------------------------------------------- */
+/* --- Narrower screens (desktop/tablet) -- ---------------------------------------------------- */
 @media (max-width: 1180px) {
   .aces-me__name { display: none; }
   .aces-hub { padding: 0 10px; }
@@ -229,14 +229,132 @@
   .aces-hub__full { display: none; }
   .aces-hub__short { display: inline; }
 }
-/* Phones: old hamburger nav until push 5c */
+/* ==========================================================================
+   Phones (768 px and below)
+   The top bar scrolls away with the page; the hubs live in a fixed bottom
+   bar, and Me opens a sheet (More tiles + the avatar menu).
+   ========================================================================== */
+:root { --nav-bottom-h: calc(60px + env(safe-area-inset-bottom, 0px)); }
+
+.aces-bottom, .aces-sheet { display: none; }
+
 @media (max-width: 768px) {
-  .aces-header, .aces-header-spacer { display: none; }
+  .aces-header { position: absolute; box-shadow: none; }
+  .aces-hubs { display: none; }
+  .aces-header__inner { gap: var(--space-2, 8px); }
+  .aces-logo__text { display: inline; font-size: 20px; }
+  .aces-me__name, .aces-me__btn > .aces-icon { display: none; }
+  .aces-me__btn { padding: 0 4px; }
+  .aces-me__menu { display: none !important; }
+  .aces-signin span { display: none; }
+  .aces-signin { width: 40px; padding: 0; justify-content: center; }
+  .aces-tab { height: 44px; }
+
+  /* Legacy page spacing: nav-styles.css pads the body for the old fixed
+     hamburger bar; the spacer and bottom bar take over that job. */
+  html.has-aces-header body {
+    padding-top: 0 !important;
+    padding-bottom: var(--nav-bottom-h) !important;
+  }
+
+  /* --- Bottom bar --- */
+  .aces-bottom {
+    display: flex;
+    position: fixed; left: 0; right: 0; bottom: 0;
+    z-index: var(--z-header, 100);
+    height: var(--nav-bottom-h);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--color-surface, #fff);
+    border-top: 1px solid var(--color-border-strong, #cdd1c9);
+    box-shadow: 0 -2px 12px rgba(16, 24, 16, 0.08);
+    font-family: var(--font-sans);
+  }
+  .aces-bottom__item {
+    flex: 1 1 0; min-width: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    padding: 6px 2px 4px; border: 0; background: transparent; cursor: pointer;
+    color: var(--color-text-muted, #5a6056); text-decoration: none;
+    font: inherit; font-size: 11px; font-weight: var(--fw-medium, 500); line-height: 1;
+    position: relative; -webkit-tap-highlight-color: transparent;
+  }
+  .aces-bottom__item .aces-icon { width: 22px; height: 22px; }
+  .aces-bottom__item.is-active { color: var(--color-brand, #2d5016); font-weight: var(--fw-semibold, 600); }
+  .aces-bottom__item.is-active::before {
+    content: ""; position: absolute; top: 0; left: 28%; right: 28%;
+    height: 3px; border-radius: 0 0 3px 3px; background: var(--color-brand, #2d5016);
+  }
+  .aces-avatar.is-sm { width: 24px; height: 24px; font-size: 10px; }
+  .aces-bottom .aces-avatar.is-viewing { box-shadow: 0 0 0 2px var(--color-surface, #fff), 0 0 0 4px var(--color-alert, #a35200); }
+
+  /* --- Me sheet --- */
+  .aces-sheet { display: block; position: fixed; inset: 0; z-index: var(--z-sheet, 900); font-family: var(--font-sans); font-size: var(--fs-sm, 14px); }
+  .aces-sheet[hidden] { display: none; }
+  .aces-sheet *, .aces-sheet *::before, .aces-sheet *::after { box-sizing: border-box; }
+  .aces-sheet a { text-decoration: none; }
+  .aces-sheet .aces-icon { display: inline-block; flex: none; width: 1.15em; height: 1.15em; vertical-align: -0.2em; overflow: visible; }
+  .aces-sheet__backdrop { position: absolute; inset: 0; background: var(--color-backdrop, rgba(15, 18, 14, 0.55)); animation: aces-fade var(--dur-fast, 150ms) ease-out; }
+  .aces-sheet__panel {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    max-height: 85vh; overflow-y: auto; overscroll-behavior: contain;
+    padding: var(--space-2, 8px) var(--space-3, 12px) calc(var(--space-4, 16px) + env(safe-area-inset-bottom, 0px));
+    background: var(--color-surface, #fff); color: var(--color-text, #1c201b);
+    border-radius: var(--radius-lg, 12px) var(--radius-lg, 12px) 0 0;
+    box-shadow: var(--elev-3);
+    animation: aces-slide-up var(--dur-slow, 300ms) var(--ease-out, ease-out);
+  }
+  .aces-sheet__panel::before {
+    content: ""; display: block; width: 36px; height: 4px; margin: 0 auto var(--space-2, 8px);
+    border-radius: 2px; background: var(--color-border-strong, #cdd1c9);
+  }
+  .aces-sheet__head { display: flex; align-items: center; gap: var(--space-3, 12px); padding: var(--space-2, 8px) var(--space-2, 8px) var(--space-3, 12px); border-bottom: 1px solid var(--color-border, #e9ebe6); }
+  .aces-sheet__head .aces-avatar { width: 40px; height: 40px; font-size: 15px; }
+  .aces-sheet__name { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; font-size: var(--fs-md, 16px); }
+  .aces-sheet__name b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .aces-sheet__close {
+    display: inline-grid; place-items: center; width: 40px; height: 40px; flex: none;
+    border: 0; border-radius: 50%; background: var(--color-surface-2, #e9ebe6); color: var(--color-text, #1c201b); cursor: pointer; font-size: 18px;
+  }
+  .aces-sheet__label {
+    padding: var(--space-3, 12px) var(--space-2, 8px) var(--space-2, 8px);
+    color: var(--color-text-muted, #5a6056);
+    font-size: var(--fs-xs, 12px); font-weight: var(--fw-semibold, 600);
+    text-transform: uppercase; letter-spacing: var(--tracking-label, 0.06em);
+  }
+  .aces-sheet__tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2, 8px); padding: 0 var(--space-1, 4px) var(--space-3, 12px); border-bottom: 1px solid var(--color-border, #e9ebe6); }
+  .aces-sheet__tile {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    min-height: 72px; padding: var(--space-2, 8px) 4px;
+    border: 1px solid var(--color-border-strong, #cdd1c9); border-radius: var(--radius-md, 8px);
+    background: var(--color-surface, #fff); color: var(--color-text, #1c201b); cursor: pointer;
+    font: inherit; font-size: var(--fs-xs, 12px); font-weight: var(--fw-medium, 500); text-align: center;
+  }
+  .aces-sheet__tile .aces-icon { width: 24px; height: 24px; color: var(--color-brand, #2d5016); }
+  .aces-sheet__tile.is-active { background: var(--color-brand-soft, #e4ecdc); border-color: var(--color-brand, #2d5016); color: var(--color-brand, #2d5016); font-weight: var(--fw-semibold, 600); }
+  .aces-sheet .aces-me__item { min-height: var(--tap-min, 44px); font-size: var(--fs-md, 16px); }
+  .aces-sheet__actions { display: flex; flex-direction: column; gap: var(--space-2, 8px); padding: var(--space-3, 12px) var(--space-1, 4px) 0; }
+  .aces-sheet__btn {
+    display: flex; align-items: center; justify-content: center; gap: var(--space-2, 8px);
+    height: var(--tap-min, 44px); border-radius: var(--radius-md, 8px);
+    border: 1px solid var(--color-border-strong, #cdd1c9); color: var(--color-text, #1c201b); font-weight: var(--fw-semibold, 600);
+  }
+  .aces-sheet__btn.is-primary { background: var(--color-brand, #2d5016); border-color: var(--color-brand, #2d5016); color: var(--color-on-brand, #fff); }
+  html.aces-sheet-open, html.aces-sheet-open body { overflow: hidden; }
+
+  /* mobile-enhancements.js floating buttons and install banner sit above the bar */
+  html.has-aces-header .back-to-top-btn,
+  html.has-aces-header .floating-share-btn { bottom: calc(var(--nav-bottom-h) + 16px) !important; }
+  html.has-aces-header .pwa-install-banner { bottom: var(--nav-bottom-h) !important; padding-bottom: 0 !important; }
+  html.has-aces-header body:has(.pwa-install-banner.visible) .back-to-top-btn,
+  html.has-aces-header body:has(.pwa-install-banner.visible) .floating-share-btn { bottom: calc(var(--nav-bottom-h) + 90px) !important; }
 }
+
+@keyframes aces-slide-up { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes aces-fade { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .aces-hub { transition: none; }
+  .aces-sheet__panel, .aces-sheet__backdrop { animation: none; }
 }
 
 @media print {
-  .aces-header, .aces-header-spacer { display: none !important; }
+  .aces-header, .aces-header-spacer, .aces-bottom, .aces-sheet { display: none !important; }
 }

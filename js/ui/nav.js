@@ -7,8 +7,10 @@
 //   import { mountHeader } from './js/ui/nav.js';
 //   mountHeader();            // idempotent; nav-component.js calls it
 //
-// Desktop and tablet (769 px and up) for now. On phones css/nav.css hides it
-// and the old hamburger from nav-component.js stays until push 5c.
+// Phones (768 px and below): the top bar keeps the logo, ?, theme and avatar
+// and scrolls away with the page; the hubs move to a fixed bottom bar
+// (Home, Season, Stats, Teams, Me), and Me opens a sheet with History, Play,
+// Help, Install App and everything in the avatar menu.
 
 import { buildNav, locatePage, loadPageVisibility, isPageVisible } from '../../nav-config.js';
 import { onAuthChange, hasRole, signOutUser, isViewingAs, clearViewAs } from '../core/auth.js';
@@ -20,7 +22,9 @@ const url = (href) => (/^https?:/.test(href) ? href : new URL(href, SITE_ROOT).h
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 let mounted = false;
-let state = { user: null, profile: null, phase: null };
+let state = { user: null, profile: null, phase: null, sheetOpen: false };
+const isPhone = () => window.matchMedia('(max-width: 768px)').matches;
+const isInstalled = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 let els = null;
 
 function ensureStyles() {
@@ -107,7 +111,7 @@ function render() {
         <img src="${esc(url('icons/icon-192.png'))}" alt="" width="32" height="32">
         <span class="aces-logo__text">Mountainside <b>Aces</b></span>
       </a>
-      <nav class="aces-hubs" aria-label="Site">${hubLinks}</nav>
+      <div class="aces-hubs" role="navigation" aria-label="Site">${hubLinks}</div>
       <div class="aces-header__end">
         <div class="aces-header__search" data-nav-search></div>
         ${helpButton(nav, here)}
@@ -135,7 +139,79 @@ function render() {
     els.tabs.innerHTML = '';
     els.tabs.hidden = true;
   }
+  renderMobile(nav, here, { name, viewing, meSections });
   syncSpacer();
+}
+
+// --- Phones: bottom bar and the Me sheet ------------------------------------
+
+function renderMobile(nav, here, { name, viewing, meSections }) {
+  const { user } = state;
+  const hubHref = (id) => nav.hubs.find((h) => h.id === id)?.href;
+  const inMe = ['me', 'history', 'play', 'help'].includes(here?.hubId);
+  const item = (id, label, iconName, href) => {
+    const active = here?.hubId === id;
+    return `<a class="aces-bottom__item${active ? ' is-active' : ''}" href="${esc(url(href))}"${active ? ' aria-current="true"' : ''}>${icon(iconName)}<span>${esc(label)}</span></a>`;
+  };
+  els.bottom.innerHTML = [
+    item('home', 'Home', 'home', nav.home.href),
+    ...['season', 'stats', 'teams'].map((id) => {
+      const h = nav.hubs.find((x) => x.id === id);
+      return h?.href ? item(id, h.shortLabel || h.label, h.icon, h.href) : '';
+    }),
+    `<button type="button" class="aces-bottom__item${inMe || state.sheetOpen ? ' is-active' : ''}" data-sheet-open aria-haspopup="dialog" aria-expanded="${state.sheetOpen}">
+      ${user ? `<span class="aces-avatar is-sm${viewing ? ' is-viewing' : ''}">${esc(initials(name))}</span>` : icon('user')}<span>Me</span>
+    </button>`,
+  ].join('');
+
+  const more = [
+    ['history', 'History', 'scroll'],
+    ['play', 'Play', 'gamepad'],
+    ['help', 'Help', 'help'],
+  ].filter(([id]) => hubHref(id)).map(([id, label, ic]) => {
+    const active = here?.hubId === id;
+    return `<a class="aces-sheet__tile${active ? ' is-active' : ''}" href="${esc(url(hubHref(id)))}">${icon(ic)}<span>${label}</span></a>`;
+  });
+  if (!isInstalled() && typeof window.triggerPWAInstall === 'function') {
+    more.push(`<button type="button" class="aces-sheet__tile" data-nav-install>${icon('smartphone')}<span>Install app</span></button>`);
+  }
+
+  const who = user
+    ? `<span class="aces-avatar${viewing ? ' is-viewing' : ''}">${esc(initials(name))}</span>
+       <div class="aces-sheet__name">${viewing ? '<span class="aces-me__viewing">Viewing as</span>' : ''}<b>${esc(name)}</b></div>`
+    : `<span class="aces-avatar">${icon('user')}</span><div class="aces-sheet__name"><b>Not signed in</b></div>`;
+  const account = user
+    ? `<div class="aces-me__section">
+        ${viewing ? `<button type="button" class="aces-me__item" data-nav-exit-view>${icon('eye-off')}<span>Exit View As</span></button>` : ''}
+        <button type="button" class="aces-me__item" data-nav-signout>${icon('log-out')}<span>Sign out</span></button>
+      </div>`
+    : `<div class="aces-sheet__actions">
+        <a class="aces-sheet__btn is-primary" href="${esc(url('signin.html'))}?next=${encodeURIComponent(location.href)}">${icon('log-in')}<span>Sign in</span></a>
+        <a class="aces-sheet__btn" href="${esc(url('signup.html'))}">${icon('user-plus')}<span>Create account</span></a>
+      </div>`;
+
+  els.sheet.innerHTML = `
+    <div class="aces-sheet__backdrop" data-sheet-close></div>
+    <div class="aces-sheet__panel" role="dialog" aria-modal="true" aria-label="Menu">
+      <div class="aces-sheet__head">
+        ${who}
+        <button type="button" class="aces-sheet__close" data-sheet-close aria-label="Close menu">${icon('close')}</button>
+      </div>
+      <div class="aces-sheet__label">More</div>
+      <div class="aces-sheet__tiles">${more.join('')}</div>
+      ${meSections}
+      ${account}
+    </div>`;
+  els.sheet.hidden = !state.sheetOpen;
+}
+
+function setSheet(open) {
+  state.sheetOpen = open;
+  els.sheet.hidden = !open;
+  document.documentElement.classList.toggle('aces-sheet-open', open);
+  els.bottom.querySelector('[data-sheet-open]')?.setAttribute('aria-expanded', String(open));
+  els.bottom.querySelector('[data-sheet-open]')?.classList.toggle('is-active', open || ['me', 'history', 'play', 'help'].includes(locatePage(location.pathname)?.hubId));
+  if (open) els.sheet.querySelector('.aces-sheet__close')?.focus();
 }
 
 // Hover (or keyboard focus) menu under a hub: every tab, with a group's
@@ -167,15 +243,15 @@ function syncSpacer() {
 // Legacy bars that stick at top: 0 would slide under the fixed header, so
 // they stick just below it instead. Runs on mount, on load and after resizes.
 function liftStickies() {
-  const h = els.header.offsetHeight;
-  if (!h) return; // header hidden (phones)
+  const fixed = getComputedStyle(els.header).position === 'fixed';
+  const h = fixed ? els.header.offsetHeight : 0; // on phones the header scrolls away
   document.querySelectorAll('body *').forEach((el) => {
     if (els.header.contains(el)) return;
     const cs = getComputedStyle(el);
     if (cs.position !== 'sticky') return;
     if (el.dataset.acesStickyTop === undefined) {
       const top = parseFloat(cs.top);
-      if (Number.isNaN(top) || top >= h) return;
+      if (Number.isNaN(top) || top >= els.header.offsetHeight) return;
       el.dataset.acesStickyTop = String(top);
     }
     el.style.top = `${h + parseFloat(el.dataset.acesStickyTop)}px`;
@@ -190,9 +266,17 @@ function setMenu(open) {
 }
 
 function wireEvents() {
-  els.header.addEventListener('click', async (e) => {
+  const onClick = async (e) => {
     if (e.target.closest('.aces-me__btn')) {
-      setMenu(!els.header.querySelector('.aces-me')?.classList.contains('is-open'));
+      if (isPhone()) setSheet(true);
+      else setMenu(!els.header.querySelector('.aces-me')?.classList.contains('is-open'));
+      return;
+    }
+    if (e.target.closest('[data-sheet-open]')) { setSheet(!state.sheetOpen); return; }
+    if (e.target.closest('[data-sheet-close]')) { setSheet(false); return; }
+    if (e.target.closest('[data-nav-install]')) {
+      setSheet(false);
+      window.triggerPWAInstall?.();
       return;
     }
     if (e.target.closest('[data-nav-signout]')) {
@@ -205,12 +289,13 @@ function wireEvents() {
       clearViewAs();
       location.reload();
     }
-  });
+  };
+  [els.header, els.bottom, els.sheet].forEach((el) => el.addEventListener('click', onClick));
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.aces-me')) setMenu(false);
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') setMenu(false);
+    if (e.key === 'Escape') { setMenu(false); if (state.sheetOpen) setSheet(false); }
   });
   if ('ResizeObserver' in window) new ResizeObserver(syncSpacer).observe(els.header);
   window.addEventListener('resize', syncSpacer);
@@ -241,9 +326,17 @@ export async function mountHeader() {
   tabs.className = 'aces-tabs';
   tabs.hidden = true;
   header.append(bar, tabs);
+  const bottom = document.createElement('div'); // not <nav>: legacy pages style nav elements
+  bottom.className = 'aces-bottom';
+  bottom.setAttribute('role', 'navigation');
+  bottom.setAttribute('aria-label', 'Main');
+  const sheet = document.createElement('div');
+  sheet.className = 'aces-sheet';
+  sheet.hidden = true;
   document.body.prepend(header, spacer);
+  document.body.append(bottom, sheet);
   document.documentElement.classList.add('has-aces-header');
-  els = { header, bar, spacer, tabs };
+  els = { header, bar, spacer, tabs, bottom, sheet };
   wireEvents();
   hideEmptyFiltersNav();
 
