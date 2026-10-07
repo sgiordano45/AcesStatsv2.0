@@ -109,7 +109,7 @@ function render() {
     <div class="aces-header__inner">
       <a class="aces-logo" href="${esc(url(nav.home.href))}" aria-label="Mountainside Aces home">
         <img src="${esc(url('icons/icon-192.png'))}" alt="" width="32" height="32">
-        <span class="aces-logo__text">Mountainside <b>Aces</b></span>
+        <span class="aces-logo__text"><span class="aces-logo__town">Mountainside </span><b>Aces</b></span>
       </a>
       <div class="aces-hubs" role="navigation" aria-label="Site">${hubLinks}</div>
       <div class="aces-header__end">

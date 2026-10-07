@@ -243,13 +243,21 @@
   .aces-hubs { display: none; }
   .aces-header__inner { gap: var(--space-2, 8px); }
   .aces-logo__text { display: inline; font-size: 20px; }
+  .aces-header__inner { padding: 0 var(--space-2, 8px) 0 var(--space-3, 12px); }
+  .aces-header__end { gap: 0; }
+  .aces-header__bar { overflow: hidden; }
+  .aces-tabs, .aces-header { max-width: 100vw; }
   .aces-me__name, .aces-me__btn > .aces-icon { display: none; }
   .aces-me__btn { padding: 0 4px; }
   .aces-me__menu { display: none !important; }
   .aces-signin span { display: none; }
   .aces-signin { width: 40px; padding: 0; justify-content: center; }
   .aces-tab { height: 44px; }
-
+}
+@media (max-width: 420px) {
+  .aces-logo__town { display: none; }
+}
+@media (max-width: 768px) {
   /* Legacy page spacing: nav-styles.css pads the body for the old fixed
      hamburger bar; the spacer and bottom bar take over that job. */
   html.has-aces-header body {
@@ -287,7 +295,7 @@
   .aces-bottom .aces-avatar.is-viewing { box-shadow: 0 0 0 2px var(--color-surface, #fff), 0 0 0 4px var(--color-alert, #a35200); }
 
   /* --- Me sheet --- */
-  .aces-sheet { display: block; position: fixed; inset: 0; z-index: var(--z-sheet, 900); font-family: var(--font-sans); font-size: var(--fs-sm, 14px); }
+  .aces-sheet { display: block; position: fixed; inset: 0; z-index: 9700; /* above the legacy install banner (9500) and share button; toasts (10000) stay on top */ font-family: var(--font-sans); font-size: var(--fs-sm, 14px); }
   .aces-sheet[hidden] { display: none; }
   .aces-sheet *, .aces-sheet *::before, .aces-sheet *::after { box-sizing: border-box; }
   .aces-sheet a { text-decoration: none; }
