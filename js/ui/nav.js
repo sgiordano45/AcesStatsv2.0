@@ -141,7 +141,9 @@ function render() {
 // Hover (or keyboard focus) menu under a hub: every tab, with a group's
 // pages listed under its name, so any page is one click from anywhere.
 function hubMenu(hub, here) {
-  const items = hub.tabs.map((t) => (t.pages
+  const items = hub.tabs.map((t) => (t.pages && t.pages.length === 1
+    ? link({ ...t.pages[0], label: t.label, icon: t.icon }, 'aces-hubmenu__item', t.pages[0].id === here?.pageId)
+    : t.pages
     ? `<div class="aces-hubmenu__group">${esc(t.label)}</div>${t.pages.map((p) => link(p, 'aces-hubmenu__item is-sub', p.id === here?.pageId)).join('')}`
     : link(t, 'aces-hubmenu__item', t.id === here?.pageId))).join('');
   return `<div class="aces-hubmenu">${items}</div>`;
