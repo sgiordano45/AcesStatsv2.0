@@ -6,7 +6,7 @@
 //   import { mountStatFilters, pickDefaultSeason } from './js/ui/stat-filters.js';
 //   const filters = mountStatFilters({
 //     season: document.getElementById('seasonFilter'),
-//     team: document.getElementById('teamFilter'),
+//     team: document.getElementById('teamFilter'),        // optional (null on team.html)
 //     subs: document.getElementById('subsFilter'),        // optional
 //     rows,                                               // { seasonId, team, teamKey, sub }
 //     defaultSeason: pickDefaultSeason(rows.map(r => r.seasonId), ctx.config),
@@ -63,19 +63,25 @@ export function mountStatFilters({ season, team, subs = null, rows = [], default
 
   function read() {
     const p = new URLSearchParams(location.search);
-    return { season: p.get('season') || defaultSeason, team: (p.get('team') || 'all').toLowerCase(), subs: p.get('subs') || 'include' };
+    return {
+      season: p.get('season') || defaultSeason,
+      team: team ? (p.get('team') || 'all').toLowerCase() : 'all',
+      subs: subs ? (p.get('subs') || 'include') : 'include'
+    };
   }
 
   function current() {
     return { season: season.value, team: team ? team.value : 'all', subs: subs ? subs.value : 'include' };
   }
 
+  // Only the keys this page has a control for: on team.html, ?team= is the
+  // page's own team and must be left alone.
   function write(f) {
     const p = new URLSearchParams(location.search);
     const set = (k, v, dflt) => (v && v !== dflt ? p.set(k, v) : p.delete(k));
     set('season', f.season, defaultSeason);
-    set('team', f.team, 'all');
-    set('subs', f.subs, 'include');
+    if (team) set('team', f.team, 'all');
+    if (subs) set('subs', f.subs, 'include');
     const qs = p.toString();
     history.replaceState(history.state, '', `${location.pathname}${qs ? `?${qs}` : ''}${location.hash}`);
   }

@@ -740,109 +740,6 @@
   }
   
   /* Stats Table */
-  .stats-table-container {
-    background: var(--card-bg);
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
-    position: relative;
-    margin-bottom: 2rem;
-  }
-  
-  .stats-table-container::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 5px;
-    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    border-radius: 16px 16px 0 0;
-  }
-
-  .swipe-indicator {
-    text-align: center;
-    padding: 0.75rem;
-    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-    color: #856404;
-    font-size: 0.85rem;
-    font-weight: 600;
-    border-bottom: 2px solid var(--accent-color);
-    display: none;
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 5px;
-  }
-  
-  thead {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  
-  th {
-    padding: 1.25rem 1rem;
-    text-align: left;
-    font-weight: 700;
-    color: var(--text-dark);
-    border-bottom: 2px solid var(--primary-color);
-    cursor: pointer;
-    user-select: none;
-    transition: background 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-size: 0.9rem;
-  }
-  
-  th:hover {
-    background: #e9ecef;
-  }
-  
-  th.asc::after {
-    content: " ▲";
-    color: var(--primary-color);
-  }
-  
-  th.desc::after {
-    content: " ▼";
-    color: var(--primary-color);
-  }
-  
-  td {
-    padding: 1.25rem 1rem;
-    border-bottom: 1px solid var(--border-color);
-    transition: background-color 0.2s ease;
-  }
-  
-  tbody tr:nth-child(even) {
-    background-color: #fafbfc;
-  }
-
-  tbody tr:hover {
-    background: linear-gradient(135deg, #f0f4f8 0%, #e9f0f7 100%);
-  }
-  
-  tbody tr:last-child td {
-    border-bottom: none;
-  }
-  
-  td a {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 700;
-    transition: all 0.2s ease;
-  }
-  
-  td a:hover {
-    color: var(--secondary-color);
-    text-decoration: underline;
-  }
-  
   .loading {
     text-align: center;
     padding: 3rem 2rem;
@@ -920,14 +817,7 @@
       padding: 0.5rem 0.75rem;
     }
 
-    .swipe-indicator {
-      display: block;
-    }
     
-    th, td {
-      padding: 0.75rem 0.5rem;
-      font-size: 0.85rem;
-    }
 
     .filters-container {
       flex-direction: column;
@@ -951,10 +841,6 @@
       grid-template-columns: 1fr 1fr;
     }
     
-    th, td {
-      padding: 0.5rem 0.25rem;
-      font-size: 0.8em;
-    }
 
     .team-header h1 {
       font-size: 1.75rem;
@@ -963,6 +849,10 @@
     .media-gallery-container {
       max-height: 300px;
     }
+  }
+
+  .team-table {
+    margin-top: 1.5rem;
   }
 </style>
 <link rel="stylesheet" href="mobile-enhancements.css">
@@ -1011,45 +901,31 @@
   <div class="filters-section">
     <div class="filters-container">
       <div class="filter-group">
-        <label for="yearFilter">Year:</label>
-        <select id="yearFilter">
-          <option value="All">All Years</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
         <label for="seasonFilter">Season:</label>
         <select id="seasonFilter">
-          <option value="All">All Seasons</option>
+          <option value="all">All seasons</option>
         </select>
+      </div>
+      <div class="filter-group">
+        <label for="subsFilter">Subs:</label>
+        <select id="subsFilter">
+          <option value="include">Include sub games</option>
+          <option value="exclude">Exclude sub games</option>
+          <option value="only">Sub games only</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <div class="aces-segmented" role="group" aria-label="Batting or pitching">
+          <button type="button" class="aces-segment" data-team-view="batting" aria-pressed="true">Batting</button>
+          <button type="button" class="aces-segment" data-team-view="pitching" aria-pressed="false">Pitching</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="stats-table-container">
-    <div class="swipe-indicator">← Swipe left/right to see all columns →</div>
-    <table id="team-stats-table">
-      <thead>
-        <tr>
-          <th>Year</th>
-          <th>Season</th>
-          <th>Name</th>
-          <th>G</th>
-          <th>AB</th>
-          <th>H</th>
-          <th>R</th>
-          <th>BB</th>
-          <th>AcesBPI</th>
-          <th>BA</th>
-          <th>OBP</th>
-          <th>Sub</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td colspan="12" class="loading">Loading statistics...</td></tr>
-      </tbody>
-    </table>
-  </div>
+  <!-- Stat tables (js/ui/table.js) -->
+  <div id="teamBatting" class="team-table"></div>
+  <div id="teamPitching" class="team-table" hidden></div>
   </div>
 </div>
 
