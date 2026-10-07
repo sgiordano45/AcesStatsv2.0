@@ -43,7 +43,7 @@ export function buildBattingRows(players, { team = null } = {}) {
         seasonKey: seasonSortKey(sid.id),
         seasonCount: 1,
         sub,
-        hasHitTypes: 'doubles' in s && hasCompleteHitTypes(sid.id),
+        hasHitTypes: 'doubles' in s && hasCompleteHitTypes(sid.id, teamName),
         acesBPI: sub ? null : numOrNull(s.acesBPI),   // subs get no acesBPI
         bwar: numOrNull(s.bwarSimp),
         teamGames: 0
@@ -60,7 +60,7 @@ const line = (r) => battingLine(r);
 const avg = (v) => (v === null || v === undefined ? '-' : fmtAvg(v));
 const allHitTypes = (rows) => rows.length > 0 && rows.every(r => r.hasHitTypes);
 const anyHitTypes = (rows) => rows.some(r => r.hasHitTypes);
-// Seasons before HIT_TYPES_FROM show a dash rather than a misleading 0 or SLG.
+// Team-seasons without complete hit types (season-ids.js) show a dash, not a misleading 0 or SLG.
 const ht = (fn) => (r) => (r.hasHitTypes ? fn(r) : null);
 
 /**

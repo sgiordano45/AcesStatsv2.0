@@ -827,7 +827,7 @@ import { getAllPlayerStatsOptimized } from './firebase-data.js';
 import { initPage, pageReady, showPageError } from './js/core/app.js';
 import { escapeHtml as esc, fmtAvg, fmtRate, formatIP } from './js/ui/format.js';
 import { battingLine, era, QUALIFIERS, isQualifiedBatter, isQualifiedPitcher, qualifierLabel } from './js/domain/stats.js';
-import { seasonLabel, sortSeasonIds, hasCompleteHitTypes } from './js/domain/season-ids.js';
+import { seasonLabel, sortSeasonIds, seasonHasHitTypes } from './js/domain/season-ids.js';
 import { applyTeamGames } from './js/data/team-games.js';
 import { combineRows } from './js/ui/table-model.js';
 import { pickDefaultSeason } from './js/ui/stat-filters.js';
@@ -908,14 +908,19 @@ function battingCategories() {
       ? { title: 'AcesBPI (Average)', icon: '⭐', value: r => r.avgBPI, format: v => fmtRate(v), ...qualified }
       : { title: 'AcesBPI', icon: '⭐', value: r => r.acesBPI, format: v => fmtRate(v), ...qualified }
   ];
-  // Extra-base hits and RBI: only for one season that tracked them for every game.
-  if (state.scope === 'season' && hasCompleteHitTypes(state.season)) {
+  // Extra-base hits and RBI: one season, players on teams that tracked them
+  // for every game (all teams from 2026 Fall; some in 2026 Summer).
+  if (state.scope === 'season' && seasonHasHitTypes(state.season)) {
+    const tracked = (fn) => (r) => (r.hasHitTypes ? fn(r) : null);
+    const allTeams = bat.filter(r => r.seasonId === state.season).every(r => r.hasHitTypes);
+    const note = allTeams ? '' : 'Teams that tracked them for every game';
+    const withNote = (c) => ({ ...c, note: [c.note, note].filter(Boolean).join(' · ') || undefined });
     cats.push(
-      { title: 'Doubles', icon: '✌️', value: r => r.doubles },
-      { title: 'Home Runs', icon: '\u{1F4A5}', value: r => r.homeRuns },
-      { title: 'RBI', icon: '\u{1F91D}', value: r => r.rbi },
-      { title: 'Slugging', icon: '\u{1F4AA}', value: r => (r.atBats ? battingLine(r).slg : null), format: avg, ...qualified },
-      { title: 'OPS', icon: '\u{1F525}', value: r => (r.atBats ? battingLine(r).ops : null), format: avg, ...qualified }
+      withNote({ title: 'Doubles', icon: '✌️', value: tracked(r => r.doubles) }),
+      withNote({ title: 'Home Runs', icon: '\u{1F4A5}', value: tracked(r => r.homeRuns) }),
+      withNote({ title: 'RBI', icon: '\u{1F91D}', value: tracked(r => r.rbi) }),
+      withNote({ title: 'Slugging', icon: '\u{1F4AA}', value: tracked(r => (r.atBats ? battingLine(r).slg : null)), format: avg, ...qualified }),
+      withNote({ title: 'OPS', icon: '\u{1F525}', value: tracked(r => (r.atBats ? battingLine(r).ops : null)), format: avg, ...qualified })
     );
   }
   return cats;

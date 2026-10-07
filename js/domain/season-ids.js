@@ -12,10 +12,15 @@
 
 export const SEASON_ORDER = Object.freeze({ spring: 1, summer: 2, fall: 3 });
 
-// First season with complete extra-base hits and RBI for every game. 2026
-// Summer records have the fields, but only some games were tracked (109
-// doubles on 4,021 hits), so 2B/3B/HR/RBI/SLG/OPS start here.
+// Extra-base hits and RBI (2B/3B/HR/RBI, so SLG/OPS) are complete for every
+// team from HIT_TYPES_FROM on. Before that, only the teams listed in
+// HIT_TYPES_TEAMS tracked them for every game: in 2026 Summer their RBI add up
+// to their runs (Teal 126 of 126, Black 169 of 179, Blue 164 of 192); the other
+// eight teams have 0 RBI. Add a team here if its older games are filled in.
 export const HIT_TYPES_FROM = '2026-fall';
+export const HIT_TYPES_TEAMS = Object.freeze({
+  '2026-summer': ['black', 'blue', 'teal']
+});
 
 export function parseStatSeasonId(raw) {
   const parts = String(raw || '').toLowerCase().split('-');
@@ -34,9 +39,20 @@ export function seasonSortKey(id) {
   return (Number(year) || 0) * 10 + (SEASON_ORDER[name] || 0);
 }
 
-/** True when a season's batting records have complete 2B/3B/HR/RBI. */
-export function hasCompleteHitTypes(id) {
-  return seasonSortKey(id) >= seasonSortKey(HIT_TYPES_FROM);
+/**
+ * True when a team's batting records for a season have complete 2B/3B/HR/RBI.
+ * Without a team: true only when every team that season has them.
+ */
+export function hasCompleteHitTypes(id, team = null) {
+  const season = parseStatSeasonId(id).id;
+  if (seasonSortKey(season) >= seasonSortKey(HIT_TYPES_FROM)) return true;
+  return !!team && (HIT_TYPES_TEAMS[season] || []).includes(String(team).toLowerCase());
+}
+
+/** True when any team that season has complete 2B/3B/HR/RBI. */
+export function seasonHasHitTypes(id) {
+  const season = parseStatSeasonId(id).id;
+  return seasonSortKey(season) >= seasonSortKey(HIT_TYPES_FROM) || (HIT_TYPES_TEAMS[season] || []).length > 0;
 }
 
 /** Unique season IDs from a list, newest first. */
