@@ -35,6 +35,8 @@
 //   shade      false turns rank shading off for the column (text never shades)
 //   qualifiedOnly  rate columns: only qualified rows are shaded (default true for rates)
 //   when(rows) optional: the column only shows when this is true for the rows in view
+//   defaultDir 'asc' | 'desc': the first-click direction (Season: newest first)
+//   csv(row, value) optional plain text for the CSV (else the formatted text)
 
 export const DEFAULT_STATE = Object.freeze({
   preset: null,      // null = first preset
@@ -133,6 +135,7 @@ export function sortToString(sort) {
 // The first click on a header: best first (high for most stats, low for
 // ERA/RA, A-Z for text).
 export function defaultDir(col) {
+  if (col && (col.defaultDir === 'asc' || col.defaultDir === 'desc')) return col.defaultDir;
   if (!col || col.type === 'text') return 'asc';
   return col.lowerIsBetter ? 'asc' : 'desc';
 }

@@ -292,7 +292,13 @@ export function mountStatTable(el, config, options = {}) {
         dot: dot ? css(dot).backgroundColor : null
       };
     };
-    const head = [...table.tHead.rows[0].cells].map(th => readCell(th, null));
+    // Header text from the sort button: stat-tooltips.js adds an "i" icon to some headers.
+    const head = [...table.tHead.rows[0].cells].map(th => {
+      const cell = readCell(th, null);
+      const btn = th.querySelector('.aces-sort');
+      if (btn) cell.text = btn.textContent.replace(/\s+/g, ' ').trim();
+      return cell;
+    });
     const headBg = head[0].bg || surface;
     const body = [...table.tBodies[0].rows].slice(0, IMAGE_MAX_ROWS).map(tr => {
       const rowBg = isClear(css(tr).backgroundColor) ? surface : css(tr).backgroundColor;
