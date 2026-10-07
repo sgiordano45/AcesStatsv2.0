@@ -59,15 +59,22 @@ export function buildBattingRows(players, { team = null } = {}) {
 const line = (r) => battingLine(r);
 const avg = (v) => (v === null || v === undefined ? '-' : fmtAvg(v));
 const allHitTypes = (rows) => rows.length > 0 && rows.every(r => r.hasHitTypes);
+const anyHitTypes = (rows) => rows.some(r => r.hasHitTypes);
+// Seasons before HIT_TYPES_FROM show a dash rather than a misleading 0 or SLG.
+const ht = (fn) => (r) => (r.hasHitTypes ? fn(r) : null);
 
 /**
  * @param {object} [o]
  * @param {string} [o.id='']     URL prefix (two tables on one page need different ones)
+ * @param {string} [o.hitTypes='all'] 'some' shows 2B/3B/HR/RBI/SLG/OPS when any row has them
  * @param {string} [o.sort]     default sort for every preset, e.g. '-season' (player pages)
  * @param {string[]} [o.lead=[]] column keys to put first (the first one is the sticky column)
  * @param {string[]} [o.omit=[]] column keys to leave out of every preset (e.g. 'team')
  */
-export function battingTableConfig({ id = '', omit = [], lead = [], sort = null } = {}) {
+export function battingTableConfig({ id = '', omit = [], lead = [], sort = null, hitTypes = 'all' } = {}) {
+  // hitTypes 'all': 2B/3B/HR/RBI/SLG/OPS show only when every row has them (league tables);
+  // 'some': when any row does, with a dash on older seasons (player pages).
+  const showHit = hitTypes === 'some' ? anyHitTypes : allHitTypes;
   const drop = new Set(omit);
   // lead: keys moved to the front of every preset (player pages: ['season', 'team']).
   const arrange = (keys) => [...lead.filter(k => keys.includes(k)), ...keys.filter(k => !lead.includes(k))].filter(k => !drop.has(k));
@@ -91,16 +98,16 @@ export function battingTableConfig({ id = '', omit = [], lead = [], sort = null 
       { key: 'PA', label: 'PA', title: 'Plate appearances (AB + BB)', type: 'count', value: r => r.atBats + r.walks },
       { key: 'AB', label: 'AB', type: 'count', value: r => r.atBats },
       { key: 'H', label: 'H', title: 'Hits', type: 'count', value: r => r.hits },
-      { key: '2B', label: '2B', title: 'Doubles', type: 'count', value: r => r.doubles, when: allHitTypes },
-      { key: '3B', label: '3B', title: 'Triples', type: 'count', value: r => r.triples, when: allHitTypes },
-      { key: 'HR', label: 'HR', title: 'Home runs', type: 'count', value: r => r.homeRuns, when: allHitTypes },
+      { key: '2B', label: '2B', title: 'Doubles', type: 'count', value: ht(r => r.doubles), when: showHit },
+      { key: '3B', label: '3B', title: 'Triples', type: 'count', value: ht(r => r.triples), when: showHit },
+      { key: 'HR', label: 'HR', title: 'Home runs', type: 'count', value: ht(r => r.homeRuns), when: showHit },
       { key: 'R', label: 'R', title: 'Runs', type: 'count', value: r => r.runs },
-      { key: 'RBI', label: 'RBI', type: 'count', value: r => r.rbi, when: allHitTypes },
+      { key: 'RBI', label: 'RBI', type: 'count', value: ht(r => r.rbi), when: showHit },
       { key: 'BB', label: 'BB', title: 'Walks', type: 'count', value: r => r.walks },
       { key: 'BA', label: 'BA', type: 'rate', value: r => (r.atBats ? line(r).avg : null), format: avg },
       { key: 'OBP', label: 'OBP', type: 'rate', value: r => (r.atBats + r.walks ? line(r).obp : null), format: avg },
-      { key: 'SLG', label: 'SLG', title: 'Slugging (2026 Fall on)', type: 'rate', value: r => (r.atBats ? line(r).slg : null), format: avg, when: allHitTypes },
-      { key: 'OPS', label: 'OPS', title: 'OBP + SLG (2026 Fall on)', type: 'rate', value: r => (r.atBats ? line(r).ops : null), format: avg, when: allHitTypes },
+      { key: 'SLG', label: 'SLG', title: 'Slugging (2026 Fall on)', type: 'rate', value: ht(r => (r.atBats ? line(r).slg : null)), format: avg, when: showHit },
+      { key: 'OPS', label: 'OPS', title: 'OBP + SLG (2026 Fall on)', type: 'rate', value: ht(r => (r.atBats ? line(r).ops : null)), format: avg, when: showHit },
       { key: 'RPA', label: 'R/PA', title: 'Runs per plate appearance', type: 'rate', value: r => (r.atBats + r.walks ? line(r).runsPerPA : null), format: avg },
       { key: 'BPI', label: 'AcesBPI', type: 'rate', qualifiedOnly: false, value: r => r.acesBPI, format: v => fmtRate(v) },
       { key: 'bWAR', label: 'bWAR', type: 'rate', qualifiedOnly: false, value: r => r.bwar, format: v => fmtRate(v) },

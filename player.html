@@ -4817,7 +4817,7 @@
     const name = currentPlayerData?.playerName || '';
     const el = document.getElementById('playerBattingTable');
     if (el && !playerBattingTable) {
-      playerBattingTable = mountStatTable(el, battingTableConfig({ id: 'bat', omit: ['name'], lead: ['season', 'team'], sort: '-season' }), {
+      playerBattingTable = mountStatTable(el, battingTableConfig({ id: 'bat', omit: ['name'], lead: ['season', 'team'], sort: '-season', hitTypes: 'some' }), {
         emptyMessage: 'No batting stats yet.',
         exportName: `aces-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-batting`,
         exportTitle: `${name} batting`
