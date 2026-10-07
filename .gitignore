@@ -12,3 +12,6 @@ Claude Download Zips/
 Documents/
 *.png
 *.pdf
+
+# Generated from js/domain by functions/scripts/sync-domain.js (predeploy)
+functions/domain/

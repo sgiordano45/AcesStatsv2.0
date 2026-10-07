@@ -1,0 +1,219 @@
+/* ==========================================================================
+   css/home.css - the v2.0 home page (index.html, js/pages/home.js)
+   Built on tokens.css + components.css: cards, score cards, team chips,
+   segmented control, stats. Only the home-specific layout lives here.
+   ========================================================================== */
+
+.home {
+  padding-bottom: var(--space-12);
+}
+
+/* Head: season kicker, display title, games played. */
+.home-head { margin: var(--space-6) 0 var(--space-4); }
+.home-head .aces-page-title { color: var(--color-brand); }
+:root[data-theme="dark"] .home-head .aces-page-title { color: var(--color-text); }
+.home-head-meta {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.home-section { margin-top: var(--space-6); }
+.home-section[hidden] { display: none; }
+
+/* Live & next: one swipeable row of score cards. */
+.home-strip { padding-bottom: var(--space-1); }
+.home-strip .aces-score { width: 200px; }
+.home-strip .aces-score.is-live { border-color: var(--color-loss); box-shadow: inset 0 3px 0 var(--color-loss); }
+.home-score-team { display: inline-flex; align-items: center; gap: 6px; font-weight: var(--fw-semibold); }
+
+/* Two-column rows on wide screens, one column on phones. */
+.home-row {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: var(--space-6);
+}
+@media (min-width: 900px) {
+  .home-row { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+  .home-row.is-even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+.home-row > .aces-card[hidden] { display: none; }
+
+.aces-card-title { display: flex; align-items: center; gap: var(--space-2); }
+.aces-card-title .aces-icon { width: 18px; height: 18px; color: var(--color-brand); }
+:root[data-theme="dark"] .aces-card-title .aces-icon { color: var(--color-link); }
+.aces-card-head { margin-bottom: var(--space-3); gap: var(--space-3); flex-wrap: wrap; }
+
+/* Standings snapshot. */
+.home-standings th[scope="row"] { font-weight: var(--fw-semibold); }
+.home-standings tr.is-clinched .is-rank { color: var(--color-win); font-weight: var(--fw-bold); }
+@media (max-width: 420px) { .home-hide-sm { display: none; } }
+
+/* Leaders: three small boards. */
+.home-boards {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+.home-boards.is-two { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.home-board-title {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-muted);
+  font: var(--fw-bold) var(--fs-xs) / 1.2 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.home-board-list { margin: 0; padding: 0; list-style: none; }
+.home-board-list li {
+  display: grid;
+  grid-template-columns: 1.5em minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--fs-sm);
+}
+.home-board-list li:last-child { border-bottom: 0; }
+.home-board-list li:first-child .home-board-value { color: var(--color-brand); }
+:root[data-theme="dark"] .home-board-list li:first-child .home-board-value { color: var(--color-accent); }
+.home-board-rank { color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.home-board-list a,
+.home-ms a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  text-decoration: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.home-board-list a:hover, .home-ms a:hover { color: var(--color-link); }
+.home-board-value { font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.home-board-note, .home-board-empty { margin: var(--space-2) 0 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.home-more { display: inline-block; margin-top: var(--space-3); }
+
+/* My Aces. */
+.home-mine-team { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); font-size: var(--fs-sm); color: var(--color-text-muted); }
+.home-mine-next {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+}
+.home-mine-next:hover { box-shadow: inset 0 0 0 1px var(--color-border-strong); }
+.home-mine-label { color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.home-mine-stats { margin-top: var(--space-3); }
+.home-mine-pitch { margin: 0 0 var(--space-3); color: var(--color-text-muted); font-size: var(--fs-sm); }
+.home-mine-actions { margin-top: var(--space-4); }
+
+/* News. */
+.home-news { margin: 0; padding: 0; list-style: none; }
+.home-news li { border-bottom: 1px solid var(--color-border); }
+.home-news li:last-child { border-bottom: 0; }
+.home-news-item {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+}
+a.home-news-item:hover .home-news-text strong { color: var(--color-link); }
+.home-news-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--color-surface-2); color: var(--color-text-muted);
+}
+.home-news-icon .aces-icon { width: 15px; height: 15px; }
+.home-news-icon.is-pinned { background: var(--color-accent-soft); color: var(--color-accent-ink); }
+.home-news-text { padding-top: 4px; }
+.home-news-sub { color: var(--color-text-muted); }
+.home-news-time { padding-top: 4px; color: var(--color-text-muted); font-size: var(--fs-xs); white-space: nowrap; }
+
+/* Milestone watch. */
+.home-ms { margin: 0; padding: 0; list-style: none; }
+.home-ms li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px var(--space-2);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--fs-sm);
+}
+.home-ms li:last-child { border-bottom: 0; }
+.home-ms-gap { color: var(--color-text-muted); font-size: var(--fs-xs); white-space: nowrap; }
+.home-ms-gap strong { color: var(--color-text); font-size: var(--fs-sm); }
+.home-ms-bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--color-surface-2); overflow: hidden; }
+.home-ms-bar > span { display: block; height: 100%; background: var(--color-brand); }
+:root[data-theme="dark"] .home-ms-bar > span { background: var(--color-link); }
+
+/* Photos: one scrolling row. */
+.home-photos {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.home-photos::-webkit-scrollbar { display: none; }
+.home-photo { flex: none; width: 180px; height: 120px; border-radius: var(--radius-md); overflow: hidden; scroll-snap-align: start; background: var(--color-surface-2); }
+.home-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Explore: the five hubs. */
+.home-hubs {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+}
+.home-hub {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-decoration: none;
+}
+.home-hub:hover { border-color: var(--color-brand); }
+.home-hub-icon {
+  grid-row: 1 / 3;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: var(--radius-md);
+  background: var(--color-brand-soft); color: var(--color-brand);
+}
+:root[data-theme="dark"] .home-hub-icon { color: var(--color-link); }
+.home-hub-icon .aces-icon { width: 20px; height: 20px; }
+.home-hub-name { font: var(--fw-bold) var(--fs-md) / 1.2 var(--font-sans); }
+.home-hub-blurb { color: var(--color-text-muted); font-size: var(--fs-xs); }
+
+/* Freshness line and the admin Rebuild button. */
+.home-foot { margin-top: var(--space-6); color: var(--color-text-muted); font-size: var(--fs-xs); text-align: center; }
+.home-rebuild { border: 0; background: none; color: var(--color-link); font: inherit; font-weight: var(--fw-semibold); cursor: pointer; padding: 0; }
+.home-rebuild:disabled { opacity: 0.5; cursor: default; }
+
+/* Skeleton placeholders until the summary loads. */
+.home-skel { display: grid; gap: var(--space-2); }
+
+/* mobile-enhancements.css (loaded for its Top button and install banner)
+   styles every bare table on phones; keep the standings on the tokens. */
+.home .aces-table { display: table !important; overflow: visible !important; border-radius: 0 !important; }
+.home .aces-table th,
+.home .aces-table td { position: static !important; box-shadow: none !important; background: var(--color-surface) !important; color: var(--color-text) !important; }
+.home .aces-table thead th { background: var(--color-surface-2) !important; color: var(--color-text-muted) !important; }
+.home .aces-table td.is-rank { color: var(--color-text-muted) !important; }

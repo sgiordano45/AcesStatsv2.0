@@ -4425,3 +4425,9 @@ exports.triggerPickemDigest = functions
     }
     return runPickemDigest({ dryRun: data?.dryRun === true, force: data?.force === true });
   });
+
+// ============================================================================
+// v2.0 home page: season summary (functions/summary.js)
+// summaryOnGameWrite, summaryRefresh, rebuildSeasonSummary
+// ============================================================================
+Object.assign(exports, require('./summary'));
