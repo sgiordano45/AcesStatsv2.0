@@ -111,11 +111,14 @@ export const NAV_HUBS = [
       { id: 'current-season', href: 'current-season.html', label: 'Standings', icon: 'list',
         also: ['current-season-team.html', 'season.html'] },
       { id: 'schedule', href: 'schedule.html', label: 'Schedule', icon: 'calendar-days' },
+      // Playoffs: the phase limits when each page can show; Bracket, Clinching and
+      // Championship preview are also switched on by hand in siteConfig/navigation/pages
+      // (late regular season / once the final is set). Projections runs all regular season.
       { key: 'playoffs', label: 'Playoffs', icon: 'trophy', pages: [
-        { id: 'playoffs', href: 'playoffs.html', label: 'Bracket', icon: 'trophy' },
-        { id: 'clinching', href: 'playoff-clinching.html', label: 'Clinching', icon: 'lock' },
-        { id: 'projections', href: 'projections.html', label: 'Projections', icon: 'trending-up' },
-        { id: 'champ-preview', href: 'championship-preview.html', label: 'Championship preview', icon: 'crown' },
+        { id: 'playoffs', href: 'playoffs.html', label: 'Bracket', icon: 'trophy', phase: ['regular', 'playoffs'] },
+        { id: 'clinching', href: 'playoff-clinching.html', label: 'Clinching', icon: 'lock', phase: 'regular' },
+        { id: 'projections', href: 'projections.html', label: 'Projections', icon: 'trending-up', phase: 'regular' },
+        { id: 'champ-preview', href: 'championship-preview.html', label: 'Championship preview', icon: 'crown', phase: 'playoffs' },
       ] },
       { id: 'weekend-preview', href: 'weekend-preview.html', label: 'Preview', icon: 'binoculars',
         also: ['game-preview.html', 'game-recap.html'] },
