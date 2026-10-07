@@ -121,14 +121,21 @@ function writeStorage(store, key, value) {
   try { store.setItem(key, JSON.stringify(value)); } catch { /* private mode or full */ }
 }
 
-// Firestore Timestamp, Date or string -> 'YYYY-MM-DD' (local date), else null.
+// Firestore Timestamp, Date or string -> 'YYYY-MM-DD', else null.
+// Season start dates are written by season-setup-wizard as new Date('YYYY-MM-DD'),
+// which is UTC midnight, so an instant at exactly UTC midnight is read as that
+// UTC day (otherwise it lands on the evening before in ET). Other instants use
+// the local day.
 function toDateString(value) {
   if (!value) return null;
   if (typeof value === 'string') return value;
   const d = typeof value.toDate === 'function' ? value.toDate() : value instanceof Date ? value : null;
   if (!d || Number.isNaN(d.getTime())) return null;
   const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const utcMidnight = d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0;
+  return utcMidnight
+    ? `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`
+    : `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 async function loadFromFirestore() {
@@ -152,6 +159,17 @@ async function loadFromFirestore() {
   }
 
   const previousSeasonId = current?.previousSeasonId || (await getPreviousSeasonId(currentSeasonId));
+
+  // Cloud Functions and older pages still find the season by seasons.isActive;
+  // season-setup-wizard keeps both in step. Flag it if they ever disagree.
+  if (source === 'siteConfig' && current?.phase !== PHASES.OFFSEASON) {
+    getSeasons().then((seasons) => {
+      const active = seasons.filter((s) => s.isActive === true).map((s) => s.id);
+      if (active.length !== 1 || active[0] !== currentSeasonId) {
+        console.warn(`[config] siteConfig/current says ${currentSeasonId} but seasons marked isActive are: ${active.join(', ') || 'none'}`);
+      }
+    }).catch(() => { /* informational only */ });
+  }
 
   let phase = VALID_PHASES.has(current?.phase) ? current.phase : null;
   if (!phase) phase = (source === 'siteConfig' || activeSeason) ? PHASES.REGULAR : PHASES.OFFSEASON;

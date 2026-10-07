@@ -1526,6 +1526,20 @@ Matt Leonardelli,Green</pre>
         await setDoc(doc(db, 'seasons', seasonId), seasonDoc);
         console.log('✅ Season document created:', seasonId);
 
+        // The site reads the current season from siteConfig/current
+        // (js/core/config.js); keep it in step with isActive.
+        if (setActive) {
+          document.getElementById('progressText').textContent = 'Setting current season...';
+          await setDoc(doc(db, 'siteConfig', 'current'), {
+            currentSeasonId: seasonId,
+            phase: 'regular',
+            openingDay: seasonConfig.startDate, // 'YYYY-MM-DD' from the date input
+            updatedAt: serverTimestamp(),
+            updatedBy: currentUser.uid
+          });
+          try { sessionStorage.removeItem('aces:siteConfig:v1'); } catch (e) { /* ignore */ }
+        }
+
         // Step 2: Create games
         document.getElementById('progressText').textContent = 'Creating games (0/' + scheduleData.length + ')...';
         
