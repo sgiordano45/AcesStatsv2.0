@@ -63,10 +63,11 @@ const allHitTypes = (rows) => rows.length > 0 && rows.every(r => r.hasHitTypes);
 /**
  * @param {object} [o]
  * @param {string} [o.id='']     URL prefix (two tables on one page need different ones)
+ * @param {string} [o.sort]     default sort for every preset, e.g. '-season' (player pages)
  * @param {string[]} [o.lead=[]] column keys to put first (the first one is the sticky column)
  * @param {string[]} [o.omit=[]] column keys to leave out of every preset (e.g. 'team')
  */
-export function battingTableConfig({ id = '', omit = [], lead = [] } = {}) {
+export function battingTableConfig({ id = '', omit = [], lead = [], sort = null } = {}) {
   const drop = new Set(omit);
   // lead: keys moved to the front of every preset (player pages: ['season', 'team']).
   const arrange = (keys) => [...lead.filter(k => keys.includes(k)), ...keys.filter(k => !lead.includes(k))].filter(k => !drop.has(k));
@@ -77,7 +78,7 @@ export function battingTableConfig({ id = '', omit = [], lead = [] } = {}) {
       columns: ['name', 'team', 'season', 'PA', 'BA', 'OBP', 'SLG', 'OPS', 'RPA', 'BPI', 'bWAR'] },
     { key: 'counting', label: 'Counting', sort: '-H', card: ['G', 'H', 'R', 'BB'],
       columns: ['name', 'team', 'season', 'G', 'PA', 'AB', 'H', '2B', '3B', 'HR', 'R', 'RBI', 'BB'] }
-  ].map(p => ({ ...p, columns: arrange(p.columns) }));
+  ].map(p => ({ ...p, sort: sort || p.sort, columns: arrange(p.columns) }));
 
   return {
     id,

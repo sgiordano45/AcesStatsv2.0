@@ -2671,22 +2671,7 @@
 
     <div class="stats-section">
       <h2>Career Stats</h2>
-      <table id="careerStatsTable">
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Games</th>
-            <th>At Bats</th>
-            <th>Hits</th>
-            <th>Runs</th>
-            <th>Walks</th>
-            <th>Avg AcesBPI</th>
-            <th>BA</th>
-            <th>OBP</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div id="playerCareerTable"></div>
     </div>
     
   </div>
@@ -2908,18 +2893,7 @@
         <!-- Career summary -->
         <div class="stats-section">
           <h2>🏆 Career Pitching Stats</h2>
-          <table id="pitchingCareerTable">
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>G</th>
-                <th>IP</th>
-                <th>RA</th>
-                <th>Career ERA</th>
-              </tr>
-            </thead>
-            <tbody id="pitchingCareerBody"></tbody>
-          </table>
+          <div id="playerPitchingCareerTable"></div>
         </div>
 
         <!-- Game log -->
@@ -4843,7 +4817,7 @@
     const name = currentPlayerData?.playerName || '';
     const el = document.getElementById('playerBattingTable');
     if (el && !playerBattingTable) {
-      playerBattingTable = mountStatTable(el, battingTableConfig({ id: 'bat', omit: ['name'], lead: ['season', 'team'] }), {
+      playerBattingTable = mountStatTable(el, battingTableConfig({ id: 'bat', omit: ['name'], lead: ['season', 'team'], sort: '-season' }), {
         emptyMessage: 'No batting stats yet.',
         exportName: `aces-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-batting`,
         exportTitle: `${name} batting`
@@ -4863,43 +4837,49 @@
       applyTeamGames(rows).then(() => playerBattingTable.refresh()).catch(err => console.warn('[player] team games', err));
     }
 
-    calculateCareerStats(stats, careerStats);
+    calculateCareerStats(stats, careerStats, rows);
   }
 
-  function calculateCareerStats(stats, careerStats) {
-    const careerTbody = document.querySelector('#careerStatsTable tbody');
-    const regularStats = stats.filter(s => s.sub === 'No');
-    const regularTotals = calculateTotals(regularStats);
-    const careerTotals = calculateTotals(stats);
-    
-    // Use pre-calculated avgAcesWar from Firebase if available (only for regular seasons)
-    // This is the authoritative value calculated during aggregation
-    const regularAvgAcesWar = careerStats?.avgAcesWar ?? regularTotals.avgAcesWar;
+  // A summary table (fixed rows, no sorting, no Qualified or Combine): the
+  // shared batting columns with the Season column used as the row label.
+  function summaryConfig(config, label = '') {
+    return {
+      ...config,
+      qualifier: null,
+      combine: null,
+      columns: config.columns.map(c => (c.key === 'season' ? { ...c, label, defaultDir: undefined } : c)),
+      presets: config.presets.map(p => ({ ...p, sort: null }))
+    };
+  }
 
-    careerTbody.innerHTML = `
-      <tr>
-        <td><strong>Regular Season</strong></td>
-        <td>${regularTotals.games}</td>
-        <td>${regularTotals.atBats}</td>
-        <td>${regularTotals.hits}</td>
-        <td>${regularTotals.runs}</td>
-        <td>${regularTotals.walks}</td>
-        <td>${regularAvgAcesWar.toFixed(2)}</td>
-        <td>${regularTotals.BA.toFixed(3)}</td>
-        <td>${regularTotals.OBP.toFixed(3)}</td>
-      </tr>
-      <tr>
-        <td><strong>Career Total</strong></td>
-        <td>${careerTotals.games}</td>
-        <td>${careerTotals.atBats}</td>
-        <td>${careerTotals.hits}</td>
-        <td>${careerTotals.runs}</td>
-        <td>${careerTotals.walks}</td>
-        <td>${regularAvgAcesWar.toFixed(2)}</td>
-        <td>${careerTotals.BA.toFixed(3)}</td>
-        <td>${careerTotals.OBP.toFixed(3)}</td>
-      </tr>
-    `;
+  let playerCareerTable = null;
+  function calculateCareerStats(stats, careerStats, rows = []) {
+    const el = document.getElementById('playerCareerTable');
+    if (!el) return;
+    const config = battingTableConfig({ id: 'car', omit: ['name', 'team', 'sub'], lead: ['season'] });
+    const merge = config.combine.merge;
+    const label = (row, text, key) => ({ ...row, seasonLabel: text, seasonKey: key, seasonCount: 2, team: '', teamKey: '' });
+
+    // acesBPI: the stored career average (regular seasons) when there is one.
+    const bpis = rows.filter(r => !r.sub && typeof r.acesBPI === 'number').map(r => r.acesBPI);
+    const avgBPI = typeof careerStats?.avgAcesWar === 'number' && careerStats.avgAcesWar
+      ? careerStats.avgAcesWar
+      : (bpis.length ? bpis.reduce((a, b) => a + b, 0) / bpis.length : null);
+
+    const regular = rows.filter(r => !r.sub);
+    const out = [];
+    if (regular.length) out.push({ ...label(merge(regular), 'Regular season', 2), acesBPI: avgBPI });
+    if (rows.length) out.push({ ...label(merge(rows), 'Career total', 1), acesBPI: avgBPI });
+
+    if (!playerCareerTable) {
+      playerCareerTable = mountStatTable(el, summaryConfig(config), {
+        useUrl: false,
+        emptyMessage: 'No batting stats yet.',
+        exportName: 'aces-player-career',
+        exportTitle: `${currentPlayerData?.playerName || ''} career`
+      });
+    }
+    playerCareerTable.setRows(out);
   }
 
   function calculateTotals(stats) {
@@ -6074,8 +6054,8 @@
         return;
       }
 
-      renderPitchingSeasons(historicalSeasons);
-      renderPitchingCareer(historicalSeasons);
+      const seasonRowsForCareer = renderPitchingSeasons(historicalSeasons);
+      renderPitchingCareer(seasonRowsForCareer);
       renderPitchingGameLog();
       content.classList.remove('hidden');
 
@@ -6115,38 +6095,24 @@
     return '—';
   }
 
-  function renderPitchingCareer(historicalSeasons = []) {
-    // Totals from game-level docs
-    const gameTotals = pitchingGames.reduce((acc, g) => {
-      acc.games++;
-      acc.ip += inningsValue(g.inningsPitched ?? 0);
-      acc.ra += g.runsAllowed ?? 0;
-      return acc;
-    }, { games: 0, ip: 0, ra: 0 });
-
-    // Totals from historical aggregated seasons
-    const histTotals = historicalSeasons.reduce((acc, s) => {
-      acc.games += Number(s.games)         || 0;
-      acc.ip    += inningsValue(s.inningsPitched);
-      acc.ra    += Number(s.runsAllowed)    || 0;
-      return acc;
-    }, { games: 0, ip: 0, ra: 0 });
-
-    const career = {
-      games: gameTotals.games + histTotals.games,
-      ip:    gameTotals.ip    + histTotals.ip,
-      ra:    gameTotals.ra    + histTotals.ra
-    };
-
-    document.getElementById('pitchingCareerBody').innerHTML = `
-      <tr>
-        <td><strong>Career Total</strong></td>
-        <td>${career.games}</td>
-        <td>${fmtIP(career.ip)}</td>
-        <td>${career.ra}</td>
-        <td>${fmtERA(career.ra, career.ip)}</td>
-      </tr>
-    `;
+  // Career pitching: one Career total row from the season rows.
+  let playerPitchingCareerTable = null;
+  function renderPitchingCareer(seasonRows = []) {
+    const el = document.getElementById('playerPitchingCareerTable');
+    if (!el) return;
+    const config = pitchingTableConfig({ id: 'pcar', omit: ['name', 'team'], lead: ['season'] });
+    const rows = seasonRows.length
+      ? [{ ...config.combine.merge(seasonRows), seasonLabel: 'Career total', seasonKey: 1, seasonCount: 2, team: '', teamKey: '' }]
+      : [];
+    if (!playerPitchingCareerTable) {
+      playerPitchingCareerTable = mountStatTable(el, summaryConfig(config), {
+        useUrl: false,
+        emptyMessage: 'No pitching stats yet.',
+        exportName: 'aces-player-pitching-career',
+        exportTitle: `${currentPlayerData?.playerName || ''} career pitching`
+      });
+    }
+    playerPitchingCareerTable.setRows(rows);
   }
 
   // Season pitching: stored seasons before PITCHING_GAME_LEVEL_FROM plus
@@ -6178,9 +6144,9 @@
     rows.sort((a, b) => b.seasonKey - a.seasonKey);
 
     const el = document.getElementById('playerPitchingTable');
-    if (!el) return;
+    if (!el) return rows;
     if (!playerPitchingTable) {
-      playerPitchingTable = mountStatTable(el, pitchingTableConfig({ id: 'pit', omit: ['name'], lead: ['season', 'team'] }), {
+      playerPitchingTable = mountStatTable(el, pitchingTableConfig({ id: 'pit', omit: ['name'], lead: ['season', 'team'], sort: '-season' }), {
         emptyMessage: 'No pitching stats yet.',
         exportName: `aces-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-pitching`,
         exportTitle: `${name} pitching`
@@ -6188,6 +6154,7 @@
     }
     playerPitchingTable.setRows(rows);
     applyTeamGames(rows).then(() => playerPitchingTable.refresh()).catch(err => console.warn('[player] team games', err));
+    return rows;
   }
 
   function renderPitchingGameLog() {
