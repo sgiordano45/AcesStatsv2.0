@@ -514,9 +514,8 @@ body {
       { key: 'ERA', label: 'ERA', type: 'rate', lowerIsBetter: true, value: r => era(r.runsAllowed, r.ip), format: rate },
       { key: 'RG', label: 'R/G', title: 'Runs allowed per game pitched', type: 'rate', lowerIsBetter: true, value: r => (r.games ? r.runsAllowed / r.games : null), format: rate }
     ],
-    // One view: hits, walks and strikeouts are only recorded for a few 2026
-    // games and W/L/SV for none, so those columns (and WHIP, K/7) wait until
-    // the game tracker records them for every game.
+    // One view: pitching is runs and innings. The league doesn't track W/L/SV,
+    // and K/BB/H aren't recorded consistently, so none of them are shown.
     presets: [
       { key: 'standard', label: 'Standard', sort: '-IP', card: ['G', 'IP', 'ERA', 'RG'],
         columns: ['name', 'team', 'season', 'G', 'IP', 'R', 'ERA', 'RG'] }
