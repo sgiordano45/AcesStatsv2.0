@@ -71,7 +71,8 @@ function render() {
     const label = h.shortLabel
       ? `<span class="aces-hub__full">${esc(h.label)}</span><span class="aces-hub__short">${esc(h.shortLabel)}</span>`
       : `<span>${esc(h.label)}</span>`;
-    return `<a class="aces-hub${active ? ' is-active' : ''}" href="${esc(url(h.href))}"${active ? ' aria-current="true"' : ''}>${icon(h.icon)}${label}</a>`;
+    const hubLink = `<a class="aces-hub${active ? ' is-active' : ''}" href="${esc(url(h.href))}"${active ? ' aria-current="true"' : ''}>${icon(h.icon)}${label}</a>`;
+    return `<div class="aces-hubitem">${hubLink}${hubMenu(h, here)}</div>`;
   }).join('');
 
   const name = displayName(user, profile);
@@ -135,6 +136,15 @@ function render() {
     els.tabs.hidden = true;
   }
   syncSpacer();
+}
+
+// Hover (or keyboard focus) menu under a hub: every tab, with a group's
+// pages listed under its name, so any page is one click from anywhere.
+function hubMenu(hub, here) {
+  const items = hub.tabs.map((t) => (t.pages
+    ? `<div class="aces-hubmenu__group">${esc(t.label)}</div>${t.pages.map((p) => link(p, 'aces-hubmenu__item is-sub', p.id === here?.pageId)).join('')}`
+    : link(t, 'aces-hubmenu__item', t.id === here?.pageId))).join('');
+  return `<div class="aces-hubmenu">${items}</div>`;
 }
 
 // The ? button opens the Help area (help.html and the guides).
