@@ -86,6 +86,277 @@ export function getFilteredNavStructure() {
   return filtered;
 }
 
+// ===========================================================================
+// v2.0 NAV TREE
+// One tree of hubs -> tabs -> pages, read by the v2.0 header, hub tabs and
+// mobile bottom bar. Icons are names from icons.svg (see js/ui/icons.js).
+//
+// A page:  { id, href, label, icon, role?, signedIn?, phase?, also?, external? }
+//   id      matches the doc ID in Firestore siteConfig/navigation/pages, so
+//           { visible: false } there still hides it. Keep IDs stable.
+//   role    a hasRole() name or list ('team-staff', 'captain', 'league-staff',
+//           'admin', or a specialRoles key). Implies signedIn.
+//   phase   'regular' | 'playoffs' | 'offseason' (or a list): shown only then.
+//   also    other pages that belong here: no tab of their own, but opening
+//           one highlights this tab (detail pages, pages merged in Phase 3).
+// A tab is a page, or a group { key, label, icon, pages: [...] } that shows a
+// second row of tabs. A group's row is the tab set its merged page gets in
+// Phase 3; it links to its first visible page.
+// ===========================================================================
+
+export const NAV_HUBS = [
+  {
+    id: 'season', label: 'Season', icon: 'calendar',
+    tabs: [
+      { id: 'current-season', href: 'current-season.html', label: 'Standings', icon: 'list',
+        also: ['current-season-team.html', 'season.html'] },
+      { id: 'schedule', href: 'schedule.html', label: 'Schedule', icon: 'calendar-days' },
+      { key: 'playoffs', label: 'Playoffs', icon: 'trophy', pages: [
+        { id: 'playoffs', href: 'playoffs.html', label: 'Bracket', icon: 'trophy' },
+        { id: 'clinching', href: 'playoff-clinching.html', label: 'Clinching', icon: 'lock' },
+        { id: 'projections', href: 'projections.html', label: 'Projections', icon: 'trending-up' },
+        { id: 'champ-preview', href: 'championship-preview.html', label: 'Championship preview', icon: 'crown' },
+      ] },
+      { id: 'weekend-preview', href: 'weekend-preview.html', label: 'Preview', icon: 'binoculars',
+        also: ['game-preview.html', 'game-recap.html'] },
+      { id: 'stream', href: 'stream.html', label: 'Live', icon: 'radio' },
+      { key: 'rules', label: 'Rules', icon: 'scale', pages: [
+        { id: 'league-rules', href: 'league-rules.html', label: 'Rules', icon: 'scale' },
+        { id: 'rule-proposal', href: 'rule-proposals.html', label: 'Proposals', icon: 'clipboard' },
+        { id: 'rule-review', href: 'rule-review.html', label: 'Review', icon: 'clipboard-check' },
+      ] },
+      { id: 'activity', href: 'activity.html', label: 'Activity', icon: 'activity' },
+      { id: 'offseason-hub', href: 'offseason.html', label: 'Offseason', icon: 'snowflake', phase: 'offseason',
+        also: ['offseason-schedule.html', 'offseason-roster.html', 'draft.html', 'countdown.html'] },
+    ],
+  },
+  {
+    id: 'stats', label: 'Stats', icon: 'chart-bar',
+    tabs: [
+      { id: 'batting', href: 'batting.html', label: 'Batting', icon: 'bat' },
+      { id: 'pitching', href: 'pitching.html', label: 'Pitching', icon: 'softball',
+        also: ['pitching_leaders.html'] },
+      { key: 'leaders', label: 'Leaders', icon: 'crown', pages: [
+        { id: 'leaders', href: 'leaders.html', label: 'Career', icon: 'crown' },
+        { id: 'milestones', href: 'milestones.html', label: 'Milestones', icon: 'target' },
+      ] },
+      { key: 'compare', label: 'Compare', icon: 'arrow-left-right', pages: [
+        { id: 'compare', href: 'compare.html', label: 'Players', icon: 'users' },
+        { id: 'team-compare', href: 'team_compare.html', label: 'Teams', icon: 'versus' },
+        { id: 'h2h', href: 'h2h_grid.html', label: 'Head-to-head', icon: 'swords' },
+      ] },
+      { key: 'explore', label: 'Explore', icon: 'search', pages: [
+        { id: 'query-stats', href: 'query-stats.html', label: 'Query', icon: 'search' },
+        { id: 'charts', href: 'charts.html', label: 'Charts', icon: 'chart-line' },
+        { id: 'bwar-explorer', href: 'bwar-explorer.html', label: 'bWAR', icon: 'calculator' },
+      ] },
+      { id: 'team-stats', href: 'team-stats.html', label: 'Team stats', icon: 'table' },
+      { id: 'scouting-report', href: 'scouting-report.html', label: 'Scouting', icon: 'binoculars' },
+    ],
+  },
+  {
+    id: 'teams', label: 'Teams & Players', shortLabel: 'Teams', icon: 'users',
+    tabs: [
+      { id: 'teams', href: 'teams.html', label: 'Teams', icon: 'shield',
+        also: ['team.html'] },
+      { id: 'players', href: 'players.html', label: 'Players', icon: 'user',
+        also: ['player.html', 'pitcher.html', 'player-splits.html', 'player_new.html', 'card-export.html'] },
+      { id: 'roster-tracker', href: 'roster-tracker.html', label: 'Roster tracker', icon: 'clipboard' },
+      { id: 'directory', href: 'aces-directory.html', label: 'Directory', icon: 'id-card', signedIn: true },
+    ],
+  },
+  {
+    id: 'history', label: 'History', icon: 'scroll',
+    tabs: [
+      { id: 'seasons', href: 'seasons.html', label: 'Seasons', icon: 'calendar' },
+      { id: 'champions', href: 'champions.html', label: 'Champions', icon: 'trophy' },
+      { key: 'awards', label: 'Awards', icon: 'award', pages: [
+        { id: 'awards', href: 'awards.html', label: 'Awards', icon: 'award' },
+        { id: 'aceys-2026', href: 'aceys-2026.html', label: 'Aceys 2026', icon: 'star' },
+      ] },
+      { id: 'recap', href: 'recap.html', label: 'Year in review', icon: 'book',
+        also: ['aces-wrapped.html'] },
+      { id: 'playoff-history', href: 'playoff-history.html', label: 'Playoff history', icon: 'flag' },
+      { id: 'trophy-case', href: 'trophy-case.html', label: 'Trophy case', icon: 'medal',
+        also: ['badge-weekly.html'] },
+      { id: 'history', href: 'league-history.html', label: 'League history', icon: 'scroll',
+        also: ['aces-23-0.html'] },
+      { key: 'media', label: 'Media', icon: 'images', pages: [
+        { id: 'pictures', href: 'pictures.html', label: 'Photos', icon: 'images' },
+        { id: 'media', href: 'media.html', label: 'Video', icon: 'video' },
+      ] },
+    ],
+  },
+  {
+    id: 'play', label: 'Play', icon: 'gamepad',
+    tabs: [
+      { id: 'games', href: 'games.html', label: 'Daily games', icon: 'puzzle',
+        also: ['aces-wordle.html', 'immaculate-grid.html', 'higher-lower.html', 'who-am-i.html',
+               'aces-connections.html', 'roster-recall.html'] },
+      { id: 'pickem', href: 'pickem.html', label: "Pick'em", icon: 'check-circle', signedIn: true },
+      { id: 'aces-dfs', href: 'dfs.html', label: 'DFS', icon: 'dice', signedIn: true,
+        also: ['dfs-week.html'] },
+      { id: 'side-bets', href: 'side-bets.html', label: 'Side bets', icon: 'handshake', signedIn: true },
+      { id: 'violations', href: 'violations.html', label: 'Wall of Shame', icon: 'flame' },
+    ],
+  },
+];
+
+// The avatar menu ("Me"). Sections show only when one of their pages does.
+const CONTRIBUTOR_ROLES = ['contributor', 'photographer', 'oddsmaker', 'eulogist', 'mediaManager', 'league-staff'];
+
+export const ME_MENU = [
+  {
+    key: 'me', label: null, pages: [
+      { id: 'profile', href: 'profile.html', label: 'Profile', icon: 'user', signedIn: true,
+        also: ['profile-fan.html'] },
+      { id: 'dashboard', href: 'my-dashboard.html', label: 'Dashboard', icon: 'grid', signedIn: true },
+      { id: 'favorites', href: 'favorites.html', label: 'Favorites', icon: 'star', signedIn: true },
+      { id: 'notifications', href: 'notifications.html', label: 'Notifications', icon: 'bell', signedIn: true },
+      { id: 'photo-upload', href: 'photo-upload.html', label: 'Upload photos', icon: 'upload', signedIn: true },
+      { id: 'aceys-voting', href: 'aceys-award-voting.html', label: 'Aceys voting', icon: 'check-circle',
+        signedIn: true, phase: 'offseason' },
+    ],
+  },
+  {
+    key: 'team', label: 'My team', pages: [
+      { id: 'submit-score', href: 'submit-score.html', label: 'Submit scores', icon: 'hash', role: 'team-staff' },
+      { id: 'submit-stats', href: 'submit-stats.html', label: 'Submit stats', icon: 'calculator', role: 'team-staff' },
+      { id: 'game-tracker', href: 'game-tracker.html', label: 'Game tracker', icon: 'clipboard', role: 'team-staff' },
+      { id: 'roster-management', href: 'roster-management.html', label: 'Roster management', icon: 'users', role: 'team-staff' },
+      { id: 'captain-roster-edit', href: 'captain-roster-edit.html', label: 'Edit roster', icon: 'edit', role: 'team-staff' },
+      { id: 'manage-team', href: 'manage-team.html', label: 'Manage team', icon: 'settings', role: 'team-staff' },
+      { id: 'team-scouting-report', href: 'team-scouting-report.html', label: 'Team scouting report', icon: 'binoculars', role: 'captain' },
+      { id: 'captain-guide', href: 'captain-guide.html', label: "Captain's guide", icon: 'book', role: 'captain' },
+    ],
+  },
+  {
+    key: 'contributor', label: 'Contributor', pages: [
+      { id: 'contributor', href: 'contributor.html', label: 'Contributor dashboard', icon: 'sparkles', role: CONTRIBUTOR_ROLES },
+    ],
+  },
+  {
+    key: 'staff', label: 'League staff', pages: [
+      { id: 'commissioner-hub', href: 'commissioner-hub.html', label: 'Commissioner hub', icon: 'megaphone', role: 'league-staff' },
+      { id: 'league-staff-admin', href: 'league-staff-admin.html', label: 'League staff admin', icon: 'shield', role: 'league-staff' },
+      { id: 'aceys-admin', href: 'admin-aceys.html', label: 'Aceys admin', icon: 'award', role: 'league-staff' },
+    ],
+  },
+  {
+    key: 'admin', label: 'Admin', pages: [
+      { id: 'admin-hub', href: 'admin-pages.html', label: 'Admin Hub', icon: 'settings', role: 'admin' },
+      { id: 'admin-view-as', href: 'admin-view-as.html', label: 'View As', icon: 'eye', role: 'admin' },
+    ],
+  },
+  {
+    key: 'more', label: null, pages: [
+      { id: 'feature-submit', href: 'feature-submit.html', label: 'Feedback', icon: 'message' },
+      { id: 'help', href: 'help.html', label: 'Help', icon: 'help',
+        also: ['aces-features-guide.html', 'contributor-guide.html', 'game-tracker-guide.html',
+               'league-staff-guide.html', 'offseason-guide.html', 'profile-setup-guide.html',
+               'scoring-guide.html', 'mountainside-aces-signup-guide.html', 'calendar-export-guide.html'] },
+      { id: 'aces-shop', href: 'https://acesmountainside.com/', label: 'Aces Shop', icon: 'external-link', external: true },
+    ],
+  },
+];
+
+export const NAV_HOME = { id: 'home', href: 'index.html', label: 'Home', icon: 'home' };
+
+// Mobile bottom bar, left to right. 'more' opens a sheet with MORE_SHEET.
+export const MOBILE_BAR = ['home', 'season', 'stats', 'teams', 'me'];
+export const MORE_SHEET = ['history', 'play', 'help'];
+
+// Pages that are deliberately in no hub: sign-in flow, admin tools (reached
+// from the Admin Hub), hidden pages, and pages due to be deleted.
+export const NAV_UNLISTED = {
+  noNav: ['signin.html', 'signup.html', 'reset-password.html', 'verify-email.html', 'offline.html'],
+  hidden: ['boxes-pool.html', 'bracket.html', 'link-player.html', 'player-questionnaire.html'],
+  adminTools: ['aggregate-stats.html', 'approve-links.html', 'captain-questionnaire-review.html',
+    'games-admin.html', 'league-schedule-editor.html', 'player-import.html', 'playoff-eligibility-tracker.html',
+    'schedule-2027-proposal.html', 'schedule-balancer.html', 'schedule-generator.html', 'schedule-rework.html',
+    'schedule-workshop.html', 'season-setup-wizard.html', 'signup-card-export.html', 'wordle-admin.html'],
+  toDelete: ['CHANGES-TODAY.html', 'aggregate-stats-legacy.html', 'banner.html', 'check-token.html',
+    'gc-data-cleaner.html', 'migrate-game-stats.html', 'practice-poll.html', 'quick-notification-tester.html',
+    'submit-stats-legacy.html', 'trade-analyzer.html', 'trophy-case-test.html'],
+};
+
+// --- Tree helpers (pure: no Firebase, no DOM) -------------------------------
+
+const isGroup = (tab) => Array.isArray(tab.pages);
+const asList = (v) => (v == null ? [] : Array.isArray(v) ? v : [v]);
+
+/** Every page in the tree (home, hubs, Me menu), each with hubId and tabKey. */
+export function navPages() {
+  const out = [{ ...NAV_HOME, hubId: 'home', tabKey: 'home' }];
+  NAV_HUBS.forEach((hub) => hub.tabs.forEach((tab) => {
+    if (isGroup(tab)) tab.pages.forEach((p) => out.push({ ...p, hubId: hub.id, tabKey: tab.key }));
+    else out.push({ ...tab, hubId: hub.id, tabKey: tab.id });
+  }));
+  ME_MENU.forEach((sec) => sec.pages.forEach((p) => out.push({ ...p, hubId: 'me', tabKey: sec.key })));
+  return out;
+}
+
+/** File name of a URL or path: '/AcesStatsv2.0/' -> 'index.html'. */
+export function pageFile(pathOrUrl = (typeof location !== 'undefined' ? location.pathname : '')) {
+  const path = String(pathOrUrl).split(/[?#]/)[0];
+  const file = path.slice(path.lastIndexOf('/') + 1);
+  return file || 'index.html';
+}
+
+/**
+ * Where a page sits: { hubId, tabKey, pageId } or null for unlisted pages.
+ * hubId is 'home', a hub id or 'me'. For a page listed under `also`, pageId
+ * is the page it belongs to.
+ */
+export function locatePage(pathOrUrl) {
+  const file = pageFile(pathOrUrl);
+  for (const p of navPages()) {
+    if (p.external) continue;
+    if (p.href === file || asList(p.also).includes(file)) {
+      return { hubId: p.hubId, tabKey: p.tabKey, pageId: p.id };
+    }
+  }
+  return null;
+}
+
+/**
+ * Whether a page shows for this viewer.
+ * ctx: { signedIn, profile, phase, hasRole(profile, role), isVisible(id) }
+ */
+export function pageAllowed(page, ctx = {}) {
+  const { signedIn = false, profile = null, phase = null, hasRole = null, isVisible = null } = ctx;
+  if (isVisible && !isVisible(page.id)) return false;
+  if ((page.signedIn || page.role) && !signedIn) return false;
+  if (page.role && !(hasRole && hasRole(profile, page.role))) return false;
+  if (page.phase && !asList(page.phase).includes(phase)) return false;
+  return true;
+}
+
+/**
+ * The tree pruned for one viewer: { home, hubs, me }. Groups keep only their
+ * allowed pages and link to the first; empty groups, tabs and Me sections are
+ * dropped. Hubs stay even when empty, so the bar never shifts.
+ */
+export function buildNav(ctx = {}) {
+  const hubs = NAV_HUBS.map((hub) => {
+    const tabs = hub.tabs.map((tab) => {
+      if (!isGroup(tab)) return pageAllowed(tab, ctx) ? tab : null;
+      const pages = tab.pages.filter((p) => pageAllowed(p, ctx));
+      return pages.length ? { ...tab, pages, href: pages[0].href } : null;
+    }).filter(Boolean);
+    return { ...hub, tabs, href: tabs[0]?.href || null };
+  });
+  const me = ME_MENU
+    .map((sec) => ({ ...sec, pages: sec.pages.filter((p) => pageAllowed(p, ctx)) }))
+    .filter((sec) => sec.pages.length);
+  return { home: NAV_HOME, hubs, me };
+}
+
+// ===========================================================================
+// LEGACY: the four-tier structure below is read by nav-component.js until
+// push 5b replaces it with the header built on the tree above.
+// ===========================================================================
+
 export const NAV_STRUCTURE = {
   // Tier 1: PRIMARY - Core pages (always visible on desktop)
   primary: [

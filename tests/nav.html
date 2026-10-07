@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Nav tree check</title>
+<script type="module" src="../js/core/preview-guard.js"></script>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<style>
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 96px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 28px 0 8px; }
+  .muted { color: var(--color-text-muted, #64748b); font-size: 13px; }
+  .card { border: 1px solid var(--color-border, #e2e8f0); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: 4px 8px; border-top: 1px solid var(--color-border, #e2e8f0); vertical-align: top; text-align: left; }
+  th { font-weight: 600; border-top: 0; }
+  .pass { color: #2d6a16; font-weight: 700; }
+  .fail { color: #b91c1c; font-weight: 700; }
+  .hubs { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+  .hubs ul { margin: 4px 0 0; padding-left: 18px; }
+  .hubs li { margin: 2px 0; }
+  .off { opacity: .4; text-decoration: line-through; }
+  .tag { font-size: 11px; color: var(--color-text-muted, #64748b); }
+  label { margin-right: 12px; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Nav tree check</h1>
+  <p class="muted">Checks the v2.0 tree in nav-config.js: unique page IDs, every link loads, every icon is in icons.svg, and where each page sits. The view below shows the tree as the chosen viewer would see it (struck-through pages are hidden for them). Read-only.</p>
+
+  <div class="card" id="summary">Running...</div>
+
+  <h2>View as</h2>
+  <div class="card">
+    <label><input type="radio" name="who" value="me" checked> Me (signed-in profile)</label>
+    <label><input type="radio" name="who" value="out"> Signed out</label>
+    <label><input type="radio" name="who" value="player"> Player</label>
+    <label><input type="radio" name="who" value="captain"> Captain</label>
+    <label><input type="radio" name="who" value="admin"> Admin</label>
+    &nbsp; Phase:
+    <select id="phase"><option value="">site phase</option><option>regular</option><option>playoffs</option><option>offseason</option></select>
+  </div>
+  <div class="hubs" id="tree"></div>
+
+  <h2>Checks</h2>
+  <div class="card"><table id="checks"></table></div>
+</main>
+
+<script type="module">
+  import { NAV_HUBS, ME_MENU, NAV_UNLISTED, navPages, locatePage, pageAllowed, loadPageVisibility, isPageVisible } from '../nav-config.js';
+  import { ICON_NAMES, icon } from '../js/ui/icons.js';
+  import { authReady, getEffectiveProfile, hasRole } from '../js/core/auth.js';
+  import { getPhase } from '../js/core/config.js';
+
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const rows = [];
+  const check = (name, ok, detail = '') => rows.push({ name, ok, detail });
+
+  const pages = navPages();
+  const ids = pages.map((p) => p.id);
+  const dupIds = ids.filter((id, i) => ids.indexOf(id) !== i);
+  check('Page IDs are unique', !dupIds.length, dupIds.join(', '));
+
+  const iconsUsed = [...NAV_HUBS.map((h) => h.icon), ...NAV_HUBS.flatMap((h) => h.tabs.map((t) => t.icon)), ...pages.map((p) => p.icon)];
+  const badIcons = [...new Set(iconsUsed.filter((i) => !ICON_NAMES.includes(i)))];
+  check('Icons are all in icons.svg', !badIcons.length, badIcons.join(', '));
+
+  const files = [...new Set([
+    ...pages.filter((p) => !p.external).flatMap((p) => [p.href, ...(p.also || [])]),
+    ...Object.values(NAV_UNLISTED).flat(),
+  ])];
+  const placed = {};
+  pages.forEach((p) => { if (!p.external) [p.href, ...(p.also || [])].forEach((f) => (placed[f] ||= []).push(p.id)); });
+  Object.entries(NAV_UNLISTED).forEach(([k, l]) => l.forEach((f) => (placed[f] ||= []).push('unlisted:' + k)));
+  const twice = Object.entries(placed).filter(([, w]) => w.length > 1).map(([f, w]) => `${f} (${w.join(', ')})`);
+  check('Each page placed once', !twice.length, twice.join('; '));
+
+  const missing = [];
+  await Promise.all(files.map(async (f) => {
+    try { const r = await fetch('../' + f, { method: 'HEAD', cache: 'no-store' }); if (!r.ok) missing.push(`${f} (${r.status})`); }
+    catch (e) { missing.push(`${f} (${e.message})`); }
+  }));
+  check(`All ${files.length} listed files load`, !missing.length, missing.join(', '));
+
+  const notLocated = pages.filter((p) => !p.external && locatePage(p.href)?.pageId !== p.id).map((p) => p.id);
+  check('locatePage finds every tab page', !notLocated.length, notLocated.join(', '));
+
+  await loadPageVisibility();
+  const hiddenByConfig = pages.filter((p) => !isPageVisible(p.id)).map((p) => p.id);
+  check('Hidden in siteConfig/navigation/pages', true, hiddenByConfig.join(', ') || 'none');
+
+  const failed = rows.filter((r) => !r.ok).length;
+  document.getElementById('summary').innerHTML = failed
+    ? `<span class="fail">FAIL</span> ${failed} of ${rows.length} checks`
+    : `<span class="pass">PASS</span> all ${rows.length} checks · ${pages.length} pages in the tree`;
+  document.getElementById('checks').innerHTML = '<tr><th>Check</th><th>Result</th><th>Detail</th></tr>' +
+    rows.map((r) => `<tr><td>${esc(r.name)}</td><td class="${r.ok ? 'pass' : 'fail'}">${r.ok ? 'pass' : 'FAIL'}</td><td>${esc(r.detail)}</td></tr>`).join('');
+
+  // --- tree view ---
+  await authReady();
+  const sitePhase = await getPhase();
+  const fake = {
+    out: null,
+    player: { userRole: 'player' },
+    captain: { userRole: 'captain', teamRoles: { x: { role: 'captain', status: 'active' } } },
+    admin: { userRole: 'admin', isAdmin: true },
+  };
+
+  function render() {
+    const who = document.querySelector('input[name=who]:checked').value;
+    const profile = who === 'me' ? getEffectiveProfile() : fake[who];
+    const ctx = { signedIn: !!profile, profile, phase: document.getElementById('phase').value || sitePhase, hasRole, isVisible: isPageVisible };
+    const li = (p) => {
+      const tags = [p.role && `role: ${[].concat(p.role).join('/')}`, p.signedIn && 'signed in', p.phase && `phase: ${p.phase}`, p.also && `+ ${p.also.length} more`].filter(Boolean).join(' · ');
+      return `<li class="${pageAllowed(p, ctx) ? '' : 'off'}">${icon(p.icon)} <a href="../${p.external ? '' : esc(p.href)}">${esc(p.label)}</a> <span class="tag">${esc(tags)}</span></li>`;
+    };
+    const hubCards = NAV_HUBS.map((h) => `<div class="card"><b>${icon(h.icon)} ${esc(h.label)}</b><ul>${h.tabs.map((t) => t.pages
+      ? `<li>${icon(t.icon)} ${esc(t.label)}<ul>${t.pages.map(li).join('')}</ul></li>`
+      : li(t)).join('')}</ul></div>`);
+    const meCard = `<div class="card"><b>${icon('user')} Me</b><ul>${ME_MENU.map((s) => s.label
+      ? `<li>${esc(s.label)}<ul>${s.pages.map(li).join('')}</ul></li>`
+      : s.pages.map(li).join('')).join('')}</ul></div>`;
+    document.getElementById('tree').innerHTML = [...hubCards, meCard].join('') +
+      `<p class="muted" style="grid-column:1/-1">Phase: ${esc(ctx.phase)} · Viewer: ${esc(who === 'me' ? (profile?.displayName || profile?.email || 'signed out') : who)}</p>`;
+  }
+  document.querySelectorAll('input[name=who], #phase').forEach((el) => el.addEventListener('change', render));
+  render();
+</script>
+</body>
+</html>
