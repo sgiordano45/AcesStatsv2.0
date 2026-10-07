@@ -9,6 +9,9 @@
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="mobile-enhancements.css">
 <link rel="stylesheet" href="nav-styles.css">
 <link rel="stylesheet" href="dark-mode.css">
@@ -327,114 +330,6 @@ body {
   color: white;
 }
 
-/* Table Container */
-.stats-table-container {
-  background: var(--card-bg);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-  position: relative;
-}
-
-.stats-table-container::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background: linear-gradient(90deg, var(--pitching-primary) 0%, var(--pitching-secondary) 100%);
-  z-index: 1;
-}
-
-.swipe-indicator {
-  display: none;
-  text-align: center;
-  padding: 0.75rem;
-  background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
-  color: #856404;
-  font-size: 0.9rem;
-  font-weight: 600;
-  border-bottom: 2px solid #ffc107;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  margin: 0;
-}
-
-thead {
-  background: linear-gradient(135deg, var(--pitching-primary) 0%, var(--pitching-secondary) 100%);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-th {
-  padding: 1rem;
-  text-align: center;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  user-select: none;
-  white-space: nowrap;
-  transition: background 0.3s ease;
-  border: none;
-}
-
-th:hover {
-  background: rgba(255,255,255,0.1);
-}
-
-th.asc::after {
-  content: " ▲";
-  font-size: 0.8em;
-  margin-left: 0.5rem;
-}
-
-th.desc::after {
-  content: " ▼";
-  font-size: 0.8em;
-  margin-left: 0.5rem;
-}
-
-td {
-  padding: 1rem;
-  text-align: center;
-  border-bottom: 1px solid var(--border-color);
-  color: var(--text-dark);
-}
-
-tbody tr {
-  transition: all 0.3s ease;
-}
-
-tbody tr:nth-child(even) {
-  background-color: #fafafa;
-}
-
-tbody tr:hover {
-  background: linear-gradient(90deg, rgba(17,153,142,0.05) 0%, rgba(56,239,125,0.05) 100%);
-  transform: scale(1.005);
-  box-shadow: var(--shadow-sm);
-}
-
-table a {
-  color: var(--pitching-primary);
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.3s ease;
-}
-
-table a:hover {
-  color: #0f8a80;
-  text-decoration: underline;
-}
-
-/* Mobile Navigation */
 .mobile-nav-container {
   display: none;
 }
@@ -483,22 +378,6 @@ table a:hover {
     justify-content: center;
   }
   
-  .swipe-indicator {
-    display: block;
-  }
-  
-  table {
-    font-size: 0.85rem;
-  }
-  
-  th, td {
-    padding: 0.75rem 0.5rem;
-  }
-  
-  .stats-table-container {
-    overflow-x: auto;
-  }
-  
   .mobile-nav-container {
     display: block;
   }
@@ -513,18 +392,14 @@ table a:hover {
     font-size: 2rem;
   }
   
-  table {
-    font-size: 0.75rem;
-  }
-  
-  th, td {
-    padding: 0.5rem 0.25rem;
-  }
-  
   .nav-link {
     display: block;
     text-align: center;
   }
+}
+
+.pitching-table {
+  margin-top: 1.5rem;
 }
 </style>
 </head>
@@ -537,569 +412,218 @@ table a:hover {
     <p>Complete pitching statistics for all players across all seasons</p>
   </div>
 
-  <!-- Loading Indicator -->
-  <div id="loadingIndicator" style="display: none;">
-    Loading pitching statistics...<br>
-    <small>Using optimized aggregated collection (fast!)</small>
-  </div>
-
-  <div class="summary">
+  <div class="summary" id="summary">
     <h2>Pitching Overview</h2>
     <p id="totalsText">Loading statistics...</p>
-    <p id="leadersText">Loading leaders...</p>
+    <p id="leadersText"></p>
   </div>
 
   <div class="filters-section">
     <div class="filters-container">
       <div class="filter-group">
-        <label for="yearFilter">Year:</label>
-        <select id="yearFilter">
-          <option value="All">All Years</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
         <label for="seasonFilter">Season:</label>
         <select id="seasonFilter">
-          <option value="All">All Seasons</option>
+          <option value="all">All seasons</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="teamFilter">Team:</label>
+        <select id="teamFilter">
+          <option value="all">All teams</option>
         </select>
       </div>
     </div>
   </div>
 
-  <div class="filters-nav">
-
-  </div>
-
-  <div class="stats-table-container">
-    <div class="swipe-indicator">← Swipe left/right to see all columns →</div>
-    <table id="pitchingTable">
-      <thead>
-        <tr>
-          <th data-field="name">Name</th>
-          <th data-field="team">Team</th>
-          <th data-field="year">Year</th>
-          <th data-field="season">Season</th>
-          <th data-field="games">Games</th>
-          <th data-field="IP">Innings Pitched</th>
-          <th data-field="runsAllowed">Runs Allowed</th>
-          <th data-field="ERA">ERA</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Rows generated dynamically -->
-      </tbody>
-    </table>
-  </div>
+  <!-- Statistics Table (js/ui/table.js) -->
+  <div id="pitchingTable" class="pitching-table"></div>
 </div>
 
 <script type="module">
-  // UPDATED: Import Firebase functions with new helper
-  import { 
-    getAllPlayerStatsOptimized,
-    pitchingSeasonsObjectToArray
-  } from './firebase-data.js';
+  // firebase-data.js first: its firebase-config.js creates the Firebase app,
+  // and js/core/firebase.js (loaded through app.js) reuses it.
+  import { getAllPlayerStatsOptimized, pitchingSeasonsObjectToArray } from './firebase-data.js';
+  import { initPage, pageReady, showPageState, showPageError } from './js/core/app.js';
+  import { capitalize, formatPlayerName, formatIP, fmtRate } from './js/ui/format.js';
+  import { era, QUALIFIERS, isQualifiedPitcher, qualifierLabel } from './js/domain/stats.js';
+  import { parseStatSeasonId, seasonLabel, seasonSortKey, inningsValue } from './js/domain/season-ids.js';
+  import { getTeamGames } from './js/data/team-games.js';
+  import { mountStatTable } from './js/ui/table.js';
+  import { sumFields } from './js/ui/table-model.js';
+  import { playerColumn, teamColumn, seasonColumn, combinedTeam, combinedSeason } from './js/ui/stat-columns.js';
+  import { mountStatFilters, pickDefaultSeason } from './js/ui/stat-filters.js';
 
-  // Global variables
-  let allData = [];
-  let currentSort = { column: null, dir: "asc" };
+  const COUNT_FIELDS = ['games', 'ip', 'runsAllowed', 'hits', 'walks', 'strikeouts', 'wins', 'losses', 'saves'];
+  const $ = (id) => document.getElementById(id);
 
-  // Helper function to capitalize strings
-  const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+  let allRows = [];   // one row per pitcher-season; the page filters apply on top
 
-  // Helper function to format player names from firstname_lastname to First Last
-function formatPlayerName(name) {
-  if (!name) return "";
-  
-  // If name already has spaces, capitalize each word properly
-  if (name.includes(' ')) {
-    return name.split(' ')
-      .map(word => {
-        // Handle special cases like DelleDonne, McDonald, etc.
-        if (word.toLowerCase() === 'delledonne') return 'DelleDonne';
-        if (word.toLowerCase() === 'mcdonald') return 'McDonald';
-        if (word.toLowerCase() === 'mccarthy') return 'McCarthy';
-		if (word.toLowerCase() === 'lacasse') return 'LaCasse';
-		if (word.toLowerCase() === 'mccabe') return 'McCabe';
-		if (word.toLowerCase() === "o'grady") return "O'Grady";
-		if (word.toLowerCase() === 'mcmahon') return 'McMahon';
-		if (word.toLowerCase() === 'mccorkell') return 'McCorkell';
-		if (word.toLowerCase() === 'denoble') return 'DeNoble';
-		if (word.toLowerCase() === 'digiacomo') return 'DiGiacomo';
-        // Add more special cases as needed
-        
-        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-      })
-      .join(' ');
-  }
-  
-  // If name has underscores, replace with spaces and capitalize
-  if (name.includes('_')) {
-    return name.split('_')
-      .map(word => {
-        // Handle special cases
-        if (word.toLowerCase() === 'delledonne') return 'DelleDonne';
-        if (word.toLowerCase() === 'mcdonald') return 'McDonald';
-        if (word.toLowerCase() === 'mccarthy') return 'McCarthy';
-        if (word.toLowerCase() === 'mccabe') return 'McCabe';
-		if (word.toLowerCase() === 'lacasse') return 'LaCasse';
-		        if (word.toLowerCase() === "o'grady") return "O'Grady";
-		if (word.toLowerCase() === 'mcmahon') return 'McMahon';
-				if (word.toLowerCase() === 'mccorkell') return 'McCorkell';
-		if (word.toLowerCase() === 'denoble') return 'DeNoble';
-		if (word.toLowerCase() === 'digiacomo') return 'DiGiacomo';
-		
-        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-      })
-      .join(' ');
-  }
-  
-  // Handle special cases for single words
-  if (name.toLowerCase() === 'delledonne') return 'DelleDonne';
-  if (name.toLowerCase() === 'mcdonald') return 'McDonald';
-  if (name.toLowerCase() === 'mccarthy') return 'McCarthy';
-  if (name.toLowerCase() === 'mccabe') return 'McCabe';
-  if (name.toLowerCase() === 'lacasse') return 'LaCasse';
-  if (name.toLowerCase() === "o'grady") return "O'Grady";
-  if (name.toLowerCase() === 'mcmahon') return 'McMahon';
-  		if (name.toLowerCase() === 'mccorkell') return 'McCorkell';
-		if (name.toLowerCase() === 'denoble') return 'DeNoble';
-		if (name.toLowerCase() === 'digiacomo') return 'DiGiacomo';
-  
-  
-  // Otherwise just capitalize the single name
-  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-}
+  // ---- rows ------------------------------------------------------------------
 
-  function showLoadingIndicator() {
-    const indicator = document.getElementById('loadingIndicator');
-    if (indicator) indicator.style.display = 'block';
-  }
-
-  function hideLoadingIndicator() {
-    const indicator = document.getElementById('loadingIndicator');
-    if (indicator) indicator.style.display = 'none';
-  }
-
-  // UPDATED: Load data using optimized aggregated collection with object-keyed pitching seasons
-  async function loadData() {
-    const loadStartTime = performance.now();
-    console.log('⚡ Loading pitching data from aggregated collection (OPTIMIZED)...');
-    console.time('Total Load Time');
-    
-    showLoadingIndicator();
-    
-    try {
-      console.time('Fetch Aggregated Data');
-      const players = await getAllPlayerStatsOptimized();
-      console.timeEnd('Fetch Aggregated Data');
-      console.log(`✅ Loaded ${players?.length || 0} players from aggregated collection`);
-      
-      if (!players || players.length === 0) {
-        console.warn('⚠️ No player data found');
-        document.getElementById('totalsText').textContent = 'No player data available.';
-        hideLoadingIndicator();
-        return;
+  function buildRows(players) {
+    const rows = [];
+    for (const player of players) {
+      if (!player.pitchingSeasons || typeof player.pitchingSeasons !== 'object') continue;
+      for (const s of pitchingSeasonsObjectToArray(player)) {
+        const sid = parseStatSeasonId(s.seasonId);
+        if (!sid.id) continue;
+        const team = capitalize(String(s.team || player.currentTeam || '').toLowerCase());
+        rows.push({
+          id: player.userId || player.id || '',
+          ids: [player.userId, player.id, player.playerId].filter(Boolean),
+          name: formatPlayerName(player.name || player.displayName || player.userId),
+          team,
+          teamKey: team.toLowerCase(),
+          seasonId: sid.id,
+          seasonLabel: seasonLabel(sid.id),
+          seasonKey: seasonSortKey(sid.id),
+          seasonCount: 1,
+          sub: sid.isSub,
+          // W/L/SV, H, BB and K are recorded from 2026 on; older records have none or zeros.
+          hasDetail: 'wins' in s,
+          games: Number(s.games) || 0,
+          ip: inningsValue(s.inningsPitched),   // thirds notation (5.1) -> 5.333
+          runsAllowed: Number(s.runsAllowed) || 0,
+          hits: Number(s.hits) || 0,
+          walks: Number(s.walks) || 0,
+          strikeouts: Number(s.strikeouts) || 0,
+          wins: Number(s.wins) || 0,
+          losses: Number(s.losses) || 0,
+          saves: Number(s.saves) || 0,
+          teamGames: 0
+        });
       }
-      
-      // UPDATED: Process pitching seasons from OBJECT format (not array)
-      console.time('Process Pitching Data');
-      const allStats = [];
-
-      players.forEach(player => {
-        // CRITICAL CHANGE: pitchingSeasons is now an OBJECT with seasonId keys
-        if (player.pitchingSeasons && typeof player.pitchingSeasons === 'object') {
-          // Convert pitching seasons object to array for processing
-          const pitchingSeasonsArray = pitchingSeasonsObjectToArray(player);
-          
-          pitchingSeasonsArray.forEach(season => {
-            // Parse year and season from seasonId
-            // Format: "2024-fall" or "2025-spring"
-            let year = "";
-            let seasonName = "";
-            
-            if (season.seasonId) {
-              const parts = season.seasonId.split('-');
-              if (parts.length >= 2) {
-                year = parts[0];           // "2024"
-                seasonName = parts[1];     // "fall"
-              }
-            }
-            
-            // Fallback: try to get year and season from the season object directly
-            if (!year && season.year) year = season.year;
-            if (!seasonName && season.season) seasonName = season.season;
-            
-            // Map pitching stats with proper field names
-            // ERA is stored as earnedRunAverage in aggregated collection
-            let eraValue = "N/A";
-            if (season.earnedRunAverage !== undefined && season.earnedRunAverage !== null && season.earnedRunAverage !== "N/A") {
-              eraValue = Number(season.earnedRunAverage);
-            }
-            
-            allStats.push({
-              name: formatPlayerName(player.name || player.displayName || player.userId),
-              team: capitalize(season.team || player.currentTeam || ""),
-              year: year,
-              season: capitalize(seasonName),
-              games: Number(season.games) || 0,
-              IP: typeof season.inningsPitched === 'number' ? season.inningsPitched.toString() :
-                  (season.inningsPitched || "0"),
-              runsAllowed: Number(season.runsAllowed) || 0,
-              ERA: eraValue,
-              id: player.userId || player.id || "",
-              seasonId: season.seasonId || ""
-            });
-          });
-        }
-      });
-      
-      console.log(`✅ Processed ${allStats.length} pitching season records from ${players.length} players`);
-      
-      // Debug: Check ERA values
-      const erasFound = allStats.filter(s => s.ERA !== "N/A");
-      const erasNA = allStats.filter(s => s.ERA === "N/A");
-      console.log(`📊 ERA Stats: ${erasFound.length} with values, ${erasNA.length} N/A`);
-      if (erasFound.length > 0) {
-        console.log('📊 Sample ERA values:', erasFound.slice(0, 3).map(s => ({ 
-          name: s.name, 
-          ERA: s.ERA, 
-          IP: s.IP 
-        })));
-      }
-      
-      if (allStats.length === 0) {
-        console.warn('⚠️ No pitching data found in aggregated collection');
-        document.getElementById('totalsText').textContent = 'No pitching data available.';
-        hideLoadingIndicator();
-        return;
-      }
-      
-      allData = allStats;
-      console.timeEnd('Process Pitching Data');
-      
-      // Hide loading indicator
-      hideLoadingIndicator();
-      
-      console.time('Render UI');
-      populateFilters();
-      renderTable(allData);
-      console.timeEnd('Render UI');
-      
-      const loadEndTime = performance.now();
-      console.timeEnd('Total Load Time');
-      console.log(`🎉 Page loaded in ${(loadEndTime - loadStartTime).toFixed(0)}ms`);
-      
-    } catch (error) {
-      console.error('❌ Error loading data:', error);
-      hideLoadingIndicator();
-      document.body.innerHTML = `
-        <div class="page-container">
-          <h1>Error loading pitching statistics</h1>
-          <p>Error: ${error.message}</p>
-          <p><a href="index.html">Return to home</a></p>
-        </div>
-      `;
     }
+    rows.sort((a, b) => b.seasonKey - a.seasonKey || a.team.localeCompare(b.team) || a.name.localeCompare(b.name));
+    return rows;
   }
 
-  function populateFilters() {
-    const years = [...new Set(allData.map(p => p.year))].sort((a, b) => b.localeCompare(a));
-    const seasons = [...new Set(allData.map(p => p.season))].sort();
+  async function attachTeamGames(rows) {
+    const games = await getTeamGames(rows.map(r => r.seasonId));
+    for (const r of rows) r.teamGames = games.get(r.seasonId, r.team);
+  }
 
-    const yearFilter = document.getElementById("yearFilter");
-    const seasonFilter = document.getElementById("seasonFilter");
+  // ---- table config ----------------------------------------------------------
 
-    years.forEach(y => {
-      let opt = document.createElement("option");
-      opt.value = y;
-      opt.textContent = y;
-      yearFilter.appendChild(opt);
+  const allDetail = (rows) => rows.length > 0 && rows.every(r => r.hasDetail);
+  const per7 = (n, ip) => (ip > 0 ? (n * 7) / ip : null);
+  const rate = (v) => fmtRate(v);
+  // Innings show as baseball thirds (5.1 = 5 1/3); per game they show as a decimal.
+  const ipText = (v, r, ctx) => (v === null || v === undefined ? '-' : ctx?.perGame ? v.toFixed(2) : formatIP(v));
+
+  const config = {
+    id: '',
+    cardSub: 'team',
+    columns: [
+      playerColumn({ page: 'pitcher.html' }),
+      teamColumn(),
+      seasonColumn(),
+      { key: 'G', label: 'G', title: 'Games pitched', type: 'count', value: r => r.games, perGame: false },
+      { key: 'IP', label: 'IP', title: 'Innings pitched', type: 'count', value: r => r.ip, format: ipText },
+      { key: 'R', label: 'R', title: 'Runs allowed', type: 'count', shade: false, value: r => r.runsAllowed },
+      { key: 'ERA', label: 'ERA', type: 'rate', lowerIsBetter: true, value: r => era(r.runsAllowed, r.ip), format: rate },
+      { key: 'W', label: 'W', title: 'Wins', type: 'count', value: r => r.wins, when: allDetail },
+      { key: 'L', label: 'L', title: 'Losses', type: 'count', shade: false, value: r => r.losses, when: allDetail },
+      { key: 'SV', label: 'SV', title: 'Saves', type: 'count', value: r => r.saves, when: allDetail },
+      { key: 'H', label: 'H', title: 'Hits allowed', type: 'count', shade: false, value: r => r.hits, when: allDetail },
+      { key: 'BB', label: 'BB', title: 'Walks', type: 'count', shade: false, value: r => r.walks, when: allDetail },
+      { key: 'K', label: 'K', title: 'Strikeouts', type: 'count', value: r => r.strikeouts, when: allDetail },
+      { key: 'WHIP', label: 'WHIP', title: 'Walks + hits per inning', type: 'rate', lowerIsBetter: true, value: r => (r.ip > 0 ? (r.walks + r.hits) / r.ip : null), format: rate, when: allDetail },
+      { key: 'K7', label: 'K/7', title: 'Strikeouts per 7 innings', type: 'rate', value: r => per7(r.strikeouts, r.ip), format: rate, when: allDetail },
+      { key: 'BB7', label: 'BB/7', title: 'Walks per 7 innings', type: 'rate', lowerIsBetter: true, value: r => per7(r.walks, r.ip), format: rate, when: allDetail },
+      { key: 'RG', label: 'R/G', title: 'Runs allowed per game pitched', type: 'rate', lowerIsBetter: true, value: r => (r.games ? r.runsAllowed / r.games : null), format: rate }
+    ],
+    presets: [
+      { key: 'standard', label: 'Standard', sort: '-IP', card: ['G', 'IP', 'R', 'ERA'],
+        columns: ['name', 'team', 'season', 'G', 'IP', 'R', 'ERA', 'W', 'L', 'SV'] },
+      { key: 'advanced', label: 'Advanced', sort: 'ERA', card: ['IP', 'ERA', 'WHIP', 'K7'],
+        columns: ['name', 'team', 'season', 'IP', 'ERA', 'RG', 'WHIP', 'K7', 'BB7'] },
+      { key: 'counting', label: 'Counting', sort: '-IP', card: ['G', 'IP', 'R', 'K'],
+        columns: ['name', 'team', 'season', 'G', 'IP', 'R', 'H', 'BB', 'K', 'W', 'L', 'SV'] }
+    ],
+    games: r => r.games,
+    qualifier: (state) => state.combine
+      ? { label: `min ${QUALIFIERS.CAREER_MIN_IP} IP combined`, test: r => r.ip >= QUALIFIERS.CAREER_MIN_IP }
+      : { label: qualifierLabel('pitching').replace(/^Min/, 'min'), test: r => r.teamGames > 0 && isQualifiedPitcher({ inningsPitched: r.ip }, r.teamGames) },
+    combine: {
+      label: 'Combine seasons',
+      key: r => r.id || r.name,
+      merge: (group) => ({
+        ...group[0],
+        ...sumFields(group, COUNT_FIELDS),
+        ...combinedTeam(group),
+        ...combinedSeason(group),
+        hasDetail: group.every(r => r.hasDetail),
+        teamGames: sumFields(group, ['teamGames']).teamGames
+      })
+    }
+  };
+
+  // ---- summary ---------------------------------------------------------------
+
+  function updateSummary(rows) {
+    const totalsText = $('totalsText');
+    const leadersText = $('leadersText');
+    if (!rows.length) { totalsText.textContent = 'No pitching stats for this selection'; leadersText.textContent = ''; return; }
+    const sum = (f) => rows.reduce((s, r) => s + r[f], 0);
+    const pitchers = new Set(rows.map(r => r.id || r.name)).size;
+    totalsText.textContent = `${pitchers} pitchers | ${sum('games')} games | ${formatIP(sum('ip'))} innings pitched | ${sum('runsAllowed')} runs allowed`;
+
+    // Leaders in the selection; fewest runs and best ERA need 30 innings.
+    const min = QUALIFIERS.CAREER_MIN_IP;
+    const best = (list, f) => list.reduce((m, r) => (f(r) > f(m) ? r : m), list[0]);
+    const qual = rows.filter(r => r.ip >= min);
+    const label = (r) => (r.seasonCount === 1 ? `, ${r.seasonLabel}` : '');
+    const parts = [
+      ['Games', best(rows, r => r.games), r => r.games],
+      ['Innings Pitched', best(rows, r => r.ip), r => formatIP(r.ip)],
+      qual.length && ['Fewest Runs Allowed', best(qual, r => -r.runsAllowed), r => r.runsAllowed],
+      qual.length && ['Best ERA', best(qual, r => -era(r.runsAllowed, r.ip)), r => fmtRate(era(r.runsAllowed, r.ip))]
+    ].filter(Boolean);
+    leadersText.textContent = 'Leaders — ' + parts.map(([l, r, val]) => `${l}: ${r.name} (${val(r)}${label(r)})`).join(' | ') +
+      `. Fewest runs and best ERA need ${min} innings.`;
+  }
+
+  // ---- start -------------------------------------------------------------------
+
+  async function main() {
+    const ctx = await initPage({ title: 'Pitching Statistics' });
+    const me = new Set([ctx?.profile?.linkedPlayer, ctx?.profile?.playerId, ctx?.user?.uid].filter(Boolean));
+
+    const table = mountStatTable($('pitchingTable'), config, {
+      emptyMessage: 'No pitching stats for this selection.',
+      exportName: 'aces-pitching',
+      exportTitle: 'Aces pitching',
+      rowClass: r => (me.size && r.ids.some(id => me.has(id)) ? 'is-me' : '')
     });
 
-    seasons.forEach(s => {
-      let opt = document.createElement("option");
-      opt.value = s;
-      opt.textContent = s;
-      seasonFilter.appendChild(opt);
-    });
-
-    yearFilter.addEventListener("change", applyFilters);
-    seasonFilter.addEventListener("change", applyFilters);
-  }
-
-  function applyFilters() {
-    const yearVal = document.getElementById("yearFilter").value;
-    const seasonVal = document.getElementById("seasonFilter").value;
-
-    let filtered = allData.filter(
-      p =>
-        (yearVal === "All" || p.year === yearVal) &&
-        (seasonVal === "All" || p.season === seasonVal)
-    );
-
-    renderTable(filtered);
-  }
-
-  function renderTable(data) {
-    const tbody = document.querySelector("#pitchingTable tbody");
-    tbody.innerHTML = "";
-
-    if (data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8">No data matches the current filters.</td></tr>';
-      document.getElementById("totalsText").textContent = "No data to display.";
-      document.getElementById("leadersText").textContent = "";
+    const players = await getAllPlayerStatsOptimized();
+    allRows = buildRows(players || []);
+    if (!allRows.length) {
+      showPageState({ title: 'No pitching stats yet', message: 'Stats show up here once games have been entered.', container: '#summary' });
       return;
     }
 
-    // Sort data by year (desc) → season (Fall > Summer > Spring) → team (alphabetical)
-    const seasonOrder = { 'Fall': 3, 'Summer': 2, 'Spring': 1 };
-    const sortedData = [...data].sort((a, b) => {
-      // Primary: Year (newest first)
-      if (a.year !== b.year) return b.year.localeCompare(a.year);
-      
-      // Secondary: Season (Fall > Summer > Spring)
-      const seasonA = seasonOrder[a.season] || 0;
-      const seasonB = seasonOrder[b.season] || 0;
-      if (seasonA !== seasonB) return seasonB - seasonA;
-      
-      // Tertiary: Team name (alphabetical)
-      return a.team.localeCompare(b.team);
+    const filters = mountStatFilters({
+      season: $('seasonFilter'), team: $('teamFilter'),
+      rows: allRows,
+      defaultSeason: pickDefaultSeason(allRows.map(r => r.seasonId), ctx?.config),
+      onChange: (rows) => { table.setRows(rows); updateSummary(rows); }
     });
+    filters.apply();
+    pageReady();
 
-    // Calculate totals
-    let totals = {
-      games: 0,
-      totalIP: 0,
-      runsAllowed: 0,
-    };
-
-    data.forEach(p => {
-      totals.games += p.games;
-      totals.totalIP += parseFloat(p.IP) || 0;
-      totals.runsAllowed += p.runsAllowed;
-    });
-
-    // Find leaders - require 30 innings minimum for rate stats
-    const qualifyingPitchers = data.filter(p => parseFloat(p.IP) >= 30);
-    let leaders = {};
-    
-    // Games leader (most games)
-    let mostGames = data.reduce((prev, curr) =>
-      curr.games > prev.games ? curr : prev,
-      { games: -1 }
-    );
-    leaders.games = mostGames.name ? `${mostGames.name} (${mostGames.games})` : "N/A";
-
-    // Innings Pitched leader (most IP)
-    let mostIP = data.reduce((prev, curr) => {
-      let currIP = parseFloat(curr.IP) || 0;
-      let prevIP = parseFloat(prev.IP) || 0;
-      return currIP > prevIP ? curr : prev;
-    }, { IP: "0" });
-    leaders.IP = mostIP.name ? `${mostIP.name} (${mostIP.IP})` : "N/A";
-
-    // Fewest Runs Allowed leader (minimum 30 innings)
-    let fewestRuns = qualifyingPitchers.reduce((prev, curr) => {
-      return curr.runsAllowed < prev.runsAllowed ? curr : prev;
-    }, { runsAllowed: Infinity });
-    leaders.runsAllowed = fewestRuns.name ? 
-      `${fewestRuns.name} (${fewestRuns.runsAllowed})` : "N/A";
-
-    // Best ERA leader (minimum 30 innings)
-    let bestERA = qualifyingPitchers.reduce((prev, curr) => {
-      let currERA = (curr.ERA !== "N/A" && !isNaN(curr.ERA)) ? Number(curr.ERA) : Infinity;
-      let prevERA = (prev.ERA !== "N/A" && !isNaN(prev.ERA)) ? Number(prev.ERA) : Infinity;
-      return currERA < prevERA ? curr : prev;
-    }, { ERA: Infinity });
-    leaders.ERA = bestERA.name ? 
-      `${bestERA.name} (${Number(bestERA.ERA).toFixed(2)})` : "N/A";
-
-    // Update summary text
-    document.getElementById("totalsText").textContent =
-      `Totals — Games: ${totals.games}, Innings Pitched: ${totals.totalIP.toFixed(1)}, Runs Allowed: ${totals.runsAllowed}`;
-
-    document.getElementById("leadersText").innerHTML = `
-      Season Leaders — Games: ${leaders.games}, Innings Pitched: ${leaders.IP}, Fewest Runs Allowed: ${leaders.runsAllowed}, Best ERA: ${leaders.ERA}<br>
-      <small style="color: var(--text-light); font-size: 0.85rem;">* ERA and Fewest Runs Allowed require minimum 30 innings pitched</small><br>
-     
-    `;
-
-    // Generate table rows
-    sortedData.forEach(p => {
-      const row = document.createElement("tr");
-      
-      const ERA = p.ERA !== "N/A" && !isNaN(p.ERA)
-        ? Number(p.ERA).toFixed(2)
-        : "N/A";
-
-      row.innerHTML = `
-        <td><a href="pitcher.html?id=${encodeURIComponent(p.playerId || p.id)}">${p.name}</a></td>
-        <td><a href="team.html?team=${encodeURIComponent(p.team)}">${p.team}</a></td>
-        <td>${p.year}</td>
-        <td>${p.season}</td>
-        <td>${p.games}</td>
-        <td>${p.IP}</td>
-        <td>${p.runsAllowed}</td>
-        <td>${ERA}</td>
-      `;
-      tbody.appendChild(row);
-    });
-
-    attachSorting();
+    try {
+      await attachTeamGames(allRows);
+      table.refresh();
+    } catch (err) {
+      console.warn('[pitching] team games unavailable; Qualified shows no one', err);
+    }
   }
 
-  function attachSorting() {
-    const headers = document.querySelectorAll("#pitchingTable th");
-    headers.forEach((th, idx) => {
-      th.onclick = () => sortTable(idx, th.getAttribute("data-field"));
-    });
-  }
-
-  function sortTable(columnIndex, field) {
-    const table = document.getElementById("pitchingTable");
-    const rows = Array.from(table.rows).slice(1);
-    const seasonOrder = { 'Fall': 3, 'Summer': 2, 'Spring': 1 };
-
-    let dir = currentSort.column === field && currentSort.dir === "asc" ? "desc" : "asc";
-    currentSort = { column: field, dir };
-
-    rows.sort((a, b) => {
-      let x = a.cells[columnIndex].innerText.trim();
-      let y = b.cells[columnIndex].innerText.trim();
-
-      let comparison = 0;
-
-      // Primary sort based on the clicked column
-      if (field === "year" || field === "season") {
-        // For year/season columns, sort by year → season → team
-        const yearA = a.cells[2].innerText.trim();
-        const yearB = b.cells[2].innerText.trim();
-        const seasonA = a.cells[3].innerText.trim();
-        const seasonB = b.cells[3].innerText.trim();
-        const teamA = a.cells[1].innerText.trim();
-        const teamB = b.cells[1].innerText.trim();
-        
-        if (yearA !== yearB) {
-          comparison = dir === "asc" ? yearA.localeCompare(yearB) : yearB.localeCompare(yearA);
-        } else {
-          const sOrderA = seasonOrder[seasonA] || 0;
-          const sOrderB = seasonOrder[seasonB] || 0;
-          if (sOrderA !== sOrderB) {
-            comparison = dir === "asc" ? sOrderA - sOrderB : sOrderB - sOrderA;
-          } else {
-            comparison = dir === "asc" ? teamA.localeCompare(teamB) : teamB.localeCompare(teamA);
-          }
-        }
-      } else if (field === "team") {
-        // For team column, sort by team first, then year/season
-        comparison = dir === "asc" ? x.localeCompare(y) : y.localeCompare(x);
-        
-        if (comparison === 0) {
-          const yearA = a.cells[2].innerText.trim();
-          const yearB = b.cells[2].innerText.trim();
-          if (yearA !== yearB) {
-            comparison = yearB.localeCompare(yearA); // Most recent first
-          } else {
-            const seasonA = a.cells[3].innerText.trim();
-            const seasonB = b.cells[3].innerText.trim();
-            const sOrderA = seasonOrder[seasonA] || 0;
-            const sOrderB = seasonOrder[seasonB] || 0;
-            comparison = sOrderB - sOrderA;
-          }
-        }
-      } else {
-        // For all other columns (stats), sort by the value with tie-breakers
-        
-        // Handle special cases
-        if (field === "ERA") {
-          // Move N/A values to the end
-          if (x === "N/A" && y !== "N/A") return 1;
-          if (y === "N/A" && x !== "N/A") return -1;
-          if (x === "N/A" && y === "N/A") comparison = 0;
-        }
-
-        if (comparison === 0) {
-          // Handle IP field (innings pitched can have decimals)
-          if (field === "IP") {
-            let xNum = parseFloat(x);
-            let yNum = parseFloat(y);
-            if (!isNaN(xNum) && !isNaN(yNum)) {
-              comparison = dir === "asc" ? xNum - yNum : yNum - xNum;
-            }
-          } else {
-            // Try parsing as numbers first
-            let xNum = parseFloat(x.replace(/,/g, ""));
-            let yNum = parseFloat(y.replace(/,/g, ""));
-
-            if (!isNaN(xNum) && !isNaN(yNum)) {
-              comparison = dir === "asc" ? xNum - yNum : yNum - xNum;
-            } else {
-              // Fall back to string comparison
-              comparison = dir === "asc" ? x.localeCompare(y) : y.localeCompare(x);
-            }
-          }
-        }
-        
-        // Tie-breaker: year → season → team
-        if (comparison === 0) {
-          const yearA = a.cells[2].innerText.trim();
-          const yearB = b.cells[2].innerText.trim();
-          if (yearA !== yearB) {
-            comparison = yearB.localeCompare(yearA); // Most recent first
-          } else {
-            const seasonA = a.cells[3].innerText.trim();
-            const seasonB = b.cells[3].innerText.trim();
-            const sOrderA = seasonOrder[seasonA] || 0;
-            const sOrderB = seasonOrder[seasonB] || 0;
-            if (sOrderA !== sOrderB) {
-              comparison = sOrderB - sOrderA;
-            } else {
-              const teamA = a.cells[1].innerText.trim();
-              const teamB = b.cells[1].innerText.trim();
-              comparison = teamA.localeCompare(teamB);
-            }
-          }
-        }
-      }
-
-      return comparison;
-    });
-
-    // Re-append sorted rows
-    rows.forEach(row => table.tBodies[0].appendChild(row));
-
-    // Update sort indicators
-    document.querySelectorAll("#pitchingTable th").forEach(th => th.classList.remove("asc", "desc"));
-    table.rows[0].cells[columnIndex].classList.add(dir);
-  }
-
-  // Initialize sorting
-  function initializeSorting() {
-    console.log('🔧 Initializing sorting...');
-    attachSorting();
-  }
-
-  // Initialize page when DOM is ready
-  function initPage() {
-    console.log('📄 Initializing page...');
-    initializeSorting();
-    loadData();
-  }
-
-  // Wait for DOM
-  if (document.readyState === 'loading') {
-    console.log('⏳ Waiting for DOM to load...');
-    document.addEventListener('DOMContentLoaded', initPage);
-  } else {
-    console.log('✅ DOM already loaded');
-    initPage();
-  }
+  main().catch((err) => showPageError(err, { container: '#summary' }));
 </script>
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
-</script>
+
 <script src="mobile-enhancements.js"></script>
 <script src="stat-tooltips.js"></script>
 <script src="theme-toggle.js"></script>

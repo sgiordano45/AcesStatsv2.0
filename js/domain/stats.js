@@ -133,6 +133,7 @@ export const QUALIFIERS = Object.freeze({
   IP_PER_TEAM_GAME: 2,   // season ERA leaders: IP >= 2 x team games played
   BWAR_MIN_PA: 20,       // bWAR is 0 below this
   CAREER_MIN_PA: 150,    // career AVG/OBP leaders
+  CAREER_MIN_IP: 30,     // combined-season ERA (the old pitching page's 30 IP)
   ALL_TIME_MIN_AB: 10    // batting page all-time rate leaders
 });
 

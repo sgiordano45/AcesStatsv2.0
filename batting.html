@@ -425,46 +425,33 @@ body {
   // firebase-data.js first: its firebase-config.js creates the Firebase app,
   // and js/core/firebase.js (loaded through app.js) reuses it.
   import { getAllPlayerStatsOptimized, seasonsObjectToArray } from './firebase-data.js';
-  import { getSeasonGames } from './js/data/games.js';
   import { initPage, pageReady, showPageState, showPageError } from './js/core/app.js';
-  import { capitalize, formatPlayerName, escapeHtml as esc, fmtAvg, fmtRate, playerUrl, teamUrl } from './js/ui/format.js';
+  import { capitalize, formatPlayerName, fmtAvg, fmtRate } from './js/ui/format.js';
   import { battingLine, QUALIFIERS, isQualifiedBatter, qualifierLabel } from './js/domain/stats.js';
-  import { normalizeGames, isDecided } from './js/domain/standings.js';
+  import { parseStatSeasonId, seasonLabel, seasonSortKey } from './js/domain/season-ids.js';
+  import { getTeamGames } from './js/data/team-games.js';
   import { mountStatTable } from './js/ui/table.js';
   import { sumFields } from './js/ui/table-model.js';
+  import { playerColumn, teamColumn, seasonColumn, combinedTeam, combinedSeason } from './js/ui/stat-columns.js';
+  import { mountStatFilters, pickDefaultSeason } from './js/ui/stat-filters.js';
 
-  const SEASON_ORDER = { spring: 1, summer: 2, fall: 3 };
   const COUNT_FIELDS = ['games', 'atBats', 'hits', 'runs', 'walks', 'doubles', 'triples', 'homeRuns', 'rbi'];
-  const TEAM_COLORS = new Set(['black', 'green', 'red', 'blue', 'white', 'orange', 'silver', 'purple', 'gold', 'carolina', 'army', 'teal']);
+  const $ = (id) => document.getElementById(id);
+  const numOrNull = (v) => (v === null || v === undefined || v === '' || v === 'N/A' || !Number.isFinite(Number(v)) ? null : Number(v));
 
-  let allRows = [];          // one row per player-season (the page's own filters apply on top)
-  let table = null;
-  let seasons = [];          // [{ id, year, name, label, key }] newest first
-  let defaultSeason = 'all';
+  let allRows = [];   // one row per player-season; the page filters apply on top
 
-  // ---- rows ----------------------------------------------------------------
-
-  // Stored season IDs can carry a team and sub suffix ('2024-fall-gold-sub');
-  // the season is the first two parts.
-  function parseSeasonId(raw) {
-    const parts = String(raw || '').toLowerCase().split('-');
-    const year = parts[0] || '';
-    const name = parts[1] || '';
-    return { id: year && name ? `${year}-${name}` : '', year, name, isSubId: parts.includes('sub') };
-  }
-
-  const seasonLabel = (s) => `${s.year} ${capitalize(s.name)}`;
-  const seasonKey = (s) => (Number(s.year) || 0) * 10 + (SEASON_ORDER[s.name] || 0);
-  const numOrNull = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : (v !== null && v !== '' && v !== 'N/A' && Number.isFinite(Number(v)) ? Number(v) : null));
+  // ---- rows ------------------------------------------------------------------
 
   function buildRows(players) {
     const rows = [];
     for (const player of players) {
       if (!player.seasons || typeof player.seasons !== 'object') continue;
       for (const s of seasonsObjectToArray(player)) {
-        const sid = parseSeasonId(s.seasonId);
+        const sid = parseStatSeasonId(s.seasonId);
         if (!sid.id) continue;
         const team = capitalize(String(s.team || player.currentTeam || '').toLowerCase());
+        const sub = sid.isSub || /^yes$/i.test(String(s.sub || ''));
         const row = {
           id: player.userId || player.id || '',
           ids: [player.userId, player.id, player.playerId].filter(Boolean),
@@ -472,14 +459,14 @@ body {
           team,
           teamKey: team.toLowerCase(),
           seasonId: sid.id,
-          seasonLabel: seasonLabel(sid),
-          seasonKey: seasonKey(sid),
+          seasonLabel: seasonLabel(sid.id),
+          seasonKey: seasonSortKey(sid.id),
           seasonCount: 1,
-          sub: sid.isSubId || /^yes$/i.test(String(s.sub || '')),
+          sub,
           hasHitTypes: 'doubles' in s,
-          acesBPI: s.sub && /^yes$/i.test(String(s.sub)) ? null : numOrNull(s.acesBPI),
+          acesBPI: sub ? null : numOrNull(s.acesBPI),   // subs get no acesBPI
           bwar: numOrNull(s.bwarSimp),
-          teamGames: null
+          teamGames: 0
         };
         for (const f of COUNT_FIELDS) row[f] = Number(s[f]) || 0;
         rows.push(row);
@@ -490,32 +477,16 @@ body {
     return rows;
   }
 
-  // Team games per season from the game docs: every decided game, playoffs
-  // included (season stats include playoff games). A team with no game docs
-  // falls back to the most games any of its players logged.
+  // Team games from the game docs; a team with none falls back to the most
+  // games any of its players logged.
   async function attachTeamGames(rows) {
-    const ids = [...new Set(rows.map(r => r.seasonId))];
-    const results = await Promise.allSettled(ids.map(id => getSeasonGames(id)));
-    const counts = new Map();   // 'seasonId|team' -> games
-    results.forEach((res, i) => {
-      if (res.status !== 'fulfilled') { console.warn('[batting] games for', ids[i], res.reason); return; }
-      for (const g of normalizeGames(res.value)) {
-        if (!isDecided(g)) continue;
-        for (const t of [g.home, g.away]) {
-          const k = `${ids[i]}|${String(t).toLowerCase()}`;
-          counts.set(k, (counts.get(k) || 0) + 1);
-        }
-      }
-    });
+    const games = await getTeamGames(rows.map(r => r.seasonId));
     const maxPlayer = new Map();
     for (const r of rows) {
       const k = `${r.seasonId}|${r.teamKey}`;
       maxPlayer.set(k, Math.max(maxPlayer.get(k) || 0, r.games));
     }
-    for (const r of rows) {
-      const k = `${r.seasonId}|${r.teamKey}`;
-      r.teamGames = counts.get(k) || maxPlayer.get(k) || 0;
-    }
+    for (const r of rows) r.teamGames = games.get(r.seasonId, r.team) || maxPlayer.get(`${r.seasonId}|${r.teamKey}`) || 0;
   }
 
   // ---- table config ----------------------------------------------------------
@@ -528,17 +499,9 @@ body {
     id: '',
     cardSub: 'team',
     columns: [
-      { key: 'name', label: 'Player', type: 'text', value: r => r.name,
-        html: r => `<a href="${esc(playerUrl({ id: r.id, name: r.name }))}">${esc(r.name)}</a>` },
-      { key: 'team', label: 'Team', type: 'text', value: r => r.team,
-        html: r => {
-          if (r.team === 'Multiple') return 'Multiple';
-          const color = TEAM_COLORS.has(r.teamKey) ? ` data-team-color="${esc(r.teamKey)}"` : '';
-          const season = r.seasonCount === 1 ? r.seasonId : undefined;
-          return `<a class="aces-team-chip"${color} href="${esc(teamUrl(r.team, { season }))}"><span class="aces-team-dot"></span>${esc(r.team)}</a>`;
-        } },
-      { key: 'season', label: 'Season', type: 'text', defaultDir: 'desc', value: r => r.seasonKey,
-        format: (v, r) => r.seasonLabel, csv: r => r.seasonLabel },
+      playerColumn(),
+      teamColumn(),
+      seasonColumn(),
       { key: 'G', label: 'G', title: 'Games', type: 'count', value: r => r.games, perGame: false },
       { key: 'PA', label: 'PA', title: 'Plate appearances (AB + BB)', type: 'count', value: r => r.atBats + r.walks },
       { key: 'AB', label: 'AB', type: 'count', value: r => r.atBats },
@@ -574,87 +537,21 @@ body {
       label: 'Combine seasons',
       key: r => r.id || r.name,
       merge: (group) => {
-        const first = group[0];
-        // Team comes from the regular (non-sub) rows: someone who only played for
-        // Green but subbed for others shows as Green. All-sub groups use their sub teams.
-        const regular = group.filter(r => !r.sub);
-        const teams = new Set((regular.length ? regular : group).map(r => r.team));
-        const seasonIds = new Set(group.map(r => r.seasonId));
         const bwars = group.map(r => r.bwar).filter(v => v !== null);
         return {
-          ...first,
+          ...group[0],
           ...sumFields(group, COUNT_FIELDS),
-          team: teams.size > 1 ? 'Multiple' : [...teams][0],
-          teamKey: teams.size > 1 ? 'multiple' : String([...teams][0] || '').toLowerCase(),
-          seasonCount: seasonIds.size,
-          seasonKey: Math.max(...group.map(r => r.seasonKey)),
-          seasonLabel: seasonIds.size > 1 ? `${seasonIds.size} seasons` : first.seasonLabel,
+          ...combinedTeam(group),        // from regular (non-sub) rows
+          ...combinedSeason(group),
           sub: group.every(r => r.sub),
           hasHitTypes: group.every(r => r.hasHitTypes),
-          acesBPI: null,                                   // a season score; it doesn't add up
+          acesBPI: null,                 // a one-season score; it doesn't add up
           bwar: bwars.length ? bwars.reduce((a, b) => a + b, 0) : null,
           teamGames: sumFields(group, ['teamGames']).teamGames
         };
       }
     }
   };
-
-  // ---- page filters: season (or a whole year) and team, kept in the URL --------
-
-  const $ = (id) => document.getElementById(id);
-
-  function readFilters() {
-    const p = new URLSearchParams(location.search);
-    return { season: p.get('season') || defaultSeason, team: p.get('team') || 'all', subs: p.get('subs') || 'include' };
-  }
-
-  function writeFilters({ season, team, subs }) {
-    const p = new URLSearchParams(location.search);
-    if (season && season !== defaultSeason) p.set('season', season); else p.delete('season');
-    if (team && team !== 'all') p.set('team', team); else p.delete('team');
-    if (subs && subs !== 'include') p.set('subs', subs); else p.delete('subs');
-    const qs = p.toString();
-    history.replaceState(history.state, '', `${location.pathname}${qs ? `?${qs}` : ''}${location.hash}`);
-  }
-
-  function inSeason(r, season) {
-    if (!season || season === 'all') return true;
-    if (season.startsWith('y:')) return r.seasonId.startsWith(season.slice(2) + '-');
-    return r.seasonId === season;
-  }
-
-  function fillSeasonSelect() {
-    const byYear = new Map();
-    for (const s of seasons) {
-      if (!byYear.has(s.year)) byYear.set(s.year, []);
-      byYear.get(s.year).push(s);
-    }
-    $('seasonFilter').innerHTML = '<option value="all">All seasons</option>' +
-      [...byYear].map(([year, list]) => `<optgroup label="${esc(year)}">` +
-        (list.length > 1 ? `<option value="y:${esc(year)}">All ${esc(year)}</option>` : '') +
-        list.map(s => `<option value="${esc(s.id)}">${esc(s.label)}</option>`).join('') + '</optgroup>').join('');
-  }
-
-  function fillTeamSelect(season, team) {
-    const teams = [...new Set(allRows.filter(r => inSeason(r, season)).map(r => r.team))].filter(Boolean).sort();
-    if (team !== 'all' && !teams.some(t => t.toLowerCase() === team)) teams.push(capitalize(team));
-    $('teamFilter').innerHTML = '<option value="all">All teams</option>' +
-      teams.map(t => `<option value="${esc(t.toLowerCase())}">${esc(t)}</option>`).join('');
-  }
-
-  function applyFilters() {
-    const f = { season: $('seasonFilter').value, team: $('teamFilter').value, subs: $('subsFilter').value };
-    const subsOk = (r) => (f.subs === 'exclude' ? !r.sub : f.subs === 'only' ? r.sub : true);
-    const rows = allRows.filter(r => inSeason(r, f.season) && (f.team === 'all' || r.teamKey === f.team) && subsOk(r));
-    table.setRows(rows);
-    updateSummary(rows);
-    return f;
-  }
-
-  function onFilterChange(e) {
-    if (e.target.id === 'seasonFilter') fillTeamSelect($('seasonFilter').value, $('teamFilter').value);
-    writeFilters(applyFilters());
-  }
 
   // ---- summary ---------------------------------------------------------------
 
@@ -692,7 +589,7 @@ body {
     // The signed-in player's rows get the gold "you" highlight (View As aware).
     const me = new Set([ctx?.profile?.linkedPlayer, ctx?.profile?.playerId, ctx?.user?.uid].filter(Boolean));
 
-    table = mountStatTable($('battingTable'), config, {
+    const table = mountStatTable($('battingTable'), config, {
       emptyMessage: 'No batting stats for this selection.',
       exportName: 'aces-batting',
       exportTitle: 'Aces batting',
@@ -706,25 +603,13 @@ body {
     }
     allRows = buildRows(players);
 
-    const seen = new Map();
-    for (const r of allRows) if (!seen.has(r.seasonId)) seen.set(r.seasonId, { id: r.seasonId, year: r.seasonId.split('-')[0], label: r.seasonLabel, key: r.seasonKey });
-    seasons = [...seen.values()].sort((a, b) => b.key - a.key);
-
-    // Default: the current season (siteConfig/current), else the newest with stats.
-    const current = ctx?.config?.phase !== 'offseason' ? ctx?.config?.currentSeasonId : null;
-    defaultSeason = (current && seen.has(current)) ? current : (seasons[0]?.id || 'all');
-
-    fillSeasonSelect();
-    const f = readFilters();
-    $('seasonFilter').value = [...$('seasonFilter').options].some(o => o.value === f.season) ? f.season : defaultSeason;
-    fillTeamSelect($('seasonFilter').value, f.team);
-    $('teamFilter').value = [...$('teamFilter').options].some(o => o.value === f.team) ? f.team : 'all';
-    $('seasonFilter').addEventListener('change', onFilterChange);
-    $('teamFilter').addEventListener('change', onFilterChange);
-    $('subsFilter').value = ['include', 'exclude', 'only'].includes(f.subs) ? f.subs : 'include';
-    $('subsFilter').addEventListener('change', onFilterChange);
-
-    applyFilters();
+    const filters = mountStatFilters({
+      season: $('seasonFilter'), team: $('teamFilter'), subs: $('subsFilter'),
+      rows: allRows,
+      defaultSeason: pickDefaultSeason(allRows.map(r => r.seasonId), ctx?.config),
+      onChange: (rows) => { table.setRows(rows); updateSummary(rows); }
+    });
+    filters.apply();
     pageReady();
 
     // Team games (for Qualified) load after the table is up.
@@ -738,6 +623,7 @@ body {
 
   main().catch((err) => showPageError(err, { container: '#summary' }));
 </script>
+
 
 <script src="mobile-enhancements.js"></script>
 <script src="stat-tooltips.js"></script>
