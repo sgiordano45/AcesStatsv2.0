@@ -374,17 +374,13 @@ export class NavigationComponent {
       document.body.insertAdjacentHTML('afterbegin', mobile);
     }
     
-    // Insert desktop nav into filters-nav
-    const filtersNav = document.querySelector('.filters-nav');
-    if (filtersNav) {
-      // Replace existing nav-container or prepend if not found
-      const existingNav = filtersNav.querySelector('.nav-container');
-      if (existingNav) {
-        existingNav.outerHTML = desktop;
-      } else {
-        filtersNav.insertAdjacentHTML('afterbegin', desktop);
-      }
-    }
+    // v2.0: desktop uses the site header from js/ui/nav.js (hubs, tab rows,
+    // avatar menu) in place of the old link row in .filters-nav. Phones keep
+    // the mobile menu above until push 5c. mountHeader() runs once per page.
+    document.querySelector('.filters-nav .nav-container')?.remove();
+    import('./js/ui/nav.js')
+      .then((m) => m.mountHeader())
+      .catch((err) => console.error('[nav] header failed to load', err));
     
     // Add body class if PWA is installed (for CSS hiding)
     if (nav.isPWAInstalled()) {

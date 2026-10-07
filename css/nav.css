@@ -1,0 +1,203 @@
+/* ==========================================================================
+   css/nav.css - v2.0 site header (js/ui/nav.js)
+   Top bar (logo, hubs, search slot, theme, avatar menu), the hub's tab row
+   and a group's second row. Built on css/tokens.css, which js/ui/nav.js links
+   too, so it works on legacy pages that don't load the v2 styles.
+   Phones (768 px and below) keep the old hamburger until push 5c.
+   ========================================================================== */
+
+:root {
+  --nav-bar-h: 52px;
+  --nav-bg: var(--color-brand, #2d5016);
+  --nav-ink: #ffffff;
+  --nav-ink-soft: rgba(255, 255, 255, 0.78);
+  --nav-hover: rgba(255, 255, 255, 0.10);
+  --nav-gold: var(--color-accent, #ffd700);
+}
+:root[data-theme="dark"] {
+  --nav-bg: #17260f;
+}
+
+.aces-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: var(--z-header, 100);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm, 14px);
+  line-height: var(--lh-snug, 1.3);
+  -webkit-font-smoothing: antialiased;
+  box-shadow: var(--elev-1);
+}
+.aces-header *, .aces-header *::before, .aces-header *::after { box-sizing: border-box; }
+.aces-header a { text-decoration: none; }
+.aces-header .aces-icon {
+  display: inline-block; flex: none;
+  width: 1.15em; height: 1.15em;
+  vertical-align: -0.2em; overflow: visible;
+}
+.aces-header-spacer { height: var(--nav-bar-h); }
+
+/* --- Top bar ------------------------------------------------------------- */
+.aces-header__bar { background: var(--nav-bg); color: var(--nav-ink); }
+.aces-header__inner {
+  display: flex; align-items: center; gap: var(--space-4, 16px);
+  max-width: var(--content-max, 1120px);
+  height: var(--nav-bar-h);
+  margin: 0 auto;
+  padding: 0 var(--gutter, 16px);
+}
+.aces-logo { display: flex; align-items: center; gap: var(--space-2, 8px); color: var(--nav-ink); flex: none; }
+.aces-logo img { width: 32px; height: 32px; border-radius: var(--radius-sm, 4px); }
+.aces-logo__text {
+  font-family: var(--font-display); font-size: 22px; letter-spacing: var(--tracking-display, 0.02em);
+  text-transform: uppercase; line-height: 1; white-space: nowrap;
+}
+.aces-logo__text b { color: var(--nav-gold); font-weight: inherit; }
+
+.aces-hubs { display: flex; align-items: stretch; height: 100%; gap: 2px; min-width: 0; }
+.aces-hub {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 var(--space-3, 12px);
+  color: var(--nav-ink-soft);
+  font-weight: var(--fw-medium, 500);
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+  border-top: 3px solid transparent;
+  transition: color var(--dur-fast, 150ms), background-color var(--dur-fast, 150ms);
+}
+.aces-hub:hover { color: var(--nav-ink); background: var(--nav-hover); }
+.aces-hub__short { display: none; }
+.aces-hub.is-active { color: var(--nav-ink); border-bottom-color: var(--nav-gold); font-weight: var(--fw-semibold, 600); }
+
+.aces-header__end { display: flex; align-items: center; gap: var(--space-2, 8px); margin-left: auto; flex: none; }
+.aces-header__search:empty { display: none; }
+
+.aces-icon-btn {
+  display: inline-grid; place-items: center;
+  width: 40px; height: 40px; padding: 0;
+  border: 0; border-radius: var(--radius-pill, 999px);
+  background: transparent; color: var(--nav-ink); cursor: pointer; font-size: 18px;
+}
+.aces-icon-btn:hover { background: var(--nav-hover); }
+.aces-theme-sun { display: none; }
+:root[data-theme="dark"] .aces-theme-sun { display: inline; }
+:root[data-theme="dark"] .aces-theme-moon { display: none; }
+
+.aces-signin {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 var(--space-3, 12px);
+  border: 1px solid rgba(255, 255, 255, 0.5); border-radius: var(--radius-pill, 999px);
+  color: var(--nav-ink); font-weight: var(--fw-semibold, 600);
+}
+.aces-signin:hover { background: var(--nav-hover); border-color: var(--nav-ink); }
+
+/* --- Avatar menu ---------------------------------------------------------- */
+.aces-me { position: relative; }
+.aces-me__btn {
+  display: flex; align-items: center; gap: var(--space-2, 8px);
+  height: 40px; padding: 0 var(--space-2, 8px) 0 4px;
+  border: 0; border-radius: var(--radius-pill, 999px);
+  background: transparent; color: var(--nav-ink); cursor: pointer;
+  font: inherit; font-weight: var(--fw-medium, 500);
+}
+.aces-me__btn:hover, .aces-me.is-open .aces-me__btn { background: var(--nav-hover); }
+.aces-me__name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aces-avatar {
+  display: inline-grid; place-items: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--nav-gold); color: var(--color-on-accent, #1f1b00);
+  font-size: 13px; font-weight: var(--fw-bold, 700); letter-spacing: 0.02em;
+}
+.aces-avatar.is-viewing { box-shadow: 0 0 0 2px var(--nav-bg), 0 0 0 4px var(--color-alert, #a35200); }
+
+.aces-me__menu {
+  display: none;
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: 264px; max-height: calc(100vh - var(--nav-bar-h) - 24px); overflow-y: auto;
+  padding: var(--space-2, 8px);
+  background: var(--color-surface, #fff); color: var(--color-text, #1c201b);
+  border: 1px solid var(--color-border-strong, #cdd1c9); border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--elev-3);
+}
+.aces-me.is-open .aces-me__menu { display: block; }
+.aces-me__who { display: flex; flex-direction: column; gap: 2px; padding: var(--space-2, 8px) var(--space-3, 12px) var(--space-3, 12px); border-bottom: 1px solid var(--color-border, #e9ebe6); }
+.aces-me__who span { color: var(--color-text-muted, #5a6056); font-size: var(--fs-xs, 12px); }
+.aces-me__viewing { color: var(--color-alert, #a35200) !important; font-weight: var(--fw-semibold, 600); text-transform: uppercase; letter-spacing: var(--tracking-label, 0.06em); }
+.aces-me__section { padding: var(--space-1, 4px) 0; }
+.aces-me__section + .aces-me__section { border-top: 1px solid var(--color-border, #e9ebe6); }
+.aces-me__label {
+  padding: var(--space-2, 8px) var(--space-3, 12px) var(--space-1, 4px);
+  color: var(--color-text-muted, #5a6056);
+  font-size: var(--fs-xs, 12px); font-weight: var(--fw-semibold, 600);
+  text-transform: uppercase; letter-spacing: var(--tracking-label, 0.06em);
+}
+.aces-me__item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px var(--space-3, 12px);
+  border: 0; border-radius: var(--radius-md, 8px);
+  background: transparent; color: inherit; cursor: pointer;
+  font: inherit; text-align: left;
+}
+.aces-me__item .aces-icon { color: var(--color-text-muted, #5a6056); }
+.aces-me__item:hover { background: var(--color-surface-2, #e9ebe6); }
+.aces-me__item.is-active { background: var(--color-brand-soft, #e4ecdc); color: var(--color-brand, #2d5016); font-weight: var(--fw-semibold, 600); }
+.aces-me__item.is-active .aces-icon { color: inherit; }
+
+/* --- Hub tab row and group row --------------------------------------------- */
+.aces-tabs { background: var(--color-surface, #fff); border-bottom: 1px solid var(--color-border-strong, #cdd1c9); }
+.aces-tabs[hidden] { display: none; }
+.aces-tabs__row, .aces-subtabs {
+  display: flex; gap: var(--space-1, 4px);
+  max-width: var(--content-max, 1120px);
+  margin: 0 auto;
+  padding: 0 var(--gutter, 16px);
+  overflow-x: auto; scrollbar-width: none;
+}
+.aces-tabs__row::-webkit-scrollbar, .aces-subtabs::-webkit-scrollbar { display: none; }
+.aces-tab {
+  display: flex; align-items: center; gap: 6px; flex: none;
+  height: 40px; padding: 0 var(--space-3, 12px);
+  color: var(--color-text-muted, #5a6056);
+  font-weight: var(--fw-medium, 500); white-space: nowrap;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.aces-tab:hover { color: var(--color-text, #1c201b); }
+.aces-tab.is-active { color: var(--color-brand, #2d5016); border-bottom-color: var(--color-brand, #2d5016); font-weight: var(--fw-semibold, 600); }
+
+.aces-subtabs { padding-top: var(--space-2, 8px); padding-bottom: var(--space-2, 8px); gap: var(--space-2, 8px); border-top: 1px solid var(--color-border, #e9ebe6); }
+.aces-subtab {
+  display: flex; align-items: center; gap: 6px; flex: none;
+  height: 28px; padding: 0 var(--space-3, 12px);
+  border: 1px solid var(--color-border-strong, #cdd1c9); border-radius: var(--radius-pill, 999px);
+  color: var(--color-text, #1c201b); font-size: var(--fs-xs, 12px); font-weight: var(--fw-medium, 500); white-space: nowrap;
+}
+.aces-subtab:hover { border-color: var(--color-brand, #2d5016); }
+.aces-subtab.is-active { background: var(--color-brand, #2d5016); border-color: var(--color-brand, #2d5016); color: var(--color-on-brand, #fff); }
+
+/* Focus rings that show on every background */
+.aces-header a:focus-visible, .aces-header button:focus-visible {
+  outline: 2px solid var(--nav-gold); outline-offset: 2px; border-radius: var(--radius-sm, 4px);
+}
+.aces-tabs a:focus-visible { outline-color: var(--color-focus, #2d5016); }
+
+/* The old desktop link card, now empty on most pages */
+.filters-nav.aces-nav-empty { display: none; }
+
+/* --- Narrower screens ---------------------------------------------------- */
+@media (max-width: 1180px) {
+  .aces-me__name { display: none; }
+  .aces-hub { padding: 0 10px; }
+}
+@media (max-width: 1000px) {
+  .aces-logo__text { display: none; }
+  .aces-hub .aces-icon { display: none; }
+  .aces-hub__full { display: none; }
+  .aces-hub__short { display: inline; }
+}
+/* Phones: old hamburger nav until push 5c */
+@media (max-width: 768px) {
+  .aces-header, .aces-header-spacer { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aces-hub { transition: none; }
+}
