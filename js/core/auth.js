@@ -3,8 +3,14 @@
 //
 //   import { onAuthChange, authReady, isAdmin, canSubmitForTeam } from './js/core/auth.js';
 //
-//   onAuthChange((user, profile) => { ... });        // every change, profile included
-//   const { user, profile } = await authReady();     // first answer only
+//   onAuthChange((user, profile, view) => { ... });  // every change, profile included
+//   const { user, profile, view } = await authReady(); // first answer only
+//
+// "View as" (admin-view-as.html): profile is always the real signed-in
+// user's. view = { profile, realProfile, impersonating }, where view.profile
+// is the profile to show the page as: the viewed user's while an admin is
+// using View As, else the same as profile. Pages that personalise or show
+// role-based UI should use view.profile; writes still go out as the real user.
 //
 // One Firebase listener per page no matter how many callers subscribe, and one
 // read of users/{uid} per sign-in, shared by everyone (nav, page, role checks).
@@ -46,7 +52,8 @@ const AUTH_TIMEOUT_MS = 10000;
 const state = {
   settled: false,   // true once Firebase (or the timeout) has answered
   user: null,
-  profile: null
+  profile: null,
+  viewProfile: null // the viewed user's profile while View As is on, else null
 };
 
 const subscribers = new Set();
@@ -55,10 +62,16 @@ const readyPromise = new Promise((resolve) => { readyResolve = resolve; });
 let listening = false;
 let changeSeq = 0;
 
+function currentView() {
+  const { profile, viewProfile } = state;
+  return { profile: viewProfile || profile, realProfile: profile, impersonating: !!viewProfile };
+}
+
 function notify() {
   const { user, profile } = state;
+  const view = currentView();
   subscribers.forEach((cb) => {
-    try { cb(user, profile); } catch (err) { console.error('[auth] subscriber failed', err); }
+    try { cb(user, profile, view); } catch (err) { console.error('[auth] subscriber failed', err); }
   });
 }
 
@@ -72,12 +85,13 @@ async function loadProfile(uid) {
   }
 }
 
-function settle(user, profile) {
+function settle(user, profile, viewProfile = null) {
   state.user = user;
   state.profile = profile;
+  state.viewProfile = viewProfile;
   if (!state.settled) {
     state.settled = true;
-    readyResolve({ user, profile });
+    readyResolve({ user, profile, view: currentView() });
   }
   notify();
 }
@@ -98,15 +112,19 @@ function startListening() {
     clearTimeout(timeoutId);
 
     let profile = null;
+    let viewProfile = null;
     if (user) {
       // Stale tokens cause silent write failures; refresh before anyone writes.
       try { await user.getIdToken(true); } catch (err) { console.warn('[auth] token refresh failed', err?.message || err); }
       profile = await loadProfile(user.uid);
+      viewProfile = await resolveViewAs(user, profile);
+    } else {
+      clearViewAs(); // a real sign-out ends View As (not the 10 s timeout)
     }
 
     // A newer auth change arrived while we were loading: let it win.
     if (seq !== changeSeq) return;
-    settle(user, profile);
+    settle(user, profile, viewProfile);
 
     if (user) {
       trackVisit(user);
@@ -142,9 +160,19 @@ export function getCurrentUser() {
   return state.user ?? auth.currentUser ?? null;
 }
 
-/** Current users/{uid} profile, or null. */
+/** Current users/{uid} profile (the real signed-in user's), or null. */
 export function getCurrentProfile() {
   return state.profile;
+}
+
+/** Profile to show the page as: the viewed user's during View As, else the real one. */
+export function getEffectiveProfile() {
+  return state.viewProfile || state.profile;
+}
+
+/** True while an admin is using View As. */
+export function isViewingAs() {
+  return !!state.viewProfile;
 }
 
 /** Re-read the profile (after the page changes it) and tell subscribers. */
@@ -152,15 +180,60 @@ export async function refreshProfile() {
   const user = getCurrentUser();
   if (!user) return null;
   const profile = await loadProfile(user.uid);
-  settle(user, profile);
+  const viewProfile = await resolveViewAs(user, profile);
+  settle(user, profile, viewProfile);
   return profile;
 }
 
 /** Sign out. Pass a page to go to afterwards (relative URL). */
 export async function signOutUser({ redirectTo = null } = {}) {
+  clearViewAs();
   await signOut(auth);
   try { sessionStorage.removeItem('lastVisitTracked'); } catch { /* ignore */ }
   if (redirectTo) window.location.href = redirectTo;
+}
+
+// ---------------------------------------------------------------------------
+// View As (state written by admin-impersonate.js, per tab in sessionStorage)
+// ---------------------------------------------------------------------------
+
+const VIEW_AS_KEY = 'aces_impersonated_user';
+const VIEW_AS_ADMIN_KEY = 'aces_real_admin_user';
+
+function readJson(key) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** End View As for this tab (same keys admin-impersonate.js stopImpersonation clears). */
+export function clearViewAs() {
+  try {
+    sessionStorage.removeItem(VIEW_AS_KEY);
+    sessionStorage.removeItem(VIEW_AS_ADMIN_KEY);
+  } catch { /* ignore */ }
+}
+
+// The viewed user's profile, or null when View As is off or not allowed.
+// Only honoured for an admin, and only for the admin who started it (a
+// different account signing in on the same tab drops it). The profile is
+// re-read from users/{uid} so it is current and keeps Firestore types; the
+// stored copy is the fallback.
+async function resolveViewAs(user, profile) {
+  const target = readJson(VIEW_AS_KEY);
+  if (!target) return null;
+  if (!profile) return null; // profile didn't load: leave the state for the next try
+  const targetUid = target.uid || target.id;
+  const startedBy = readJson(VIEW_AS_ADMIN_KEY)?.uid;
+  if (!isAdmin(profile) || !targetUid || targetUid === user.uid || (startedBy && startedBy !== user.uid)) {
+    clearViewAs();
+    return null;
+  }
+  const fresh = await loadProfile(targetUid);
+  return { ...(fresh || target), id: targetUid, uid: targetUid };
 }
 
 // ---------------------------------------------------------------------------

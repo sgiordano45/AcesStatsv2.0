@@ -4,6 +4,8 @@
 //   import { initPage, pageReady, showPageError, bindActions } from './js/core/app.js';
 //
 //   const { user, profile, config } = await initPage({ title: 'Batting' });
+//   // profile is who to show the page as: during View As it's the viewed
+//   // user's (realProfile is the admin's, impersonating is true).
 //   // ... load and render ...
 //   pageReady();
 //
@@ -29,7 +31,7 @@
 
 import { IS_LIVE } from './env.js';
 import { db, collection, addDoc, serverTimestamp } from './firebase.js';
-import { authReady, onAuthChange, getCurrentUser, hasRole } from './auth.js';
+import { authReady, onAuthChange, getCurrentUser, hasRole, clearViewAs } from './auth.js';
 import { getSiteConfig } from './config.js';
 import { showToast } from '../ui/toast.js';
 
@@ -67,7 +69,10 @@ let initPromise = null;
  * @param {boolean} [options.nav=true]      Load the shared nav.
  * @param {boolean} [options.offlineBanner=true]
  * @param {string} [options.deniedMessage]  Text for the access message.
- * @returns {Promise<{ user: object|null, profile: object|null, config: object }>}
+ * @returns {Promise<{ user: object|null, profile: object|null, realProfile: object|null,
+ *                     impersonating: boolean, config: object }>}
+ *   profile is the effective profile (the viewed user's during View As);
+ *   realProfile is always the signed-in user's own. Role gates use profile.
  */
 export function initPage(options = {}) {
   if (initPromise) {
@@ -96,7 +101,10 @@ async function runInit({
     import(siteUrl('nav-component.js')).catch((err) => console.error('[app] nav failed to load', err));
   }
 
-  const [{ user, profile }, config] = await Promise.all([authReady(), getSiteConfig()]);
+  const [{ user, view }, config] = await Promise.all([authReady(), getSiteConfig()]);
+  const { profile, realProfile, impersonating } = view;
+
+  if (impersonating) showViewAsBanner();
 
   if ((requiresAuth || role) && !user) {
     redirectToSignIn();
@@ -104,11 +112,20 @@ async function runInit({
   }
 
   if (role && !hasRole(profile, role)) {
-    showAccessDenied(deniedMessage);
+    if (impersonating) showViewAsDenied(profile);
+    else showAccessDenied(deniedMessage);
     return new Promise(() => {}); // page code does not run
   }
 
-  return { user, profile, config };
+  return { user, profile, realProfile, impersonating, config };
+}
+
+// The View As banner lives in admin-impersonate.js (it injects itself on
+// import). Loaded only while View As is on, so other visits don't pay for it.
+function showViewAsBanner() {
+  import(siteUrl('admin-impersonate.js'))
+    .then((m) => m.injectImpersonationBanner?.())
+    .catch((err) => console.warn('[app] View As banner failed to load', err));
 }
 
 /** Send the visitor to sign in, remembering where to come back to. */
@@ -206,6 +223,18 @@ export function showPageState({ title, message = '', actions = [], container } =
   document.querySelectorAll('[data-page-loading]').forEach((el) => { el.hidden = true; });
   placeCard(card, container);
   return card;
+}
+
+function showViewAsDenied(profile) {
+  const who = profile?.preferredDisplayName || profile?.displayName || profile?.email || 'This user';
+  showPageState({
+    title: 'Not available in View As',
+    message: `${who} doesn't have access to this page.`,
+    actions: [
+      { label: 'Exit View As', primary: true, onClick: () => { clearViewAs(); window.location.reload(); } },
+      { label: 'Go to home page', href: siteUrl('index.html') }
+    ]
+  });
 }
 
 function showAccessDenied(message) {

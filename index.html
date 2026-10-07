@@ -2686,8 +2686,9 @@
 <!-- Replace the auth state change handler in index.html (around line 1106-1230) with this: -->
 
 <script type="module">
-  import { auth, onAuthChange, getUserProfile, USER_ROLES } from './firebase-auth.js';
-  import { isImpersonating, getEffectiveUserProfile, injectImpersonationBanner } from './admin-impersonate.js';
+  import { auth, USER_ROLES } from './firebase-auth.js';
+  // view.profile is the viewed user's during View As (initPage shows the banner).
+  import { onAuthChange } from './js/core/auth.js';
 
   const authSection = document.getElementById('authSection');
   const personalizationSection = document.getElementById('personalizationSection');
@@ -2695,7 +2696,7 @@
   // Mobile auth is handled by nav-component.js, not directly here
 
   // Listen for auth state changes
-  onAuthChange(async (user) => {
+  onAuthChange((user, realProfile, view) => {
     console.log('🔍 Auth state changed:', user ? user.email : 'No user');
     
     if (user) {
@@ -2703,26 +2704,13 @@
       console.log('✅ User signed in:', user.email);
       
       let displayName = user.displayName || user.email.split('@')[0];
-      let profile = null;
-      
-      try {
-        const profileResult = await getUserProfile(user.uid);
-        if (profileResult.success && profileResult.data) {
-          profile = profileResult.data;
-          // Check for impersonation mode
-          if (isImpersonating()) {
-            profile = getEffectiveUserProfile(profile);
-            console.log('🎭 Impersonation active - viewing as:', profile?.displayName);
-          }
-          injectImpersonationBanner();
-
-          if (profile.preferredDisplayName) {
-            displayName = profile.preferredDisplayName;
-            console.log('✅ Using preferred display name:', displayName);
-          }
-        }
-      } catch (error) {
-        console.error('⚠️ Could not load user profile:', error);
+      const profile = view?.profile || null;
+      if (view?.impersonating) {
+        console.log('🎭 Impersonation active - viewing as:', profile?.displayName);
+      }
+      if (profile?.preferredDisplayName) {
+        displayName = profile.preferredDisplayName;
+        console.log('✅ Using preferred display name:', displayName);
       }
       
       // Show personalization section, hide signup guide

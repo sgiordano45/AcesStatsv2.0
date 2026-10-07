@@ -3730,7 +3730,8 @@
 
   // Track current user and whether they can edit this player's photo
   let currentUser = null;
-  let currentProfile = null;
+  let currentProfile = null;  // effective profile: the viewed user's during View As
+  let viewingAs = false;
   let canEditPhoto = false;
   let linkedUserId = null; // The user ID that owns this player page
   
@@ -6293,9 +6294,10 @@
   // ========================================
   
   // Listen for auth state changes
-  onAuthChange((user, profile) => {
+  onAuthChange((user, profile, view) => {
     currentUser = user;
-    currentProfile = profile;
+    currentProfile = view?.profile ?? profile;
+    viewingAs = !!view?.impersonating;
     checkPhotoEditPermission();
   });
   
@@ -6310,8 +6312,10 @@
     }
     
     try {
-      // User can edit if they are the linked user OR if they are an admin
-      if (currentUser.uid === linkedUserId) {
+      // User can edit if they are the linked user OR if they are an admin.
+      // During View As, both checks are for the viewed user.
+      const actingUid = viewingAs ? currentProfile?.id : currentUser.uid;
+      if (actingUid === linkedUserId) {
         canEditPhoto = true;
         console.log('✅ User can edit their own player photo');
       } else {
