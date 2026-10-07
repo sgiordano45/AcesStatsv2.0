@@ -46,7 +46,15 @@
 .aces-st .aces-table { display: table !important; overflow: visible !important; white-space: normal !important; border-radius: 0 !important; background: var(--color-surface) !important; color: var(--color-text) !important; }
 .aces-st .aces-table th,
 .aces-st .aces-table td { background: var(--color-surface) !important; color: var(--color-text) !important; border-color: var(--color-border) !important; box-shadow: none !important; }
-.aces-st .aces-table thead th { background: var(--color-surface-2) !important; color: var(--color-text-muted) !important; position: sticky !important; top: 0 !important; z-index: 2 !important; }
+/* Header: field green like the site bar, white labels, gold arrow on the sorted column. */
+.aces-st { --st-head-bg: var(--color-brand); --st-head-ink: rgba(255, 255, 255, 0.85); --st-head-ink-on: #ffffff; --st-head-arrow: var(--color-accent); }
+:root[data-theme="dark"] .aces-st { --st-head-bg: #1d3317; --st-head-ink: #b9c8b3; --st-head-ink-on: #ffffff; }
+.aces-st .aces-table thead th { background: var(--st-head-bg) !important; color: var(--st-head-ink) !important; border-color: transparent !important; position: sticky !important; top: 0 !important; z-index: 2 !important; }
+.aces-st .aces-table thead th .aces-sort { color: inherit; }
+.aces-st .aces-table thead th .aces-sort:hover,
+.aces-st .aces-table thead th[aria-sort] .aces-sort { color: var(--st-head-ink-on); }
+.aces-st .aces-table thead th[aria-sort] .aces-sort::after { border-top-color: var(--st-head-arrow); }
+.aces-st .aces-table thead th .stat-tip-icon { background: rgba(255, 255, 255, 0.22) !important; color: #ffffff !important; }
 .aces-st .aces-table.is-sticky-first tr > :first-child { position: sticky !important; left: 0 !important; z-index: 1 !important; box-shadow: inset -1px 0 0 var(--color-border) !important; }
 .aces-st .aces-table.is-sticky-first thead tr > :first-child { z-index: 3 !important; }
 .aces-st .aces-table tbody tr:hover > * { background: var(--color-surface-2) !important; }
@@ -55,7 +63,7 @@
 .aces-st .aces-table tbody tr.is-me > * { background: var(--color-accent-soft) !important; }
 .aces-st .aces-table.is-sticky-first tbody tr.is-me > :first-child { box-shadow: inset 3px 0 0 var(--color-accent), inset -1px 0 0 var(--color-border) !important; }
 .aces-st .aces-table th.is-first { color: var(--color-text) !important; }
-.aces-st .aces-table thead th.is-first { color: var(--color-text-muted) !important; }
+.aces-st .aces-table thead th.is-first { color: var(--st-head-ink) !important; }
 
 /* ---- Phone cards (768 px and below the table is swapped for these) ------ */
 

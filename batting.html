@@ -405,6 +405,14 @@ body {
           <option value="all">All teams</option>
         </select>
       </div>
+      <div>
+        <label for="subsFilter">Subs:</label>
+        <select id="subsFilter">
+          <option value="include">Include sub games</option>
+          <option value="exclude">Exclude sub games</option>
+          <option value="only">Sub games only</option>
+        </select>
+      </div>
     </div>
   </div>
 
@@ -567,13 +575,17 @@ body {
       key: r => r.id || r.name,
       merge: (group) => {
         const first = group[0];
-        const teams = new Set(group.map(r => r.team));
+        // Team comes from the regular (non-sub) rows: someone who only played for
+        // Green but subbed for others shows as Green. All-sub groups use their sub teams.
+        const regular = group.filter(r => !r.sub);
+        const teams = new Set((regular.length ? regular : group).map(r => r.team));
         const seasonIds = new Set(group.map(r => r.seasonId));
         const bwars = group.map(r => r.bwar).filter(v => v !== null);
         return {
           ...first,
           ...sumFields(group, COUNT_FIELDS),
-          team: teams.size > 1 ? 'Multiple' : first.team,
+          team: teams.size > 1 ? 'Multiple' : [...teams][0],
+          teamKey: teams.size > 1 ? 'multiple' : String([...teams][0] || '').toLowerCase(),
           seasonCount: seasonIds.size,
           seasonKey: Math.max(...group.map(r => r.seasonKey)),
           seasonLabel: seasonIds.size > 1 ? `${seasonIds.size} seasons` : first.seasonLabel,
@@ -593,13 +605,14 @@ body {
 
   function readFilters() {
     const p = new URLSearchParams(location.search);
-    return { season: p.get('season') || defaultSeason, team: p.get('team') || 'all' };
+    return { season: p.get('season') || defaultSeason, team: p.get('team') || 'all', subs: p.get('subs') || 'include' };
   }
 
-  function writeFilters({ season, team }) {
+  function writeFilters({ season, team, subs }) {
     const p = new URLSearchParams(location.search);
     if (season && season !== defaultSeason) p.set('season', season); else p.delete('season');
     if (team && team !== 'all') p.set('team', team); else p.delete('team');
+    if (subs && subs !== 'include') p.set('subs', subs); else p.delete('subs');
     const qs = p.toString();
     history.replaceState(history.state, '', `${location.pathname}${qs ? `?${qs}` : ''}${location.hash}`);
   }
@@ -630,8 +643,9 @@ body {
   }
 
   function applyFilters() {
-    const f = { season: $('seasonFilter').value, team: $('teamFilter').value };
-    const rows = allRows.filter(r => inSeason(r, f.season) && (f.team === 'all' || r.teamKey === f.team));
+    const f = { season: $('seasonFilter').value, team: $('teamFilter').value, subs: $('subsFilter').value };
+    const subsOk = (r) => (f.subs === 'exclude' ? !r.sub : f.subs === 'only' ? r.sub : true);
+    const rows = allRows.filter(r => inSeason(r, f.season) && (f.team === 'all' || r.teamKey === f.team) && subsOk(r));
     table.setRows(rows);
     updateSummary(rows);
     return f;
@@ -707,6 +721,8 @@ body {
     $('teamFilter').value = [...$('teamFilter').options].some(o => o.value === f.team) ? f.team : 'all';
     $('seasonFilter').addEventListener('change', onFilterChange);
     $('teamFilter').addEventListener('change', onFilterChange);
+    $('subsFilter').value = ['include', 'exclude', 'only'].includes(f.subs) ? f.subs : 'include';
+    $('subsFilter').addEventListener('change', onFilterChange);
 
     applyFilters();
     pageReady();
