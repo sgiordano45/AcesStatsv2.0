@@ -433,6 +433,7 @@
 
 <script type="module">
 import { getAllSeasons, getSeasonGames, getSeasonPlayerStatsOptimized } from './firebase-data.js';
+import { getDisplaySeasonId } from './js/core/config.js';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let rawPlayers = [];
@@ -468,8 +469,9 @@ async function populateSeasons() {
     sel.innerHTML = seasons.map(s =>
       `<option value="${s.id}">${s.name || s.id}</option>`
     ).join('');
-    if (seasons.some(s => s.id === '2026-summer')) {
-      sel.value = '2026-summer';
+    const defaultSeasonId = await getDisplaySeasonId().catch(() => null);
+    if (seasons.some(s => s.id === defaultSeasonId)) {
+      sel.value = defaultSeasonId;
     }
   } catch (e) {
     sel.innerHTML = '<option value="">Failed to load seasons</option>';

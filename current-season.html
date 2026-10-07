@@ -2678,6 +2678,7 @@
     </script>
 
   <script type="module">
+  import { getDisplaySeasonId } from './js/core/config.js'; // season to show when none is active
     import { db } from './firebase-config.js';
     import { doc, getDoc, collection, getDocs, query, where } from './firebase-config.js';
     import { BADGE_DEFINITIONS, getBadgesByCategory, getBadgeIconHtml } from './badge-calculator.js';
@@ -2686,7 +2687,7 @@
     async function loadTrophyCasePreview() {
       // Use active season from Firebase
       const activeSeason = await getCurrentSeason();
-      const seasonId = activeSeason?.id || '2026-fall';
+      const seasonId = activeSeason?.id || (await getDisplaySeasonId());
 
       try {
         const summaryRef = doc(db, 'playerBadges', `season_${seasonId}`);

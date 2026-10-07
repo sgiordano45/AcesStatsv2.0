@@ -240,6 +240,31 @@ export async function getCurrentSeasonId() {
   return (await getSiteConfig()).currentSeasonId;
 }
 
+/**
+ * The season a page should show when it needs one: the current season, else
+ * (offseason, or no config at all) the newest season doc. Use instead of a
+ * hard-coded fallback ID.
+ */
+export async function getDisplaySeasonId() {
+  const { currentSeasonId } = await getSiteConfig();
+  if (currentSeasonId) return currentSeasonId;
+  try { return (await getSeasons())[0]?.id ?? null; } catch { return null; }
+}
+
+/**
+ * Seasons from firstSeasonId through the display season, newest first, as
+ * [{ id, label }]. For pages whose data starts at a known season (badges from
+ * 2025-fall): the list grows on its own each season.
+ */
+export async function getSeasonRange(firstSeasonId) {
+  const [seasons, lastId] = await Promise.all([getSeasons(), getDisplaySeasonId()]);
+  const from = seasonSortKey(firstSeasonId);
+  const to = lastId ? seasonSortKey(lastId) : Infinity;
+  const ids = seasons.map((s) => s.id).filter((id) => seasonSortKey(id) >= from && seasonSortKey(id) <= to);
+  if (lastId && !ids.includes(lastId) && seasonSortKey(lastId) >= from) ids.unshift(lastId);
+  return ids.sort(compareSeasonsDesc).map((id) => ({ id, label: formatSeasonLabel(id) }));
+}
+
 export async function getPhase() {
   return (await getSiteConfig()).phase;
 }

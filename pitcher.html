@@ -472,6 +472,7 @@ tbody tr:hover { background: rgba(17,153,142,0.06); }
      MODULE: Data loading
 ═══════════════════════════════════════════ -->
 <script type="module">
+  import { getDisplaySeasonId } from './js/core/config.js'; // season to show when none is active
 import {
   getAllPlayerStatsOptimized,
   pitchingSeasonsObjectToArray,
@@ -831,7 +832,7 @@ async function loadBadgesTab(legacyId) {
 
   try {
     const activeSeason = await getCurrentSeason();
-    const currentSeasonId = activeSeason?.id || '2026-summer';
+    const currentSeasonId = activeSeason?.id || (await getDisplaySeasonId());
     const [year, season] = currentSeasonId.split('-');
     const seasonDisplay = `${year} ${capitalize(season||'')}`;
     const badgeDocId = `${currentSeasonId}_${legacyId}`;

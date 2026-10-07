@@ -2068,9 +2068,7 @@ body {
               <label class="form-label" for="defaultSeason">Default Season</label>
               <select id="defaultSeason" class="form-select">
                 <option value="current">Current Season</option>
-                <option value="2025-summer">2025 Summer</option>
-                <option value="2024-fall">2024 Fall</option>
-                <option value="2024-summer">2024 Summer</option>
+                <!-- past seasons are added from the seasons list on load -->
               </select>
             </div>
           </div>
@@ -2671,6 +2669,25 @@ body {
   </div>
 
   <script type="module">
+  import { getSeasons, formatSeasonLabel } from './js/core/config.js';
+
+  // Default Season choices: Current Season, then every season newest first.
+  // A saved choice that isn't in the list is kept, so it still shows.
+  async function populateDefaultSeasonOptions(saved) {
+    const sel = document.getElementById('defaultSeason');
+    if (!sel || sel.dataset.populated) return;
+    let ids = [];
+    try { ids = (await getSeasons()).map((s) => s.id); } catch (err) { console.warn('Could not load seasons for Default Season', err); }
+    if (saved && saved !== 'current' && !ids.includes(saved)) ids.push(saved);
+    ids.forEach((id) => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = formatSeasonLabel(id);
+      sel.appendChild(opt);
+    });
+    sel.dataset.populated = '1';
+  }
+
 import { onAuthChange, getCurrentUser, logoutUser, getUserProfile, updateUserProfile as updateUserProfileAuth, addFavoriteTeam, addFavoritePlayer, auth } from './firebase-auth.js';
 import { getCurrentSeason, getSeasonPlayerStatsOptimized, getAllTeams, getAllPlayerStatsOptimized, db, doc, getDoc } from './firebase-data.js';
 import { updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
@@ -3241,6 +3258,7 @@ document.getElementById('memberSince').textContent = memberSinceText;
           // Load preferences
           document.getElementById('publicFavorites').checked = userProfile.preferences?.publicFavorites ?? false;
           document.getElementById('defaultStatsView').value = userProfile.preferences?.defaultStatsView || 'season';
+          await populateDefaultSeasonOptions(userProfile.preferences?.defaultSeason);
           document.getElementById('defaultSeason').value = userProfile.preferences?.defaultSeason || 'current';
           
           // Load directory settings

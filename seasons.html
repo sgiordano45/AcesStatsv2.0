@@ -533,7 +533,7 @@ body {
 </div>
 
 <script type="module">
-import { getAllPlayerStatsOptimized, getAllSeasons, getAllAwards, getSeasonGames } from './firebase-data.js';
+import { getAllPlayerStatsOptimized, getAllSeasons, getAllAwards, getSeasonGames, getCurrentSeason } from './firebase-data.js';
 
 let allPlayers = [];
 let allSeasons = [];
@@ -648,13 +648,14 @@ async function generateSeasonCards() {
   // Get game counts from season subcollections
   console.log('Fetching game counts from season subcollections...');
   const today = new Date();
+  const currentSeasonId = (await getCurrentSeason().catch(() => null))?.id ?? null;
   
   for (const [seasonId, seasonData] of seasons) {
     try {
       const games = await getSeasonGames(seasonId);
       
-      // For current season (2025-fall), only count completed games
-      if (seasonId === '2025-fall') {
+      // For the current season, only count completed games
+      if (seasonId === currentSeasonId) {
         const completedGames = games.filter(game => {
           // If game has a date, check if it's in the past
           if (game.date && game.date.toDate) {

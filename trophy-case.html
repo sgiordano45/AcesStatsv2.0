@@ -1123,6 +1123,7 @@
       getDoc
     } from './firebase-config.js';
     import { getCurrentSeason } from './firebase-data.js';
+    import { getSeasonRange, getDisplaySeasonId, formatSeasonLabel } from './js/core/config.js';
     import { NavigationComponent } from './nav-component.js';
     import { 
       BADGE_DEFINITIONS, 
@@ -1140,14 +1141,24 @@
     // SEASON SETUP
     // ============================================
 
-    // ---- ADD NEW BADGE-SUPPORTED SEASONS HERE ----
-    const BADGE_SEASONS = [
-      { id: '2026-summer', label: '2026 Summer' },
-      { id: '2025-fall',   label: '2025 Fall (Partial)' }
-    ];
-    // ------------------------------------------------
+    // Badges start in 2025 Fall (partial data); later seasons come from the
+    // seasons list, so nothing needs adding here each season.
+    const BADGE_FIRST_SEASON = '2025-fall';
+    const PARTIAL_BADGE_SEASONS = new Set(['2025-fall']);
+    let BADGE_SEASONS = [];
+
+    async function loadBadgeSeasons() {
+      let list = [];
+      try { list = await getSeasonRange(BADGE_FIRST_SEASON); } catch (e) { console.warn('Could not load seasons list', e); }
+      if (!list.length) {
+        const id = (await getDisplaySeasonId().catch(() => null)) || BADGE_FIRST_SEASON;
+        list = [{ id, label: formatSeasonLabel(id) }];
+      }
+      return list.map(s => PARTIAL_BADGE_SEASONS.has(s.id) ? { ...s, label: `${s.label} (Partial)` } : s);
+    }
 
     async function initSeasons() {
+      BADGE_SEASONS = await loadBadgeSeasons();
       try {
         const activeSeason = await getCurrentSeason();
         if (activeSeason) {

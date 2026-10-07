@@ -387,18 +387,17 @@ body {
   import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
   import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
   import { getCurrentSeason } from './firebase-data.js';
+  import { getSeasonRange, getDisplaySeasonId, formatSeasonLabel } from './js/core/config.js';
   import { BADGE_DEFINITIONS } from './badge-calculator.js';
   import { NavigationComponent } from './nav-component.js';
 
   // ── Badge seasons ──────────────────────────────────────────
-  const BADGE_SEASONS = [
-    { id: '2026-summer', label: '2026 Summer' },
-    { id: '2025-fall',   label: '2025 Fall' }
-  ];
+  // Badges start in 2025 Fall; later seasons are added from the seasons list.
+  const BADGE_FIRST_SEASON = '2025-fall';
 
   // ── State ──────────────────────────────────────────────────
   let allPlayerBadges = {};
-  let currentSeasonId = '2026-summer';
+  let currentSeasonId = null;
 
   // ── Helpers ───────────────────────────────────────────────
   function formatDate(d) {
@@ -450,6 +449,12 @@ body {
     const select = document.getElementById('seasonSelect');
     let activeSeason;
     try { activeSeason = await getCurrentSeason(); } catch(e) {}
+    let BADGE_SEASONS;
+    try { BADGE_SEASONS = await getSeasonRange(BADGE_FIRST_SEASON); } catch(e) { BADGE_SEASONS = []; }
+    if (!BADGE_SEASONS.length) {
+      const id = (await getDisplaySeasonId().catch(() => null)) || BADGE_FIRST_SEASON;
+      BADGE_SEASONS = [{ id, label: formatSeasonLabel(id) }];
+    }
 
     BADGE_SEASONS.forEach(s => {
       const opt = document.createElement('option');

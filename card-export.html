@@ -877,6 +877,7 @@
 </div><!-- #cardRenderArea -->
 
 <script type="module">
+  import { getDisplaySeasonId } from './js/core/config.js'; // season to show when none is active
   import {
     getAllPlayerStatsOptimized,
     getCurrentSeason,
@@ -1241,7 +1242,7 @@
         awardsMap[key].push(a);
       });
 
-      const currentSeasonId = activeSeason?.id || '2026-summer';
+      const currentSeasonId = activeSeason?.id || (await getDisplaySeasonId());
       const [seasonYear, seasonName] = currentSeasonId.split('-');
 
       // Filter out migrated legacy placeholder docs — they share a displayName with the UID doc
@@ -1464,7 +1465,7 @@
         getAllPlayers()
       ]);
 
-      const currentSeasonId = activeSeason?.id || '2026-summer';
+      const currentSeasonId = activeSeason?.id || (await getDisplaySeasonId());
 
       // Filter migrated placeholders — they share displayName with the UID doc but have no photos
       const activeUserInfo = allUserInfo.filter(u => !u.migrated);

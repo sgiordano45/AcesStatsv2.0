@@ -592,6 +592,7 @@
 <script src="team-charts.js"></script>
 
 <script type="module">
+  import { getDisplaySeasonId } from './js/core/config.js'; // season to show when none is active
   import {
     getAllPlayerStatsOptimized,
     getPlayerStatsOptimized,
@@ -1113,11 +1114,12 @@
         if (!currentSeason) currentSeason = await getCurrentSeason();
         // Prefer player's actual Firestore ID (e.g. joe_patanella) over name-derived key
         const badgeLegacyId = currentPlayer.id || legacyId;
-        const badgeId   = `${currentSeason?.id || '2026-summer'}_${badgeLegacyId}`;
+        const badgeSeasonId = currentSeason?.id || (await getDisplaySeasonId());
+        const badgeId   = `${badgeSeasonId}_${badgeLegacyId}`;
         let badgeSnap = await getDoc(doc(db, 'playerBadges', badgeId));
         // Fallback to name-derived ID if actual ID finds nothing
         if (!badgeSnap.exists() && badgeLegacyId !== legacyId) {
-          const fallbackId = `${currentSeason?.id || '2026-summer'}_${legacyId}`;
+          const fallbackId = `${badgeSeasonId}_${legacyId}`;
           badgeSnap = await getDoc(doc(db, 'playerBadges', fallbackId));
         }
         if (badgeSnap.exists()) badges = { ...badgeSnap.data(), seasonDisplay: currentSeason?.displayName };

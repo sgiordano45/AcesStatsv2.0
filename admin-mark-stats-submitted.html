@@ -120,9 +120,7 @@
     <h3>2. Select Season</h3>
     <select id="seasonSelect" disabled>
       <option value="">-- Select Season --</option>
-      <option value="2025-fall">2025-fall</option>
-      <option value="2025-summer">2025-summer</option>
-      <option value="2024-fall">2024-fall</option>
+      <!-- seasons are added from the seasons list on load -->
     </select>
     <button id="loadGamesBtn" disabled>Load Games</button>
   </div>
@@ -175,6 +173,17 @@
 
     const authStatus = document.getElementById('authStatus');
     const seasonSelect = document.getElementById('seasonSelect');
+
+    // Every season, newest first (js/core/config.js), instead of a fixed list.
+    import('./js/core/config.js')
+      .then(({ getSeasons }) => getSeasons())
+      .then((seasons) => seasons.forEach((s) => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.id;
+        seasonSelect.appendChild(opt);
+      }))
+      .catch((err) => console.warn('Could not load seasons', err));
     const loadGamesBtn = document.getElementById('loadGamesBtn');
     const gamesCard = document.getElementById('gamesCard');
     const gameList = document.getElementById('gameList');

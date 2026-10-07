@@ -3703,6 +3703,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script type="module">
+  import { getDisplaySeasonId } from './js/core/config.js'; // season to show when none is active
   import {
     getPlayerStatsOptimized,
     getPlayerInfo,
@@ -4289,7 +4290,7 @@
   async function fetchPlayerBadges(legacyId, authUid = null) {
     try {
       const activeSeason = await getCurrentSeason();
-      const currentSeasonId = activeSeason?.id || '2026-summer';
+      const currentSeasonId = activeSeason?.id || (await getDisplaySeasonId());
       const [year, season] = currentSeasonId.split('-');
       const seasonDisplay = `${year} ${season.charAt(0).toUpperCase() + season.slice(1)}`;
 
