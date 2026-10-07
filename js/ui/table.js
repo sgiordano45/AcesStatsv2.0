@@ -2,7 +2,8 @@
 // The one stat table. Draws what js/ui/table-model.js computes: column presets,
 // Qualified only (with the rule shown), Totals / Per game, Combine seasons,
 // top/bottom 10% shading, sortable sticky header and first column, a card
-// list on phones, settings in the URL, Copy CSV and Share as image.
+// list on phones, settings in the URL, Copy CSV and Share as image (drawn
+// on a canvas, no html2canvas).
 //
 //   import { mountStatTable } from './js/ui/table.js';
 //   const table = mountStatTable(document.getElementById('stats'), config, {
@@ -31,7 +32,6 @@ import { escapeHtml as esc } from './format.js';
 import { showToast } from './toast.js';
 
 const SITE_ROOT = new URL('../../', import.meta.url).href;
-const HTML2CANVAS = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
 const IMAGE_MAX_ROWS = 40;
 const TALL_AFTER_ROWS = 15;   // more rows than this: the table scrolls inside a 70vh box so the header sticks
 
@@ -271,45 +271,123 @@ export function mountStatTable(el, config, options = {}) {
     }
   }
 
-  function loadHtml2canvas() {
-    if (window.html2canvas) return Promise.resolve(window.html2canvas);
-    return new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = HTML2CANVAS;
-      s.onload = () => resolve(window.html2canvas);
-      s.onerror = () => reject(new Error('Could not load html2canvas'));
-      document.head.appendChild(s);
+  // Draws the live table's first IMAGE_MAX_ROWS rows straight onto a canvas:
+  // cell text, shading, bold, the "is-me" row and team-dot colours, all read
+  // from the page as shown (so it follows light or dark mode). No library.
+  function drawTableImage(table, { title, foot }) {
+    const css = (el) => getComputedStyle(el);
+    const isClear = (c) => !c || c === 'transparent' || /rgba\(.*,\s*0\)$/.test(c);
+    const pageBg = (() => { const c = css(document.body).backgroundColor; return isClear(c) ? '#ffffff' : c; })();
+    const surface = (() => { const c = css(table.querySelector('td, th')).backgroundColor; return isClear(c) ? pageBg : c; })();
+
+    const readCell = (el, rowBg) => {
+      const s = css(el);
+      const dot = el.querySelector('.aces-team-dot');
+      return {
+        text: el.innerText.replace(/\s+/g, ' ').trim(),
+        bg: isClear(s.backgroundColor) ? rowBg : s.backgroundColor,
+        color: s.color,
+        weight: s.fontWeight,
+        right: s.textAlign === 'right' || el.classList.contains('is-num'),
+        dot: dot ? css(dot).backgroundColor : null
+      };
+    };
+    const head = [...table.tHead.rows[0].cells].map(th => readCell(th, null));
+    const headBg = head[0].bg || surface;
+    const body = [...table.tBodies[0].rows].slice(0, IMAGE_MAX_ROWS).map(tr => {
+      const rowBg = isClear(css(tr).backgroundColor) ? surface : css(tr).backgroundColor;
+      return { cells: [...tr.cells].map(td => readCell(td, rowBg)), me: tr.classList.contains('is-me') };
     });
+
+    const scale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+    const font = css(table).fontFamily;
+    const PAD = 10, ROW = 30, HEAD = 30, TITLE = 44, FOOT = 28, MARGIN = 16, DOT = 10;
+    const c = document.createElement('canvas');
+    const g = c.getContext('2d');
+    const setFont = (w, px) => { g.font = `${w} ${px}px ${font}`; };
+
+    // Column widths from the widest text in each column.
+    const widths = head.map((h, i) => {
+      setFont(600, 12);
+      let w = g.measureText(h.text).width;
+      for (const r of body) {
+        const cell = r.cells[i];
+        setFont(cell.weight, 14);
+        w = Math.max(w, g.measureText(cell.text).width + (cell.dot ? DOT + 6 : 0));
+      }
+      return Math.ceil(w) + PAD * 2;
+    });
+    const tableW = widths.reduce((a, b) => a + b, 0);
+    setFont(700, 22);
+    const W = Math.max(tableW, g.measureText(title).width) + MARGIN * 2;
+    const H = MARGIN + TITLE + HEAD + body.length * ROW + FOOT + MARGIN;
+    c.width = Math.ceil(W * scale);
+    c.height = Math.ceil(H * scale);
+    g.scale(scale, scale);
+    g.textBaseline = 'middle';
+
+    g.fillStyle = pageBg; g.fillRect(0, 0, W, H);
+    const brand = css(document.documentElement).getPropertyValue('--color-brand').trim() || '#2d5016';
+    const muted = css(document.documentElement).getPropertyValue('--color-text-muted').trim() || '#5a6056';
+    const border = css(document.documentElement).getPropertyValue('--color-border').trim() || '#e9ebe6';
+    const accent = css(document.documentElement).getPropertyValue('--color-accent').trim() || '#ffd700';
+    setFont(700, 22); g.fillStyle = brand; g.fillText(title, MARGIN, MARGIN + TITLE / 2 - 4);
+
+    const drawRow = (cells, y, h, isHead) => {
+      let x = MARGIN;
+      cells.forEach((cell, i) => {
+        const w = widths[i];
+        g.fillStyle = isHead ? headBg : (cell.bg || surface);
+        g.fillRect(x, y, w, h);
+        setFont(isHead ? 600 : cell.weight, isHead ? 12 : 14);
+        g.fillStyle = cell.color;
+        let tx = cell.right ? x + w - PAD : x + PAD;
+        g.textAlign = cell.right ? 'right' : 'left';
+        if (cell.dot && !cell.right) {
+          g.beginPath(); g.arc(tx + DOT / 2, y + h / 2, DOT / 2, 0, Math.PI * 2);
+          g.fillStyle = cell.dot; g.fill();
+          g.lineWidth = 1; g.strokeStyle = 'rgba(0,0,0,0.18)'; g.stroke();
+          g.fillStyle = cell.color;
+          tx += DOT + 6;
+        }
+        g.fillText(cell.text, tx, y + h / 2 + 1);
+        x += w;
+      });
+      g.fillStyle = border; g.fillRect(MARGIN, y + h - 1, tableW, 1);
+    };
+
+    let y = MARGIN + TITLE;
+    drawRow(head, y, HEAD, true);
+    y += HEAD;
+    for (const r of body) {
+      drawRow(r.cells, y, ROW, false);
+      if (r.me) { g.fillStyle = accent; g.fillRect(MARGIN, y, 3, ROW); }
+      y += ROW;
+    }
+    setFont(400, 12); g.fillStyle = muted; g.textAlign = 'right';
+    g.fillText(foot, MARGIN + tableW, y + FOOT / 2 + 2);
+    return c;
   }
 
-  // Draws the first IMAGE_MAX_ROWS rows off screen (no scroll box, no
-  // toolbar) with a title and the site name, then shares or downloads it.
   async function shareImage(btn) {
     if (!view || !view.rows.length) return showToast('Nothing to share yet', 'info');
+    const table = wrap.querySelector('table');
+    if (!table) return;
     btn.disabled = true;
-    const box = document.createElement('div');
-    box.className = 'aces-st__capture';
-    const shown = view.rows.slice(0, IMAGE_MAX_ROWS);
-    const more = view.rows.length - shown.length;
     try {
-      const html2canvas = await loadHtml2canvas();
-      const saveRows = view.rows;
-      view.rows = shown;
-      renderTable();
-      const table = wrap.innerHTML;
-      view.rows = saveRows;
-      renderTable();
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      const shown = Math.min(view.rows.length, IMAGE_MAX_ROWS);
       const preset = view.presets.length > 1 && view.preset ? ` · ${view.preset.label}` : '';
-      box.innerHTML = `<div class="aces-st__capture-title">${esc(opts.exportTitle || document.title)}${esc(preset)}${view.state.perGame ? ' · per game' : ''}</div>
-        ${table}
-        <div class="aces-st__capture-foot">${more > 0 ? `Top ${shown.length} of ${view.rows.length} · ` : ''}${esc(location.host)}</div>`;
-      document.body.appendChild(box);
-      const bg = getComputedStyle(document.body).backgroundColor;
-      const canvas = await html2canvas(box, { backgroundColor: bg && bg !== 'rgba(0, 0, 0, 0)' ? bg : '#ffffff', scale: Math.min(2, window.devicePixelRatio || 1), useCORS: true, logging: false });
+      const title = `${opts.exportTitle || document.title}${preset}${view.state.perGame ? ' · per game' : ''}`;
+      const foot = `${shown < view.rows.length ? `Top ${shown} of ${view.rows.length} · ` : ''}${location.host}`;
+      const canvas = drawTableImage(table, { title, foot });
       const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
       const file = new File([blob], `${fileBase()}.png`, { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try { await navigator.share({ files: [file], title: opts.exportTitle || document.title }); }
+      // Phones: the share sheet (iPhone's has Save Image). Computers: just
+      // download, because desktop share menus have no save option.
+      const phone = window.matchMedia('(pointer: coarse)').matches;
+      if (phone && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], title }); }
         catch (e) { if (e.name !== 'AbortError') download(blob, file.name); }
       } else {
         download(blob, file.name);
@@ -319,7 +397,6 @@ export function mountStatTable(el, config, options = {}) {
       console.error('[table] share image', e);
       showToast('Could not make the image', 'error');
     } finally {
-      box.remove();
       btn.disabled = false;
     }
   }

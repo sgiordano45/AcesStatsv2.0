@@ -1,7 +1,7 @@
 /* ==========================================================================
-   css/table.css - the stat table's toolbar, note, phone cards and image
-   export (js/ui/table.js). The table itself is .aces-table in
-   css/components.css (sticky header and first column, is-top / is-bottom
+   css/table.css - the stat table's toolbar, note and phone cards
+   (js/ui/table.js; Share as image is drawn on a canvas there). The table
+   itself is .aces-table in css/components.css (sticky header and first column, is-top / is-bottom
    shading). table.js links tokens.css, components.css and this file itself.
    ========================================================================== */
 
@@ -98,34 +98,6 @@
 .aces-st__stat.is-top { background: var(--color-rank-top); }
 .aces-st__stat.is-bottom { background: var(--color-rank-bottom); }
 .aces-st__stat.is-bottom dd { color: var(--color-text-muted); font-weight: var(--fw-regular); }
-
-/* ---- Share as image: drawn off screen, then removed --------------------- */
-
-.aces-st__capture {
-  position: fixed;
-  top: 0;
-  left: -10000px;
-  width: max-content;
-  max-width: 1100px;
-  padding: var(--space-4);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-family: var(--font-sans);
-}
-.aces-st__capture .aces-table-wrap,
-.aces-st__capture .aces-table thead th { position: static; }
-.aces-st__capture-title {
-  margin: 0 0 var(--space-3);
-  font: var(--fw-bold) var(--fs-lg) / var(--lh-tight) var(--font-display);
-  letter-spacing: var(--tracking-display);
-  color: var(--color-brand);
-}
-.aces-st__capture-foot {
-  margin-top: var(--space-2);
-  color: var(--color-text-muted);
-  font-size: var(--fs-xs);
-  text-align: right;
-}
 
 @media print {
   .aces-st__bar, .aces-st__cards { display: none !important; }
