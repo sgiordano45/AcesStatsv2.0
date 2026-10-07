@@ -59,13 +59,16 @@ const ipText = (v, r, ctx) => (v === null || v === undefined ? '-' : ctx?.perGam
 /**
  * @param {object} [o]
  * @param {string} [o.id='']     URL prefix (two tables on one page need different ones)
+ * @param {string[]} [o.lead=[]] column keys to put first (the first one is the sticky column)
  * @param {string[]} [o.omit=[]] column keys to leave out (e.g. 'team')
  */
-export function pitchingTableConfig({ id = '', omit = [] } = {}) {
+export function pitchingTableConfig({ id = '', omit = [], lead = [] } = {}) {
   const drop = new Set(omit);
+  // lead: keys moved to the front of every preset (player pages: ['season', 'team']).
+  const arrange = (keys) => [...lead.filter(k => keys.includes(k)), ...keys.filter(k => !lead.includes(k))].filter(k => !drop.has(k));
   return {
     id,
-    cardSub: drop.has('team') ? 'season' : 'team',
+    cardSub: drop.has('team') || lead[0] === 'team' ? 'season' : 'team',
     columns: [
       playerColumn({ page: 'pitcher.html' }),
       teamColumn(),
@@ -78,7 +81,7 @@ export function pitchingTableConfig({ id = '', omit = [] } = {}) {
     ],
     presets: [
       { key: 'standard', label: 'Standard', sort: '-IP', card: ['G', 'IP', 'ERA', 'RG'],
-        columns: ['name', 'team', 'season', 'G', 'IP', 'R', 'ERA', 'RG'].filter(k => !drop.has(k)) }
+        columns: arrange(['name', 'team', 'season', 'G', 'IP', 'R', 'ERA', 'RG']) }
     ],
     games: r => r.games,
     qualifier: (state) => state.combine

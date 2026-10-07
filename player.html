@@ -2525,6 +2525,11 @@
       font-size: 1.5rem;
     }
   }
+
+  .player-subs-filter { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.75rem; font-size: 0.9rem; }
+  .player-subs-filter[hidden] { display: none; }
+  .player-subs-filter label { font-weight: 600; }
+  .player-subs-filter select { padding: 0.35rem 0.6rem; border-radius: 6px; border: 1px solid var(--color-border-strong, #cdd1c9); background: var(--color-surface, #fff); color: inherit; font: inherit; }
 </style>
 <link rel="stylesheet" href="mobile-enhancements.css">
 </head>
@@ -2652,49 +2657,16 @@
 
   <div id="statsContainer" style="display: none;">
     <div class="stats-section">
-      <h2>Regular Season Stats</h2>
-      <table id="regularStatsTable">
-        <thead>
-          <tr>
-            <th>Year</th>
-            <th>Season</th>
-            <th>Team</th>
-            <th>Games</th>
-            <th>At Bats</th>
-            <th>Hits</th>
-            <th>Runs</th>
-            <th>Walks</th>
-            <th>AcesBPI</th>
-            <th>BA</th>
-            <th>OBP</th>
-            <th>Sub</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <div class="stats-section">
-      <h2>Substitute Season Stats</h2>
-      <table id="subStatsTable">
-        <thead>
-          <tr>
-            <th>Year</th>
-            <th>Season</th>
-            <th>Team</th>
-            <th>Games</th>
-            <th>At Bats</th>
-            <th>Hits</th>
-            <th>Runs</th>
-            <th>Walks</th>
-            <th>AcesBPI</th>
-            <th>BA</th>
-            <th>OBP</th>
-            <th>Sub</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <h2>Season Stats</h2>
+      <div class="player-subs-filter" id="playerSubsWrap" hidden>
+        <label for="playerSubsFilter">Subs:</label>
+        <select id="playerSubsFilter">
+          <option value="include">Include sub games</option>
+          <option value="exclude">Exclude sub games</option>
+          <option value="only">Sub games only</option>
+        </select>
+      </div>
+      <div id="playerBattingTable"></div>
     </div>
 
     <div class="stats-section">
@@ -2930,20 +2902,7 @@
         <!-- Season breakdown -->
         <div class="stats-section">
           <h2>⚾ Season Pitching Stats</h2>
-          <table id="pitchingSeasonTable">
-            <thead>
-              <tr>
-                <th>Year</th>
-                <th>Season</th>
-                <th>Team</th>
-                <th>G</th>
-                <th>IP</th>
-                <th>RA</th>
-                <th>ERA</th>
-              </tr>
-            </thead>
-            <tbody id="pitchingSeasonBody"></tbody>
-          </table>
+          <div id="playerPitchingTable"></div>
         </div>
 
         <!-- Career summary -->
@@ -3728,6 +3687,12 @@
   // Aliased: this script has locals named battingAverage / onBasePercentage.
   import { battingAverage as calcAvg, onBasePct as calcObp, era as calcEra, QUALIFIERS } from './js/domain/stats.js';
   import { parseGameDate } from './js/domain/dates.js';
+  import { formatIP } from './js/ui/format.js';
+  import { parseStatSeasonId, seasonLabel, seasonSortKey, inningsValue } from './js/domain/season-ids.js';
+  import { applyTeamGames } from './js/data/team-games.js';
+  import { mountStatTable } from './js/ui/table.js';
+  import { buildBattingRows, battingTableConfig } from './js/ui/batting-stats.js';
+  import { pitchingTableConfig } from './js/ui/pitching-stats.js';
 
   // Track current user and whether they can edit this player's photo
   let currentUser = null;
@@ -4869,47 +4834,33 @@
     checkPhotoEditPermission();
   }
 
+  // Season stats: one js/ui/table.js table for regular and sub seasons (Sub
+  // column + Subs filter), Season as the sticky first column.
+  let playerBattingTable = null;
   function populateStatsTables(stats, playerId, careerStats) {
-    const regularStats = stats.filter(s => s.sub === 'No');
-    const regularTbody = document.querySelector('#regularStatsTable tbody');
-    regularTbody.innerHTML = regularStats.map(s => `
-      <tr>
-        <td>${s.year}</td>
-        <td>${s.season}</td>
-        <td><a href="team.html?team=${encodeURIComponent(s.team)}" class="team-link">${s.team}</a></td>
-        <td>${s.games}</td>
-        <td>${s.atBats}</td>
-        <td>${s.hits}</td>
-        <td>${s.runs}</td>
-        <td>${s.walks}</td>
-        <td>${typeof s.AcesWar === 'number' ? s.AcesWar.toFixed(2) : 'N/A'}</td>
-        <td>${typeof s.BA === 'number' ? s.BA.toFixed(3) : 'N/A'}</td>
-        <td>${typeof s.OBP === 'number' ? s.OBP.toFixed(3) : 'N/A'}</td>
-        <td>${s.sub}</td>
-      </tr>
-    `).join('');
-
-    const subStats = stats.filter(s => s.sub === 'Yes');
-    const subTbody = document.querySelector('#subStatsTable tbody');
-    if (subStats.length > 0) {
-      subTbody.innerHTML = subStats.map(s => `
-        <tr>
-          <td>${s.year}</td>
-          <td>${s.season}</td>
-          <td><a href="team.html?team=${encodeURIComponent(s.team)}" class="team-link">${s.team}</a></td>
-          <td>${s.games}</td>
-          <td>${s.atBats}</td>
-          <td>${s.hits}</td>
-          <td>${s.runs}</td>
-          <td>${s.walks}</td>
-          <td>${typeof s.AcesWar === 'number' ? s.AcesWar.toFixed(2) : 'N/A'}</td>
-          <td>${typeof s.BA === 'number' ? s.BA.toFixed(3) : 'N/A'}</td>
-          <td>${typeof s.OBP === 'number' ? s.OBP.toFixed(3) : 'N/A'}</td>
-          <td><span class="sub-yes">${s.sub}</span></td>
-        </tr>
-      `).join('');
-    } else {
-      subTbody.innerHTML = '<tr><td colspan="12">No substitute stats</td></tr>';
+    const resolved = currentPlayerData?.resolvedPlayer;
+    const rows = resolved ? buildBattingRows([resolved]) : [];
+    const name = currentPlayerData?.playerName || '';
+    const el = document.getElementById('playerBattingTable');
+    if (el && !playerBattingTable) {
+      playerBattingTable = mountStatTable(el, battingTableConfig({ id: 'bat', omit: ['name'], lead: ['season', 'team'] }), {
+        emptyMessage: 'No batting stats yet.',
+        exportName: `aces-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-batting`,
+        exportTitle: `${name} batting`
+      });
+    }
+    if (playerBattingTable) {
+      const select = document.getElementById('playerSubsFilter');
+      const wrap = document.getElementById('playerSubsWrap');
+      if (wrap) wrap.hidden = !rows.some(r => r.sub);
+      const apply = () => {
+        const v = select ? select.value : 'include';
+        playerBattingTable.setRows(rows.filter(r => (v === 'exclude' ? !r.sub : v === 'only' ? r.sub : true)));
+      };
+      if (select && !select.dataset.bound) { select.addEventListener('change', apply); select.dataset.bound = '1'; }
+      apply();
+      // Team games for Qualified (2.0 PA per team game).
+      applyTeamGames(rows).then(() => playerBattingTable.refresh()).catch(err => console.warn('[player] team games', err));
     }
 
     calculateCareerStats(stats, careerStats);
@@ -6136,8 +6087,8 @@
   }
 
   function fmtIP(ip) {
-    // Softball IP can be 0.1 increments — display with 1 decimal
-    return (ip ?? 0).toFixed(1);
+    // Baseball thirds: 5.333 -> '5.1'; stored thirds (5.1) pass through.
+    return formatIP(ip ?? 0);
   }
 
   // ERA for 7-inning games: (RA / IP) * 7
@@ -6168,7 +6119,7 @@
     // Totals from game-level docs
     const gameTotals = pitchingGames.reduce((acc, g) => {
       acc.games++;
-      acc.ip += g.inningsPitched ?? 0;
+      acc.ip += inningsValue(g.inningsPitched ?? 0);
       acc.ra += g.runsAllowed ?? 0;
       return acc;
     }, { games: 0, ip: 0, ra: 0 });
@@ -6176,7 +6127,7 @@
     // Totals from historical aggregated seasons
     const histTotals = historicalSeasons.reduce((acc, s) => {
       acc.games += Number(s.games)         || 0;
-      acc.ip    += Number(s.inningsPitched) || 0;
+      acc.ip    += inningsValue(s.inningsPitched);
       acc.ra    += Number(s.runsAllowed)    || 0;
       return acc;
     }, { games: 0, ip: 0, ra: 0 });
@@ -6198,75 +6149,45 @@
     `;
   }
 
+  // Season pitching: stored seasons before PITCHING_GAME_LEVEL_FROM plus
+  // game-level docs added up per season, in one js/ui/table.js table.
+  let playerPitchingTable = null;
   function renderPitchingSeasons(historicalSeasons = []) {
-    const seasonOrder = { 'fall': 3, 'summer': 2, 'spring': 1 };
-    const allRows = [];
+    const name = currentPlayerData?.playerName || '';
+    const base = { id: currentPlayerData?.playerId || '', ids: [], name, seasonCount: 1, sub: false, teamGames: 0 };
+    const make = (seasonId, team, games, ip, runsAllowed) => {
+      const sid = parseStatSeasonId(seasonId);
+      const teamName = capitalize(String(team || '').toLowerCase());
+      return { ...base, team: teamName, teamKey: teamName.toLowerCase(), seasonId: sid.id || seasonId,
+        seasonLabel: seasonLabel(sid.id || seasonId), seasonKey: seasonSortKey(sid.id || seasonId), games, ip, runsAllowed };
+    };
 
-    // ── Historical seasons from aggregatedPlayerStats ──────────────────────
-    historicalSeasons.forEach(s => {
-      const parts = (s.seasonId || '').split('-');
-      const year = parts[0] || s.seasonId;
-      const term = parts[1] ? parts[1].charAt(0).toUpperCase() + parts[1].slice(1) : '';
-      const ip  = Number(s.inningsPitched) || 0;
-      const ra  = Number(s.runsAllowed)    || 0;
-      // Prefer stored earnedRunAverage; fall back to calculation
-      let eraDisplay;
-      if (s.earnedRunAverage !== undefined && s.earnedRunAverage !== null && s.earnedRunAverage !== 'N/A') {
-        eraDisplay = Number(s.earnedRunAverage).toFixed(2);
-      } else {
-        eraDisplay = fmtERA(ra, ip);
-      }
-      allRows.push({
-        sortKey: s.seasonId || '',
-        html: `<tr>
-          <td>${year}</td><td>${term}</td>
-          <td>${capitalize(s.team || '')}</td>
-          <td>${Number(s.games) || 0}</td>
-          <td>${fmtIP(ip)}</td>
-          <td>${ra}</td>
-          <td>${eraDisplay}</td>
-        </tr>`
-      });
-    });
+    const rows = historicalSeasons.map(s =>
+      make(s.seasonId, s.team, Number(s.games) || 0, inningsValue(s.inningsPitched), Number(s.runsAllowed) || 0));
 
-    // ── Game-level seasons (2026-summer+) ──────────────────────────────────
-    const gameSeasonsMap = {};
+    const bySeason = {};
     pitchingGames.forEach(g => {
       const sid = g.seasonId || 'Unknown';
-      if (!gameSeasonsMap[sid]) gameSeasonsMap[sid] = { games: 0, ip: 0, ra: 0, team: g.teamId || '' };
-      gameSeasonsMap[sid].games++;
-      gameSeasonsMap[sid].ip += g.inningsPitched ?? 0;
-      gameSeasonsMap[sid].ra += g.runsAllowed ?? 0;
-      if (g.teamId) gameSeasonsMap[sid].team = g.teamId;
+      bySeason[sid] ??= { games: 0, ip: 0, ra: 0, team: '' };
+      bySeason[sid].games++;
+      bySeason[sid].ip += inningsValue(g.inningsPitched ?? 0);
+      bySeason[sid].ra += g.runsAllowed ?? 0;
+      if (g.teamId) bySeason[sid].team = g.teamId;
     });
+    Object.entries(bySeason).forEach(([sid, t]) => rows.push(make(sid, t.team, t.games, t.ip, t.ra)));
+    rows.sort((a, b) => b.seasonKey - a.seasonKey);
 
-    Object.entries(gameSeasonsMap).forEach(([seasonId, s]) => {
-      const parts = seasonId.split('-');
-      const year = parts[0] || seasonId;
-      const term = parts[1] ? parts[1].charAt(0).toUpperCase() + parts[1].slice(1) : '';
-      allRows.push({
-        sortKey: seasonId,
-        html: `<tr>
-          <td>${year}</td><td>${term}</td>
-          <td>${s.team}</td>
-          <td>${s.games}</td>
-          <td>${fmtIP(s.ip)}</td>
-          <td>${s.ra}</td>
-          <td>${fmtERA(s.ra, s.ip)}</td>
-        </tr>`
+    const el = document.getElementById('playerPitchingTable');
+    if (!el) return;
+    if (!playerPitchingTable) {
+      playerPitchingTable = mountStatTable(el, pitchingTableConfig({ id: 'pit', omit: ['name'], lead: ['season', 'team'] }), {
+        emptyMessage: 'No pitching stats yet.',
+        exportName: `aces-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-pitching`,
+        exportTitle: `${name} pitching`
       });
-    });
-
-    // Sort newest first
-    allRows.sort((a, b) => {
-      const [yearA, termA = ''] = a.sortKey.split('-');
-      const [yearB, termB = ''] = b.sortKey.split('-');
-      if (yearA !== yearB) return yearB.localeCompare(yearA);
-      return (seasonOrder[termB] || 0) - (seasonOrder[termA] || 0);
-    });
-
-    document.getElementById('pitchingSeasonBody').innerHTML =
-      allRows.length ? allRows.map(r => r.html).join('') : '<tr><td colspan="7">No data</td></tr>';
+    }
+    playerPitchingTable.setRows(rows);
+    applyTeamGames(rows).then(() => playerPitchingTable.refresh()).catch(err => console.warn('[player] team games', err));
   }
 
   function renderPitchingGameLog() {
