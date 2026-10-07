@@ -324,10 +324,13 @@ export function locatePage(pathOrUrl) {
 
 /**
  * Whether a page shows for this viewer.
- * ctx: { signedIn, profile, phase, hasRole(profile, role), isVisible(id) }
+ * ctx: { signedIn, profile, phase, hasRole(profile, role), isVisible(id), currentId }
+ * The page being viewed (currentId) always shows, so its tab is there even
+ * while it is hidden or out of phase for everyone else.
  */
 export function pageAllowed(page, ctx = {}) {
-  const { signedIn = false, profile = null, phase = null, hasRole = null, isVisible = null } = ctx;
+  const { signedIn = false, profile = null, phase = null, hasRole = null, isVisible = null, currentId = null } = ctx;
+  if (currentId && page.id === currentId) return true;
   if (isVisible && !isVisible(page.id)) return false;
   if ((page.signedIn || page.role) && !signedIn) return false;
   if (page.role && !(hasRole && hasRole(profile, page.role))) return false;

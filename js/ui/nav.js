@@ -59,9 +59,9 @@ function link(page, cls, current) {
 
 function render() {
   const { user, profile, phase } = state;
-  const ctx = { signedIn: !!user, profile, phase, hasRole, isVisible: isPageVisible };
-  const nav = buildNav(ctx);
   const here = locatePage(location.pathname);
+  const ctx = { signedIn: !!user, profile, phase, hasRole, isVisible: isPageVisible, currentId: here?.pageId };
+  const nav = buildNav(ctx);
   const hub = nav.hubs.find((h) => h.id === here?.hubId);
   const tab = hub?.tabs.find((t) => (t.key || t.id) === here?.tabKey);
 
