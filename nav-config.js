@@ -169,12 +169,12 @@ export const NAV_HUBS = [
     id: 'history', label: 'History', icon: 'scroll',
     tabs: [
       { id: 'seasons', href: 'seasons.html', label: 'Seasons', icon: 'calendar' },
-      { id: 'champions', href: 'champions.html', label: 'Champions', icon: 'trophy' },
+      { id: 'champions', href: 'champions.html', label: 'Champions', icon: 'trophy', phase: 'offseason' },
       { key: 'awards', label: 'Awards', icon: 'award', pages: [
         { id: 'awards', href: 'awards.html', label: 'Awards', icon: 'award' },
         { id: 'aceys-2026', href: 'aceys-2026.html', label: 'Aceys 2026', icon: 'star' },
       ] },
-      { id: 'recap', href: 'recap.html', label: 'Year in review', icon: 'book',
+      { id: 'recap', href: 'recap.html', label: 'Year in review', icon: 'book', phase: 'offseason',
         also: ['aces-wrapped.html'] },
       { id: 'playoff-history', href: 'playoff-history.html', label: 'Playoff history', icon: 'flag' },
       { id: 'trophy-case', href: 'trophy-case.html', label: 'Trophy case', icon: 'medal',
