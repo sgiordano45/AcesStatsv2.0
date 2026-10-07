@@ -34,9 +34,6 @@
 .aces-st .aces-table thead th.is-first { color: var(--color-text-muted); }
 .aces-st .aces-table a { color: var(--color-link); text-decoration: none; }
 .aces-st .aces-table a:hover { text-decoration: underline; }
-.aces-st .aces-table th[aria-sort] .aces-sort { color: var(--color-text); }
-.aces-st .aces-table th[aria-sort="descending"] .aces-sort::after { content: " \25BE"; }
-.aces-st .aces-table th[aria-sort="ascending"] .aces-sort::after { content: " \25B4"; }
 .aces-st .aces-table th.is-num .aces-sort { margin-left: auto; }
 
 .aces-st__skeleton { padding: var(--space-2); }
@@ -48,6 +45,18 @@
 @media (max-width: 768px) {
   .aces-st .aces-table-wrap:has(> table) { display: none; }
   .aces-st__cards { display: grid; gap: var(--space-2); }
+  /* One row you swipe sideways, so the controls don't push the stats off the first screen. */
+  .aces-st__bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-left: calc(-1 * var(--space-4));
+    margin-right: calc(-1 * var(--space-4));
+    padding: 0 var(--space-4) var(--space-1);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .aces-st__bar::-webkit-scrollbar { display: none; }
+  .aces-st__bar > *, .aces-st__chips { flex: none; flex-wrap: nowrap; }
   .aces-st__actions { margin-left: 0; }
 }
 
@@ -85,6 +94,7 @@
 .aces-st__stat { padding: 4px 6px; border-radius: var(--radius-sm, 4px); text-align: center; }
 .aces-st__stat dt { color: var(--color-text-muted); font-size: 11px; font-weight: var(--fw-semibold); }
 .aces-st__stat dd { margin: 0; font-size: var(--fs-md); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
+.aces-st__stat.is-text dd { font-size: var(--fs-sm); font-weight: var(--fw-medium); overflow-wrap: anywhere; }
 .aces-st__stat.is-top { background: var(--color-rank-top); }
 .aces-st__stat.is-bottom { background: var(--color-rank-bottom); }
 .aces-st__stat.is-bottom dd { color: var(--color-text-muted); font-weight: var(--fw-regular); }

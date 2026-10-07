@@ -38,7 +38,8 @@ const TALL_AFTER_ROWS = 15;   // more rows than this: the table scrolls inside a
 function ensureStyles() {
   for (const file of ['css/tokens.css', 'css/components.css', 'css/table.css']) {
     const href = new URL(file, SITE_ROOT).href;
-    if (document.querySelector(`link[href="${href}"], link[href="${file}"], link[href="./${file}"]`)) continue;
+    // link.href is always absolute, so this matches "../css/x.css", "css/x.css" and full URLs alike.
+    if ([...document.querySelectorAll('link[rel="stylesheet"]')].some(l => l.href === href)) continue;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = href;
@@ -185,7 +186,7 @@ export function mountStatTable(el, config, options = {}) {
       const rest = r.cells.filter(c => !keySet.has(c.col.key));
       const rc = typeof opts.rowClass === 'function' ? opts.rowClass(r.row) : '';
       const sub = subKey && idx(subKey) >= 0 ? `<span class="aces-st__card-sub">${cellHtml(cellOf(subKey), r.row, ctx)}</span>` : '';
-      const stat = (c) => `<div class="aces-st__stat${c.shade ? ` is-${c.shade}` : ''}"><dt>${esc(c.col.label)}</dt><dd>${cellHtml(c, r.row, ctx)}</dd></div>`;
+      const stat = (c) => `<div class="aces-st__stat${c.col.type === 'text' ? ' is-text' : ''}${c.shade ? ` is-${c.shade}` : ''}"><dt>${esc(c.col.label)}</dt><dd>${cellHtml(c, r.row, ctx)}</dd></div>`;
       const open = expanded.has(n);
       return `<li class="aces-st__card${rc ? ' ' + esc(rc) : ''}${open ? ' is-open' : ''}" data-card="${n}">
         <div class="aces-st__card-head"><span class="aces-st__card-name">${cellHtml(r.cells[0], r.row, ctx)}</span>${sub}
