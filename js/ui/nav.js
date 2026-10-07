@@ -66,7 +66,7 @@ function render() {
   const tab = hub?.tabs.find((t) => (t.key || t.id) === here?.tabKey);
 
   // Top bar
-  const hubLinks = nav.hubs.filter((h) => h.href).map((h) => {
+  const hubLinks = nav.hubs.filter((h) => h.href && !h.utility).map((h) => {
     const active = h.id === here?.hubId;
     const label = h.shortLabel
       ? `<span class="aces-hub__full">${esc(h.label)}</span><span class="aces-hub__short">${esc(h.shortLabel)}</span>`
@@ -109,6 +109,7 @@ function render() {
       <nav class="aces-hubs" aria-label="Site">${hubLinks}</nav>
       <div class="aces-header__end">
         <div class="aces-header__search" data-nav-search></div>
+        ${helpButton(nav, here)}
         <button type="button" class="aces-icon-btn" data-theme-toggle aria-label="Switch light or dark mode">
           <span class="aces-theme-moon">${icon('moon')}</span><span class="aces-theme-sun">${icon('sun')}</span>
         </button>
@@ -136,10 +137,37 @@ function render() {
   syncSpacer();
 }
 
+// The ? button opens the Help area (help.html and the guides).
+function helpButton(nav, here) {
+  const help = nav.hubs.find((h) => h.id === 'help');
+  if (!help?.href) return '';
+  const active = here?.hubId === 'help';
+  return `<a class="aces-icon-btn${active ? ' is-active' : ''}" href="${esc(url(help.href))}" aria-label="Help and guides" title="Help and guides"${active ? ' aria-current="true"' : ''}>${icon('help')}</a>`;
+}
+
 // The bar is fixed; a spacer of the same height keeps page content below it.
 function syncSpacer() {
   if (!els) return;
   els.spacer.style.height = `${els.header.offsetHeight}px`;
+  liftStickies();
+}
+
+// Legacy bars that stick at top: 0 would slide under the fixed header, so
+// they stick just below it instead. Runs on mount, on load and after resizes.
+function liftStickies() {
+  const h = els.header.offsetHeight;
+  if (!h) return; // header hidden (phones)
+  document.querySelectorAll('body *').forEach((el) => {
+    if (els.header.contains(el)) return;
+    const cs = getComputedStyle(el);
+    if (cs.position !== 'sticky') return;
+    if (el.dataset.acesStickyTop === undefined) {
+      const top = parseFloat(cs.top);
+      if (Number.isNaN(top) || top >= h) return;
+      el.dataset.acesStickyTop = String(top);
+    }
+    el.style.top = `${h + parseFloat(el.dataset.acesStickyTop)}px`;
+  });
 }
 
 function setMenu(open) {
@@ -187,7 +215,9 @@ export async function mountHeader() {
   ensureStyles();
   ensureThemeScript();
 
-  const header = document.createElement('header');
+  // A div, not <header>: some legacy pages style every <header> element.
+  const header = document.createElement('div');
+  header.setAttribute('role', 'banner');
   header.id = 'aces-header';
   header.className = 'aces-header';
   const spacer = document.createElement('div');
@@ -206,6 +236,7 @@ export async function mountHeader() {
   hideEmptyFiltersNav();
 
   render(); // signed-out shape straight away; filled in when auth answers
+  window.addEventListener('load', () => { liftStickies(); setTimeout(liftStickies, 1500); });
   const [phase] = await Promise.all([
     getPhase().catch(() => null),
     loadPageVisibility().catch(() => null),

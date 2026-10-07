@@ -97,12 +97,15 @@ export function getFilteredNavStructure() {
 //   role    a hasRole() name or list ('team-staff', 'captain', 'league-staff',
 //           'admin', or a specialRoles key). Implies signedIn.
 //   phase   'regular' | 'playoffs' | 'offseason' (or a list): shown only then.
+//   ignoreSiteConfig  list it whatever siteConfig/navigation/pages says.
 //   also    other pages that belong here: no tab of their own, but opening
 //           one highlights this tab (detail pages, pages merged in Phase 3).
 // A tab is a page, or a group { key, label, icon, pages: [...] } that shows a
 // second row of tabs. A group's row is the tab set its merged page gets in
 // Phase 3; it links to its first visible page.
 // ===========================================================================
+
+const CONTRIBUTOR_ROLES = ['contributor', 'photographer', 'oddsmaker', 'eulogist', 'mediaManager', 'league-staff'];
 
 export const NAV_HUBS = [
   {
@@ -129,8 +132,16 @@ export const NAV_HUBS = [
         { id: 'rule-review', href: 'rule-review.html', label: 'Review', icon: 'clipboard-check' },
       ] },
       { id: 'activity', href: 'activity.html', label: 'Activity', icon: 'activity' },
-      { id: 'offseason-hub', href: 'offseason.html', label: 'Offseason', icon: 'snowflake', phase: 'offseason',
-        also: ['offseason-schedule.html', 'offseason-roster.html', 'draft.html', 'countdown.html'] },
+      // Offseason planning: admin and league staff only, in any phase, so they
+      // can prepare before the offseason starts. Listed whatever
+      // siteConfig/navigation/pages says (the old nav still reads those docs).
+      { key: 'offseason', label: 'Offseason', icon: 'snowflake', pages: [
+        { id: 'offseason-hub', href: 'offseason.html', label: 'Offseason hub', icon: 'snowflake', role: 'league-staff', ignoreSiteConfig: true },
+        { id: 'offseason-schedule', href: 'offseason-schedule.html', label: 'Schedule', icon: 'calendar-days', role: 'league-staff', ignoreSiteConfig: true },
+        { id: 'offseason-roster', href: 'offseason-roster.html', label: 'Rosters', icon: 'users', role: 'league-staff', ignoreSiteConfig: true },
+        { id: 'draft', href: 'draft.html', label: 'Draft', icon: 'shuffle', role: 'league-staff', ignoreSiteConfig: true },
+        { id: 'countdown', href: 'countdown.html', label: 'Countdown', icon: 'timer', role: 'league-staff', ignoreSiteConfig: true },
+      ] },
     ],
   },
   {
@@ -203,10 +214,27 @@ export const NAV_HUBS = [
       { id: 'violations', href: 'violations.html', label: 'Wall of Shame', icon: 'flame' },
     ],
   },
+  {
+    // Help: not one of the five hubs in the bar. It opens from the ? button in
+    // the header (and the More sheet on phones) and gets its own tab row.
+    id: 'help', label: 'Help', icon: 'help', utility: true,
+    tabs: [
+      { id: 'help', href: 'help.html', label: 'Help center', icon: 'help' },
+      { id: 'features-guide', href: 'aces-features-guide.html', label: 'Site features', icon: 'sparkles' },
+      { id: 'profile-setup-guide', href: 'profile-setup-guide.html', label: 'Profile setup', icon: 'user' },
+      { id: 'signup-guide', href: 'mountainside-aces-signup-guide.html', label: 'Signing up', icon: 'user-plus' },
+      { id: 'scoring-guide', href: 'scoring-guide.html', label: 'Scoring', icon: 'hash' },
+      { id: 'calendar-guide', href: 'calendar-export-guide.html', label: 'Calendar', icon: 'calendar' },
+      { id: 'game-tracker-guide', href: 'game-tracker-guide.html', label: 'Game tracker', icon: 'clipboard', role: 'team-staff' },
+      { id: 'captain-guide', href: 'captain-guide.html', label: "Captain's guide", icon: 'book', role: 'captain' },
+      { id: 'contributor-guide', href: 'contributor-guide.html', label: 'Contributors', icon: 'sparkles', role: CONTRIBUTOR_ROLES },
+      { id: 'league-staff-guide', href: 'league-staff-guide.html', label: 'League staff', icon: 'shield', role: 'league-staff' },
+      { id: 'offseason-guide', href: 'offseason-guide.html', label: 'Offseason', icon: 'snowflake', role: 'league-staff' },
+    ],
+  },
 ];
 
 // The avatar menu ("Me"). Sections show only when one of their pages does.
-const CONTRIBUTOR_ROLES = ['contributor', 'photographer', 'oddsmaker', 'eulogist', 'mediaManager', 'league-staff'];
 
 export const ME_MENU = [
   {
@@ -230,7 +258,6 @@ export const ME_MENU = [
       { id: 'captain-roster-edit', href: 'captain-roster-edit.html', label: 'Edit roster', icon: 'edit', role: 'team-staff' },
       { id: 'manage-team', href: 'manage-team.html', label: 'Manage team', icon: 'settings', role: 'team-staff' },
       { id: 'team-scouting-report', href: 'team-scouting-report.html', label: 'Team scouting report', icon: 'binoculars', role: 'captain' },
-      { id: 'captain-guide', href: 'captain-guide.html', label: "Captain's guide", icon: 'book', role: 'captain' },
     ],
   },
   {
@@ -254,10 +281,6 @@ export const ME_MENU = [
   {
     key: 'more', label: null, pages: [
       { id: 'feature-submit', href: 'feature-submit.html', label: 'Feedback', icon: 'message' },
-      { id: 'help', href: 'help.html', label: 'Help', icon: 'help',
-        also: ['aces-features-guide.html', 'contributor-guide.html', 'game-tracker-guide.html',
-               'league-staff-guide.html', 'offseason-guide.html', 'profile-setup-guide.html',
-               'scoring-guide.html', 'mountainside-aces-signup-guide.html', 'calendar-export-guide.html'] },
       { id: 'aces-shop', href: 'https://acesmountainside.com/', label: 'Aces Shop', icon: 'external-link', external: true },
     ],
   },
@@ -331,7 +354,7 @@ export function locatePage(pathOrUrl) {
 export function pageAllowed(page, ctx = {}) {
   const { signedIn = false, profile = null, phase = null, hasRole = null, isVisible = null, currentId = null } = ctx;
   if (currentId && page.id === currentId) return true;
-  if (isVisible && !isVisible(page.id)) return false;
+  if (isVisible && !page.ignoreSiteConfig && !isVisible(page.id)) return false;
   if ((page.signedIn || page.role) && !signedIn) return false;
   if (page.role && !(hasRole && hasRole(profile, page.role))) return false;
   if (page.phase && !asList(page.phase).includes(phase)) return false;

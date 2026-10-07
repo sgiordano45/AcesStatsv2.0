@@ -79,6 +79,7 @@
   background: transparent; color: var(--nav-ink); cursor: pointer; font-size: 18px;
 }
 .aces-icon-btn:hover { background: var(--nav-hover); }
+.aces-icon-btn.is-active { background: var(--nav-hover); box-shadow: inset 0 -3px 0 var(--nav-gold); border-radius: var(--radius-md, 8px); }
 .aces-theme-sun { display: none; }
 :root[data-theme="dark"] .aces-theme-sun { display: inline; }
 :root[data-theme="dark"] .aces-theme-moon { display: none; }
@@ -200,4 +201,8 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .aces-hub { transition: none; }
+}
+
+@media print {
+  .aces-header, .aces-header-spacer { display: none !important; }
 }

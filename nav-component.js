@@ -363,6 +363,15 @@ export class NavigationComponent {
     });
     
     const { mobile, desktop } = nav.render();
+
+    // The phone menu needs nav-styles.css; some pages never linked it.
+    const navCss = new URL('./nav-styles.css', import.meta.url).href;
+    if (![...document.querySelectorAll('link[rel="stylesheet"]')].some((l) => l.href === navCss)) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = navCss;
+      document.head.appendChild(link);
+    }
     
     // Insert mobile nav BEFORE page-container (not inside it)
     const pageContainer = document.querySelector('.page-container');
