@@ -453,7 +453,7 @@ body {
   import { playerColumn, teamColumn, seasonColumn, combinedTeam, combinedSeason } from './js/ui/stat-columns.js';
   import { mountStatFilters, pickDefaultSeason } from './js/ui/stat-filters.js';
 
-  const COUNT_FIELDS = ['games', 'ip', 'runsAllowed', 'hits', 'walks', 'strikeouts', 'wins', 'losses', 'saves'];
+  const COUNT_FIELDS = ['games', 'ip', 'runsAllowed'];
   const $ = (id) => document.getElementById(id);
 
   let allRows = [];   // one row per pitcher-season; the page filters apply on top
@@ -479,17 +479,9 @@ body {
           seasonKey: seasonSortKey(sid.id),
           seasonCount: 1,
           sub: sid.isSub,
-          // W/L/SV, H, BB and K are recorded from 2026 on; older records have none or zeros.
-          hasDetail: 'wins' in s,
           games: Number(s.games) || 0,
           ip: inningsValue(s.inningsPitched),   // thirds notation (5.1) -> 5.333
           runsAllowed: Number(s.runsAllowed) || 0,
-          hits: Number(s.hits) || 0,
-          walks: Number(s.walks) || 0,
-          strikeouts: Number(s.strikeouts) || 0,
-          wins: Number(s.wins) || 0,
-          losses: Number(s.losses) || 0,
-          saves: Number(s.saves) || 0,
           teamGames: 0
         });
       }
@@ -505,8 +497,6 @@ body {
 
   // ---- table config ----------------------------------------------------------
 
-  const allDetail = (rows) => rows.length > 0 && rows.every(r => r.hasDetail);
-  const per7 = (n, ip) => (ip > 0 ? (n * 7) / ip : null);
   const rate = (v) => fmtRate(v);
   // Innings show as baseball thirds (5.1 = 5 1/3); per game they show as a decimal.
   const ipText = (v, r, ctx) => (v === null || v === undefined ? '-' : ctx?.perGame ? v.toFixed(2) : formatIP(v));
@@ -522,24 +512,14 @@ body {
       { key: 'IP', label: 'IP', title: 'Innings pitched', type: 'count', value: r => r.ip, format: ipText },
       { key: 'R', label: 'R', title: 'Runs allowed', type: 'count', shade: false, value: r => r.runsAllowed },
       { key: 'ERA', label: 'ERA', type: 'rate', lowerIsBetter: true, value: r => era(r.runsAllowed, r.ip), format: rate },
-      { key: 'W', label: 'W', title: 'Wins', type: 'count', value: r => r.wins, when: allDetail },
-      { key: 'L', label: 'L', title: 'Losses', type: 'count', shade: false, value: r => r.losses, when: allDetail },
-      { key: 'SV', label: 'SV', title: 'Saves', type: 'count', value: r => r.saves, when: allDetail },
-      { key: 'H', label: 'H', title: 'Hits allowed', type: 'count', shade: false, value: r => r.hits, when: allDetail },
-      { key: 'BB', label: 'BB', title: 'Walks', type: 'count', shade: false, value: r => r.walks, when: allDetail },
-      { key: 'K', label: 'K', title: 'Strikeouts', type: 'count', value: r => r.strikeouts, when: allDetail },
-      { key: 'WHIP', label: 'WHIP', title: 'Walks + hits per inning', type: 'rate', lowerIsBetter: true, value: r => (r.ip > 0 ? (r.walks + r.hits) / r.ip : null), format: rate, when: allDetail },
-      { key: 'K7', label: 'K/7', title: 'Strikeouts per 7 innings', type: 'rate', value: r => per7(r.strikeouts, r.ip), format: rate, when: allDetail },
-      { key: 'BB7', label: 'BB/7', title: 'Walks per 7 innings', type: 'rate', lowerIsBetter: true, value: r => per7(r.walks, r.ip), format: rate, when: allDetail },
       { key: 'RG', label: 'R/G', title: 'Runs allowed per game pitched', type: 'rate', lowerIsBetter: true, value: r => (r.games ? r.runsAllowed / r.games : null), format: rate }
     ],
+    // One view: hits, walks and strikeouts are only recorded for a few 2026
+    // games and W/L/SV for none, so those columns (and WHIP, K/7) wait until
+    // the game tracker records them for every game.
     presets: [
-      { key: 'standard', label: 'Standard', sort: '-IP', card: ['G', 'IP', 'R', 'ERA'],
-        columns: ['name', 'team', 'season', 'G', 'IP', 'R', 'ERA', 'W', 'L', 'SV'] },
-      { key: 'advanced', label: 'Advanced', sort: 'ERA', card: ['IP', 'ERA', 'WHIP', 'K7'],
-        columns: ['name', 'team', 'season', 'IP', 'ERA', 'RG', 'WHIP', 'K7', 'BB7'] },
-      { key: 'counting', label: 'Counting', sort: '-IP', card: ['G', 'IP', 'R', 'K'],
-        columns: ['name', 'team', 'season', 'G', 'IP', 'R', 'H', 'BB', 'K', 'W', 'L', 'SV'] }
+      { key: 'standard', label: 'Standard', sort: '-IP', card: ['G', 'IP', 'ERA', 'RG'],
+        columns: ['name', 'team', 'season', 'G', 'IP', 'R', 'ERA', 'RG'] }
     ],
     games: r => r.games,
     qualifier: (state) => state.combine
@@ -553,7 +533,6 @@ body {
         ...sumFields(group, COUNT_FIELDS),
         ...combinedTeam(group),
         ...combinedSeason(group),
-        hasDetail: group.every(r => r.hasDetail),
         teamGames: sumFields(group, ['teamGames']).teamGames
       })
     }

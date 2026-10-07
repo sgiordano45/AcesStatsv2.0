@@ -428,7 +428,7 @@ body {
   import { initPage, pageReady, showPageState, showPageError } from './js/core/app.js';
   import { capitalize, formatPlayerName, fmtAvg, fmtRate } from './js/ui/format.js';
   import { battingLine, QUALIFIERS, isQualifiedBatter, qualifierLabel } from './js/domain/stats.js';
-  import { parseStatSeasonId, seasonLabel, seasonSortKey } from './js/domain/season-ids.js';
+  import { parseStatSeasonId, seasonLabel, seasonSortKey, hasCompleteHitTypes } from './js/domain/season-ids.js';
   import { getTeamGames } from './js/data/team-games.js';
   import { mountStatTable } from './js/ui/table.js';
   import { sumFields } from './js/ui/table-model.js';
@@ -463,7 +463,7 @@ body {
           seasonKey: seasonSortKey(sid.id),
           seasonCount: 1,
           sub,
-          hasHitTypes: 'doubles' in s,
+          hasHitTypes: 'doubles' in s && hasCompleteHitTypes(sid.id),
           acesBPI: sub ? null : numOrNull(s.acesBPI),   // subs get no acesBPI
           bwar: numOrNull(s.bwarSimp),
           teamGames: 0
@@ -514,8 +514,8 @@ body {
       { key: 'BB', label: 'BB', title: 'Walks', type: 'count', value: r => r.walks },
       { key: 'BA', label: 'BA', type: 'rate', value: r => (r.atBats ? line(r).avg : null), format: avg },
       { key: 'OBP', label: 'OBP', type: 'rate', value: r => (r.atBats + r.walks ? line(r).obp : null), format: avg },
-      { key: 'SLG', label: 'SLG', title: 'Slugging (2026 on)', type: 'rate', value: r => (r.atBats ? line(r).slg : null), format: avg, when: allHitTypes },
-      { key: 'OPS', label: 'OPS', title: 'OBP + SLG (2026 on)', type: 'rate', value: r => (r.atBats ? line(r).ops : null), format: avg, when: allHitTypes },
+      { key: 'SLG', label: 'SLG', title: 'Slugging (2026 Fall on)', type: 'rate', value: r => (r.atBats ? line(r).slg : null), format: avg, when: allHitTypes },
+      { key: 'OPS', label: 'OPS', title: 'OBP + SLG (2026 Fall on)', type: 'rate', value: r => (r.atBats ? line(r).ops : null), format: avg, when: allHitTypes },
       { key: 'RPA', label: 'R/PA', title: 'Runs per plate appearance', type: 'rate', value: r => (r.atBats + r.walks ? line(r).runsPerPA : null), format: avg },
       { key: 'BPI', label: 'AcesBPI', type: 'rate', qualifiedOnly: false, value: r => r.acesBPI, format: v => fmtRate(v) },
       { key: 'bWAR', label: 'bWAR', type: 'rate', qualifiedOnly: false, value: r => r.bwar, format: v => fmtRate(v) },

@@ -12,6 +12,11 @@
 
 export const SEASON_ORDER = Object.freeze({ spring: 1, summer: 2, fall: 3 });
 
+// First season with complete extra-base hits and RBI for every game. 2026
+// Summer records have the fields, but only some games were tracked (109
+// doubles on 4,021 hits), so 2B/3B/HR/RBI/SLG/OPS start here.
+export const HIT_TYPES_FROM = '2026-fall';
+
 export function parseStatSeasonId(raw) {
   const parts = String(raw || '').toLowerCase().split('-');
   const year = parts[0] || '';
@@ -27,6 +32,11 @@ export function seasonLabel(id) {
 export function seasonSortKey(id) {
   const { year, name } = parseStatSeasonId(id);
   return (Number(year) || 0) * 10 + (SEASON_ORDER[name] || 0);
+}
+
+/** True when a season's batting records have complete 2B/3B/HR/RBI. */
+export function hasCompleteHitTypes(id) {
+  return seasonSortKey(id) >= seasonSortKey(HIT_TYPES_FROM);
 }
 
 /** Unique season IDs from a list, newest first. */
