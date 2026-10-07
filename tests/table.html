@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Stat table check</title>
+<script type="module" src="../js/core/preview-guard.js"></script>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/table.css">
+<style>
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 96px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 28px 0 8px; }
+  .muted { color: var(--color-text-muted, #64748b); font-size: 13px; }
+  .box { border: 1px solid var(--color-border, #e2e8f0); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; overflow-x: auto; }
+  #results table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  #results th, #results td { padding: 4px 8px; border-top: 1px solid var(--color-border, #e2e8f0); text-align: left; vertical-align: top; }
+  .pass { color: #2d6a16; font-weight: 700; }
+  .fail { color: #b91c1c; font-weight: 700; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Stat table check</h1>
+  <p class="muted">Tests js/ui/table-model.js (sorting, qualified, per game, combining, shading, CSV, URL) and shows js/ui/table.js on made-up data. No Firebase. The demo writes its settings to this page's URL.</p>
+  <div class="box" id="summary">Running...</div>
+  <div class="box" id="results"></div>
+
+  <h2>Demo (made-up players)</h2>
+  <p class="muted">40 player-seasons over 2 seasons. Try the presets, Qualified (min 2.0 PA per team game, 10 team games a season), Per game, Combine seasons, sorting, Copy CSV and Share image. Under 769 px wide it turns into cards.</p>
+  <div id="demo"></div>
+</main>
+
+<script type="module">
+import * as M from '../js/ui/table-model.js';
+import { mountStatTable } from '../js/ui/table.js';
+import { escapeHtml as esc } from '../js/ui/format.js';
+
+// ---- made-up data (seeded, so it is the same every load) -----------------
+let seed = 7;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const TEAMS = ['teal', 'orange', 'black', 'carolina', 'army', 'purple'];
+const NAMES = ['Al Diaz','Bo Hart','Cy Moss','Dan Ruiz','Ed Kim','Flo Park','Gus Lee','Hal Cruz','Ike Shaw','Jay Bell',
+  'Kev Ng','Lou Reyes','Max Ford','Ned Ola','Oz Pratt','Pat Wu','Quin Roe','Ray Sato','Sal Vega','Ty Long'];
+const rows = [];
+for (const season of ['2026-summer', '2026-fall']) {
+  NAMES.forEach((name, i) => {
+    const games = 10 - Math.floor(rnd() * 6);
+    const atBats = Math.floor(games * (2 + rnd() * 2));
+    const hits = Math.floor(atBats * (0.3 + rnd() * 0.45));
+    const doubles = season === '2026-fall' ? Math.floor(hits * rnd() * 0.3) : 0;
+    rows.push({ id: 'p' + i, name, team: TEAMS[i % TEAMS.length], season, teamGames: 10, games, atBats, hits,
+      runs: Math.floor(hits * (0.4 + rnd() * 0.5)), walks: Math.floor(rnd() * games), doubles, hasHitTypes: season === '2026-fall' });
+  });
+}
+
+const avg = (v) => (v === null || v === undefined ? '-' : v.toFixed(3).replace(/^0/, ''));
+const pa = (r) => r.atBats + r.walks;
+const config = {
+  id: '',
+  cardSub: 'team',
+  columns: [
+    { key: 'name', label: 'Player', type: 'text', value: r => r.name, html: r => `<a href="#">${esc(r.name)}</a>` },
+    { key: 'team', label: 'Team', type: 'text', value: r => r.team,
+      html: r => r.team === 'multi' ? 'Multiple' : `<span class="aces-team-chip" data-team-color="${esc(r.team)}"><span class="aces-team-dot"></span>${esc(r.team[0].toUpperCase() + r.team.slice(1))}</span>` },
+    { key: 'season', label: 'Season', type: 'text', value: r => r.season },
+    { key: 'G', label: 'G', type: 'count', value: r => r.games, perGame: false, title: 'Games' },
+    { key: 'PA', label: 'PA', type: 'count', value: pa, title: 'Plate appearances' },
+    { key: 'AB', label: 'AB', type: 'count', value: r => r.atBats },
+    { key: 'H', label: 'H', type: 'count', value: r => r.hits },
+    { key: '2B', label: '2B', type: 'count', value: r => r.doubles, when: rs => rs.length > 0 && rs.every(r => r.hasHitTypes) },
+    { key: 'R', label: 'R', type: 'count', value: r => r.runs },
+    { key: 'BB', label: 'BB', type: 'count', value: r => r.walks },
+    { key: 'BA', label: 'BA', type: 'rate', value: r => (r.atBats ? r.hits / r.atBats : null), format: avg },
+    { key: 'OBP', label: 'OBP', type: 'rate', value: r => (pa(r) ? (r.hits + r.walks) / pa(r) : null), format: avg },
+    { key: 'SLG', label: 'SLG', type: 'rate', value: r => (r.atBats ? (r.hits + r.doubles) / r.atBats : null), format: avg, when: rs => rs.length > 0 && rs.every(r => r.hasHitTypes) }
+  ],
+  presets: [
+    { key: 'standard', label: 'Standard', columns: ['name', 'team', 'season', 'G', 'AB', 'H', 'R', 'BB', 'BA', 'OBP'], card: ['G', 'H', 'BA', 'OBP'], sort: '-BA' },
+    { key: 'advanced', label: 'Advanced', columns: ['name', 'team', 'season', 'PA', 'BA', 'OBP', 'SLG'], card: ['PA', 'BA', 'OBP', 'SLG'], sort: '-OBP' },
+    { key: 'counting', label: 'Counting', columns: ['name', 'team', 'season', 'G', 'PA', 'AB', 'H', '2B', 'R', 'BB'], card: ['G', 'H', 'R', 'BB'], sort: '-H' }
+  ],
+  games: r => r.games,
+  qualifier: () => ({ label: 'min 2.0 PA per team game', test: r => pa(r) >= 2 * r.teamGames }),
+  combine: {
+    key: r => r.id,
+    merge: g => ({ ...g[0], season: g.length > 1 ? `${g.length} seasons` : g[0].season,
+      team: new Set(g.map(r => r.team)).size > 1 ? 'multi' : g[0].team,
+      hasHitTypes: g.every(r => r.hasHitTypes),
+      ...M.sumFields(g, ['games', 'atBats', 'hits', 'runs', 'walks', 'doubles', 'teamGames']) })
+  }
+};
+
+// ---- checks --------------------------------------------------------------
+const checks = [];
+const check = (name, ok, detail = '') => checks.push({ name, ok: !!ok, detail });
+
+let v = M.computeView(config, rows, {});
+check('Default preset and sort', v.preset.key === 'standard' && v.sort.key === 'BA' && v.sort.dir === 'desc', `${v.preset.key} ${M.sortToString(v.sort)}`);
+check('Sorted best BA first', v.rows.every((r, i) => i === 0 || (r.cells[8].value ?? -1) <= (v.rows[i - 1].cells[8].value ?? -1)));
+check('2B and SLG hidden when any row lacks hit types', !M.computeView(config, rows, { preset: 'advanced' }).columns.some(c => c.key === 'SLG'));
+const fall = rows.filter(r => r.season === '2026-fall');
+check('SLG shows when every row has hit types', M.computeView(config, fall, { preset: 'advanced' }).columns.some(c => c.key === 'SLG'));
+const q = M.computeView(config, rows, { qualified: true });
+check('Qualified filter', q.rows.length === rows.filter(r => pa(r) >= 20).length && q.totalRows === rows.length, `${q.rows.length} of ${q.totalRows}`);
+const unq = v.rows.filter(r => !r.qualified);
+check('Unqualified rows never shaded on rate columns', unq.every(r => !r.cells[8].shade && !r.cells[9].shade), `${unq.length} unqualified`);
+const tops = v.rows.filter(r => r.cells[5].shade === 'top').length;
+check('About 10% shaded top (H)', tops >= 4 && tops <= 8, `${tops} of ${v.rows.length}`);
+check('Shading off', M.computeView(config, rows, { shade: false }).rows.every(r => r.cells.every(c => !c.shade)));
+const pg = M.computeView(config, rows, { perGame: true, sort: { key: 'name', dir: 'asc' } });
+const r0 = pg.rows[0];
+check('Per game divides counts, not G or rates', r0.cells[3].value === r0.row.games && Math.abs(r0.cells[5].value - r0.row.hits / r0.row.games) < 1e-9 && r0.cells[5].text.includes('.'));
+const cb = M.computeView(config, rows, { combine: true });
+check('Combine seasons: one row per player', cb.rows.length === NAMES.length && cb.rows[0].row.season === '2 seasons');
+const one = rows.filter(r => r.id === 'p3');
+check('Combine adds up counts', cb.rows.find(r => r.row.id === 'p3').row.hits === one[0].hits + one[1].hits);
+check('Missing values sort last', M.sortRows([{ a: null }, { a: 2 }, { a: 5 }], { key: 'a', type: 'count' }, 'desc').map(r => r.a).join() === '5,2,');
+check('Lower is better: shaded and sorted the other way', (() => {
+  const c = { columns: [{ key: 'n', type: 'text', value: r => r.n }, { key: 'ERA', type: 'rate', lowerIsBetter: true, value: r => r.e }], presets: [{ key: 's', columns: ['n', 'ERA'], sort: 'ERA' }] };
+  const rs = Array.from({ length: 20 }, (_, i) => ({ n: 'x' + i, e: i }));
+  const w = M.computeView(c, rs, {});
+  return w.rows[0].row.e === 0 && w.rows[0].cells[1].shade === 'top' && w.rows[19].cells[1].shade === 'bottom';
+})());
+check('Fewer than 10 rows: no shading', M.computeView(config, rows.slice(0, 9), {}).rows.every(r => r.cells.every(c => !c.shade)));
+check('CSV quoting', M.csvCell('A, "B"') === '"A, ""B"""' && M.toCSV(v).split('\r\n')[0] === 'Player,Team,Season,G,AB,H,R,BB,BA,OBP');
+const params = new URLSearchParams('season=2026-fall&bat.preset=advanced&bat.q=1&bat.sort=-OBP');
+const bc = { ...config, id: 'bat' };
+const st = M.readUrlState(bc, params);
+check('Read URL (prefixed)', st.preset === 'advanced' && st.qualified === true && st.sort.key === 'OBP' && st.shade === undefined);
+M.writeUrlState(bc, { preset: 'standard', perGame: true, shade: false }, params);
+check('Write URL keeps page keys, drops defaults', params.toString() === 'season=2026-fall&bat.per=g&bat.shade=0', params.toString());
+check('Header click: best first, then flips', M.nextSort(null, { key: 'H', type: 'count' }).dir === 'desc' && M.nextSort({ key: 'H', dir: 'desc' }, { key: 'H' }).dir === 'asc' && M.nextSort(null, { key: 'n', type: 'text' }).dir === 'asc');
+
+const failed = checks.filter(c => !c.ok).length;
+document.getElementById('summary').innerHTML = failed
+  ? `<span class="fail">FAIL</span> ${failed} of ${checks.length} checks`
+  : `<span class="pass">PASS</span> all ${checks.length} checks`;
+document.getElementById('results').innerHTML = `<table><tbody>${checks.map(c =>
+  `<tr><td>${esc(c.name)}</td><td class="${c.ok ? 'pass' : 'fail'}">${c.ok ? 'pass' : 'FAIL'}</td><td>${esc(c.detail)}</td></tr>`).join('')}</tbody></table>`;
+window.__tableCheck = { failed, total: checks.length };
+
+// ---- demo ----------------------------------------------------------------
+const table = mountStatTable(document.getElementById('demo'), config, {
+  exportName: 'aces-table-demo', exportTitle: 'Table demo · made-up players',
+  rowClass: r => (r.id === 'p4' ? 'is-me' : '')
+});
+setTimeout(() => table.setRows(rows), 600);   // shows the skeleton first
+window.__table = table;
+</script>
+</body>
+</html>
