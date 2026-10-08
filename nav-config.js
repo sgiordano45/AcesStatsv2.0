@@ -257,7 +257,7 @@ export const ME_MENU = [
   },
   {
     key: 'admin', label: 'Admin', pages: [
-      { id: 'admin-hub', href: 'admin-pages.html', label: 'Admin Hub', icon: 'settings', role: 'admin' },
+      { id: 'admin-hub', href: 'admin/index.html', label: 'Admin', icon: 'settings', role: 'league-staff', also: ['admin-pages.html'] },
       { id: 'admin-view-as', href: 'admin-view-as.html', label: 'View As', icon: 'eye', role: 'admin' },
     ],
   },
@@ -304,11 +304,12 @@ export function navPages() {
   return out;
 }
 
-/** File name of a URL or path: '/AcesStatsv2.0/' -> 'index.html'. */
+/** File name of a URL or path: '/AcesStatsv2.0/' -> 'index.html', '/AcesStatsv2.0/admin/' -> 'admin/index.html'. */
 export function pageFile(pathOrUrl = (typeof location !== 'undefined' ? location.pathname : '')) {
   const path = String(pathOrUrl).split(/[?#]/)[0];
-  const file = path.slice(path.lastIndexOf('/') + 1);
-  return file || 'index.html';
+  const file = path.slice(path.lastIndexOf('/') + 1) || 'index.html';
+  // Pages in the /admin/ folder are listed as 'admin/<file>'.
+  return /\/admin\/[^/]*$/.test(path) ? `admin/${file}` : file;
 }
 
 /**
@@ -446,7 +447,7 @@ export const NAV_STRUCTURE = {
     { id: 'aces-shop', href: 'https://acesmountainside.com/', label: 'Aces Shop', icon: '🛒', priority: 4, requiresAuth: true, external: true },
     { id: 'spray-intake', href: 'admin-spray-intake.html', label: 'Spray Chart Intake', icon: '🎯', priority: 4, requiresAuth: true, requiresRole: 'admin' },
     { id: 'aceys-admin', href: 'admin-aceys.html', label: 'Aceys Admin', icon: '🏆', priority: 4, requiresAuth: true, requiresRole: 'league_staff' },
-    { id: 'admin-hub', href: 'admin-pages.html', label: 'Admin Hub', icon: '🛠️', priority: 4, requiresAuth: true, requiresRole: 'admin' },
+    { id: 'admin-hub', href: 'admin/index.html', label: 'Admin Hub', icon: '🛠️', priority: 4, requiresAuth: true, requiresRole: 'admin' },
     { id: 'admin-view-as', href: 'admin-view-as.html', label: 'View As User', icon: '🎭', priority: 4, requiresAuth: true, requiresRole: 'admin' },
   ],
 

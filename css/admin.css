@@ -1,0 +1,80 @@
+/* ==========================================================================
+   css/admin.css - the /admin/ shell (admin/index.html, js/admin/home.js)
+   Sidebar of every tool by job, then the to-do cards and site status.
+   ========================================================================== */
+
+.adm-shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: var(--space-6); align-items: start; padding-bottom: var(--space-12, 48px); }
+
+/* Sidebar */
+.adm-side {
+  position: sticky; top: calc(var(--nav-bar-h, 52px) + var(--space-4));
+  max-height: calc(100vh - var(--nav-bar-h, 52px) - var(--space-8));
+  overflow-y: auto; margin-top: var(--space-6); padding: var(--space-3);
+  border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface);
+}
+.adm-filter { display: block; margin-bottom: var(--space-3); }
+.adm-filter .aces-input { width: 100%; }
+.adm-group + .adm-group { margin-top: var(--space-4); }
+.adm-group-title {
+  display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-1);
+  color: var(--color-text-muted); font: var(--fw-semibold) var(--fs-xs) / 1.2 var(--font-sans);
+  letter-spacing: var(--tracking-label); text-transform: uppercase;
+}
+.adm-group-title .aces-icon { width: 14px; height: 14px; }
+.adm-group ul { margin: 0; padding: 0; list-style: none; }
+.adm-group a {
+  display: block; padding: 6px var(--space-2); border-radius: var(--radius-sm);
+  color: var(--color-text); font-size: var(--fs-sm); text-decoration: none;
+}
+.adm-group a:hover, .adm-group a:focus-visible { background: var(--color-surface-2); color: var(--color-link); }
+.adm-none { margin: 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.adm-menu-btn { display: none; }
+
+/* Main */
+.adm-heading {
+  margin: var(--space-6) 0 var(--space-3); font: 400 var(--fs-lg) / 1.1 var(--font-display);
+  letter-spacing: var(--tracking-display, 0.02em); text-transform: uppercase;
+}
+.adm-todos { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-3); }
+.adm-todo { display: flex; flex-direction: column; gap: var(--space-3); border-left: 4px solid var(--color-border); }
+.adm-todo.is-due { border-left-color: var(--color-alert); }
+.adm-todo.is-urgent { border-left-color: var(--color-loss); }
+.adm-todo.is-clear { border-left-color: var(--color-win); }
+.adm-todo .aces-btn { align-self: flex-start; }
+.adm-todo-head { display: flex; align-items: flex-start; gap: var(--space-3); }
+.adm-todo-head > div { flex: 1; min-width: 0; }
+.adm-todo-head h3 { margin: 0; font-size: var(--fs-md); }
+.adm-todo-head p { margin: 2px 0 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.adm-todo-icon {
+  display: grid; place-items: center; flex: none; width: 36px; height: 36px;
+  border-radius: var(--radius-md); background: var(--color-surface-2); color: var(--color-text-muted);
+}
+.adm-todo-icon .aces-icon { width: 18px; height: 18px; }
+.is-due .adm-todo-icon { background: var(--color-alert-soft); color: var(--color-alert); }
+.is-urgent .adm-todo-icon { background: var(--color-loss-soft); color: var(--color-loss); }
+.is-clear .adm-todo-icon { background: var(--color-win-soft); color: var(--color-win); }
+.adm-todo-count { font: 400 var(--fs-xl) / 1 var(--font-display); }
+.is-clear .adm-todo-count { color: var(--color-text-faint); }
+
+.adm-list { margin: 0; padding: 0; list-style: none; font-size: var(--fs-sm); }
+.adm-list li { display: flex; flex-wrap: wrap; gap: 2px var(--space-2); padding: 6px 0; border-top: 1px solid var(--color-border); }
+.adm-when { min-width: 52px; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.adm-score { color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.adm-missing { flex-basis: 100%; padding-left: 60px; color: var(--color-alert); font-size: var(--fs-xs); }
+.adm-missing::before { content: "Needs: "; }
+.adm-more { margin: 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+
+.adm-status { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--space-3); margin: 0; }
+.adm-status dt { color: var(--color-text-muted); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: var(--tracking-label); }
+.adm-status dd { margin: 2px 0 0; font-weight: var(--fw-semibold); }
+.adm-hint { margin: var(--space-3) 0 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.adm-todo > .adm-hint:only-child { margin: 0; }
+
+/* Phones and small tablets: the sidebar becomes a panel behind "All tools". */
+@media (max-width: 860px) {
+  .adm-shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .adm-menu-btn { display: inline-flex; }
+  .adm-side { display: none; position: static; max-height: none; margin: var(--space-4) 0 0; order: 2; }
+  .adm-nav-open .adm-side { display: block; order: 0; }
+  .adm-main { order: 1; }
+}

@@ -19,6 +19,7 @@ export const TOOL_GROUPS = [
     ['media.html#upload', 'Team photos', 'Upload photos from games', 'camera']
   ] },
   { role: 'league-staff', title: 'League staff', icon: 'settings', guide: 'help.html#league-staff', tools: [
+    ['admin/index.html', 'Admin home', 'To-dos and every staff tool', 'grid'],
     ['league-staff-admin.html', 'League staff admin', 'Seasons, games and settings', 'sliders'],
     ['offseason.html', 'Offseason hub', 'Rosters, schedule and the draft', 'leaf'],
     ['offseason-roster.html', 'Offseason rosters', 'Team assignments for next season', 'users'],
@@ -26,7 +27,6 @@ export const TOOL_GROUPS = [
     ['schedule-workshop.html', 'Schedule workshop', 'Try schedule changes', 'calendar']
   ] },
   { role: 'admin', title: 'Admin', icon: 'shield-check', tools: [
-    ['admin-pages.html', 'Admin hub', 'Every admin tool', 'grid'],
     ['approve-links.html', 'Approve player links', 'Pending account-to-player requests', 'user-check'],
     ['admin-link-players.html', 'Link players', 'Connect accounts to player records', 'link'],
     ['admin-user-management.html', 'User management', 'Accounts, roles and View As', 'users'],
