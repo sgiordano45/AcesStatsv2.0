@@ -1,0 +1,107 @@
+/* ==========================================================================
+   css/compare.css - compare.html (js/pages/compare.js)
+   Players / Teams / Head-to-head. Built on tokens.css + components.css.
+   ========================================================================== */
+
+.cmp { padding-bottom: var(--space-12); }
+.cmp-modes { margin: var(--space-2) 0 var(--space-4); }
+
+/* Pickers: A, swap, B on one row; the scope picker underneath. */
+.cmp-controls { display: grid; gap: var(--space-3); margin-bottom: var(--space-4); }
+.cmp-picks { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: var(--space-2); }
+.cmp-pick { margin: 0; }
+.cmp-controls > .cmp-pick { max-width: 320px; }
+.cmp-swap { align-self: end; width: 44px; min-height: 44px; padding: 0; }
+@media (max-width: 560px) {
+  .cmp-picks { grid-template-columns: minmax(0, 1fr); }
+  .cmp-swap { justify-self: center; transform: rotate(90deg); }
+  .cmp-controls > .cmp-pick { max-width: none; }
+}
+
+.cmp-results { display: grid; gap: var(--space-4); }
+
+/* Header card: the two sides and the scope. */
+.cmp-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+.cmp-who { display: grid; gap: var(--space-1); justify-items: center; min-width: 0; }
+.cmp-name { color: var(--color-text); font: var(--fw-bold) var(--fs-lg) / 1.2 var(--font-sans); text-decoration: none; overflow-wrap: anywhere; }
+.cmp-name:hover { color: var(--color-link); }
+.cmp-teams { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.cmp-vs { color: var(--color-text-muted); font: 400 var(--fs-xl) / 1 var(--font-display); text-transform: uppercase; }
+.cmp-scope { grid-column: 1 / -1; margin: 0; color: var(--color-text-muted); font-size: var(--fs-sm); text-align: center; }
+.cmp-together { display: flex; align-items: center; justify-content: center; gap: var(--space-2); margin: 0; color: var(--color-text-muted); font-size: var(--fs-sm); text-align: center; }
+.cmp-together .aces-icon { width: 16px; height: 16px; flex: none; }
+
+.cmp-section-title {
+  display: flex; align-items: center; gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  font: var(--fw-bold) var(--fs-md) / 1.2 var(--font-sans);
+}
+.cmp-section-title .aces-icon { width: 18px; height: 18px; color: var(--color-brand); }
+:root[data-theme="dark"] .cmp-section-title .aces-icon { color: var(--color-link); }
+.cmp-sub { margin: var(--space-4) 0 var(--space-2); color: var(--color-text-muted); font: var(--fw-bold) var(--fs-xs) / 1.2 var(--font-sans); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.cmp-note { margin: var(--space-3) 0 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+
+/* Tale of the tape: A | label | B, the better side bold with a fuller bar. */
+.cmp-tape { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.cmp-tape tr + tr > * { border-top: 1px solid var(--color-border); }
+.cmp-tape th, .cmp-tape td { padding: 8px 4px; vertical-align: middle; }
+.cmp-label { width: 34%; color: var(--color-text-muted); font: var(--fw-semibold) var(--fs-xs) / 1.25 var(--font-sans); text-align: center; }
+.cmp-label small { display: block; font-weight: var(--fw-medium); }
+.cmp-val { width: 33%; font-size: var(--fs-md); }
+.cmp-val.is-a { text-align: right; }
+.cmp-val.is-b { text-align: left; }
+.cmp-val.is-win .cmp-num { font-weight: var(--fw-bold); color: var(--color-text); }
+.cmp-num { color: var(--color-text-muted); }
+.cmp-bar {
+  display: block; height: 4px; margin-top: 4px; border-radius: 2px;
+  width: var(--w); background: var(--color-border-strong);
+}
+.cmp-bar.is-a { margin-left: auto; }
+.cmp-bar.is-win { background: var(--color-brand); }
+:root[data-theme="dark"] .cmp-bar.is-win { background: var(--color-link); }
+
+.cmp-two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.cmp-two > :first-child { text-align: right; }
+.cmp-awards { margin: 0; padding: 0; list-style: none; font-size: var(--fs-sm); line-height: 1.6; }
+
+/* Team head-to-head. */
+.cmp-h2h { display: flex; align-items: baseline; justify-content: center; gap: var(--space-3); margin: 0; font-weight: var(--fw-semibold); }
+.cmp-h2h strong { font: 400 var(--fs-3xl, 2.25rem) / 1 var(--font-display); color: var(--color-text); }
+.cmp-meetings { margin: 0; padding: 0; list-style: none; }
+.cmp-meetings li {
+  display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) auto; gap: var(--space-2);
+  align-items: center; padding: 6px 0; border-top: 1px solid var(--color-border); font-size: var(--fs-sm);
+}
+.cmp-meet-when { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.cmp-meet-win { display: inline-flex; align-items: center; gap: 6px; font-weight: var(--fw-semibold); white-space: nowrap; }
+@media (max-width: 480px) {
+  .cmp-meetings li { grid-template-columns: minmax(0, 1fr) auto; }
+  .cmp-meet-when { grid-column: 1 / -1; }
+}
+
+/* Head-to-head grid. */
+.cmp-grid-card .aces-card-head { flex-wrap: wrap; }
+.h2h-grid th, .h2h-grid td { text-align: center; }
+.h2h-grid thead th { white-space: nowrap; }
+.h2h-grid thead th > span { display: block; margin-top: 2px; }
+.h2h-grid tbody th { text-align: left; white-space: nowrap; }
+.h2h-grid tbody th .aces-team-dot, .h2h-grid thead th .aces-team-dot { margin-right: 4px; }
+.h2h-corner { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.h2h-grid td a { display: block; color: inherit; text-decoration: none; font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
+.h2h-grid td.is-ahead { background: var(--color-win-soft); color: var(--color-win); }
+.h2h-grid td.is-behind { background: var(--color-loss-soft); color: var(--color-loss); }
+.h2h-grid td.is-even { background: var(--color-surface-2); }
+.h2h-self, .h2h-none { color: var(--color-text-faint, var(--color-text-muted)); }
+.aces-table.h2h-grid tbody tr:hover > td.is-ahead { background: var(--color-win-soft); }
+.aces-table.h2h-grid tbody tr:hover > td.is-behind { background: var(--color-loss-soft); }
+.cmp-legend { display: inline-flex; gap: var(--space-2); font-size: var(--fs-xs); }
+.cmp-legend > span { padding: 2px 8px; border-radius: 999px; }
+.cmp-legend .is-ahead { background: var(--color-win-soft); color: var(--color-win); }
+.cmp-legend .is-even { background: var(--color-surface-2); color: var(--color-text-muted); }
+.cmp-legend .is-behind { background: var(--color-loss-soft); color: var(--color-loss); }

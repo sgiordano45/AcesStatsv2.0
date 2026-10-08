@@ -58,8 +58,6 @@ const HTML_PAGES = [
   `${BASE_PATH}/pictures.html`,
   `${BASE_PATH}/photo-upload.html`,
   `${BASE_PATH}/compare.html`,
-  `${BASE_PATH}/team_compare.html`,
-  `${BASE_PATH}/h2h_grid.html`,
   `${BASE_PATH}/charts.html`,
   `${BASE_PATH}/recap.html`,
   `${BASE_PATH}/champions.html`,

@@ -151,11 +151,8 @@ export const NAV_HUBS = [
       { id: 'pitching', href: 'pitching.html', label: 'Pitching', icon: 'softball' },
       { id: 'leaders', href: 'leaders.html', label: 'Leaders', icon: 'crown',
         also: ['milestones.html', 'pitching_leaders.html'] },
-      { key: 'compare', label: 'Compare', icon: 'arrow-left-right', pages: [
-        { id: 'compare', href: 'compare.html', label: 'Players', icon: 'users' },
-        { id: 'team-compare', href: 'team_compare.html', label: 'Teams', icon: 'versus' },
-        { id: 'h2h', href: 'h2h_grid.html', label: 'Head-to-head', icon: 'swords' },
-      ] },
+      { id: 'compare', href: 'compare.html', label: 'Compare', icon: 'arrow-left-right',
+        also: ['team_compare.html', 'h2h_grid.html'] },
       { key: 'explore', label: 'Explore', icon: 'search', pages: [
         { id: 'query-stats', href: 'query-stats.html', label: 'Query', icon: 'search' },
         { id: 'charts', href: 'charts.html', label: 'Charts', icon: 'chart-line' },
@@ -415,9 +412,7 @@ export const NAV_STRUCTURE = {
 
   // Tier 3: TERTIARY - Specialty pages (mobile-only unless contextually relevant)
   tertiary: [
-    { id: 'compare', href: 'compare.html', label: 'Player Comparison', icon: '🔀', priority: 3 },
-    { id: 'team-compare', href: 'team_compare.html', label: 'Team Comparison', icon: '🆚', priority: 3 },
-    { id: 'h2h', href: 'h2h_grid.html', label: 'Head-to-Head Grid', icon: '⚔️', priority: 3 },
+    { id: 'compare', href: 'compare.html', label: 'Compare', icon: '🔀', priority: 3 },
     { id: 'history', href: 'league-history.html', label: 'League History', icon: '📜', priority: 3 },
     { id: 'charts', href: 'charts.html', label: 'Performance Charts', icon: '📊', priority: 3 },
     { id: 'team-stats', href: 'team-stats.html', label: 'Team Stats', icon: '🏟️', priority: 3 },
@@ -567,13 +562,7 @@ export const PAGE_CONFIGS = {
     desktop: ['home', 'batting', 'pitching', 'players', 'leaders', ]
   },
   
-  'team_compare.html': {
-    desktop: ['home', 'teams', 'h2h', 'seasons']
-  },
   
-  'h2h_grid.html': {
-    desktop: ['home', 'current-season', 'teams', 'team-compare', 'history']
-  },
   
   'league-history.html': {
     desktop: ['home', 'current-season', 'teams', 'team-compare', 'h2h']
