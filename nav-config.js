@@ -230,8 +230,8 @@ export const NAV_HUBS = [
 export const ME_MENU = [
   {
     key: 'me', label: null, pages: [
-      { id: 'profile', href: 'profile.html', label: 'Profile', icon: 'user', signedIn: true,
-        also: ['profile-fan.html'] },
+      { id: 'profile', href: 'me.html#profile', label: 'Profile', icon: 'user', signedIn: true,
+        also: ['profile.html', 'profile-fan.html'] },
       { id: 'dashboard', href: 'me.html', label: 'Dashboard', icon: 'grid', signedIn: true,
         also: ['my-dashboard.html'] },
       { id: 'favorites', href: 'me.html#favorites', label: 'Favorites', icon: 'star', signedIn: true,
