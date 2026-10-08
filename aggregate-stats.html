@@ -3563,6 +3563,17 @@
       btn.disabled = false;
     }
   };
+
+  // Opened from admin/stats.html: ?season=2026-fall preselects the season and
+  // &test=1 turns on test mode.
+  {
+    const params = new URLSearchParams(location.search);
+    const pick = params.get('season');
+    const sel = document.getElementById('seasonSelect');
+    if (pick && sel && [...sel.options].some(o => o.value === pick)) sel.value = pick;
+    const box = document.getElementById('testModeCheckbox');
+    if (box && params.get('test') === '1') { box.checked = true; window.toggleTestMode(); }
+  }
 </script>
 
 <script type="module">

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script type="module" src="../js/core/preview-guard.js"></script>
+<link rel="manifest" href="../manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2d5016">
+<meta name="robots" content="noindex">
+<title>Stats pipeline - Admin - Mountainside Aces</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../mobile-enhancements.css">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="aces-v2 adm">
+
+<div class="adm-shell aces-container" data-page-content>
+  <aside class="adm-side" id="adminSide" aria-label="Admin tools">
+    <div class="adm-filter">
+      <input class="aces-input" id="adminFilter" type="search" placeholder="Find a tool..." aria-label="Find a tool" autocomplete="off">
+    </div>
+    <nav id="adminNav"></nav>
+  </aside>
+
+  <main class="adm-main" id="main">
+    <header class="aces-page-head">
+      <div>
+        <span class="aces-page-kicker" id="adminWho">Admin</span>
+        <h1 class="aces-page-title">Stats pipeline</h1>
+      </div>
+      <div class="stp-controls">
+        <span class="aces-select-wrap"><select class="aces-select" id="stpSeason" aria-label="Season"></select></span>
+        <button class="aces-btn" id="stpRefresh" type="button">Refresh</button>
+        <button class="aces-btn adm-menu-btn" id="adminMenuBtn" type="button" aria-controls="adminSide">All tools</button>
+      </div>
+    </header>
+
+    <p class="stp-intro">Work down the steps after each week of games. Each step opens the tool that does it, already set to this season. <span id="stpChange"></span></p>
+    <ol class="stp-steps" id="stpSteps"></ol>
+
+    <div class="stp-games-head">
+      <h2 class="adm-heading">Finished games <span class="stp-count" id="stpGamesCount"></span></h2>
+      <div class="aces-segmented" role="group" aria-label="Which games">
+        <button class="aces-segment" type="button" data-games="work" aria-pressed="true">Needs work</button>
+        <button class="aces-segment" type="button" data-games="all" aria-pressed="false">All</button>
+      </div>
+    </div>
+    <div id="stpGames"></div>
+  </main>
+</div>
+
+<script type="module" src="../js/admin/stats.js"></script>
+</body>
+</html>

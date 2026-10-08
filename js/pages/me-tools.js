@@ -31,7 +31,7 @@ export const TOOL_GROUPS = [
     ['admin-link-players.html', 'Link players', 'Connect accounts to player records', 'link'],
     ['admin-user-management.html', 'User management', 'Accounts, roles and View As', 'users'],
     ['admin-roles.html', 'Role updater', 'Change roles in bulk', 'shield'],
-    ['aggregate-stats.html', 'Aggregate stats', 'Rebuild player stat totals', 'refresh'],
+    ['admin/stats.html', 'Stats pipeline', 'Stats in, review, aggregate, badges', 'refresh'],
     ['admin-badges.html', 'Badge calculator', 'Award player badges', 'medal'],
     ['games-admin.html', 'Games admin', 'Daily games content', 'gamepad'],
     ['admin-content.html', 'Content tools', 'Announcements and site content', 'megaphone'],

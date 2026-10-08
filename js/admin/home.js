@@ -1,6 +1,6 @@
 // js/admin/home.js
 // /admin/: the admin shell's home. A sidebar of every tool by job
-// (js/admin/catalog.js) and a to-do list of what needs doing now:
+// (js/admin/shell.js) and a to-do list of what needs doing now:
 //   games past their start with no score, games missing a team's stats,
 //   pending player-link and team-staff requests, rule proposals, new feature
 //   requests, plus the season settings and when stats were last aggregated.
@@ -13,7 +13,7 @@ import { getSeasonGames } from '../data/games.js';
 import { normalizeGame } from '../domain/standings.js';
 import { parseGameDateTime, formatGameDate } from '../domain/dates.js';
 import { seasonLabel } from '../domain/season-ids.js';
-import { ADMIN_GROUPS } from './catalog.js';
+import { mountAdminShell } from './shell.js';
 import { escapeHtml as esc } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 
@@ -29,23 +29,6 @@ function ago(ms) {
   if (m < 1440) return `${Math.round(m / 60)} h ago`;
   return `${Math.round(m / 1440)} days ago`;
 }
-
-// ---------------------------------------------------------------------------
-// Sidebar
-// ---------------------------------------------------------------------------
-
-function renderSidebar(profile) {
-  const q = norm($('adminFilter')?.value || '');
-  $('adminNav').innerHTML = ADMIN_GROUPS.map(g => {
-    const items = g.items.filter(([, , , role]) => hasRole(profile, role))
-      .filter(([page, name, desc]) => !q || norm(`${name} ${desc} ${page}`).includes(q));
-    return items.length ? `<section class="adm-group">
-      <h2 class="adm-group-title">${icon(g.icon)} ${esc(g.label)}</h2>
-      <ul>${items.map(([page, name, desc]) => `<li><a href="${esc(href(page))}" title="${esc(desc)}">${esc(name)}</a></li>`).join('')}</ul>
-    </section>` : '';
-  }).join('') || '<p class="adm-none">No tools match.</p>';
-}
-const norm = (s) => String(s).toLowerCase();
 
 // ---------------------------------------------------------------------------
 // To-dos
@@ -132,7 +115,7 @@ async function renderTodos(ctx) {
     cards.push(todoCard({ icon: 'hash', title: 'Missing scores', count: games.noScore.length, text: `${games.noScore.length} game${games.noScore.length === 1 ? ' has' : 's have'} started with no final score`,
       href: 'submit-score.html', action: 'Submit scores', list: top(games.noScore), tone: 'is-urgent' }));
     cards.push(todoCard({ icon: 'calculator', title: 'Missing stats', count: games.noStats.length, text: `${games.noStats.length} finished game${games.noStats.length === 1 ? ' is' : 's are'} missing a team's stats`,
-      href: admin ? 'admin-submit-stats.html' : 'submit-stats.html', action: 'Enter stats', list: top(games.noStats) }));
+      href: admin ? 'admin/stats.html' : 'submit-stats.html', action: admin ? 'Open stats pipeline' : 'Enter stats', list: top(games.noStats) }));
   }
   cards.push(todoCard({ icon: 'user-check', title: 'Player link requests', count: reqs ? reqs.links : null, text: `${reqs?.links} waiting for approval`, href: 'approve-links.html', action: 'Review requests' }));
   cards.push(todoCard({ icon: 'shield', title: 'Team staff requests', count: reqs ? reqs.staff : null, text: `${reqs?.staff} waiting for a captain`, href: 'manage-team.html', action: 'Open team staff' }));
@@ -157,10 +140,7 @@ async function renderTodos(ctx) {
 
 async function main() {
   const ctx = await initPage({ title: 'Admin', role: 'league-staff', deniedMessage: 'The admin area is for league staff and admins.' });
-  renderSidebar(ctx.profile);
-  $('adminFilter').addEventListener('input', () => renderSidebar(ctx.profile));
-  $('adminMenuBtn').addEventListener('click', () => document.body.classList.toggle('adm-nav-open'));
-  $('adminWho').textContent = hasRole(ctx.profile, 'admin') ? 'Admin' : 'League staff';
+  mountAdminShell(ctx.profile, 'admin/index.html');
   pageReady();
   await renderTodos(ctx);
 }

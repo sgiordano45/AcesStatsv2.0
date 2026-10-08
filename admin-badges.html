@@ -741,6 +741,11 @@
         if (currentSeason) {
           seasonSelect.value = currentSeason.id;
         }
+        // Opened from admin/stats.html: ?season= picks the season, &test=1 test mode.
+        const params = new URLSearchParams(location.search);
+        const pick = params.get('season');
+        if (pick && seasons.some(s => s.id === pick)) seasonSelect.value = pick;
+        if (params.has('test')) testModeCheckbox.checked = params.get('test') === '1';
         
         calculateBtn.disabled = false;
         log(`Loaded ${seasons.length} seasons`, 'success');

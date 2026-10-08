@@ -25,6 +25,7 @@ export const ADMIN_GROUPS = [
     ['schedule-2027-proposal.html', '2027 schedule proposal', 'Draft format for 2027', 'league-staff']
   ] },
   { id: 'stats', label: 'Stats pipeline', icon: 'calculator', items: [
+    ['admin/stats.html', 'Stats pipeline', 'Step by step: stats in, review, aggregate, badges', 'admin'],
     ['admin-submit-stats.html', 'Enter stats', 'Stats for any team and game', 'admin'],
     ['admin-game-tracker-review.html', 'Review tracked games', 'Check live-tracked games before they count', 'admin'],
     ['aggregate-stats.html', 'Aggregate stats', 'Rebuild player totals (test, then production)', 'admin'],
