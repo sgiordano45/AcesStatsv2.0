@@ -255,3 +255,41 @@ a.home-news-item:hover .home-news-text strong { color: var(--color-link); }
 .home-off-team .aces-team-dot { width: 18px; height: 18px; }
 .home-off-signup .aces-btn { align-self: flex-start; margin: var(--space-2) 0; }
 .home-off-links-head { margin-top: var(--space-6); }
+
+/* ---- Playoffs block -------------------------------------------------------- */
+.home-series-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+}
+.home-series { display: flex; flex-direction: column; gap: 6px; color: var(--color-text); text-decoration: none; }
+.home-series:hover { border-color: var(--color-border-strong); }
+.home-series-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.home-series-row.is-winner .home-score-team { color: var(--color-text); }
+.home-series-row.is-out { color: var(--color-text-muted); }
+.home-series-row.is-out .home-score-team { text-decoration: line-through; text-decoration-thickness: 1px; }
+.home-series-wins {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.home-series-row.is-winner .home-series-wins { color: var(--color-brand); }
+:root[data-theme="dark"] .home-series-row.is-winner .home-series-wins { color: var(--color-accent); }
+.home-series-status {
+  display: flex; flex-direction: column; gap: 2px;
+  margin-top: var(--space-1); padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted); font-size: var(--fs-xs);
+}
+.home-series-status strong { color: var(--color-text); font-size: var(--fs-sm); }
+.home-po-links { margin-top: var(--space-3); }
+.home-po-links .aces-chip .aces-icon { width: 15px; height: 15px; }
+.home-po-earlier { margin-top: var(--space-3); }
+.home-po-earlier summary {
+  cursor: pointer; color: var(--color-link);
+  font: var(--fw-semibold) var(--fs-sm) / 1.4 var(--font-sans);
+}
+.home-po-round { margin-top: var(--space-3); }
+.home-po-results { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); font-size: var(--fs-sm); }
+.home-po-results li { display: inline-flex; align-items: center; gap: 6px; }

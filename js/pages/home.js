@@ -18,7 +18,12 @@
 // offseason block: countdown to opening day (siteConfig/current.openingDay),
 // the champion (champions/{seasonId}), signups (siteConfig/signups, set each
 // year) and links to Year in review, Champions and the Aceys.
-// Preview only: ?phase=offseason|regular|playoffs overrides the phase to test.
+// Playoffs: the playoffs block leads (series by round from the playoff games,
+// plus Bracket / Championship preview links as the nav allows them). Late in
+// the regular season, a "Playoff race" row appears once Clinching or the
+// Bracket is switched on in siteConfig/navigation/pages.
+// Preview only: ?phase=offseason|regular|playoffs and ?season=<id> override
+// the phase and season, to test a mode against a past season.
 
 import { initPage, pageReady } from '../core/app.js';
 import { hasRole } from '../core/auth.js';
@@ -430,6 +435,80 @@ function renderFoot() {
 }
 
 
+
+// ---- playoffs -----------------------------------------------------------------------------------
+
+// The Playoffs group's pages, as the nav would show them now (phase window and
+// the hand switches in siteConfig/navigation/pages both apply).
+function playoffLinks() {
+  const { user, profile } = state.ctx || {};
+  const nav = buildNav({ signedIn: !!user, profile, phase: state.phase, hasRole, isVisible: isPageVisible });
+  const season = nav.hubs.find(h => h.id === 'season');
+  const group = season?.tabs.find(t => t.key === 'playoffs');
+  return group?.pages || [];
+}
+
+function seriesCard(sr) {
+  const [a, b] = sr.teams;
+  const wa = sr.wins[a] || 0;
+  const wb = sr.wins[b] || 0;
+  const done = !sr.next && sr.played > 0;
+  const leader = wa === wb ? null : wa > wb ? a : b;
+  const status = !sr.played ? 'Not started'
+    : done && leader ? `${leader} ${wa + wb === 1 ? 'wins' : 'wins the series'} ${Math.max(wa, wb)}-${Math.min(wa, wb)}`
+    : leader ? `${leader} leads ${Math.max(wa, wb)}-${Math.min(wa, wb)}`
+    : `Tied ${wa}-${wb}`;
+  const row = (t, w) => `<div class="home-series-row${done && leader === t ? ' is-winner' : ''}${done && leader && leader !== t ? ' is-out' : ''}">
+      <span class="home-score-team">${dot(t)}${esc(t)}</span><span class="home-series-wins">${w}</span></div>`;
+  const next = sr.next
+    ? `<span>Next: ${esc(formatRelativeDay(sr.next.dateKey))}${sr.next.time ? ` · ${esc(formatTime(sr.next.time))}` : ''}${sr.next.ifNecessary ? ' (if necessary)' : ''}</span>`
+    : '';
+  return `<a class="aces-card home-series" href="playoffs.html">
+    ${row(a, wa)}${row(b, wb)}
+    <div class="home-series-status"><strong>${esc(status)}</strong>${next}</div>
+  </a>`;
+}
+
+function renderPlayoffs() {
+  const el = $('homePlayoffs');
+  if (!el) return;
+  const links = playoffLinks();
+  const linkRow = links.length ? `<div class="aces-chip-row home-po-links">${links.map(p =>
+    `<a class="aces-chip" href="${esc(p.href)}">${icon(p.icon)}${esc(p.label)}</a>`).join('')}</div>` : '';
+
+  // Regular season: just the race links, once Clinching or the Bracket is switched on.
+  if (state.phase === 'regular') {
+    if (!links.some(p => p.id === 'clinching' || p.id === 'playoffs')) { el.hidden = true; return; }
+    el.hidden = false;
+    el.innerHTML = `<div class="aces-section-head"><h2 class="aces-section-title">Playoff race</h2></div>${linkRow}`;
+    return;
+  }
+  if (state.phase !== 'playoffs') { el.hidden = true; return; }
+
+  const po = state.summary?.playoffs || { rounds: [] };
+  const rounds = po.rounds || [];
+  // The round being played: the first with a game still to come, else the last.
+  const current = rounds.find(r => r.series.some(sr => sr.next)) || rounds[rounds.length - 1];
+  const earlier = current ? rounds.slice(0, rounds.indexOf(current)).reverse() : [];
+
+  el.hidden = false;
+  el.innerHTML = `
+    <div class="aces-section-head">
+      <h2 class="aces-section-title">Playoffs${current ? ` · ${esc(current.name)}` : ''}</h2>
+      <a class="aces-section-link" href="playoffs.html">Bracket</a>
+    </div>
+    ${current ? `<div class="home-series-grid">${current.series.map(seriesCard).join('')}</div>`
+      : '<div class="aces-empty">The bracket is set once the regular season ends.</div>'}
+    ${earlier.length ? `<details class="home-po-earlier"><summary>Earlier rounds</summary>
+      ${earlier.map(r => `<div class="home-po-round"><h3 class="home-board-title">${esc(r.name)}</h3>
+        <ul class="home-po-results">${r.series.map(sr => {
+          const [a, b] = sr.teams;
+          return `<li>${dot(a)}${esc(a)} <strong>${sr.wins[a] || 0}-${sr.wins[b] || 0}</strong> ${esc(b)}${dot(b)}</li>`;
+        }).join('')}</ul></div>`).join('')}
+    </details>` : ''}
+    ${linkRow}`;
+}
+
 // ---- offseason --------------------------------------------------------------------------------
 
 // siteConfig/signups, set by admins each year (Firebase console):
@@ -532,6 +611,7 @@ function renderAll() {
   renderLeaders();
   renderMilestones();
   renderFoot();
+  renderPlayoffs();
 }
 
 async function startLive() {
@@ -553,6 +633,8 @@ async function main() {
   if (['regular', 'playoffs', 'offseason'].includes(forced)) state.phase = forced;
   // In season: the current season. Offseason: the last one played.
   state.seasonId = (state.phase !== 'offseason' && ctx?.config?.currentSeasonId) || await getDisplaySeasonId();
+  const forcedSeason = IS_PREVIEW ? new URLSearchParams(location.search).get('season') : null;
+  if (forcedSeason && /^\d{4}-[a-z]+$/.test(forcedSeason)) state.seasonId = forcedSeason;
 
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-scope]');
@@ -570,7 +652,7 @@ async function main() {
   renderMyAces().catch(err => console.warn('[home] my aces', err));
   renderNews();
   renderPhotos();
-  renderExplore();
+  renderExplore().then(renderPlayoffs).catch(err => console.warn('[home] playoffs', err));
   startLive();
 }
 

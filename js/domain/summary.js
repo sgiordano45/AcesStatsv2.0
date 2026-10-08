@@ -18,7 +18,7 @@ import { battingLine, era, QUALIFIERS, isQualifiedBatter, isQualifiedPitcher } f
 import { parseStatSeasonId, inningsValue } from './season-ids.js';
 
 /** Bump when the shape changes: older stored docs are rebuilt in the browser. */
-export const SUMMARY_VERSION = 1;
+export const SUMMARY_VERSION = 2;   // 2: playoffs
 
 const TOP = 5;
 const RECENT = 8;
@@ -45,8 +45,52 @@ function gameCard(g, raw) {
     home: g.home, away: g.away,
     homeScore: g.hasScores ? g.homeScore : null, awayScore: g.hasScores ? g.awayScore : null,
     result: g.result, winner: g.winner || '', type: g.type, round: g.round || '',
-    field: raw?.field || raw?.location || ''
+    field: raw?.field || raw?.location || '',
+    ifNecessary: raw?.ifNecessary === true || /if necessary/i.test(String(g.round || ''))
   };
+}
+
+const roundName = (r) => String(r || 'Playoffs').replace(/\s*\(if necessary\)\s*/i, '').trim() || 'Playoffs';
+
+/**
+ * Playoffs from the playoff games themselves (works for the series bracket
+ * and the double-elimination one): rounds in date order, each with its
+ * series: { id, round, teams: [a, b], wins: { a: n, b: m }, played, last, next }.
+ * Series group by seriesId, else by the two teams within a round.
+ */
+export function buildPlayoffs(all, rawById, asOf) {
+  const games = all.filter(g => g.type === 'playoff' && g.home && g.away);
+  if (!games.length) return { started: false, rounds: [] };
+  const series = new Map();
+  for (const g of games) {
+    const raw = rawById.get(g.id) || {};
+    const round = roundName(g.round || raw.round);
+    const key = raw.seriesId ? `s:${raw.seriesId}` : `${round}|${[g.home, g.away].sort().join('|')}`;
+    if (!series.has(key)) series.set(key, { id: raw.seriesId || key, round, teams: [g.home, g.away].sort(), games: [] });
+    series.get(key).games.push(g);
+  }
+  const out = [...series.values()].map(sr => {
+    const decided = sr.games.filter(isDecided).sort(bySchedule);
+    const wins = Object.fromEntries(sr.teams.map(t => [t, 0]));
+    for (const g of decided) {
+      const w = g.result === 'home' ? g.home : g.result === 'away' ? g.away : null;
+      if (w && w in wins) wins[w]++;
+    }
+    const pending = sr.games.filter(g => !isDecided(g) && g.dateKey && g.dateKey >= asOf).sort(bySchedule);
+    const first = sr.games.map(g => g.dateKey).filter(Boolean).sort()[0] || '';
+    return {
+      id: sr.id, round: sr.round, teams: sr.teams, wins, played: decided.length, first,
+      last: decided.length ? gameCard(decided[decided.length - 1], rawById.get(decided[decided.length - 1].id)) : null,
+      next: pending.length ? gameCard(pending[0], rawById.get(pending[0].id)) : null
+    };
+  });
+  const rounds = [];
+  for (const sr of out.sort((a, b) => (a.first < b.first ? -1 : a.first > b.first ? 1 : 0))) {
+    let r = rounds.find(x => x.name === sr.round);
+    if (!r) { r = { name: sr.round, first: sr.first, series: [] }; rounds.push(r); }
+    r.series.push(sr);
+  }
+  return { started: games.some(isDecided), rounds: rounds.map(({ name, series: list }) => ({ name, series: list })) };
 }
 
 const bySchedule = (a, b) => (a.dateKey === b.dateKey ? timeSortValue(a.time) - timeSortValue(b.time) : a.dateKey < b.dateKey ? -1 : 1);
@@ -181,6 +225,7 @@ export function buildSeasonSummary({ seasonId, games = [], players = [], asOf = 
     upcoming,
     teamGames,
     leaders,
+    playoffs: buildPlayoffs(all, rawById, asOf),
     milestones: { hits: watch('hits', MILESTONES.hits), runs: watch('runs', MILESTONES.runs) }
   };
 }
