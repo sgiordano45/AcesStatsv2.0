@@ -14,11 +14,16 @@
 //
 // Standings, games, leaders and milestones come from one season summary
 // (js/data/summaries.js): the stored doc when fresh, else built in the browser.
-// Offseason: the last season's summary, without the live strip.
+// Offseason: the last season's summary, without the live strip, led by the
+// offseason block: countdown to opening day (siteConfig/current.openingDay),
+// the champion (champions/{seasonId}), signups (siteConfig/signups, set each
+// year) and links to Year in review, Champions and the Aceys.
+// Preview only: ?phase=offseason|regular|playoffs overrides the phase to test.
 
 import { initPage, pageReady } from '../core/app.js';
 import { hasRole } from '../core/auth.js';
 import { getDisplaySeasonId, formatSeasonLabel } from '../core/config.js';
+import { IS_PREVIEW } from '../core/env.js';
 import { db, collection, query, where, orderBy, limit, getDocs, doc, getDoc } from '../core/firebase.js';
 import { getSeasonSummary, rebuildSeasonSummary } from '../data/summaries.js';
 import { getPlayerStatsOptimized } from '../data/player-stats.js';
@@ -26,7 +31,7 @@ import { escapeHtml as esc, fmtAvg, fmtRate, formatPlayerName } from '../ui/form
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 import { teamChipHtml, TEAM_COLORS } from '../ui/stat-columns.js';
-import { formatTime, formatRelativeDay, todayKey } from '../domain/dates.js';
+import { formatTime, formatRelativeDay, todayKey, daysBetween, formatGameDate } from '../domain/dates.js';
 import { battingLine } from '../domain/stats.js';
 import { parseStatSeasonId } from '../domain/season-ids.js';
 import { buildNav, loadPageVisibility, isPageVisible } from '../../nav-config.js';
@@ -148,7 +153,7 @@ function renderStandings() {
     </tr>`).join('');
   section('homeStandings', `
     <div class="aces-card-head">
-      <h2 class="aces-card-title">${icon('list')} Standings</h2>
+      <h2 class="aces-card-title">${icon('list')} ${state.phase === 'offseason' ? 'Final standings' : 'Standings'}</h2>
       <a class="aces-section-link" href="current-season.html">Full standings</a>
     </div>
     ${rows.length ? `<div class="aces-table-wrap"><table class="aces-table is-compact home-standings">
@@ -423,6 +428,94 @@ function renderFoot() {
   });
 }
 
+
+// ---- offseason --------------------------------------------------------------------------------
+
+// siteConfig/signups, set by admins each year (Firebase console):
+//   { url: 'https://...', label: 'Register for 2027', opens: '2027-01-15',
+//     closes: '2027-03-01', note: 'Returning and new players' }
+// The button shows only between opens and closes (either may be left out).
+async function loadSignups() {
+  try {
+    const snap = await getDoc(doc(db, 'siteConfig', 'signups'));
+    const d = snap.exists() ? snap.data() : null;
+    if (!d || !d.url) return null;
+    const today = todayKey();
+    const key = (v) => (v && typeof v.toDate === 'function' ? todayKey(v.toDate()) : v ? String(v).slice(0, 10) : '');
+    if (d.opens && key(d.opens) > today) return null;
+    if (d.closes && key(d.closes) < today) return null;
+    return { url: d.url, label: d.label || 'Sign up for next season', note: d.note || '', closes: key(d.closes) };
+  } catch (err) {
+    console.warn('[home] signups unavailable', err);
+    return null;
+  }
+}
+
+// The champion of the season shown, else the most recent one on record.
+async function loadChampion(seasonId) {
+  try {
+    const own = seasonId ? await getDoc(doc(db, 'champions', seasonId)) : null;
+    if (own?.exists()) return { seasonId, ...own.data() };
+    const all = await getDocs(collection(db, 'champions'));
+    const docs = all.docs.map(d => ({ seasonId: d.id, ...d.data() }));
+    const key = (id) => { const [y, n] = String(id).split('-'); return (Number(y) || 0) * 10 + ({ spring: 1, summer: 2, fall: 3 }[n] || 0); };
+    return docs.sort((a, b) => key(b.seasonId) - key(a.seasonId))[0] || null;
+  } catch (err) {
+    console.warn('[home] champion unavailable', err);
+    return null;
+  }
+}
+
+async function renderOffseason() {
+  const el = $('homeOffseason');
+  if (!el) return;
+  if (state.phase !== 'offseason') { el.hidden = true; return; }
+
+  const [champ, signups] = await Promise.all([loadChampion(state.seasonId), loadSignups()]);
+  const opening = state.ctx?.config?.openingDay || '';
+  const days = opening ? daysBetween(todayKey(), opening) : null;
+
+  const countdown = days !== null && days >= 0 ? `
+    <div class="aces-card home-off-count">
+      <span class="home-off-label">Opening day</span>
+      <span class="home-off-days">${days === 0 ? 'Today' : days}</span>
+      <span class="home-off-sub">${days === 0 ? esc(formatGameDate(opening, 'long')) : `${days === 1 ? 'day' : 'days'} to go · ${esc(formatGameDate(opening, 'long'))}`}</span>
+    </div>` : '';
+
+  const champCard = champ?.team ? `
+    <a class="aces-card home-off-champ" href="champions.html">
+      <span class="home-off-label">${icon('trophy')} ${esc(formatSeasonLabel(champ.seasonId))} champions</span>
+      <span class="home-off-team">${dot(champ.team)}${esc(champ.team)}</span>
+      ${champ.runnerUp ? `<span class="home-off-sub">Runner-up: ${esc(champ.runnerUp)}</span>` : ''}
+    </a>` : '';
+
+  const signupCard = signups ? `
+    <div class="aces-card home-off-signup">
+      <span class="home-off-label">${icon('user-plus')} Signups are open</span>
+      ${signups.note ? `<p class="home-off-sub">${esc(signups.note)}</p>` : ''}
+      <a class="aces-btn is-accent" href="${esc(signups.url)}" target="_blank" rel="noopener">${esc(signups.label)}</a>
+      ${signups.closes ? `<span class="home-off-sub">Closes ${esc(formatGameDate(signups.closes, 'long'))}</span>` : ''}
+    </div>` : '';
+
+  const links = [
+    ['recap.html', 'book', 'Year in review', 'The season in stories and numbers'],
+    ['champions.html', 'trophy', 'Champions', 'Every title, every season'],
+    ['aceys-2026.html', 'star', 'The Aceys', 'This year’s awards'],
+    ['awards.html', 'award', 'Awards', 'All-time honors']
+  ].map(([href, ic, name, blurb]) => `
+    <a class="home-hub" href="${href}">
+      <span class="home-hub-icon">${icon(ic)}</span>
+      <span class="home-hub-name">${esc(name)}</span>
+      <span class="home-hub-blurb">${esc(blurb)}</span>
+    </a>`).join('');
+
+  el.hidden = false;
+  el.innerHTML = `
+    <div class="home-off-top">${countdown}${champCard}${signupCard}</div>
+    <div class="aces-section-head home-off-links-head"><h2 class="aces-section-title">The offseason</h2></div>
+    <div class="home-hubs">${links}</div>`;
+}
+
 // ---- start --------------------------------------------------------------------------------------
 
 async function loadSummary(opts) {
@@ -454,6 +547,9 @@ async function main() {
   const ctx = await initPage({ title: 'Home' });
   state.ctx = ctx;
   state.phase = ctx?.config?.phase || 'regular';
+  // Preview only: ?phase=offseason (or regular / playoffs) to test a mode.
+  const forced = IS_PREVIEW ? new URLSearchParams(location.search).get('phase') : null;
+  if (['regular', 'playoffs', 'offseason'].includes(forced)) state.phase = forced;
   // In season: the current season. Offseason: the last one played.
   state.seasonId = (state.phase !== 'offseason' && ctx?.config?.currentSeasonId) || await getDisplaySeasonId();
 
@@ -469,6 +565,7 @@ async function main() {
   pageReady();
 
   // The rest loads after the first screen is up.
+  renderOffseason().catch(err => console.warn('[home] offseason', err));
   renderMyAces().catch(err => console.warn('[home] my aces', err));
   renderNews();
   renderPhotos();
