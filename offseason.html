@@ -561,6 +561,8 @@
             <!-- Desktop nav will be injected here by nav-component.js -->
         </div>
         
+        <!-- Shown once initPage confirms league staff -->
+        <div data-page-content hidden>
         <!-- Header -->
         <div class="header">
             <a href="index.html" class="back-button">Back Home</a>
@@ -639,6 +641,7 @@
         </div>
     </div>
     
+        </div><!-- End data-page-content -->
     </div><!-- End page-container -->
 
     <script>
@@ -650,6 +653,11 @@
         });
     </script>
     <script src="mobile-enhancements.js"></script>
-<script type="module" src="nav-component.js"></script>
+<script type="module">
+  // League staff only: the nav hides this page, and this gate covers direct links.
+  import { initPage, pageReady } from './js/core/app.js';
+  await initPage({ title: 'Offseason Hub', role: 'league-staff', deniedMessage: 'The Offseason Hub is for league staff.' });
+  pageReady();
+</script>
 </body>
 </html>

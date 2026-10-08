@@ -245,8 +245,6 @@ export const ME_MENU = [
       { id: 'favorites', href: 'favorites.html', label: 'Favorites', icon: 'star', signedIn: true },
       { id: 'notifications', href: 'notifications.html', label: 'Notifications', icon: 'bell', signedIn: true },
       { id: 'photo-upload', href: 'photo-upload.html', label: 'Upload photos', icon: 'upload', signedIn: true },
-      { id: 'aceys-voting', href: 'aceys-award-voting.html', label: 'Aceys voting', icon: 'check-circle',
-        signedIn: true, phase: 'offseason' },
     ],
   },
   {
@@ -300,10 +298,9 @@ export const NAV_UNLISTED = {
   adminTools: ['aggregate-stats.html', 'approve-links.html', 'captain-questionnaire-review.html',
     'games-admin.html', 'league-schedule-editor.html', 'player-import.html', 'playoff-eligibility-tracker.html',
     'schedule-2027-proposal.html', 'schedule-balancer.html', 'schedule-generator.html', 'schedule-rework.html',
-    'schedule-workshop.html', 'season-setup-wizard.html', 'signup-card-export.html', 'wordle-admin.html'],
-  toDelete: ['CHANGES-TODAY.html', 'aggregate-stats-legacy.html', 'banner.html', 'check-token.html',
-    'gc-data-cleaner.html', 'migrate-game-stats.html', 'practice-poll.html', 'quick-notification-tester.html',
-    'submit-stats-legacy.html', 'trade-analyzer.html', 'trophy-case-test.html'],
+    'schedule-workshop.html', 'season-setup-wizard.html', 'signup-card-export.html', 'wordle-admin.html',
+    'aggregate-stats-legacy.html', 'gc-data-cleaner.html', 'submit-stats-legacy.html'],
+  toDelete: [],
 };
 
 // --- Tree helpers (pure: no Firebase, no DOM) -------------------------------
@@ -468,7 +465,6 @@ export const NAV_STRUCTURE = {
     { id: 'offseason-hub', href: 'offseason.html', label: 'Offseason Hub', icon: '🎣️', priority: 4, requiresAuth: true },
     { id: 'aces-shop', href: 'https://acesmountainside.com/', label: 'Aces Shop', icon: '🛒', priority: 4, requiresAuth: true, external: true },
     { id: 'spray-intake', href: 'admin-spray-intake.html', label: 'Spray Chart Intake', icon: '🎯', priority: 4, requiresAuth: true, requiresRole: 'admin' },
-    { id: 'aceys-voting', href: 'aceys-award-voting.html', label: 'Aceys Award Voting', icon: '🗳️', priority: 4, requiresAuth: true },
     { id: 'aceys-admin', href: 'admin-aceys.html', label: 'Aceys Admin', icon: '🏆', priority: 4, requiresAuth: true, requiresRole: 'league_staff' },
     { id: 'admin-hub', href: 'admin-pages.html', label: 'Admin Hub', icon: '🛠️', priority: 4, requiresAuth: true, requiresRole: 'admin' },
     { id: 'admin-view-as', href: 'admin-view-as.html', label: 'View As User', icon: '🎭', priority: 4, requiresAuth: true, requiresRole: 'admin' },
@@ -696,9 +692,6 @@ export const PAGE_CONFIGS = {
     desktop: []
   },
 
-  'aceys-award-voting.html': {
-    desktop: []
-  },
 
   'admin-aceys.html': {
     desktop: []
