@@ -542,7 +542,7 @@
           console.log('✓ User has linked player & complete setup, redirecting to profile...');
           showAlert('✅ Welcome back! Redirecting to your profile...', 'success');
           setTimeout(() => {
-            window.location.href = 'profile.html';
+            window.location.href = 'me.html';
           }, 1500);
         } else {
           console.log('⚙️ User has linked player but incomplete setup, redirecting to setup guide...');
@@ -572,7 +572,7 @@
         console.log('🎯 User has fan account (skipped linking), redirecting to fan profile...');
         showAlert('✅ Welcome back!', 'success');
         setTimeout(() => {
-          window.location.href = 'profile-fan.html';
+          window.location.href = 'me.html';
         }, 1500);
         return;
       }

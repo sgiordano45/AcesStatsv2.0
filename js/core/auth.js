@@ -289,7 +289,7 @@ function checkProfileSetupRedirect(user, profile) {
   } catch {
     return; // no storage: never redirect, or we'd redirect on every page
   }
-  window.location.href = new URL('../../profile.html?showSetup=true', import.meta.url).href;
+  window.location.href = new URL('../../me.html#notifications', import.meta.url).href;
 }
 
 // ===========================================================================

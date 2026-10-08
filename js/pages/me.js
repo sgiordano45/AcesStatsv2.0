@@ -4,8 +4,9 @@
 // time; until a section is built here, its tab links to the old page.
 //
 // Built so far: Dashboard (next game with RSVP, your season, to-do list,
-// notifications, upcoming games), Favorites, Profile, Notifications and
-// Account (js/pages/me-*.js), each loaded when first opened.
+// notifications, upcoming games), and Favorites, Profile, Notifications,
+// Directory, Games, Account and Your tools (js/pages/me-*.js), each loaded
+// when first opened.
 
 import { initPage, pageReady, showPageError } from '../core/app.js';
 import { hasRole } from '../core/auth.js';
@@ -35,9 +36,11 @@ const SECTIONS = [
   { id: 'favorites', label: 'Favorites', icon: 'star' },
   { id: 'profile', label: 'Profile', icon: 'user' },
   { id: 'notifications', label: 'Notifications', icon: 'bell' },
-  { id: 'directory', label: 'Directory', icon: 'id-card', old: 'profile.html#tab-directory' },
+  { id: 'directory', label: 'Directory', icon: 'id-card' },
+  { id: 'games', label: 'Games', icon: 'gamepad' },
   { id: 'account', label: 'Account', icon: 'lock' },
-  { id: 'tools', label: 'Your tools', icon: 'clipboard', old: 'profile.html', role: 'team-staff' }
+  // Admins pass every hasRole check, so they see it too.
+  { id: 'tools', label: 'Your tools', icon: 'clipboard', role: ['team-staff', 'league-staff', 'contributor'] }
 ];
 
 const state = { ctx: null, profile: null, uid: '', canWrite: false, seasonId: '', team: '', games: [], rsvps: new Map(), notes: [], unsub: null };
@@ -237,6 +240,10 @@ function todos({ upcoming, needScore, needStats }, playerLinked) {
     const soon = pending.some(g => g.dateKey && daysBetween(todayKey(), g.dateKey) <= 2);
     out.push({ icon: 'mail', title: 'RSVP', text: `${pending.length} upcoming game${pending.length === 1 ? '' : 's'} need your answer`, href: '#upcoming', urgent: soon });
   }
+  const u = state.ctx.user;
+  if (state.canWrite && u && !u.emailVerified && (u.providerData || []).some(x => x.providerId === 'password')) {
+    out.push({ icon: 'mail', title: 'Verify your email', text: 'Confirm your address to secure your account', href: 'verify-email.html', urgent: true });
+  }
   if (!playerLinked) out.push({ icon: 'link', title: 'Link your player record', text: 'See your stats here and on the home page', href: 'link-player.html' });
   if (!state.profile?.displayName) out.push({ icon: 'user', title: 'Add your display name', text: 'How your name shows around the site', href: 'profile.html' });
   const n = notificationTodo();
@@ -381,6 +388,15 @@ async function show(id) {
   } else if (id === 'account') {
     const { mountAccount } = await import('./me-account.js');
     mountAccount($('meAccount'), { canWrite: state.canWrite, viewingAs: !!state.ctx.impersonating, profile: state.profile, user: state.ctx.user });
+  } else if (id === 'directory') {
+    const { mountDirectory } = await import('./me-directory.js');
+    mountDirectory($('meDirectory'), { uid: state.uid, canWrite: state.canWrite, profile: state.profile });
+  } else if (id === 'games') {
+    const { mountGames } = await import('./me-games.js');
+    await mountGames($('meGames'), { uid: state.uid });
+  } else if (id === 'tools') {
+    const { mountTools } = await import('./me-tools.js');
+    mountTools($('meTools'), { profile: state.profile });
   }
 }
 
