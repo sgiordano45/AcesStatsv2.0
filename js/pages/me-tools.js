@@ -8,16 +8,17 @@ import { escapeHtml as esc } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 
 export const TOOL_GROUPS = [
-  { role: 'team-staff', title: 'Captain and team staff', icon: 'clipboard', guide: 'captain-guide.html', tools: [
+  { role: 'team-staff', title: 'Captain and team staff', icon: 'clipboard', guide: 'help.html#captains', tools: [
     ['roster-management.html', 'Roster and RSVPs', 'Who’s in, lineups and fielding', 'users'],
     ['submit-score.html', 'Submit scores', 'Final scores for your games', 'hash'],
     ['submit-stats.html', 'Submit stats', 'Player stats for your games', 'calculator'],
+    ['game-tracker.html', 'Game tracker', 'Score a game live, play by play', 'clipboard-check'],
     ['manage-team.html', 'Team staff', 'Add or remove co-captains and staff', 'shield'],
     ['captain-roster-edit.html', 'Edit roster info', 'Names, numbers and positions', 'edit'],
     ['team-scouting-report.html', 'Scouting report', 'Your next opponent at a glance', 'binoculars'],
     ['photo-upload.html', 'Team photos', 'Upload photos from games', 'camera']
   ] },
-  { role: 'league-staff', title: 'League staff', icon: 'settings', guide: 'league-staff-guide.html', tools: [
+  { role: 'league-staff', title: 'League staff', icon: 'settings', guide: 'help.html#league-staff', tools: [
     ['league-staff-admin.html', 'League staff admin', 'Seasons, games and settings', 'sliders'],
     ['offseason.html', 'Offseason hub', 'Rosters, schedule and the draft', 'leaf'],
     ['offseason-roster.html', 'Offseason rosters', 'Team assignments for next season', 'users'],

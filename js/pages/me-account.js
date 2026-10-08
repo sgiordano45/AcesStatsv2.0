@@ -54,8 +54,8 @@ function render() {
       <div class="aces-card-head"><h2 class="aces-card-title">${icon('help')} Help</h2></div>
       <ul class="me-links">
         <li><a href="help.html">${icon('book')}<span><strong>Help center</strong><span>Guides for every part of the site</span></span></a></li>
-        <li><a href="aces-features-guide.html">${icon('sparkles')}<span><strong>What you can do</strong><span>A tour of the features</span></span></a></li>
-        <li><a href="profile-setup-guide.html">${icon('clipboard-check')}<span><strong>Setup checklist</strong><span>Link your player, turn on notifications</span></span></a></li>
+        <li><a href="help.html#using-the-site">${icon('sparkles')}<span><strong>What you can do</strong><span>A tour of the features</span></span></a></li>
+        <li><a href="help.html#getting-started">${icon('clipboard-check')}<span><strong>Getting started</strong><span>Link your player, turn on notifications</span></span></a></li>
       </ul>
     </section>
 

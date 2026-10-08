@@ -210,17 +210,10 @@ export const NAV_HUBS = [
     // the header (and the More sheet on phones) and gets its own tab row.
     id: 'help', label: 'Help', icon: 'help', utility: true,
     tabs: [
-      { id: 'help', href: 'help.html', label: 'Help center', icon: 'help' },
-      { id: 'features-guide', href: 'aces-features-guide.html', label: 'Site features', icon: 'sparkles' },
-      { id: 'profile-setup-guide', href: 'profile-setup-guide.html', label: 'Profile setup', icon: 'user' },
-      { id: 'signup-guide', href: 'mountainside-aces-signup-guide.html', label: 'Signing up', icon: 'user-plus' },
-      { id: 'scoring-guide', href: 'scoring-guide.html', label: 'Scoring', icon: 'hash' },
-      { id: 'calendar-guide', href: 'calendar-export-guide.html', label: 'Calendar', icon: 'calendar' },
-      { id: 'game-tracker-guide', href: 'game-tracker-guide.html', label: 'Game tracker', icon: 'clipboard', role: 'team-staff' },
-      { id: 'captain-guide', href: 'captain-guide.html', label: "Captain's guide", icon: 'book', role: 'captain' },
-      { id: 'contributor-guide', href: 'contributor-guide.html', label: 'Contributors', icon: 'sparkles', role: CONTRIBUTOR_ROLES },
-      { id: 'league-staff-guide', href: 'league-staff-guide.html', label: 'League staff', icon: 'shield', role: 'league-staff' },
-      { id: 'offseason-guide', href: 'offseason-guide.html', label: 'Offseason', icon: 'snowflake', role: 'league-staff' },
+      { id: 'help', href: 'help.html', label: 'Help center', icon: 'help',
+        also: ['aces-features-guide.html', 'profile-setup-guide.html', 'mountainside-aces-signup-guide.html',
+          'scoring-guide.html', 'calendar-export-guide.html', 'game-tracker-guide.html', 'captain-guide.html',
+          'contributor-guide.html', 'league-staff-guide.html', 'offseason-guide.html'] },
     ],
   },
 ];

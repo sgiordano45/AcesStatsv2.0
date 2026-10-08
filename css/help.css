@@ -1,0 +1,43 @@
+/* ==========================================================================
+   css/help.css - help.html (js/pages/help.js)
+   ========================================================================== */
+
+.help { padding-bottom: var(--space-12); max-width: 880px; }
+.help-search { margin-bottom: var(--space-3); }
+.help-search .aces-field { margin: 0; }
+.help-search .aces-input { min-height: 48px; font-size: var(--fs-md); }
+.help-count { min-height: 1.2em; margin: var(--space-1) 0 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.help-chips { margin-bottom: var(--space-6); }
+.help-chips .aces-icon { width: 14px; height: 14px; }
+
+.help-section { scroll-margin-top: calc(var(--nav-bar-h, 52px) + 56px); margin-bottom: var(--space-8); }
+.help-section[hidden] { display: none; }
+.help-section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.help-section-title { display: flex; align-items: center; gap: var(--space-2); margin: 0; font: 400 var(--fs-2xl, 1.75rem) / 1.1 var(--font-display); letter-spacing: var(--tracking-display, 0.02em); text-transform: uppercase; }
+.help-section-title .aces-icon { width: 22px; height: 22px; color: var(--color-brand); }
+:root[data-theme="dark"] .help-section-title .aces-icon { color: var(--color-link); }
+.help-intro { margin: var(--space-1) 0 var(--space-3); color: var(--color-text-muted); }
+
+.help-topics { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); overflow: hidden; }
+.help-topic { scroll-margin-top: calc(var(--nav-bar-h, 52px) + 56px); }
+.help-topic[hidden] { display: none; }
+.help-topic + .help-topic { border-top: 1px solid var(--color-border); }
+.help-topic summary {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  min-height: 48px; padding: var(--space-2) var(--space-4);
+  font-weight: var(--fw-semibold); cursor: pointer; list-style: none;
+}
+.help-topic summary::-webkit-details-marker { display: none; }
+.help-topic summary:hover { background: var(--color-surface-2); }
+.help-topic summary .aces-icon { flex: none; width: 18px; height: 18px; color: var(--color-text-muted); transition: transform var(--dur-fast, 150ms); }
+.help-topic[open] summary .aces-icon { transform: rotate(180deg); }
+.help-topic[open] summary { color: var(--color-brand); }
+:root[data-theme="dark"] .help-topic[open] summary { color: var(--color-link); }
+.help-topic-body { padding: 0 var(--space-4) var(--space-4); line-height: 1.6; }
+.help-topic-body > :first-child { margin-top: 0; }
+.help-topic-body > :last-child { margin-bottom: 0; }
+.help-topic-body p { margin: 0 0 var(--space-2); }
+.help-topic-body ul, .help-topic-body ol { margin: 0 0 var(--space-2); padding-left: 1.3em; }
+.help-topic-body li + li { margin-top: 4px; }
+.help-topic-body a { color: var(--color-link); font-weight: var(--fw-semibold); }
+.help-empty { padding: var(--space-6) 0; color: var(--color-text-muted); text-align: center; }

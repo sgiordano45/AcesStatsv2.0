@@ -1311,7 +1311,7 @@ async function handleUserLoggedIn(user) {
         profileBtn.onclick = () => window.location.href = 'profile.html';
       } else {
         profileBtn.innerHTML = '<span>Continue Profile Setup →</span>';
-        profileBtn.onclick = () => window.location.href = 'profile-setup-guide.html';
+        profileBtn.onclick = () => window.location.href = 'me.html';
       }
     }
     
@@ -1357,7 +1357,7 @@ async function handleUserLoggedIn(user) {
           console.log('✅ Auto-approval processed');
           // Redirect to profile setup guide
           setTimeout(() => {
-            window.location.href = 'profile-setup-guide.html';
+            window.location.href = 'me.html';
           }, 2000);
         }
       } catch (error) {
