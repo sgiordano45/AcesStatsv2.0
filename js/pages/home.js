@@ -359,9 +359,9 @@ async function renderPhotos() {
     el.innerHTML = `
       <div class="aces-section-head">
         <h2 class="aces-section-title">League photos</h2>
-        <a class="aces-section-link" href="pictures.html">All photos</a>
+        <a class="aces-section-link" href="media.html">All photos</a>
       </div>
-      <div class="home-photos">${photos.map(p => `<a class="home-photo" href="pictures.html"><img src="${esc(p.url)}" alt="${esc(p.name || 'League photo')}" loading="lazy"></a>`).join('')}</div>`;
+      <div class="home-photos">${photos.map(p => `<a class="home-photo" href="media.html"><img src="${esc(p.url)}" alt="${esc(p.name || 'League photo')}" loading="lazy"></a>`).join('')}</div>`;
   } catch (err) {
     console.warn('[home] photos unavailable', err);
     el.hidden = true;

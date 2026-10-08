@@ -16,7 +16,7 @@ export const TOOL_GROUPS = [
     ['manage-team.html', 'Team staff', 'Add or remove co-captains and staff', 'shield'],
     ['captain-roster-edit.html', 'Edit roster info', 'Names, numbers and positions', 'edit'],
     ['team-scouting-report.html', 'Scouting report', 'Your next opponent at a glance', 'binoculars'],
-    ['photo-upload.html', 'Team photos', 'Upload photos from games', 'camera']
+    ['media.html#upload', 'Team photos', 'Upload photos from games', 'camera']
   ] },
   { role: 'league-staff', title: 'League staff', icon: 'settings', guide: 'help.html#league-staff', tools: [
     ['league-staff-admin.html', 'League staff admin', 'Seasons, games and settings', 'sliders'],

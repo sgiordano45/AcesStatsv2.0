@@ -131,7 +131,7 @@ export const HELP_SECTIONS = [
     "id": "daily-games-photos",
     "title": "Play the daily games and share photos",
     "keywords": "daily word game 6-letter streak play photos gallery upload videos baseball card",
-    "body": "<p>The <strong>Play</strong> hub has the daily 6-letter word games, with a new puzzle every day. Your record, streaks and game badges are on <a href=\"me.html#games\">Me, Games tab</a>.</p><p>The <a href=\"pictures.html\">photo gallery</a> holds photos and videos from games and events, organized by team. Signed-in members can add their own on <a href=\"photo-upload.html\">Photo upload</a>.</p><p>You can also make a baseball card from your photo, stats and team colors, and download or share it.</p>"
+    "body": "<p>The <strong>Play</strong> hub has the daily 6-letter word games, with a new puzzle every day. Your record, streaks and game badges are on <a href=\"me.html#games\">Me, Games tab</a>.</p><p>The <a href=\"media.html#photos\">photo gallery</a> holds photos and videos from games and events, organized by team. Signed-in members can add their own on <a href=\"media.html#upload\">Photo upload</a>.</p><p>You can also make a baseball card from your photo, stats and team colors, and download or share it.</p>"
    }
   ]
  },
@@ -405,7 +405,7 @@ export const HELP_SECTIONS = [
     "id": "manage-photos",
     "title": "Upload and manage photos",
     "keywords": "photos videos upload caption album team folder delete",
-    "body": "<p>To add new media, click <strong>Go to Photo Upload</strong> (or open <a href=\"photo-upload.html\">Photo upload</a>). You can upload several photos or videos at once, pick a team album and add captions.</p><p>To edit existing uploads, open the Photos tab, click a photo, change its caption or album, and click <strong>Save Changes</strong>.</p><p>Albums: League Photos (general), plus one for each team: Green, Blue, Orange, Purple, Red, Yellow, Black, White, Gold, Silver, Carolina and Army.</p><p><strong>Delete is permanent.</strong> It removes the file from storage and cannot be undone.</p>"
+    "body": "<p>To add new media, click <strong>Go to Photo Upload</strong> (or open <a href=\"media.html#upload\">Photo upload</a>). You can upload several photos or videos at once, pick a team album and add captions.</p><p>To edit existing uploads, open the Photos tab, click a photo, change its caption or album, and click <strong>Save Changes</strong>.</p><p>Albums: League Photos (general), plus one for each team: Green, Blue, Orange, Purple, Red, Yellow, Black, White, Gold, Silver, Carolina and Army.</p><p><strong>Delete is permanent.</strong> It removes the file from storage and cannot be undone.</p>"
    },
    {
     "id": "odds-previews",

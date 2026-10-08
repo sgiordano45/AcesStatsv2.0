@@ -125,7 +125,7 @@ export const NAV_HUBS = [
       ] },
       { id: 'weekend-preview', href: 'weekend-preview.html', label: 'Preview', icon: 'binoculars',
         also: ['game-preview.html', 'game-recap.html'] },
-      { id: 'stream', href: 'stream.html', label: 'Live', icon: 'radio' },
+      { id: 'stream', href: 'media.html#live', label: 'Live', icon: 'radio' },
       { key: 'rules', label: 'Rules', icon: 'scale', pages: [
         { id: 'league-rules', href: 'league-rules.html', label: 'Rules', icon: 'scale' },
         { id: 'rule-proposal', href: 'rule-proposals.html', label: 'Proposals', icon: 'clipboard' },
@@ -186,10 +186,8 @@ export const NAV_HUBS = [
         also: ['badge-weekly.html'] },
       { id: 'history', href: 'league-history.html', label: 'League history', icon: 'scroll',
         also: ['aces-23-0.html'] },
-      { key: 'media', label: 'Media', icon: 'images', pages: [
-        { id: 'pictures', href: 'pictures.html', label: 'Photos', icon: 'images' },
-        { id: 'media', href: 'media.html', label: 'Video', icon: 'video' },
-      ] },
+      { id: 'media', href: 'media.html', label: 'Media', icon: 'images',
+        also: ['pictures.html', 'stream.html', 'photo-upload.html'] },
     ],
   },
   {
@@ -230,7 +228,8 @@ export const ME_MENU = [
       { id: 'favorites', href: 'me.html#favorites', label: 'Favorites', icon: 'star', signedIn: true,
         also: ['favorites.html'] },
       { id: 'notifications', href: 'notifications.html', label: 'Notifications', icon: 'bell', signedIn: true },
-      { id: 'photo-upload', href: 'photo-upload.html', label: 'Upload photos', icon: 'upload', signedIn: true },
+      { id: 'photo-upload', href: 'media.html#upload', label: 'Upload photos', icon: 'upload', signedIn: true,
+        role: ['team-staff', 'league-staff', 'photographer'] },
     ],
   },
   {
