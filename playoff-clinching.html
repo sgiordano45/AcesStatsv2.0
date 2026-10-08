@@ -334,9 +334,9 @@
     background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
     font-weight: 600;
     color: var(--text-dark);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    /* Not sticky: inside the overflow-x wrappers it never stuck to the page,
+       and Chrome painted it over the second row. */
+    position: static !important;
   }
 
   .clinching-table tbody tr {
