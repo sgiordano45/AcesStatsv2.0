@@ -758,6 +758,13 @@ body {
 .leader-table tr.is-me td { background: var(--color-accent-soft, #fff5c2) !important; }
 .leader-table tr.is-me td:first-child { box-shadow: inset 3px 0 0 var(--color-accent, #ffd700); }
 .leader-table tr.me-extra td { border-top: 2px dashed var(--color-border-strong, #cdd1c9); }
+/* Milestones view: one full-width heading per stat, club cards beneath. */
+.milestone-head { grid-column: 1 / -1; margin: 0.5rem 0 -0.75rem; font-size: 1.35rem; color: var(--text-dark); }
+.milestone-head:first-child { margin-top: 0; }
+.leader-table td.gap-cell { color: var(--text-light); white-space: nowrap; }
+.leader-section .empty-club { padding: 1rem 1.5rem; color: var(--text-light); font-style: italic; text-align: center; }
+.toggle-btn.milestones { border-color: var(--color-accent-ink, #8a6d00); color: var(--color-accent-ink, #8a6d00); }
+.toggle-btn.milestones.active { background: var(--color-accent-ink, #8a6d00); color: white; }
 </style>
 </head>
 <body>
@@ -775,7 +782,7 @@ body {
 
   </div>
 
-  <div class="scope-selector">
+  <div class="scope-selector" id="scopeSelector">
     <h3>Leader Type</h3>
     <div class="scope-toggle">
       <button id="careerScopeBtn" class="scope-btn active" onclick="switchToScope('career')">
@@ -804,6 +811,9 @@ body {
       <button id="pitchingLeadersBtn" class="toggle-btn pitching" onclick="switchToView('pitching')">
         🥎 Pitching Leaders
       </button>
+      <button id="milestonesBtn" class="toggle-btn milestones" onclick="switchToView('milestones')">
+        &#x1F3AF; Milestones
+      </button>
     </div>
   </div>
 
@@ -820,6 +830,8 @@ body {
 // js/ui/pitching-stats.js; rate stats use the shared minimums.
 //
 // URL: leaders.html?view=pitching&scope=career|best|season&season=2026-fall
+// view=milestones lists the career clubs (100+ hits and so on); it replaced
+// milestones.html, as the batting/pitching toggle replaced pitching_leaders.html.
 
 // firebase-data.js first: its firebase-config.js creates the Firebase app,
 // and js/core/firebase.js (loaded through app.js) reuses it.
@@ -834,6 +846,7 @@ import { pickDefaultSeason } from './js/ui/stat-filters.js';
 import { teamChipHtml } from './js/ui/stat-columns.js';
 import { buildBattingRows, battingTableConfig } from './js/ui/batting-stats.js';
 import { buildPitchingRows, pitchingTableConfig } from './js/ui/pitching-stats.js';
+import { MILESTONES } from './js/domain/summary.js';
 
 const $ = (id) => document.getElementById(id);
 const TOP = 10;
@@ -994,7 +1007,74 @@ function leaderTable(rows, cat, kind) {
     </div>`;
 }
 
+// ---- milestones -------------------------------------------------------------------
+
+// Hits and runs use the same steps as the home page's milestone watch.
+const CLUBS = [
+  { key: 'hits', label: 'Hits', icon: '\u{1F3AF}', steps: MILESTONES.hits },
+  { key: 'runs', label: 'Runs', icon: '\u{1F3C3}', steps: MILESTONES.runs },
+  { key: 'walks', label: 'Walks', icon: '\u{1F6B6}', steps: [10, 20, 30, 40, 50] }
+];
+const CLOSE = 0.9;   // "Closing in": at least 90% of the way to the next club
+
+function playerLink(r, value, extra = '') {
+  const q = r.id ? `id=${encodeURIComponent(r.id)}` : `name=${encodeURIComponent(r.name)}`;
+  return `<td><a href="player.html?${esc(q)}">${esc(r.name)}</a></td><td class="stat-value">${esc(String(value))}</td>${extra}`;
+}
+
+function milestonesHtml() {
+  const rows = careerRows(bat, batMerge);
+  let html = '';
+  for (const club of CLUBS) {
+    const top = Math.max(0, ...rows.map(r => r[club.key] || 0));
+    // Steps carry on past the list while anyone is above the last one.
+    const steps = [...club.steps];
+    const inc = steps[steps.length - 1] - steps[steps.length - 2];
+    while (steps[steps.length - 1] <= top) steps.push(steps[steps.length - 1] + inc);
+    // Clubs up to and including the first one nobody has reached.
+    const shown = steps.slice(0, steps.findIndex(t => t > top) + 1);
+
+    html += `<h2 class="milestone-head">${club.icon} Career ${club.label}</h2>`;
+
+    const closing = rows
+      .map(r => ({ r, v: r[club.key] || 0 }))
+      .map(x => ({ ...x, next: steps.find(t => t > x.v) }))
+      .filter(x => x.next && x.v > 0 && x.v >= x.next * CLOSE)
+      .sort((a, b) => (a.next - a.v) - (b.next - b.v) || b.v - a.v);
+    if (closing.length) {
+      html += `<div class="leader-section">
+        <h3>Closing in</h3>
+        <div class="minimum-note">Within 10% of the next ${esc(club.label.toLowerCase())} club</div>
+        <table class="leader-table"><thead><tr><th>Player</th><th class="stat-value">${esc(club.label)}</th><th class="stat-value">Next</th></tr></thead>
+        <tbody>${closing.map(x => `<tr${isMe(x.r) ? ' class="is-me"' : ''}>${playerLink(x.r, x.v, `<td class="stat-value gap-cell">${x.next - x.v} to ${x.next}</td>`)}</tr>`).join('')}</tbody></table>
+      </div>`;
+    }
+
+    for (const t of [...shown].reverse()) {
+      const members = rows.filter(r => (r[club.key] || 0) >= t).sort((a, b) => b[club.key] - a[club.key] || a.name.localeCompare(b.name));
+      let rank = 0;
+      const body = members.map((r, i) => {
+        if (i === 0 || r[club.key] !== members[i - 1][club.key]) rank = i + 1;
+        const cls = [rank <= 3 ? `rank-${rank}` : '', isMe(r) ? 'is-me' : ''].filter(Boolean).join(' ');
+        return `<tr${cls ? ` class="${cls}"` : ''}><td class="rank">${rank}</td>${playerLink(r, r[club.key])}</tr>`;
+      }).join('');
+      html += `<div class="leader-section">
+        <h3>${t}+ ${esc(club.label)}</h3>
+        ${members.length
+          ? `<div class="minimum-note">${members.length} player${members.length === 1 ? '' : 's'}</div>
+             <table class="leader-table"><thead><tr><th class="rank">Rank</th><th>Player</th><th class="stat-value">${esc(club.label)}</th></tr></thead><tbody>${body}</tbody></table>`
+          : '<p class="empty-club">No one has reached this yet</p>'}
+      </div>`;
+    }
+  }
+  return html;
+}
+
 function render() {
+  if (state.view === 'milestones') {
+    $('leaders-container').innerHTML = milestonesHtml() || '<div class="loading">No career stats yet.</div>';
+    return;
+  }
   const kind = state.view;
   const rows = rowsFor(kind);
   const cats = kind === 'batting' ? battingCategories() : pitchingCategories();
@@ -1012,6 +1092,15 @@ const SCOPE_TEXT = {
 };
 
 function syncControls() {
+  const ms = state.view === 'milestones';
+  $('scopeSelector').hidden = ms;
+  $('milestonesBtn').classList.toggle('active', ms);
+  if (ms) {
+    $('pageTitle').textContent = '\u{1F3AF} Career Milestones';
+    $('battingLeadersBtn').classList.remove('active');
+    $('pitchingLeadersBtn').classList.remove('active');
+    return;
+  }
   const typeText = state.view === 'batting' ? 'Batting' : 'Pitching';
   const scopeText = state.scope === 'career' ? 'Career' : state.scope === 'best' ? 'Best Season' : seasonLabel(state.season);
   $('pageTitle').textContent = `${state.view === 'batting' ? '⚾' : '\u{1F94E}'} ${typeText} ${scopeText} Leaders`;
@@ -1027,8 +1116,8 @@ function writeUrl() {
   const p = new URLSearchParams(location.search);
   const set = (k, v, dflt) => (v && v !== dflt ? p.set(k, v) : p.delete(k));
   set('view', state.view, 'batting');
-  set('scope', state.scope, 'career');
-  set('season', state.scope === 'season' ? state.season : '', defaultSeason);
+  set('scope', state.view === 'milestones' ? '' : state.scope, 'career');
+  set('season', state.view !== 'milestones' && state.scope === 'season' ? state.season : '', defaultSeason);
   const qs = p.toString();
   history.replaceState(history.state, '', `${location.pathname}${qs ? `?${qs}` : ''}${location.hash}`);
 }
@@ -1041,7 +1130,8 @@ function update(patch) {
 }
 
 // The old inline onclick handlers.
-window.switchToView = (view) => update({ view: view === 'pitching' ? 'pitching' : 'batting' });
+const VIEWS = ['batting', 'pitching', 'milestones'];
+window.switchToView = (view) => update({ view: VIEWS.includes(view) ? view : 'batting' });
 window.switchToScope = (scope) => update({ scope: ['career', 'best', 'season'].includes(scope) ? scope : 'career' });
 
 // ---- start ----------------------------------------------------------------------------
@@ -1061,7 +1151,7 @@ async function main() {
 
   const p = new URLSearchParams(location.search);
   state = {
-    view: p.get('view') === 'pitching' ? 'pitching' : 'batting',
+    view: VIEWS.includes(p.get('view')) ? p.get('view') : 'batting',
     scope: ['career', 'best', 'season'].includes(p.get('scope')) ? p.get('scope') : 'career',
     season: seasonIds.includes(p.get('season')) ? p.get('season') : defaultSeason
   };

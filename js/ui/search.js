@@ -26,7 +26,7 @@ const KEYWORDS = {
   schedule: 'games calendar fixtures',
   batting: 'hitting average obp stats',
   pitching: 'era innings pitchers',
-  leaders: 'leaderboard top best records',
+  leaders: 'leaderboard top best records milestones clubs pitching',
   teams: 'rosters',
   players: 'directory roster',
   playoffs: 'bracket postseason',

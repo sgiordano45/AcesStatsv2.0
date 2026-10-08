@@ -380,7 +380,7 @@ function renderMilestones() {
   const el = section('homeMilestones', `
     <div class="aces-card-head">
       <h2 class="aces-card-title">${icon('target')} Milestone watch</h2>
-      <a class="aces-section-link" href="milestones.html">Milestones</a>
+      <a class="aces-section-link" href="leaders.html?view=milestones">Milestones</a>
     </div>
     <div class="home-boards is-two">
       <div class="home-board"><h3 class="home-board-title">Career hits</h3>${list(m.hits || [], 'hits')}</div>

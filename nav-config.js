@@ -148,12 +148,9 @@ export const NAV_HUBS = [
     id: 'stats', label: 'Stats', icon: 'chart-bar',
     tabs: [
       { id: 'batting', href: 'batting.html', label: 'Batting', icon: 'bat' },
-      { id: 'pitching', href: 'pitching.html', label: 'Pitching', icon: 'softball',
-        also: ['pitching_leaders.html'] },
-      { key: 'leaders', label: 'Leaders', icon: 'crown', pages: [
-        { id: 'leaders', href: 'leaders.html', label: 'Career', icon: 'crown' },
-        { id: 'milestones', href: 'milestones.html', label: 'Milestones', icon: 'target' },
-      ] },
+      { id: 'pitching', href: 'pitching.html', label: 'Pitching', icon: 'softball' },
+      { id: 'leaders', href: 'leaders.html', label: 'Leaders', icon: 'crown',
+        also: ['milestones.html', 'pitching_leaders.html'] },
       { key: 'compare', label: 'Compare', icon: 'arrow-left-right', pages: [
         { id: 'compare', href: 'compare.html', label: 'Players', icon: 'users' },
         { id: 'team-compare', href: 'team_compare.html', label: 'Teams', icon: 'versus' },
@@ -418,7 +415,6 @@ export const NAV_STRUCTURE = {
 
   // Tier 3: TERTIARY - Specialty pages (mobile-only unless contextually relevant)
   tertiary: [
-    { id: 'milestones', href: 'milestones.html', label: 'Milestones', icon: '🎯', priority: 3 },
     { id: 'compare', href: 'compare.html', label: 'Player Comparison', icon: '🔀', priority: 3 },
     { id: 'team-compare', href: 'team_compare.html', label: 'Team Comparison', icon: '🆚', priority: 3 },
     { id: 'h2h', href: 'h2h_grid.html', label: 'Head-to-Head Grid', icon: '⚔️', priority: 3 },
@@ -535,7 +531,7 @@ export const PAGE_CONFIGS = {
   },
   
   'player.html': {
-    desktop: ['home', 'batting', 'pitching', 'players', 'leaders', 'milestones', 'compare']
+    desktop: ['home', 'batting', 'pitching', 'players', 'leaders', 'compare']
   },
   
   'seasons.html': {
@@ -547,7 +543,7 @@ export const PAGE_CONFIGS = {
   },
   
   'leaders.html': {
-    desktop: ['home', 'current-season', 'batting', 'pitching', 'players', 'leaders', 'milestones', 'awards']
+    desktop: ['home', 'current-season', 'batting', 'pitching', 'players', 'leaders', 'awards']
   },
   
   'awards.html': {
@@ -566,9 +562,6 @@ export const PAGE_CONFIGS = {
     desktop: ['home', 'current-season', 'champions', 'awards', 'leaders', 'players']
   },
 
-  'milestones.html': {
-    desktop: ['home', 'batting', 'pitching', 'players', 'leaders', ]
-  },
   
   'compare.html': {
     desktop: ['home', 'batting', 'pitching', 'players', 'leaders', ]

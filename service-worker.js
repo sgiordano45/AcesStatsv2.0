@@ -55,7 +55,6 @@ const HTML_PAGES = [
   `${BASE_PATH}/seasons.html`,
   `${BASE_PATH}/playoffs.html`,
   `${BASE_PATH}/leaders.html`,
-  `${BASE_PATH}/milestones.html`,
   `${BASE_PATH}/pictures.html`,
   `${BASE_PATH}/photo-upload.html`,
   `${BASE_PATH}/compare.html`,
