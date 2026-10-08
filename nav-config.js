@@ -153,11 +153,8 @@ export const NAV_HUBS = [
         also: ['milestones.html', 'pitching_leaders.html'] },
       { id: 'compare', href: 'compare.html', label: 'Compare', icon: 'arrow-left-right',
         also: ['team_compare.html', 'h2h_grid.html'] },
-      { key: 'explore', label: 'Explore', icon: 'search', pages: [
-        { id: 'query-stats', href: 'query-stats.html', label: 'Query', icon: 'search' },
-        { id: 'charts', href: 'charts.html', label: 'Charts', icon: 'chart-line' },
-        { id: 'bwar-explorer', href: 'bwar-explorer.html', label: 'bWAR', icon: 'calculator' },
-      ] },
+      { id: 'explore', href: 'explore.html', label: 'Explore', icon: 'search',
+        also: ['query-stats.html', 'charts.html'] },
       { id: 'team-stats', href: 'team-stats.html', label: 'Team stats', icon: 'table' },
       { id: 'scouting-report', href: 'scouting-report.html', label: 'Scouting', icon: 'binoculars' },
     ],
@@ -293,7 +290,7 @@ export const NAV_UNLISTED = {
     'games-admin.html', 'league-schedule-editor.html', 'player-import.html', 'playoff-eligibility-tracker.html',
     'schedule-2027-proposal.html', 'schedule-balancer.html', 'schedule-generator.html', 'schedule-rework.html',
     'schedule-workshop.html', 'season-setup-wizard.html', 'signup-card-export.html', 'wordle-admin.html',
-    'aggregate-stats-legacy.html', 'gc-data-cleaner.html', 'submit-stats-legacy.html'],
+    'aggregate-stats-legacy.html', 'gc-data-cleaner.html', 'submit-stats-legacy.html', 'bwar-explorer.html'],
   toDelete: [],
 };
 
@@ -414,10 +411,9 @@ export const NAV_STRUCTURE = {
   tertiary: [
     { id: 'compare', href: 'compare.html', label: 'Compare', icon: '🔀', priority: 3 },
     { id: 'history', href: 'league-history.html', label: 'League History', icon: '📜', priority: 3 },
-    { id: 'charts', href: 'charts.html', label: 'Performance Charts', icon: '📊', priority: 3 },
+    { id: 'explore', href: 'explore.html', label: 'Explore', icon: '📊', priority: 3 },
     { id: 'team-stats', href: 'team-stats.html', label: 'Team Stats', icon: '🏟️', priority: 3 },
     { id: 'scouting-report', href: 'scouting-report.html', label: 'Scouting Report', icon: '🔭', priority: 3 },
-    { id: 'query-stats', href: 'query-stats.html', label: 'Stats Query Tool', icon: '🔍', priority: 3 },
     { id: 'pictures', href: 'pictures.html', label: 'Gallery', icon: '📷', priority: 3 },
     { id: 'media', href: 'media.html', label: 'Media Hub', icon: '📺', priority: 3 },
     { id: 'rule-proposal', href: 'rule-proposals.html', label: 'Rule Proposals', icon: '📋', priority: 3 },
@@ -568,13 +564,7 @@ export const PAGE_CONFIGS = {
     desktop: ['home', 'current-season', 'teams', 'team-compare', 'h2h']
   },
   
-  'charts.html': {
-    desktop: ['home', 'current-season', 'batting', 'pitching', 'teams', 'players', 'seasons', 'leaders', 'compare', 'team-compare', 'charts']
-  },
   
-  'query-stats.html': {
-    desktop: ['home', 'batting', 'pitching', 'players', 'leaders', 'query-stats']
-  },
   
   'pictures.html': {
     desktop: ['home', 'current-season', 'teams', 'players', 'pictures']

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script type="module" src="js/core/preview-guard.js"></script>
+<link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Explore Mountainside Aces stats: filter players and teams by any stat and see the results as a table or chart.">
+<title>Explore - Mountainside Aces</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="css/table.css">
+<link rel="stylesheet" href="css/explore.css">
+</head>
+<body class="aces-v2">
+
+<main class="x aces-container" id="main">
+  <header class="aces-page-head">
+    <div>
+      <span class="aces-page-kicker">Stats</span>
+      <h1 class="aces-page-title">Explore</h1>
+    </div>
+  </header>
+
+  <section class="aces-card x-builder" aria-label="Query">
+    <div class="x-row">
+      <div class="x-group">
+        <span class="aces-label">Look at</span>
+        <div class="aces-segmented" role="group" aria-label="Look at">
+          <button type="button" class="aces-segment" data-what="batting" aria-pressed="true">Batting</button>
+          <button type="button" class="aces-segment" data-what="pitching" aria-pressed="false">Pitching</button>
+          <button type="button" class="aces-segment" data-what="teams" aria-pressed="false">Teams</button>
+        </div>
+      </div>
+      <div class="x-group">
+        <span class="aces-label">Over</span>
+        <div class="aces-segmented" role="group" aria-label="Over">
+          <button type="button" class="aces-segment" data-scope="season" aria-pressed="true">One season</button>
+          <button type="button" class="aces-segment" data-scope="all" aria-pressed="false">Every season</button>
+          <button type="button" class="aces-segment" data-scope="career" aria-pressed="false">Career</button>
+        </div>
+      </div>
+      <label class="aces-field x-group" id="xSeasonWrap"><span class="aces-label">Season</span>
+        <span class="aces-select-wrap"><select class="aces-select is-sm" id="xSeason"></select></span></label>
+      <label class="aces-field x-group" id="xTeamWrap"><span class="aces-label">Team</span>
+        <span class="aces-select-wrap"><select class="aces-select is-sm" id="xTeam"></select></span></label>
+    </div>
+
+    <div class="x-filters-head">
+      <span class="aces-label">Filters</span>
+      <span class="x-hint">All must match. Averages can be typed as .400 or 400.</span>
+    </div>
+    <div class="x-filters" id="xFilters"></div>
+    <div class="aces-cluster">
+      <button type="button" class="aces-btn is-sm" data-add-filter>Add filter</button>
+      <button type="button" class="aces-btn is-ghost is-sm" data-clear-filters>Clear</button>
+    </div>
+  </section>
+
+  <div class="x-results-head">
+    <p class="x-count" id="xCount" aria-live="polite"></p>
+    <div class="aces-segmented" role="group" aria-label="Show as">
+      <button type="button" class="aces-segment" data-view="table" aria-pressed="true">Table</button>
+      <button type="button" class="aces-segment" data-view="chart" aria-pressed="false">Chart</button>
+    </div>
+  </div>
+
+  <div id="xTable"></div>
+  <section class="aces-card x-chart" id="xChart" hidden aria-label="Chart"></section>
+</main>
+
+<script type="module" src="js/pages/explore.js"></script>
+<script src="mobile-enhancements.js"></script>
+</body>
+</html>

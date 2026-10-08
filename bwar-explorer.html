@@ -315,7 +315,7 @@
 
 <div id="navPlaceholder"></div>
 
-<div class="container">
+<div class="container" data-page-content hidden>
 
   <!-- Season selector -->
   <div class="card">
@@ -434,6 +434,7 @@
 <script type="module">
 import { getAllSeasons, getSeasonGames, getSeasonPlayerStatsOptimized } from './firebase-data.js';
 import { getDisplaySeasonId } from './js/core/config.js';
+import { initPage, pageReady } from './js/core/app.js';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let rawPlayers = [];
@@ -456,7 +457,10 @@ const DEFAULTS = {
 };
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
+// League staff only: a calibration tool, reached from the admin tools.
 (async () => {
+  await initPage({ title: 'bWAR Explorer', role: 'league-staff', deniedMessage: 'The bWAR Explorer is a league staff tool.' });
+  pageReady();
   buildSliders();
   await populateSeasons();
 })();
@@ -851,6 +855,5 @@ function hideStatus() { hide('statusMsg'); }
 
 </script>
 
-<script src="nav-loader.js"></script>
 </body>
 </html>

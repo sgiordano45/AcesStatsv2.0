@@ -28,6 +28,7 @@ const KEYWORDS = {
   pitching: 'era innings pitchers',
   leaders: 'leaderboard top best records milestones clubs pitching',
   teams: 'rosters',
+  explore: 'query filter search chart charts graph find',
   compare: 'versus vs head-to-head h2h matchup rivalry players teams',
   players: 'directory roster',
   playoffs: 'bracket postseason',

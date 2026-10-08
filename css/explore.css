@@ -1,0 +1,52 @@
+/* ==========================================================================
+   css/explore.css - explore.html (js/pages/explore.js)
+   The query builder, and the bar chart view. The table is css/table.css.
+   ========================================================================== */
+
+.x { padding-bottom: var(--space-12); }
+
+.x-builder { display: grid; gap: var(--space-3); margin-bottom: var(--space-4); }
+.x-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3) var(--space-4); }
+.x-group { display: grid; gap: 4px; margin: 0; }
+.x-group[hidden] { display: none; }
+.x-group .aces-segmented { max-width: 100%; }
+
+.x-filters-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--color-border); }
+.x-hint { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.x-filters { display: grid; gap: var(--space-2); }
+.x-filters:empty { display: none; }
+.x-filter { display: grid; grid-template-columns: minmax(0, 1fr) 72px 110px 32px; gap: var(--space-2); align-items: center; max-width: 560px; }
+.x-filter .aces-select-wrap { min-width: 0; }
+.x-val { min-height: 36px; padding: 0 10px; font-size: var(--fs-sm); }
+.x-op { text-align: center; }
+
+.x-results-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); }
+.x-count { margin: 0; color: var(--color-text-muted); font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+
+/* Bar chart: rank, name, bar, value. Bars take the team color. */
+.x-chart-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-3); }
+.x-chart-pick { margin: 0; }
+.x-chart-note { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.x-bars { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.x-bar {
+  display: grid;
+  grid-template-columns: 2em minmax(90px, 200px) minmax(0, 1fr) 4.5em;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+}
+.x-bar-rank { color: var(--color-text-muted); font-variant-numeric: tabular-nums; text-align: right; }
+.x-bar-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: var(--fw-semibold); }
+.x-bar-season { color: var(--color-text-muted); font-weight: var(--fw-medium); font-size: var(--fs-xs); }
+.x-bar-track { height: 18px; border-radius: 4px; background: var(--color-surface-2); overflow: hidden; }
+.x-bar-fill { display: block; height: 100%; width: var(--w); border-radius: 4px; background: var(--team, var(--color-brand)); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12); }
+.x-bar-fill.is-neg { opacity: 0.55; background-image: repeating-linear-gradient(135deg, transparent 0 4px, rgba(255, 255, 255, 0.35) 4px 8px); }
+.x-bar-val { font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; text-align: right; }
+.x-chart-more { margin-top: var(--space-3); }
+.x-chart .aces-empty { margin: var(--space-4) 0; }
+
+@media (max-width: 600px) {
+  .x-filter { grid-template-columns: minmax(0, 1fr) 64px 84px 32px; }
+  .x-bar { grid-template-columns: 1.6em minmax(70px, 120px) minmax(0, 1fr) 3.8em; font-size: var(--fs-xs); }
+  .x-results-head { flex-wrap: wrap; }
+}
