@@ -4,8 +4,8 @@
 // time; until a section is built here, its tab links to the old page.
 //
 // Built so far: Dashboard (next game with RSVP, your season, to-do list,
-// notifications, upcoming games) and Favorites (js/pages/me-favorites.js,
-// loaded when first opened).
+// notifications, upcoming games), Favorites, Profile, Notifications and
+// Account (js/pages/me-*.js), each loaded when first opened.
 
 import { initPage, pageReady, showPageError } from '../core/app.js';
 import { hasRole } from '../core/auth.js';
@@ -33,10 +33,10 @@ const UPCOMING = 5;
 const SECTIONS = [
   { id: 'dashboard', label: 'Dashboard', icon: 'grid' },
   { id: 'favorites', label: 'Favorites', icon: 'star' },
-  { id: 'profile', label: 'Profile', icon: 'user', old: 'profile.html' },
-  { id: 'preferences', label: 'Notifications', icon: 'bell', old: 'profile.html#notifications' },
-  { id: 'directory', label: 'Directory', icon: 'id-card', old: 'profile.html#directory' },
-  { id: 'account', label: 'Account', icon: 'lock', old: 'profile.html#settings' },
+  { id: 'profile', label: 'Profile', icon: 'user' },
+  { id: 'notifications', label: 'Notifications', icon: 'bell' },
+  { id: 'directory', label: 'Directory', icon: 'id-card', old: 'profile.html#tab-directory' },
+  { id: 'account', label: 'Account', icon: 'lock' },
   { id: 'tools', label: 'Your tools', icon: 'clipboard', old: 'profile.html', role: 'team-staff' }
 ];
 
@@ -220,7 +220,7 @@ function notificationTodo() {
   const p = state.profile;
   const on = p?.notificationsEnabled === true;
   const perm = Notification.permission;
-  const href = 'profile.html#notifications';
+  const href = '#notifications';
   if (!on) return { icon: 'bell', title: 'Turn on notifications', text: 'Schedule changes, RSVP reminders and scores', href };
   if (perm === 'denied') return { icon: 'bell', title: 'Notifications are blocked', text: 'Allow them for this site in your browser settings', href, urgent: true };
   if (perm === 'default') return { icon: 'bell', title: 'Finish notification setup', text: 'One more tap to start getting alerts', href, urgent: true };
@@ -369,6 +369,18 @@ async function show(id) {
   } else if (id === 'favorites') {
     const { mountFavorites } = await import('./me-favorites.js');
     await mountFavorites($('meFavorites'), { uid: state.uid, canWrite: state.canWrite, seasonId: state.seasonId, profile: state.profile });
+  } else if (id === 'profile') {
+    const { mountProfile } = await import('./me-profile.js');
+    await mountProfile($('meProfile'), {
+      uid: state.uid, canWrite: state.canWrite, viewingAs: !!state.ctx.impersonating,
+      profile: state.profile, user: state.ctx.user, player, team: state.team
+    });
+  } else if (id === 'notifications') {
+    const { mountNotifications } = await import('./me-notifications.js');
+    await mountNotifications($('meNotifications'), { uid: state.uid, canWrite: state.canWrite, viewingAs: !!state.ctx.impersonating, profile: state.profile });
+  } else if (id === 'account') {
+    const { mountAccount } = await import('./me-account.js');
+    mountAccount($('meAccount'), { canWrite: state.canWrite, viewingAs: !!state.ctx.impersonating, profile: state.profile, user: state.ctx.user });
   }
 }
 
