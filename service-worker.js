@@ -48,7 +48,7 @@ const HTML_PAGES = [
   `${BASE_PATH}/schedule-generator.html`,
   `${BASE_PATH}/game-tracker.html`,
   `${BASE_PATH}/roster-management.html`,
-  `${BASE_PATH}/favorites.html`,
+  `${BASE_PATH}/me.html`,
   `${BASE_PATH}/game-preview.html`,
   `${BASE_PATH}/player.html`,
   `${BASE_PATH}/season.html`,

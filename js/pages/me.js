@@ -4,7 +4,8 @@
 // time; until a section is built here, its tab links to the old page.
 //
 // Built so far: Dashboard (next game with RSVP, your season, to-do list,
-// notifications, upcoming games).
+// notifications, upcoming games) and Favorites (js/pages/me-favorites.js,
+// loaded when first opened).
 
 import { initPage, pageReady, showPageError } from '../core/app.js';
 import { hasRole } from '../core/auth.js';
@@ -31,7 +32,7 @@ const UPCOMING = 5;
 // Sections. `old` is where the section still lives until it's rebuilt here.
 const SECTIONS = [
   { id: 'dashboard', label: 'Dashboard', icon: 'grid' },
-  { id: 'favorites', label: 'Favorites', icon: 'star', old: 'favorites.html' },
+  { id: 'favorites', label: 'Favorites', icon: 'star' },
   { id: 'profile', label: 'Profile', icon: 'user', old: 'profile.html' },
   { id: 'preferences', label: 'Notifications', icon: 'bell', old: 'profile.html#notifications' },
   { id: 'directory', label: 'Directory', icon: 'id-card', old: 'profile.html#directory' },
@@ -319,7 +320,8 @@ function renderDashboard() {
       ${rsvpButtons(g)}</li>`).join('')}</ul>`;
 }
 
-async function loadDashboard() {
+/** Who you are: player record, team, greeting. Shared by every section. */
+async function loadMe() {
   const p = state.profile;
   // Player stats first: they also tell us the team when the profile doesn't.
   player = await findPlayerStatsForUser(p, state.uid).catch(() => null);
@@ -331,7 +333,9 @@ async function loadDashboard() {
   const hello = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   $('meTitle').textContent = first ? `${hello}, ${first}` : hello;
   $('meKicker').innerHTML = `${state.team ? `${chip(state.team)} ` : ''}<span>${esc(seasonLabel(state.seasonId))}</span>`;
+}
 
+async function loadDashboard() {
   renderDashboard();   // stats and to-dos straight away; games fill in below
 
   if (state.team && state.ctx.config?.phase !== 'offseason') {
@@ -345,6 +349,27 @@ async function loadDashboard() {
   }
   renderDashboard();
   watchNotifications();
+}
+
+// ---------------------------------------------------------------------------
+// Sections
+// ---------------------------------------------------------------------------
+
+const loaded = new Set();
+
+async function show(id) {
+  const built = sections().filter(s => !s.old);
+  if (!built.some(s => s.id === id)) id = 'dashboard';
+  renderTabs(id);
+  document.querySelectorAll('[data-section]').forEach(el => { el.hidden = el.dataset.section !== id; });
+  if (loaded.has(id)) return;
+  loaded.add(id);
+  if (id === 'dashboard') {
+    await loadDashboard();
+  } else if (id === 'favorites') {
+    const { mountFavorites } = await import('./me-favorites.js');
+    await mountFavorites($('meFavorites'), { uid: state.uid, canWrite: state.canWrite, seasonId: state.seasonId, profile: state.profile });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -379,9 +404,10 @@ async function main() {
   state.canWrite = !ctx.impersonating && state.uid === ctx.user?.uid;
   state.seasonId = (ctx.config?.phase !== 'offseason' && ctx.config?.currentSeasonId) || await getDisplaySeasonId();
 
-  renderTabs('dashboard');
   wire();
-  await loadDashboard();
+  await loadMe();
+  window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+  await show(location.hash.slice(1));
   pageReady();
 }
 

@@ -78,3 +78,23 @@
 .me-game-opp { font-weight: var(--fw-semibold); }
 .me-game:hover .me-game-opp { color: var(--color-link); }
 .me-games .me-rsvp .aces-segment { min-height: 32px; padding: 0 var(--space-3); font-size: var(--fs-xs); }
+
+/* Favorites */
+.fav-grid { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); margin: 0; padding: 0; list-style: none; }
+.fav-card {
+  display: grid; gap: var(--space-2); align-content: start;
+  padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  border-top: 3px solid var(--team, var(--color-border-strong));
+}
+.fav-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.fav-name { color: var(--color-text); font-weight: var(--fw-bold); text-decoration: none; }
+.fav-name:hover { color: var(--color-link); }
+.fav-line { margin: 0; font-size: var(--fs-sm); }
+.fav-line.is-muted, .fav-next { color: var(--color-text-muted); }
+.fav-next { display: flex; align-items: center; gap: 6px; margin: 0; font-size: var(--fs-xs); }
+.fav-next .aces-icon { width: 14px; height: 14px; }
+.fav-flag { margin: 0; color: var(--color-win); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+.fav-count { color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+.fav-add { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+.fav-add .aces-select-wrap, .fav-add .aces-input { flex: 1 1 200px; max-width: 320px; }
+.fav-add .aces-input { min-height: 36px; padding: 0 10px; font-size: var(--fs-sm); }
