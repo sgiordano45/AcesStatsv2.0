@@ -80,9 +80,9 @@ function renderHead() {
   const s = state.summary;
   const label = state.seasonId ? formatSeasonLabel(state.seasonId) : '';
   const phaseText = { regular: 'Regular season', playoffs: 'Playoffs', offseason: 'Offseason' }[state.phase] || '';
-  const counts = s?.counts
-    ? `${s.counts.gamesPlayed} games played${s.counts.gamesLeft ? ` · ${s.counts.gamesLeft} to go` : ''}`
-    : '';
+  const counts = !s?.counts ? ''
+    : state.phase === 'offseason' ? `Season complete · ${s.counts.gamesPlayed} games played`
+    : `${s.counts.gamesPlayed} games played${s.counts.gamesLeft ? ` · ${s.counts.gamesLeft} to go` : ''}`;
   section('homeHead', `
     <div>
       <span class="aces-page-kicker">${esc([label, phaseText].filter(Boolean).join(' · '))}</span>
@@ -235,9 +235,10 @@ async function renderMyAces() {
 
   const s = state.summary;
   const standing = team ? (s?.standings || []).find(r => r.team.toLowerCase() === team.toLowerCase()) : null;
-  const next = team ? (s?.upcoming || []).find(g => g.home.toLowerCase() === team.toLowerCase() || g.away.toLowerCase() === team.toLowerCase()) : null;
+  const next = team && state.phase !== 'offseason' ? (s?.upcoming || []).find(g => g.home.toLowerCase() === team.toLowerCase() || g.away.toLowerCase() === team.toLowerCase()) : null;
 
-  const staff = hasRole(profile, 'team-staff');
+  // Game-day actions only in season.
+  const staff = state.phase !== 'offseason' && hasRole(profile, 'team-staff');
   const actions = [
     `<a class="aces-btn is-sm" href="my-dashboard.html">${icon('calendar')} RSVP &amp; dashboard</a>`,
     staff && `<a class="aces-btn is-sm" href="submit-score.html">${icon('hash')} Submit score</a>`,
