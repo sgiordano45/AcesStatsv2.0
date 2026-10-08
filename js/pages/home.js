@@ -373,7 +373,7 @@ async function renderPhotos() {
   }
 }
 
-// ---- explore ------------------------------------------------------------------------------------
+// ---- explore (the five hubs in the bar; Help is a utility hub) ------------------------------------------------------------------------------------
 
 const HUB_BLURBS = {
   season: 'Standings, schedule, playoffs and rules',
@@ -389,7 +389,7 @@ async function renderExplore() {
   const nav = buildNav({ signedIn: !!user, profile, phase: state.phase, hasRole, isVisible: isPageVisible });
   section('homeExplore', `
     <div class="aces-section-head"><h2 class="aces-section-title">Explore</h2></div>
-    <div class="home-hubs">${nav.hubs.filter(h => h.href).map(h => `
+    <div class="home-hubs">${nav.hubs.filter(h => h.href && HUB_BLURBS[h.id]).map(h => `
       <a class="home-hub" href="${esc(h.href)}">
         <span class="home-hub-icon">${icon(h.icon)}</span>
         <span class="home-hub-name">${esc(h.label)}</span>
