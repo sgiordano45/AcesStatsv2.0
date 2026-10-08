@@ -67,7 +67,6 @@ const HTML_PAGES = [
   `${BASE_PATH}/current-season-team.html`,
   `${BASE_PATH}/offseason-schedule.html`,
   `${BASE_PATH}/offseason.html`,
-  `${BASE_PATH}/bracket.html`,
   `${BASE_PATH}/pitcher.html`
 ];
 

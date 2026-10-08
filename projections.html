@@ -1035,9 +1035,10 @@
 
     window.runProjections = runProjections;
   </script>
-  <script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
+<script type="module">
+  // The site header, theme and View As (js/core/app.js).
+  import { initPage } from './js/core/app.js';
+  initPage({ title: 'Season Projections' });
 </script>
   <script src="team-colors.js"></script>
   <script src="mobile-enhancements.js"></script>

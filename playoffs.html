@@ -592,7 +592,8 @@
     <script type="module">
         import { db, collection, query, where, getDocs, doc, getDoc } from './firebase-config.js';
         import { getCurrentSeason, getSeasonGames } from './firebase-data.js';
-        import { getCurrentUser, getUserProfile, USER_ROLES, onAuthChange } from './firebase-auth.js';
+        import { initPage } from './js/core/app.js';
+        import { hasRole } from './js/core/auth.js';
         import { setDoc, updateDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         let currentSeason = null;
@@ -606,31 +607,16 @@
         let userCanManagePlayoffs = false; // True if user is Admin or League-Staff
         let authReady = false;
 
-        // Wait for auth state to be ready before loading playoff data
-        onAuthChange(async (user) => {
-            if (!authReady) {
-                authReady = true;
-                currentUser = user;
-
-                if (currentUser) {
-                    const profileResult = await getUserProfile(currentUser.uid);
-                    if (profileResult.success) {
-                        userProfile = profileResult.data;
-                        // Check if user is Admin or League-Staff
-                        userCanManagePlayoffs = (
-                            userProfile.userRole === USER_ROLES.ADMIN ||
-                            userProfile.userRole === USER_ROLES.LEAGUE_STAFF
-                        );
-                        console.log('👤 User role:', userProfile.userRole, '| Can manage playoffs:', userCanManagePlayoffs);
-                    }
-                } else {
-                    console.log('👤 No user logged in');
-                }
-
-                // Now load the playoff bracket
-                loadPlayoffBracket();
-            }
-        });
+        // initPage: the site header, theme and View As; staff (admin or
+        // league staff, as the viewed user during View As) can edit the bracket.
+        (async () => {
+            const ctx = await initPage({ title: 'Playoffs' });
+            currentUser = ctx.user;
+            userProfile = ctx.profile;
+            userCanManagePlayoffs = hasRole(userProfile, 'league-staff');
+            authReady = true;
+            loadPlayoffBracket();
+        })();
 
         // Load current season and playoff data
         async function loadPlayoffBracket() {

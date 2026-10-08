@@ -285,7 +285,7 @@ export const MORE_SHEET = ['history', 'play', 'help'];
 // from the Admin Hub), hidden pages, and pages due to be deleted.
 export const NAV_UNLISTED = {
   noNav: ['signin.html', 'signup.html', 'reset-password.html', 'verify-email.html', 'offline.html'],
-  hidden: ['boxes-pool.html', 'bracket.html', 'link-player.html', 'player-questionnaire.html'],
+  hidden: ['boxes-pool.html', 'link-player.html', 'player-questionnaire.html'],
   adminTools: ['aggregate-stats.html', 'approve-links.html', 'captain-questionnaire-review.html',
     'games-admin.html', 'league-schedule-editor.html', 'player-import.html', 'playoff-eligibility-tracker.html',
     'schedule-2027-proposal.html', 'schedule-balancer.html', 'schedule-generator.html', 'schedule-rework.html',
@@ -397,7 +397,6 @@ export const NAV_STRUCTURE = {
     { id: 'playoffs', href: 'playoffs.html', label: 'Playoff Bracket', icon: '🥇', priority: 2 },
     { id: 'projections', href: 'projections.html', label: 'Playoff Projections', icon: '🎱', priority: 2 },
     { id: 'clinching', href: 'playoff-clinching.html', label: 'Playoff Clinching', icon: '🔒', priority: 2 },
-    { id: 'bracket', href: 'bracket.html', label: 'Create your own Playoff bracket', icon: '🔭', priority: 2 },
     { id: 'seasons', href: 'seasons.html', label: 'All Seasons', icon: '📅', priority: 2 },
     { id: 'champions', href: 'champions.html', label: 'Champions', icon: '🏆', priority: 2 },
     { id: 'recap', href: 'recap.html', label: 'Year in Review', icon: '📖', priority: 2 },
@@ -498,7 +497,7 @@ export const PAGE_CONFIGS = {
   },
     
   'playoff-clinching.html': {
-    desktop: ['home', 'current-season', 'weekend-preview', 'playoffs', 'projections','bracket']
+    desktop: ['home', 'current-season', 'weekend-preview', 'playoffs', 'projections']
   },
   
   'batting.html': {

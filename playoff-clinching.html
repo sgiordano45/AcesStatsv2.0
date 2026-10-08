@@ -2555,8 +2555,9 @@
   <script src="team-colors.js"></script>
 <!-- Load navigation -->
 <script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
+  // The site header, theme and View As (js/core/app.js).
+  import { initPage } from './js/core/app.js';
+  initPage({ title: 'Playoff Seeding Scenarios' });
 </script>
 <script src="mobile-enhancements.js"></script>
 <script src="theme-toggle.js"></script>
