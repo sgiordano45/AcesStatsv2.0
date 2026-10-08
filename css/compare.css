@@ -105,3 +105,10 @@
 .cmp-legend .is-ahead { background: var(--color-win-soft); color: var(--color-win); }
 .cmp-legend .is-even { background: var(--color-surface-2); color: var(--color-text-muted); }
 .cmp-legend .is-behind { background: var(--color-loss-soft); color: var(--color-loss); }
+
+/* The grid is short enough to need no sticky header, and Chrome sometimes
+   painted the sticky header partway down the table on first render. The
+   team column still sticks when the grid scrolls sideways on phones. */
+.aces-table.h2h-grid thead th { position: static !important; top: auto !important; }
+.aces-table.h2h-grid tbody th { position: sticky; left: 0; z-index: 1; }
+.aces-table.h2h-grid tbody th { background: var(--color-surface); }
