@@ -375,7 +375,7 @@
   align-items: center;
   gap: 8px;
   height: 36px;
-  min-width: 200px;
+  min-width: 150px;
   padding: 0 8px 0 12px;
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: var(--radius-pill, 999px);
@@ -396,7 +396,13 @@
   color: var(--nav-ink-soft);
   font: var(--fw-semibold, 600) 11px / 1.4 var(--font-sans);
 }
-@media (max-width: 1180px) {
+/* Room for the pill: the bar runs wider than the page body on big screens,
+   long names truncate, and the pill turns into an icon below 1240 px. */
+@media (min-width: 1181px) {
+  .aces-header__inner { max-width: 1280px; }
+}
+.aces-me__name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1240px) {
   .aces-search-btn { min-width: 0; width: 40px; height: 40px; padding: 0; justify-content: center; border-color: transparent; background: none; color: var(--nav-ink); }
   .aces-search-btn:hover { background: var(--nav-hover); }
   .aces-search-btn__text, .aces-search-btn kbd { display: none; }

@@ -1048,7 +1048,7 @@ window.switchToScope = (scope) => update({ scope: ['career', 'best', 'season'].i
 
 async function main() {
   const ctx = await initPage({ title: 'Leaders' });
-  me = new Set([ctx?.profile?.linkedPlayer, ctx?.profile?.playerId, ctx?.user?.uid].filter(Boolean));
+  me = new Set([ctx?.profile?.linkedPlayer, ctx?.profile?.playerId, ctx?.profile?.id, ctx?.profile?.mergedFromProfile, String(ctx?.profile?.linkedPlayer || '').trim().toLowerCase().replace(/\s+/g, '_'), ctx?.user?.uid].filter(Boolean));
 
   const players = await getAllPlayerStatsOptimized();
   bat = buildBattingRows(players);

@@ -682,3 +682,34 @@ export async function getSeasonPitchingStats(seasonId) {
   const results = await Promise.all(statsPromises);
   return results.filter(stat => stat !== null);
 }
+
+/**
+ * The aggregatedPlayerStats doc for a signed-in user, or null. Accounts link
+ * to stats in a few ways over the years, so try each quietly in order:
+ * profile.playerId, the auth UID (users/{uid} id), mergedFromProfile (the
+ * legacy ID), then linkedPlayer as an ID or as a name ("Steve Giordano" ->
+ * steve_giordano). Migrated legacy docs are skipped.
+ * @param {object} profile users/{uid} doc as { id, ...data }
+ * @param {string} [uid]
+ */
+export async function findPlayerStatsForUser(profile, uid) {
+  const linked = String(profile?.linkedPlayer || '').trim();
+  const ids = [
+    profile?.playerId,
+    uid || profile?.uid || profile?.id,
+    profile?.mergedFromProfile,
+    linked && !/\s/.test(linked) ? linked : '',
+    linked ? linked.toLowerCase().replace(/\s+/g, '_') : ''
+  ].filter(Boolean);
+  for (const id of [...new Set(ids)]) {
+    try {
+      const snap = await getDoc(doc(db, 'aggregatedPlayerStats', id));
+      if (!snap.exists() || snap.data().migrated === true) continue;
+      const data = snap.data();
+      return { id: snap.id, ...data, playerId: snap.id, playerName: data.name };
+    } catch (err) {
+      console.warn(`[player-stats] lookup ${id} failed`, err);
+    }
+  }
+  return null;
+}

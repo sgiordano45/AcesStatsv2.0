@@ -31,14 +31,14 @@ import { getDisplaySeasonId, formatSeasonLabel } from '../core/config.js';
 import { IS_PREVIEW } from '../core/env.js';
 import { db, collection, query, where, orderBy, limit, getDocs, doc, getDoc } from '../core/firebase.js';
 import { getSeasonSummary, rebuildSeasonSummary } from '../data/summaries.js';
-import { getPlayerStatsOptimized } from '../data/player-stats.js';
-import { escapeHtml as esc, fmtAvg, fmtRate, formatPlayerName } from '../ui/format.js';
+import { findPlayerStatsForUser } from '../data/player-stats.js';
+import { escapeHtml as esc, fmtAvg, fmtRate, formatPlayerName, formatIP } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 import { teamChipHtml, TEAM_COLORS } from '../ui/stat-columns.js';
 import { formatTime, formatRelativeDay, todayKey, daysBetween, formatGameDate } from '../domain/dates.js';
-import { battingLine } from '../domain/stats.js';
-import { parseStatSeasonId } from '../domain/season-ids.js';
+import { battingLine, era } from '../domain/stats.js';
+import { parseStatSeasonId, hasCompleteHitTypes, inningsValue } from '../domain/season-ids.js';
 import { buildNav, loadPageVisibility, isPageVisible } from '../../nav-config.js';
 
 const $ = (id) => document.getElementById(id);
@@ -221,19 +221,34 @@ async function renderMyAces() {
     return;
   }
 
-  const playerId = profile?.linkedPlayer || profile?.playerId || null;
-  const player = playerId ? await getPlayerStatsOptimized(playerId).catch(() => null) : null;
+  // View As shows the viewed user's stats, so go by the profile's own id.
+  const player = profile ? await findPlayerStatsForUser(profile, profile.id || user?.uid).catch(() => null) : null;
+  const playerId = player?.id || null;
 
-  // This season's line (sub records merged), and the team from the regular record.
+  // This season's line (sub records merged), the team from the regular
+  // record, and career totals for the line under it.
+  const blank = () => ({ atBats: 0, hits: 0, walks: 0, runs: 0, games: 0, doubles: 0, triples: 0, homeRuns: 0, rbi: 0 });
   let line = null;
   let team = '';
+  let hitTypes = true;
+  const career = blank();
   for (const [rawId, rec] of Object.entries(player?.seasons || {})) {
+    for (const k of Object.keys(career)) career[k] += Number(rec[k]) || 0;
     const sid = parseStatSeasonId(rawId);
     if (sid.id !== state.seasonId) continue;
-    line ??= { atBats: 0, hits: 0, walks: 0, runs: 0, games: 0 };
+    line ??= blank();
     for (const k of Object.keys(line)) line[k] += Number(rec[k]) || 0;
     const sub = sid.isSub || /^yes$/i.test(String(rec.sub || ''));
     if (!sub || !team) team = rec.team || team;
+    if (!('doubles' in rec) || !hasCompleteHitTypes(sid.id, rec.team)) hitTypes = false;
+  }
+  let pitch = null;
+  for (const [rawId, rec] of Object.entries(player?.pitchingSeasons || {})) {
+    if (parseStatSeasonId(rawId).id !== state.seasonId) continue;
+    pitch ??= { ip: 0, runsAllowed: 0, games: 0 };
+    pitch.ip += inningsValue(rec.inningsPitched);
+    pitch.runsAllowed += Number(rec.runsAllowed) || 0;
+    pitch.games += Number(rec.games) || 0;
   }
   team = String(team || player?.currentTeam || profile?.team || profile?.linkedTeam || '');
   team = team ? team.charAt(0).toUpperCase() + team.slice(1).toLowerCase() : '';
@@ -251,16 +266,31 @@ async function renderMyAces() {
     staff && `<a class="aces-btn is-sm" href="roster-management.html">${icon('users')} Roster</a>`
   ].filter(Boolean).join('');
 
-  const statLine = line ? (() => {
-    const b = battingLine(line);
-    return `<div class="aces-stats home-mine-stats">
-      <div class="aces-stat"><span class="aces-stat-value">${line.games}</span><span class="aces-stat-label">G</span></div>
-      <div class="aces-stat"><span class="aces-stat-value">${line.hits}</span><span class="aces-stat-label">H</span></div>
-      <div class="aces-stat"><span class="aces-stat-value">${line.runs}</span><span class="aces-stat-label">R</span></div>
-      <div class="aces-stat"><span class="aces-stat-value">${esc(fmtAvg(b.avg))}</span><span class="aces-stat-label">BA</span></div>
-      <div class="aces-stat"><span class="aces-stat-value">${esc(fmtAvg(b.obp))}</span><span class="aces-stat-label">OBP</span></div>
-    </div>`;
-  })() : '';
+  const tile = (value, label) => `<div class="aces-stat"><span class="aces-stat-value">${esc(String(value))}</span><span class="aces-stat-label">${label}</span></div>`;
+  let statBlock = '';
+  if (playerId) {
+    const title = `<h3 class="home-board-title">${esc(formatSeasonLabel(state.seasonId))}${state.phase === 'offseason' ? '' : ' so far'}</h3>`;
+    let body = '';
+    if (line && (line.atBats + line.walks) > 0) {
+      const b = battingLine(line);
+      body += `<div class="aces-stats home-mine-stats">
+        ${tile(line.games, 'G')}${tile(b.pa, 'PA')}${tile(line.hits, 'H')}${tile(line.runs, 'R')}${tile(line.walks, 'BB')}
+        ${hitTypes ? tile(line.doubles, '2B') + tile(line.triples, '3B') + tile(line.homeRuns, 'HR') + tile(line.rbi, 'RBI') : ''}
+        ${tile(fmtAvg(b.avg), 'BA')}${tile(fmtAvg(b.obp), 'OBP')}${hitTypes ? tile(fmtAvg(b.slg), 'SLG') : ''}
+      </div>`;
+    }
+    if (pitch && pitch.ip > 0) {
+      body += `<div class="aces-stats home-mine-stats">
+        ${tile(pitch.games, 'G pitched')}${tile(formatIP(pitch.ip), 'IP')}${tile(pitch.runsAllowed, 'R')}${tile(fmtRate(era(pitch.runsAllowed, pitch.ip)), 'ERA')}
+      </div>`;
+    }
+    if (!body) body = '<p class="home-board-empty">No stats yet this season.</p>';
+    const cb = battingLine(career);
+    const careerNote = career.atBats + career.walks > 0
+      ? `<p class="home-board-note">Career: ${career.games} G · ${career.hits} H · ${career.runs} R · ${esc(fmtAvg(cb.avg))} BA · ${esc(fmtAvg(cb.obp))} OBP</p>`
+      : '';
+    statBlock = `<div class="home-mine-season">${title}${body}${careerNote}</div>`;
+  }
 
   el.innerHTML = `
     <div class="aces-card-head">
@@ -272,9 +302,9 @@ async function renderMyAces() {
         <span class="home-mine-label">Next game</span>
         <span>${esc(next.home.toLowerCase() === team.toLowerCase() ? `vs ${next.away}` : `at ${next.home}`)} · ${esc(formatRelativeDay(next.dateKey))}${next.time ? ` · ${esc(formatTime(next.time))}` : ''}${next.field ? ` · ${esc(next.field)}` : ''}</span>
       </a>` : ''}
-    ${statLine}
     ${!playerId ? '<p class="home-mine-pitch">Link your account to your player record to see your stats here.</p>' : ''}
-    <div class="aces-cluster home-mine-actions">${actions}</div>`;
+    <div class="aces-cluster home-mine-actions">${actions}</div>
+    ${statBlock}`;
 }
 
 const ordinal = (n) => {
