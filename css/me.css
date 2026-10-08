@@ -1,0 +1,80 @@
+/* ==========================================================================
+   css/me.css - me.html (js/pages/me.js)
+   ========================================================================== */
+
+.me { padding-bottom: var(--space-12); }
+.me-kicker { display: inline-flex; align-items: center; gap: var(--space-2); }
+.me-tabs { margin-bottom: var(--space-4); }
+.me-tabs .aces-tab .aces-icon { width: 16px; height: 16px; }
+
+.me-dash { display: grid; gap: var(--space-4); }
+.me-row { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .me-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.me-row > .aces-card, .me-dash > .aces-card { min-width: 0; }
+.me-dash [hidden] { display: none; }
+.me-empty { margin: 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.me-empty.is-done { display: flex; align-items: center; gap: var(--space-2); color: var(--color-win); font-weight: var(--fw-semibold); }
+.me-empty .aces-icon { width: 18px; height: 18px; }
+.aces-card-title .aces-badge { margin-left: 4px; }
+
+/* Next game */
+.me-next { display: grid; gap: var(--space-3); }
+.me-next-match { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: var(--fs-lg); }
+.me-next-match .aces-team-chip { font-size: var(--fs-md); min-height: 32px; }
+.me-next-vs { color: var(--color-text-muted); font: 400 var(--fs-xl) / 1 var(--font-display); text-transform: uppercase; }
+.me-next-when { margin: 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.me-next-when strong { color: var(--color-text); }
+.me-next-rsvp { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.me-next-team { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; padding-top: var(--space-2); border-top: 1px solid var(--color-border); color: var(--color-text-muted); font-size: var(--fs-sm); }
+.me-next-team .aces-icon { width: 16px; height: 16px; }
+.me-next-team a { margin-left: auto; font-weight: var(--fw-semibold); }
+
+/* RSVP: In is green, Out is red when chosen. */
+.me-rsvp .aces-segment[data-rsvp="yes"][aria-pressed="true"] { background: var(--color-win-soft); color: var(--color-win); }
+.me-rsvp .aces-segment[data-rsvp="no"][aria-pressed="true"] { background: var(--color-loss-soft); color: var(--color-loss); }
+.me-rsvp .aces-segment:disabled { cursor: default; opacity: 0.7; }
+
+/* To do */
+.me-todo, .me-notes, .me-games { margin: 0; padding: 0; list-style: none; }
+.me-todo li + li { border-top: 1px solid var(--color-border); }
+.me-todo-item {
+  display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) 0; color: var(--color-text); text-decoration: none;
+}
+.me-todo-item > .aces-icon { width: 16px; height: 16px; color: var(--color-text-muted); }
+.me-todo-icon {
+  display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%;
+  background: var(--color-surface-2); color: var(--color-text-muted);
+}
+.me-todo-icon .aces-icon { width: 16px; height: 16px; }
+.me-todo-item.is-urgent .me-todo-icon { background: var(--color-loss-soft); color: var(--color-loss); }
+.me-todo-text { display: grid; font-size: var(--fs-sm); line-height: 1.3; }
+.me-todo-text span { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.me-todo-item:hover strong { color: var(--color-link); }
+
+/* Notifications */
+.me-notes { max-height: 360px; overflow-y: auto; }
+.me-note {
+  display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: var(--space-2); align-items: start;
+  padding: var(--space-2) 0; border-top: 1px solid var(--color-border); cursor: pointer;
+}
+.me-note:first-child { border-top: 0; }
+.me-note-icon {
+  display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--color-surface-2); color: var(--color-text-muted);
+}
+.me-note-icon .aces-icon { width: 14px; height: 14px; }
+.me-note.is-unread .me-note-icon { background: var(--color-accent-soft); color: var(--color-accent-ink); }
+.me-note-text { display: grid; gap: 2px; font-size: var(--fs-sm); line-height: 1.3; }
+.me-note.is-unread .me-note-text strong::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--color-accent); vertical-align: 1px; }
+.me-note-text span { color: var(--color-text-muted); }
+.me-note-text small { color: var(--color-text-faint, var(--color-text-muted)); font-size: var(--fs-xs); }
+
+/* Coming up */
+.me-games li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-2) 0; border-top: 1px solid var(--color-border); }
+.me-games li:first-child { border-top: 0; }
+.me-game { display: grid; color: var(--color-text); text-decoration: none; font-size: var(--fs-sm); }
+.me-game-when { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.me-game-opp { font-weight: var(--fw-semibold); }
+.me-game:hover .me-game-opp { color: var(--color-link); }
+.me-games .me-rsvp .aces-segment { min-height: 32px; padding: 0 var(--space-3); font-size: var(--fs-xs); }

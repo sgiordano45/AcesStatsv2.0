@@ -232,7 +232,8 @@ export const ME_MENU = [
     key: 'me', label: null, pages: [
       { id: 'profile', href: 'profile.html', label: 'Profile', icon: 'user', signedIn: true,
         also: ['profile-fan.html'] },
-      { id: 'dashboard', href: 'my-dashboard.html', label: 'Dashboard', icon: 'grid', signedIn: true },
+      { id: 'dashboard', href: 'me.html', label: 'Dashboard', icon: 'grid', signedIn: true,
+        also: ['my-dashboard.html'] },
       { id: 'favorites', href: 'favorites.html', label: 'Favorites', icon: 'star', signedIn: true },
       { id: 'notifications', href: 'notifications.html', label: 'Notifications', icon: 'bell', signedIn: true },
       { id: 'photo-upload', href: 'photo-upload.html', label: 'Upload photos', icon: 'upload', signedIn: true },
@@ -430,7 +431,7 @@ export const NAV_STRUCTURE = {
   
   // Tier 4: AUTH - User-specific pages (only visible when authenticated)
   auth: [
-    { id: 'dashboard', href: 'my-dashboard.html', label: 'My Dashboard', icon: '📋', priority: 4, requiresAuth: true },
+    { id: 'dashboard', href: 'me.html', label: 'My Dashboard', icon: '📋', priority: 4, requiresAuth: true },
     { id: 'profile', href: 'profile.html', label: 'My Profile', icon: '👤', priority: 4, requiresAuth: true },
     { id: 'contributor', href: 'contributor.html', label: 'Contributor Dashboard', icon: '✨', priority: 4, requiresAuth: true, requiresRole: 'contributor' },
     { id: 'favorites', href: 'favorites.html', label: 'Favorites', icon: '⭐', priority: 4, requiresAuth: true },

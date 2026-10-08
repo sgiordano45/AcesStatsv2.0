@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script type="module" src="js/core/preview-guard.js"></script>
+<link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Me - Mountainside Aces</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="css/me.css">
+</head>
+<body class="aces-v2">
+
+<main class="me aces-container" id="main">
+  <header class="aces-page-head me-head">
+    <div>
+      <span class="aces-page-kicker me-kicker" id="meKicker">&nbsp;</span>
+      <h1 class="aces-page-title" id="meTitle">Me</h1>
+    </div>
+  </header>
+
+  <nav class="aces-tabs me-tabs" id="meTabs" aria-label="Me sections"></nav>
+
+  <div id="meBody">
+    <!-- Dashboard -->
+    <section id="dashboard" class="me-dash">
+      <div class="me-row">
+        <section class="aces-card" id="meNext" aria-label="Next game">
+          <span class="aces-skeleton is-title"></span><span class="aces-skeleton is-row"></span><span class="aces-skeleton is-row"></span>
+        </section>
+        <section class="aces-card" id="meTodo" aria-label="To do">
+          <span class="aces-skeleton is-title"></span><span class="aces-skeleton is-row"></span>
+        </section>
+      </div>
+      <div class="me-row">
+        <section class="aces-card" id="meStats" aria-label="My season">
+          <span class="aces-skeleton is-title"></span><span class="aces-skeleton is-row"></span>
+        </section>
+        <section class="aces-card" id="meNotes" aria-label="Notifications">
+          <span class="aces-skeleton is-title"></span><span class="aces-skeleton is-row"></span>
+        </section>
+      </div>
+      <section class="aces-card" id="meUpcoming" aria-label="Coming up" hidden></section>
+    </section>
+  </div>
+</main>
+
+<script type="module" src="js/pages/me.js"></script>
+<script src="mobile-enhancements.js"></script>
+</body>
+</html>

@@ -271,7 +271,7 @@ async function refreshFcmTokenIfNeeded(profile) {
 const SETUP_REDIRECT_DAYS = 7;
 const SETUP_SKIP_PAGES = [
   'profile.html', 'signin.html', 'signup.html', 'reset-password.html',
-  'verify-email.html', 'link-player.html', 'my-dashboard.html'
+  'verify-email.html', 'link-player.html', 'my-dashboard.html', 'me.html'
 ];
 
 function checkProfileSetupRedirect(user, profile) {
