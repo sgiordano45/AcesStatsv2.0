@@ -26,6 +26,16 @@ let state = { user: null, profile: null, phase: null, sheetOpen: false };
 const isPhone = () => window.matchMedia('(max-width: 768px)').matches;
 const isInstalled = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 let els = null;
+let searchCtx = null;   // the nav context the search palette filters pages by
+
+// Global search (js/ui/search.js), loaded the first time it opens.
+function openSearch(query = '') {
+  import('./search.js')
+    .then((m) => m.openSearch({ ctx: searchCtx, query }))
+    .catch((err) => console.error('[nav] search failed to load', err));
+}
+
+const typingInField = (el) => !!el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 
 function ensureStyles() {
   for (const file of ['css/tokens.css', 'css/nav.css']) {
@@ -65,6 +75,7 @@ function render() {
   const { user, profile, phase } = state;
   const here = locatePage(location.pathname);
   const ctx = { signedIn: !!user, profile, phase, hasRole, isVisible: isPageVisible, currentId: here?.pageId };
+  searchCtx = { ...ctx, currentId: null };
   const nav = buildNav(ctx);
   const hub = nav.hubs.find((h) => h.id === here?.hubId);
   const tab = hub?.tabs.find((t) => (t.key || t.id) === here?.tabKey);
@@ -113,7 +124,11 @@ function render() {
       </a>
       <div class="aces-hubs" role="navigation" aria-label="Site">${hubLinks}</div>
       <div class="aces-header__end">
-        <div class="aces-header__search" data-nav-search></div>
+        <div class="aces-header__search" data-nav-search>
+          <button type="button" class="aces-search-btn" data-search-open aria-label="Search players, teams, seasons and pages" title="Search (/)">
+            ${icon('search')}<span class="aces-search-btn__text">Search</span><kbd>/</kbd>
+          </button>
+        </div>
         ${helpButton(nav, here)}
         <button type="button" class="aces-icon-btn" data-theme-toggle aria-label="Switch light or dark mode">
           <span class="aces-theme-moon">${icon('moon')}</span><span class="aces-theme-sun">${icon('sun')}</span>
@@ -272,6 +287,7 @@ function wireEvents() {
       else setMenu(!els.header.querySelector('.aces-me')?.classList.contains('is-open'));
       return;
     }
+    if (e.target.closest('[data-search-open]')) { setSheet(false); openSearch(); return; }
     if (e.target.closest('[data-sheet-open]')) { setSheet(!state.sheetOpen); return; }
     if (e.target.closest('[data-sheet-close]')) { setSheet(false); return; }
     if (e.target.closest('[data-nav-install]')) {
@@ -296,6 +312,13 @@ function wireEvents() {
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { setMenu(false); if (state.sheetOpen) setSheet(false); }
+    // "/" (outside a text field) or Cmd/Ctrl-K opens search.
+    const cmdK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k';
+    if (cmdK || (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey && !typingInField(e.target))) {
+      e.preventDefault();
+      setMenu(false);
+      openSearch();
+    }
   });
   if ('ResizeObserver' in window) new ResizeObserver(syncSpacer).observe(els.header);
   window.addEventListener('resize', syncSpacer);

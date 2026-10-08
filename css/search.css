@@ -1,0 +1,113 @@
+/* ==========================================================================
+   css/search.css - global search palette (js/ui/search.js)
+   A <dialog> near the top of the screen on desktop, full screen on phones.
+   Linked by search.js the first time search opens.
+   ========================================================================== */
+
+.aces-search {
+  width: min(640px, calc(100vw - 32px));
+  max-height: min(70vh, 640px);
+  margin: 10vh auto auto;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--elev-3, 0 12px 32px rgba(0, 0, 0, 0.25));
+  font-family: var(--font-sans);
+  overflow: hidden;
+}
+.aces-search::backdrop { background: var(--color-backdrop, rgba(15, 18, 14, 0.55)); }
+.aces-search[open] { animation: aces-search-in 120ms ease-out; }
+@keyframes aces-search-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+.aces-search__box { display: flex; flex-direction: column; max-height: inherit; }
+
+.aces-search__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.aces-search__bar > .aces-icon { flex: none; width: 20px; height: 20px; color: var(--color-text-muted); }
+.aces-search__bar input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: var(--fw-medium) var(--fs-lg) / 1.2 var(--font-sans);
+}
+.aces-search__bar input::-webkit-search-cancel-button { display: none; }
+.aces-search__close {
+  flex: none;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 6px;
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  font: var(--fw-semibold) var(--fs-xs) / 1 var(--font-sans);
+  cursor: pointer;
+}
+
+.aces-search__results { overflow-y: auto; padding: var(--space-2) 0; overscroll-behavior: contain; }
+.aces-search__group + .aces-search__group { margin-top: var(--space-2); }
+.aces-search__glabel {
+  padding: var(--space-2) var(--space-4) var(--space-1);
+  color: var(--color-text-muted);
+  font: var(--fw-bold) var(--fs-xs) / 1.2 var(--font-sans);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.aces-search__row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 6px var(--space-4);
+  color: var(--color-text);
+  text-decoration: none;
+}
+.aces-search__row.is-active { background: var(--color-brand-soft); box-shadow: inset 3px 0 0 var(--color-brand); }
+:root[data-theme="dark"] .aces-search__row.is-active { box-shadow: inset 3px 0 0 var(--color-link); }
+.aces-search__ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--color-surface-2); color: var(--color-text-muted);
+}
+.aces-search__ico .aces-icon { width: 15px; height: 15px; }
+.aces-search__ico .aces-team-dot { width: 12px; height: 12px; }
+.aces-search__label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: var(--fw-semibold); }
+.aces-search__meta {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--color-text-muted); font-size: var(--fs-xs); white-space: nowrap;
+}
+.aces-search__note { margin: 0; padding: var(--space-4); color: var(--color-text-muted); font-size: var(--fs-sm); text-align: center; }
+
+.aces-search__foot {
+  display: flex; flex-wrap: wrap; gap: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted); font-size: var(--fs-xs);
+}
+.aces-search__foot kbd {
+  display: inline-block; min-width: 18px; margin-right: 2px; padding: 1px 5px;
+  border: 1px solid var(--color-border-strong); border-radius: 4px;
+  background: var(--color-surface-2);
+  font: var(--fw-semibold) 11px / 1.4 var(--font-sans); text-align: center;
+}
+
+@media (max-width: 768px) {
+  .aces-search {
+    width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh;
+    margin: 0; border: 0; border-radius: 0;
+  }
+  .aces-search__box { height: 100%; }
+  .aces-search__results { flex: 1; }
+  .aces-search__foot { display: none; }
+  .aces-search__bar input { font-size: var(--fs-md); }   /* 16px: no zoom on iPhone */
+}

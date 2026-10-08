@@ -366,3 +366,39 @@
 @media print {
   .aces-header, .aces-header-spacer, .aces-bottom, .aces-sheet { display: none !important; }
 }
+
+/* ---- Global search button (opens js/ui/search.js) -------------------------
+   Wide screens: a pill that reads like a search field, with the "/" hint.
+   Narrower screens and phones: an icon button like Help and Theme. */
+.aces-search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  min-width: 200px;
+  padding: 0 8px 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius-pill, 999px);
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--nav-ink-soft);
+  font: var(--fw-medium, 500) var(--fs-sm, 14px) / 1 var(--font-sans);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.aces-search-btn:hover { background: rgba(255, 255, 255, 0.16); color: var(--nav-ink); }
+.aces-search-btn:focus-visible { outline: 2px solid var(--nav-gold); outline-offset: 2px; }
+.aces-search-btn > .aces-icon { width: 18px; height: 18px; flex: none; }
+.aces-search-btn__text { flex: 1; text-align: left; }
+.aces-search-btn kbd {
+  padding: 1px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  color: var(--nav-ink-soft);
+  font: var(--fw-semibold, 600) 11px / 1.4 var(--font-sans);
+}
+@media (max-width: 1180px) {
+  .aces-search-btn { min-width: 0; width: 40px; height: 40px; padding: 0; justify-content: center; border-color: transparent; background: none; color: var(--nav-ink); }
+  .aces-search-btn:hover { background: var(--nav-hover); }
+  .aces-search-btn__text, .aces-search-btn kbd { display: none; }
+  .aces-search-btn > .aces-icon { width: 20px; height: 20px; }
+}

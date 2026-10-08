@@ -23,6 +23,8 @@ const { pathToFileURL } = require('url');
 const db = () => admin.firestore();
 let domain = null;
 const loadDomain = () => (domain ??= import(pathToFileURL(path.join(__dirname, 'domain', 'summary.js')).href));
+let searchDomain = null;
+const loadSearch = () => (searchDomain ??= import(pathToFileURL(path.join(__dirname, 'domain', 'search-index.js')).href));
 
 const summaryDoc = (seasonId) => db().doc(`siteConfig/summaries/seasons/${seasonId}`);
 
@@ -48,6 +50,19 @@ async function buildAndStore(seasonId, builtBy) {
   const summary = JSON.parse(JSON.stringify(buildSeasonSummary({ seasonId, games, players })));
   await summaryDoc(seasonId).set({ ...summary, builtBy, storedAt: admin.firestore.FieldValue.serverTimestamp() });
   console.log(`[summary] ${seasonId} rebuilt (${builtBy}): ${games.length} games, ${players.length} players`);
+  // Global search index (js/ui/search.js), from the same player docs. A
+  // failure here never blocks the summary; browsers build their own then.
+  try {
+    const [{ buildSearchIndex }, seasonsSnap] = await Promise.all([
+      loadSearch(),
+      db().collection('seasons').get()
+    ]);
+    const index = buildSearchIndex({ players, seasonIds: seasonsSnap.docs.map(d => d.id) });
+    await db().doc('siteConfig/searchIndex').set(JSON.parse(JSON.stringify(index)));
+    console.log(`[summary] search index: ${index.players.length} players, ${index.teams.length} teams, ${index.seasons.length} seasons`);
+  } catch (err) {
+    console.error('[summary] search index failed', err);
+  }
   return summary;
 }
 
