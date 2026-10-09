@@ -22,15 +22,12 @@
 /* Seed odds table */
 .pj-odds { padding-bottom: var(--space-3); }
 .pj .aces-table thead th { position: static; }
-.pj-table th[scope="row"] { white-space: nowrap; }
+.pj-table th[scope="row"] { position: sticky; left: 0; z-index: 1; white-space: nowrap; box-shadow: inset -1px 0 0 var(--color-border); }
 .pj-team { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text); font-weight: var(--fw-semibold); }
 .pj-rank { color: var(--color-text-muted); }
-.pj-bye { background: color-mix(in srgb, var(--color-brand) 8%, transparent); }
+.pj-table td.pj-bye { background: color-mix(in srgb, var(--color-brand) 8%, var(--color-surface)); }
 .pj-seed-h { min-width: 2.4em; }
-.pj-cell {
-  min-width: 2.4em; text-align: center; font-variant-numeric: tabular-nums; font-size: var(--fs-xs);
-  background: color-mix(in srgb, var(--color-brand) calc(var(--a, 0) * 100%), transparent);
-}
+.pj-table td.pj-cell { min-width: 2.4em; text-align: center; font-variant-numeric: tabular-nums; font-size: var(--fs-xs); }
 .pj-cell.is-hot { color: var(--color-on-status); font-weight: var(--fw-bold); }
 .pj-table .is-bye-edge { border-right: 2px solid var(--color-border-strong); }
 

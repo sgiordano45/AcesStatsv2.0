@@ -4,7 +4,7 @@
 <script type="module" src="js/core/preview-guard.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Draft Questionnaire - Mountainside Aces</title>
+  <title>Player Questionnaire - Mountainside Aces</title>
   <meta name="theme-color" content="#2d5016">
   <link rel="stylesheet" href="nav-styles.css">
   <style>
@@ -243,7 +243,7 @@
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
   <div class="loading-text" id="loadingText">Loading…</div>
 </div>
@@ -372,10 +372,11 @@
 </div><!-- /mainContent -->
 
 <script type="module">
-  import { db, doc, getDoc, collection } from './firebase-config.js';
-  import { setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-  import { onAuthChange } from './firebase-auth.js';
-  import { NavigationComponent } from './nav-component.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Player Questionnaire' });
+  import { db, doc, getDoc, collection } from './js/core/firebase.js';
+  import { setDoc, serverTimestamp } from './js/core/firebase.js';
+  import { onAuthChange } from './js/core/auth.js';
 
   // ─── Data ───────────────────────────────────────────────────────────────────
   const POSITIONS = ['P','C','1B','2B','3B','SS','LF','CF','RF','OF (any)','Anywhere'];
@@ -622,7 +623,7 @@
 
   // ─── Loading helpers ──────────────────────────────────────────────────────
   function hideLoading() {
-    document.getElementById('loadingOverlay').classList.add('hidden');
+    pageReady();
   }
 </script>
 

@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Contributor Dashboard - Mountainside Aces</title>
+<title>Contributor - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -823,7 +823,7 @@
 <body>
 
 <!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -1056,8 +1056,10 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
-  import { auth, hasSpecialRole } from './firebase-auth.js';
-  import { db } from './firebase-config.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Contributor' });
+  import { auth, hasSpecialRole } from './js/core/auth.js';
+  import { db } from './js/core/firebase.js';
   import { getStorage, ref, deleteObject } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
   import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
   import { 
@@ -1074,7 +1076,7 @@
     orderBy,
     Timestamp,
     serverTimestamp
-  } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  } from './js/core/firebase.js';
 
   const storage = getStorage();
 
@@ -1188,13 +1190,13 @@
   }
 
   function showAuthGate() {
-    document.getElementById('loadingOverlay').classList.add('hidden');
+    pageReady();
     document.getElementById('authGate').style.display = 'block';
     document.getElementById('mainContent').style.display = 'none';
   }
 
   function showMainContent() {
-    document.getElementById('loadingOverlay').classList.add('hidden');
+    pageReady();
     document.getElementById('authGate').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
     
@@ -2526,11 +2528,7 @@ ${previewUrl}`;
   window.showToast = showToast;
 </script>
 
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-</script>
 <script src="team-colors.js"></script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

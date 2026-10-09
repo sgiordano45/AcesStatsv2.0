@@ -4,7 +4,7 @@
 <script type="module" src="js/core/preview-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mountainside Aces - Rule Proposal Review</title>
+    <title>Rule Review - Mountainside Aces</title>
     <meta name="theme-color" content="#2d5016">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -785,7 +785,7 @@
     </style>
 </head>
 <body>
-    <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-overlay" id="loadingOverlay" data-page-loading>
         <div class="softball-spinner"></div>
     </div>
 
@@ -915,10 +915,12 @@
     </footer>
     
     <script type="module">
-        import { doc, getDoc, updateDoc, collection, getDocs, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Rule Review' });
+        import { doc, getDoc, updateDoc, collection, getDocs, query, orderBy, serverTimestamp } from './js/core/firebase.js';
         import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { db } from './firebase-data.js';
-        import { auth, USER_ROLES } from './firebase-auth.js';
+        import { db } from './js/core/firebase.js';
+        import { auth, USER_ROLES } from './js/core/auth.js';
 
         // DOM Elements
         const loadingOverlay = document.getElementById('loadingOverlay');
@@ -989,7 +991,7 @@
                 await checkAccess(user);
             } else {
                 showAccessDenied();
-                loadingOverlay.classList.add('hidden');
+                pageReady();
             }
         });
 
@@ -999,7 +1001,7 @@
                 
                 if (!userDoc.exists()) {
                     showAccessDenied();
-                    loadingOverlay.classList.add('hidden');
+                    pageReady();
                     return;
                 }
 
@@ -1019,7 +1021,7 @@
                 showAccessDenied();
             }
             
-            loadingOverlay.classList.add('hidden');
+            pageReady();
         }
 
         function checkReviewPermission(profile) {
@@ -1389,10 +1391,6 @@
             return str.charAt(0).toUpperCase() + str.slice(1);
         }
     </script>
-    <script type="module">
-        import { NavigationComponent } from './nav-component.js';
-    </script>
     <script src="mobile-enhancements.js"></script>
-    <script src="theme-toggle.js"></script>
 </body>
 </html>

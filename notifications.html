@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Send Notifications - Mountainside Aces</title>
+<title>Notifications - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -898,7 +898,7 @@
 <nav-component></nav-component>
 
 <!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -1136,10 +1136,12 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
-  import { db, functions } from './firebase-config.js';
-  import { auth } from './firebase-auth.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Notifications' });
+  import { db, functions } from './js/core/firebase.js';
+  import { auth } from './js/core/auth.js';
   import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-  import { collection, getDocs, getDoc, doc, query, where, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { collection, getDocs, getDoc, doc, query, where, orderBy, limit } from './js/core/firebase.js';
   import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 
   // ========================================
@@ -1289,7 +1291,7 @@
   });
 
   async function initializePage() {
-    document.getElementById('loadingOverlay').classList.add('hidden');
+    pageReady();
     document.getElementById('mainContent').style.display = 'block';
     
     // Update role badge
@@ -1341,7 +1343,7 @@
   }
 
   function showAuthGate() {
-    document.getElementById('loadingOverlay').classList.add('hidden');
+    pageReady();
     document.getElementById('authGate').style.display = 'block';
     document.getElementById('mainContent').style.display = 'none';
   }
@@ -2195,10 +2197,6 @@
   }
 </script>
 
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-</script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

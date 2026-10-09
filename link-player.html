@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="mobile-enhancements.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Link Player Account - Mountainside Aces</title>
+  <title>Link Your Player - Mountainside Aces</title>
   <meta name="theme-color" content="#2d5016">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1166,18 +1166,13 @@
   </div>
   
   <script type="module">
-    import { 
-      getCurrentUser, 
-      onAuthChange, 
-      getUserProfile,
-	  updateUserProfile,	  
-      logoutUser,
-      requestPlayerLink,
-      cancelPlayerLinkRequest,
-      requestPlayerUnlink,
-      processPlayerLinkRequest
-    } from './firebase-auth.js';
-    import { getAllPlayerStatsOptimized } from './firebase-data.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Link Your Player' });
+    import { getCurrentUser, onAuthChange } from './js/core/auth.js';
+import { getUserProfile, updateUserProfile } from './js/data/users.js';
+import { logoutUser } from './js/core/account.js';
+import { requestPlayerLink, cancelPlayerLinkRequest, requestPlayerUnlink, processPlayerLinkRequest } from './js/data/player-links.js';
+    import { getAllPlayerStatsOptimized } from './js/data/index.js';
     
     let currentUser = null;
     let userProfile = null;
@@ -1944,6 +1939,5 @@ document.head.appendChild(style);
     </div>
   </div>
   <script src="mobile-enhancements.js"></script>
-  <script src="theme-toggle.js"></script>
 </body>
 </html>

@@ -351,15 +351,17 @@
 
   <!-- Nav — auto-initializes into .filters-nav, same as current-season.html -->
   <script type="module">
-    import { NavigationComponent } from './nav-component.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Team Scouting Report' });
     import './firebase-auth.js'; // Sets window.auth so nav picks up auth state + role
   </script>
 
   <!-- Main data logic -->
   <script type="module">
-    import { db, getAllSeasons, getAllTeams, getSeasonPlayerStatsOptimized, getAllPlayerStatsOptimized } from './firebase-data.js';
+    import { getAllSeasons, getAllTeams, getSeasonPlayerStatsOptimized, getAllPlayerStatsOptimized } from './js/data/index.js';
+import { db } from './js/core/firebase.js';
     import { getTeamRosterDoc } from './firebase-roster.js';
-    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { doc, getDoc } from './js/core/firebase.js';
 
     const seasonSel  = document.getElementById('seasonSel');
     const teamSel    = document.getElementById('teamSel');
@@ -923,6 +925,5 @@
     boot();
   </script>
   <script src="mobile-enhancements.js"></script>
-  <script src="theme-toggle.js"></script>
 </body>
 </html>

@@ -301,7 +301,7 @@ body {
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
   <div class="loading-text">Loading roster data...</div>
 </div>
@@ -352,10 +352,11 @@ body {
 </div>
 
 <script type="module">
-import { db } from './firebase-data.js';
-import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { getAllPlayerStatsOptimized, getAllSeasons } from './firebase-data.js';
-import { NavigationComponent } from './nav-component.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Roster Tracker' });
+import { db } from './js/core/firebase.js';
+import { collection, getDocs } from './js/core/firebase.js';
+import { getAllPlayerStatsOptimized, getAllSeasons } from './js/data/index.js';
 
 const TEAM_COLORS = {
   black: '#1a1a1a', green: '#2d7d32', red: '#d32f2f', blue: '#1976d2',
@@ -378,10 +379,6 @@ let seasonRosters = {}; // { seasonId: { teamName: [playerNames] } }
 let currentView = 'teams';
 
 async function init() {
-  try {
-    await NavigationComponent.init();
-  } catch(e) { console.log('Nav init skipped'); }
-  
   try {
     // Load all seasons
     const seasons = await getAllSeasons();
@@ -413,7 +410,7 @@ async function init() {
       </div>`;
   }
   
-  document.getElementById('loadingOverlay').classList.add('hidden');
+  pageReady();
 }
 
 function buildSeasonRosters() {

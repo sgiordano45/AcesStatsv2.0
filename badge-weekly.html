@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weekly Badge Report — Admin | Mountainside Aces</title>
+<title>Weekly Badges - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <link rel="stylesheet" href="mobile-enhancements.css">
 <link rel="stylesheet" href="nav-styles.css">
@@ -301,7 +301,7 @@ body {
 <body>
 
 <!-- Loading -->
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="spinner">🏆</div>
 </div>
 
@@ -382,14 +382,16 @@ body {
 </div>
 
 <script type="module">
-  import { auth, getUserProfile } from './firebase-auth.js';
-  import { db } from './firebase-config.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Weekly Badges' });
+  import { auth } from './js/core/auth.js';
+import { getUserProfile } from './js/data/users.js';
+  import { db } from './js/core/firebase.js';
   import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-  import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-  import { getCurrentSeason } from './firebase-data.js';
+  import { collection, getDocs } from './js/core/firebase.js';
+  import { getCurrentSeason } from './js/data/index.js';
   import { getSeasonRange, getDisplaySeasonId, formatSeasonLabel } from './js/core/config.js';
   import { BADGE_DEFINITIONS } from './badge-calculator.js';
-  import { NavigationComponent } from './nav-component.js';
 
   // ── Badge seasons ──────────────────────────────────────────
   // Badges start in 2025 Fall; later seasons are added from the seasons list.
@@ -440,7 +442,7 @@ body {
     } else {
       document.getElementById('authGate').style.display = 'flex';
     }
-    document.getElementById('loadingOverlay').classList.add('hidden');
+    pageReady();
   });
 
   // ── Init ──────────────────────────────────────────────────
@@ -693,6 +695,5 @@ body {
 
 </script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

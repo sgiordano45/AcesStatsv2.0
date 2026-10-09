@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Mountainside Aces">
-  <title>Offseason Roster Planning | Mountainside Aces</title>
+  <title>Offseason Rosters - Mountainside Aces</title>
   
   <style>
     :root {
@@ -936,7 +936,7 @@
 </head>
 <body>
   <!-- Loading Overlay -->
-  <div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-overlay" id="loadingOverlay" data-page-loading>
     <div class="softball-spinner"></div>
     <p style="font-size: 1.1rem; font-weight: 600; color: var(--primary-color);">Loading Offseason Planning...</p>
   </div>
@@ -972,6 +972,8 @@
   </div>
 
   <script type="module">
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Offseason Rosters' });
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
     import { 
       doc, 
@@ -988,9 +990,9 @@
       orderBy,
       limit,
       serverTimestamp
-    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-    import { db } from './firebase-data.js';
-    import { getCurrentSeason, getAllPlayerStatsOptimized, getSeasonPlayerStatsOptimized } from './firebase-data.js';
+    } from './js/core/firebase.js';
+    import { db } from './js/core/firebase.js';
+    import { getCurrentSeason, getAllPlayerStatsOptimized, getSeasonPlayerStatsOptimized } from './js/data/index.js';
     
     const auth = getAuth();
     
@@ -1068,7 +1070,7 @@
     }
     
     function showPermissionDenied() {
-      document.getElementById('loadingOverlay').classList.add('hidden');
+      pageReady();
       document.getElementById('appContent').innerHTML = `
         <div class="permission-denied">
           <h2>🔒 Access Restricted</h2>
@@ -1213,7 +1215,7 @@
         renderChangelog();
       });
       
-      document.getElementById('loadingOverlay').classList.add('hidden');
+      pageReady();
     }
     
     async function createInitialOffseasonDoc() {
@@ -2783,6 +2785,5 @@
     });
   </script>
   <script src="mobile-enhancements.js"></script>
-<script type="module" src="nav-component.js"></script>
 </body>
 </html>

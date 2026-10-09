@@ -154,7 +154,7 @@ function renderTable(res) {
     const bye = r.odds.slice(0, b).reduce((s, v) => s + v, 0);
     const cells = r.odds.map((v, k) => {
       const a = v > 0 ? 0.08 + 0.72 * (v / max) : 0;
-      return `<td class="is-num pj-cell${k + 1 === b ? ' is-bye-edge' : ''}${a > 0.45 ? ' is-hot' : ''}" style="--a:${a.toFixed(3)}"${v ? ` title="${esc(`${cap(r.team)}: ${pct(v)}% to finish ${ordinal(k + 1)}`)}"` : ''}>${v >= 0.5 ? Math.round(v) : v > 0 ? '&middot;' : ''}</td>`;
+      return `<td class="is-num pj-cell${k + 1 === b ? ' is-bye-edge' : ''}${a > 0.45 ? ' is-hot' : ''}" style="${a ? `background:color-mix(in srgb, var(--color-brand) ${Math.round(a * 100)}%, var(--color-surface))` : ''}"${v ? ` title="${esc(`${cap(r.team)}: ${pct(v)}% to finish ${ordinal(k + 1)}`)}"` : ''}>${v >= 0.5 ? Math.round(v) : v > 0 ? '&middot;' : ''}</td>`;
     }).join('');
     const cur = `${r.cur.w}-${r.cur.l}${r.cur.t ? `-${r.cur.t}` : ''}`;
     return `<tr>
@@ -167,7 +167,7 @@ function renderTable(res) {
       ${cells}
     </tr>`;
   }).join('');
-  $('pjTable').innerHTML = `<div class="aces-table-wrap"><table class="aces-table is-compact is-sticky-first pj-table">
+  $('pjTable').innerHTML = `<div class="aces-table-wrap"><table class="aces-table is-compact pj-table">
     <thead>
       <tr><th scope="col" class="is-num">#</th><th scope="col">Team</th><th scope="col" class="is-num">Now</th><th scope="col" class="is-num" title="Average wins and losses at the end of the regular season">Proj.</th><th scope="col" class="is-num" title="Average seed">Avg seed</th>${b && b < res.n ? '<th scope="col" class="is-num" title="Chance of a top seed with a first-round bye">Bye</th>' : ''}${head}</tr>
     </thead>

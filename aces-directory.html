@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aces Directory</title>
+<title>Aces Directory - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -864,7 +864,7 @@ body {
   <!-- Navigation Component (will auto-load) -->
 
   <!-- Loading Overlay -->
-  <div id="loadingOverlay" class="loading-overlay">
+  <div id="loadingOverlay" class="loading-overlay" data-page-loading>
     <div class="softball-spinner"></div>
   </div>
 
@@ -1096,8 +1096,11 @@ body {
 
   <!-- Firebase & Core Scripts -->
   <script type="module">
-    import { auth, onAuthStateChanged } from './firebase-auth.js';
-    import { db } from './firebase-config.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Aces Directory' });
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { auth } from './js/core/auth.js';
+    import { db } from './js/core/firebase.js';
     import { 
       collection, 
       getDocs, 
@@ -1109,7 +1112,7 @@ body {
       where, 
       orderBy,
       serverTimestamp 
-    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    } from './js/core/firebase.js';
 
     let currentUser = null;
     let currentUserData = null;
@@ -1779,18 +1782,13 @@ body {
     }
 
     function hideLoading() {
-      document.getElementById('loadingOverlay').classList.add('hidden');
+      pageReady();
     }
 
     // Initialize
     showLoading();
   </script>
 
-  <script type="module">
-    import { NavigationComponent } from './nav-component.js';
-    // Navigation auto-initializes on load!
-  </script>
   <script src="mobile-enhancements.js"></script>
-  <script src="theme-toggle.js"></script>
 </body>
 </html>
