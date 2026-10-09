@@ -1010,7 +1010,7 @@
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -1131,9 +1131,9 @@
 </div>
 
 <script type="module">
-  import { db, collection, doc, getDoc, getDocs, query, where, orderBy, limit } from './firebase-config.js';
-  import { NavigationComponent } from './nav-component.js';
+  import { db, collection, doc, getDoc, getDocs, query, where, orderBy, limit } from './js/core/firebase.js';
   import { getChampionPhoto } from './firebase-storage.js';
+  import { initPage, pageReady } from './js/core/app.js';
 
   let allSeasons = [];
   let championsData = {}; // Map of seasonId -> champion data from Firebase
@@ -1220,7 +1220,7 @@
       console.error('Error initializing:', error);
       showError();
     } finally {
-      document.getElementById('loadingOverlay').classList.add('hidden');
+      pageReady();
     }
   }
 
@@ -2173,22 +2173,10 @@
   // Make loadSeasonData available globally for timeline clicks
   window.loadSeasonData = loadSeasonData;
 
-  // Initialize on load
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      document.getElementById('loadingOverlay').classList.add('hidden');
-    }, 500);
-  });
-
-  init();
+  initPage({ title: 'Champions' }).then(init);
 </script>
 
 <script src="team-colors.js"></script>
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
-</script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

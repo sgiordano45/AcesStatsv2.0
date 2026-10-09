@@ -553,7 +553,7 @@ body {
 </style>
 </head>
 <body>
-<div id="loadingOverlay" class="loading-overlay">
+<div id="loadingOverlay" class="loading-overlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -579,12 +579,8 @@ body {
 </div>
 
 <script type="module">
-  // UPDATED: Import Firebase data functions with season helper
-  import { 
-    getAllPlayerStatsOptimized,
-    seasonsObjectToArray,
-    getCurrentSeason
-  } from './firebase-data.js';
+  import { getAllPlayerStatsOptimized, seasonsObjectToArray, getCurrentSeason } from './js/data/index.js';
+  import { initPage, pageReady, showPageError } from './js/core/app.js';
 
   let allData = [];
   let currentSeasonMeta = null; // { year, season } populated from getCurrentSeason()
@@ -595,13 +591,6 @@ body {
     menu.classList.toggle('open');
   }
   window.toggleMobileMenu = toggleMobileMenu;
-
-  // Hide loading overlay after page loads
-  window.addEventListener('load', function() {
-    setTimeout(function() {
-      document.getElementById('loadingOverlay').classList.add('hidden');
-    }, 800);
-  });
 
 function formatPlayerName(name) {
   if (!name) return "";
@@ -764,9 +753,7 @@ function formatPlayerName(name) {
       console.log(`🎉 Page loaded in ${(loadEndTime - loadStartTime).toFixed(0)}ms`);
 
     } catch (error) {
-      console.error('❌ Error loading player data:', error);
-      document.getElementById('players-container').innerHTML =
-        `<p>Error loading player data: ${error.message}</p>`;
+      showPageError(error, { container: '#players-container' });
     }
   }
 
@@ -981,18 +968,15 @@ function formatPlayerName(name) {
     return playerItem;
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadData);
-  } else {
-    loadData();
+  async function main() {
+    await initPage({ title: 'All Players' });
+    await loadData();
+    pageReady();
   }
-</script>
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
+
+  main().catch((err) => showPageError(err));
 </script>
 <script src="team-colors.js"></script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

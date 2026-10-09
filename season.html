@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Season Overview - Aces Stats</title>
+<title>Season - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -588,7 +588,7 @@
 </head>
 <body>
 <!-- Loading Overlay -->
-<div id="loadingOverlay" class="loading-overlay">
+<div id="loadingOverlay" class="loading-overlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -681,20 +681,17 @@
 </div>
 
 <script type="module">
-// Hide loading overlay when page loads
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    document.getElementById('loadingOverlay').classList.add('hidden');
-  }, 800);
-});
-
 import {
   getAllPlayerStatsOptimized,
   getAllAwards,
   getSeasonGames,
   seasonsObjectToArray,
   pitchingSeasonsObjectToArray
-} from './firebase-data.js';
+} from './js/data/index.js';
+import { initPage, pageReady, showPageState, showPageError, siteUrl } from './js/core/app.js';
+
+const backToSeasons = [{ label: 'All seasons', href: siteUrl('seasons.html'), primary: true }];
+const PAGE = '.page-container';   // whole-page states replace the page body; the header stays
 
 let currentSeasonId = "";
 let currentView = 'batting';
@@ -733,16 +730,17 @@ if (currentSeasonId) {
 
 console.log('Final seasonId:', currentSeasonId);
 
-if (!currentSeasonId) {
-  document.body.innerHTML = `<div class="page-container">
-    <h1>Error: Season not specified</h1>
-    <p>URL: ${window.location.href}</p>
-    <p>Search: ${window.location.search}</p>
-    <p><a href="seasons.html">Return to all seasons</a></p>
-  </div>`;
-} else {
-  loadSeasonData();
+async function main() {
+  await initPage({ title: 'Season' });
+  if (!currentSeasonId) {
+    showPageState({ title: 'No season picked', message: 'Choose a season from the seasons list.', actions: backToSeasons, container: PAGE });
+    return;
+  }
+  await loadSeasonData();
+  pageReady();
 }
+
+main().catch((err) => showPageError(err, { container: PAGE }));
 
 async function loadSeasonData() {
   try {
@@ -877,27 +875,14 @@ async function loadSeasonData() {
     // Show the page even if no players (might have games/awards)
     if (seasonPlayers.length === 0 && seasonPitchers.length === 0 &&
         seasonGames.length === 0 && seasonAwards.length === 0) {
-      document.body.innerHTML = `
-        <div class="page-container">
-          <h1>Season "${currentSeasonId}" not found</h1>
-          <p>No data available for this season yet.</p>
-          <p><a href="seasons.html">Return to all seasons</a></p>
-        </div>
-      `;
+      showPageState({ title: 'Season not found', message: `No data is available for "${currentSeasonId}" yet.`, actions: backToSeasons, container: PAGE });
       return;
     }
     
     initializePage();
     
   } catch (error) {
-    console.error("Error loading season data:", error);
-    document.body.innerHTML = `
-      <div class="page-container">
-        <h1>Error loading season data</h1>
-        <p>${error.message}</p>
-        <p><a href="seasons.html">Return to all seasons</a></p>
-      </div>
-    `;
+    showPageError(error, { container: PAGE });
   }
 }
 
@@ -907,6 +892,7 @@ function initializePage() {
   const displaySeason = season.charAt(0).toUpperCase() + season.slice(1);
   
   document.getElementById("seasonTitle").textContent = `${year} ${displaySeason} Season`;
+  document.title = `${year} ${displaySeason} Season - Mountainside Aces`;
   
   console.log('Initializing page with data:', {
     players: seasonPlayers.length,
@@ -1549,13 +1535,8 @@ function renderStatsTable() {
   }
 }
 </script>
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
-</script>
 <script src="team-colors.js"></script>
 <script src="mobile-enhancements.js"></script>
 <script src="stat-tooltips.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

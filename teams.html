@@ -572,7 +572,7 @@ body {
 </style>
 </head>
 <body>
-<div id="loadingOverlay" class="loading-overlay">
+<div id="loadingOverlay" class="loading-overlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -602,16 +602,9 @@ body {
     // CONVERTED: Now using object-keyed seasons structure
     // Performance: ~50-100ms load time (was multiple seconds)
 
-    import { 
-      db, 
-      collection, 
-      getDocs 
-    } from './firebase-config.js';
-    
-    import { 
-      getAllPlayerStatsOptimized,
-      seasonsObjectToArray
-    } from './firebase-data.js';
+    import { db, collection, getDocs } from './js/core/firebase.js';
+    import { getAllPlayerStatsOptimized, seasonsObjectToArray } from './js/data/index.js';
+    import { initPage, pageReady, showPageError } from './js/core/app.js';
 
     let allData = [];
     let allGames = [];
@@ -630,13 +623,6 @@ body {
       menu.classList.toggle('open');
     }
     window.toggleMobileMenu = toggleMobileMenu;
-
-    // Hide loading overlay after page loads
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        document.getElementById('loadingOverlay').classList.add('hidden');
-      }, 800);
-    });
 
     async function loadData() {
       try {
@@ -751,9 +737,7 @@ body {
         generateTeamCards();
         
       } catch (error) {
-        console.error("Error loading data from Firestore:", error);
-        document.getElementById("teams-container").innerHTML =
-          '<p style="text-align: center; color: #666; padding: 2rem;">Error loading team data. Please try again later.</p>';
+        showPageError(error, { container: '#teams-container' });
       }
     }
 
@@ -1039,15 +1023,16 @@ body {
       return standings;
     }
 
-    loadData();
-</script>
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
+    async function main() {
+      await initPage({ title: 'All Teams' });
+      await loadData();
+      pageReady();
+    }
+
+    main().catch((err) => showPageError(err));
 </script>
 
 <script src="team-colors.js"></script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>League Awards - Aces Stats</title>
+<title>League Awards - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -540,7 +540,7 @@
 </head>
 <body>
 <!-- Loading Overlay -->
-<div id="loadingOverlay" class="loading-overlay">
+<div id="loadingOverlay" class="loading-overlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -582,17 +582,10 @@
   </div>
 
 <script type="module">
-// Hide loading overlay when page loads
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    document.getElementById('loadingOverlay').classList.add('hidden');
-  }, 800);
-});
-
-import { db, collection, getDocs } from './firebase-config.js';
+import { db, collection, getDocs } from './js/core/firebase.js';
+import { initPage, pageReady, showPageError } from './js/core/app.js';
 
 let allAwards = [];
-let allStats = [];
 
 async function loadData() {
   try {
@@ -621,25 +614,10 @@ async function loadData() {
     
     console.log(`Loaded ${allAwards.length} awards from Firestore`);
     
-    // Load stats collection (for player verification if needed)
-    const statsSnapshot = await getDocs(collection(db, 'aggregatedPlayerStats'));
-    allStats = [];
-    
-    statsSnapshot.forEach(doc => {
-      allStats.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
-    
-    console.log(`Loaded ${allStats.length} player stats from Firestore`);
-    
     populateFilters();
     renderAwards();
   } catch (error) {
-    console.error("Error loading data from Firestore:", error);
-    document.getElementById("awards-content").innerHTML = 
-      '<div class="no-awards">Error loading awards data. Please check your connection and try again.</div>';
+    showPageError(error, { container: '#awards-content' });
   }
 }
 
@@ -867,15 +845,15 @@ function renderAwardTypeTable(awardType, awards) {
   return html;
 }
 
-// Load data when page loads
-loadData();
-</script>
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
+async function main() {
+  await initPage({ title: 'League Awards' });
+  await loadData();
+  pageReady();
+}
+
+main().catch((err) => showPageError(err, { container: '#awards-content' }));
 </script>
 <script src="team-colors.js"></script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

@@ -506,7 +506,7 @@ body {
 </style>
 </head>
 <body>
-<div id="loadingOverlay" class="loading-overlay">
+<div id="loadingOverlay" class="loading-overlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -533,7 +533,8 @@ body {
 </div>
 
 <script type="module">
-import { getAllPlayerStatsOptimized, getAllSeasons, getAllAwards, getSeasonGames, getCurrentSeason } from './firebase-data.js';
+import { getAllPlayerStatsOptimized, getAllSeasons, getAllAwards, getSeasonGames, getCurrentSeason } from './js/data/index.js';
+import { initPage, pageReady, showPageError } from './js/core/app.js';
 
 let allPlayers = [];
 let allSeasons = [];
@@ -545,13 +546,6 @@ function toggleMobileMenu() {
   menu.classList.toggle('open');
 }
 window.toggleMobileMenu = toggleMobileMenu;
-
-// Hide loading overlay after page loads
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    document.getElementById('loadingOverlay').classList.add('hidden');
-  }, 800);
-});
 
 async function loadData() {
   const loadStartTime = performance.now();
@@ -581,9 +575,7 @@ async function loadData() {
     await generateSeasonCards();
     
   } catch (error) {
-    console.error('❌ Error loading data:', error);
-    document.getElementById('seasons-container').innerHTML = 
-      '<div class="loading" style="color: #dc3545;">Error loading season data. Please refresh the page.</div>';
+    showPageError(error, { container: '#seasons-container' });
   }
 }
 
@@ -811,15 +803,15 @@ async function generateSeasonCards() {
   console.timeEnd('Generate Season Cards');
 }
 
-// Load data on page load
-loadData();
-</script>
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
+async function main() {
+  await initPage({ title: 'All Seasons' });
+  await loadData();
+  pageReady();
+}
+
+main().catch((err) => showPageError(err, { container: '#seasons-container' }));
 </script>
 <script src="team-colors.js"></script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>
