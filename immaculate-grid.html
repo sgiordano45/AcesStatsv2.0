@@ -796,7 +796,7 @@ body {
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -933,30 +933,28 @@ body {
 </div>
 
 <script type="module">
+import { initPage, pageReady, showPageError } from './js/core/app.js';
 import { 
   db, 
   collection, 
   getDocs,
   doc,
   getDoc
-} from './firebase-config.js';
+} from './js/core/firebase.js';
 
 import {
   setDoc,
   updateDoc,
   serverTimestamp
-} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+} from './js/core/firebase.js';
 
 import { 
   getAllPlayerStatsOptimized,
   seasonsObjectToArray
-} from './firebase-data.js';
+} from './js/data/index.js';
 
-import {
-  getCurrentUser,
-  onAuthChange,
-  getUserProfile
-} from './firebase-auth.js';
+import { getCurrentUser, onAuthChange } from './js/core/auth.js';
+import { getUserProfile } from './js/data/users.js';
 
 // ============================================
 // ONE-TIME CACHE RESET (for beta testers)
@@ -2015,6 +2013,7 @@ window.toggleHowToPlay = function() {
 // ============================================
 async function init() {
   try {
+    await initPage({ title: 'Aces Grid' });
     // Check if we're before launch date
     // Parse date parts to avoid timezone issues (YYYY-MM-DD)
     const [launchYear, launchMonth, launchDay] = LAUNCH_DATE.split('-').map(Number);
@@ -2022,7 +2021,7 @@ async function init() {
     const now = new Date().setHours(0, 0, 0, 0);
     
     if (now < launchDate) {
-      document.getElementById('loadingOverlay').classList.add('hidden');
+      pageReady();
       const displayDate = new Date(launchYear, launchMonth - 1, launchDay);
       document.getElementById('puzzleDate').textContent = `Launching ${displayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`;
       document.getElementById('gameGrid').innerHTML = `
@@ -2089,17 +2088,12 @@ async function init() {
     });
     
     // Hide loading
-    document.getElementById('loadingOverlay').classList.add('hidden');
+    pageReady();
     
   } catch (error) {
     console.error('Error initializing game:', error);
-    document.getElementById('loadingOverlay').innerHTML = `
-      <div style="text-align: center; padding: 2rem;">
-        <p>Error loading game data</p>
-        <p style="color: var(--text-light); font-size: 0.9rem;">${error.message}</p>
-        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; cursor: pointer;">Retry</button>
-      </div>
-    `;
+    pageReady();
+    showPageError(error);
   }
 }
 
@@ -2107,11 +2101,7 @@ async function init() {
 init();
 </script>
 
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-</script>
 <script src="team-colors.js"></script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

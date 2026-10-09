@@ -719,7 +719,7 @@ body {
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -857,23 +857,21 @@ body {
 <div class="toast" id="toast"></div>
 
 <script type="module">
+import { initPage, pageReady, showPageError } from './js/core/app.js';
 import { 
   db, 
   doc,
   getDoc
-} from './firebase-config.js';
+} from './js/core/firebase.js';
 
 import {
   setDoc,
   serverTimestamp
-} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+} from './js/core/firebase.js';
 
-import { getAllPlayerStatsOptimized, getAllAwards } from './firebase-data.js';
+import { getAllPlayerStatsOptimized, getAllAwards } from './js/data/index.js';
 
-import {
-  getCurrentUser,
-  onAuthChange
-} from './firebase-auth.js';
+import { getCurrentUser, onAuthChange } from './js/core/auth.js';
 
 // ============================================
 // CONFIGURATION
@@ -1957,12 +1955,13 @@ function setupAuthListener() {
 // ============================================
 async function init() {
   try {
+    await initPage({ title: 'Aces Connections' });
     // Check if we're before launch date (use local midnight)
     const launchDate = new Date(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY).setHours(0, 0, 0, 0);
     const now = new Date().setHours(0, 0, 0, 0);
     
     if (now < launchDate) {
-      document.getElementById('loadingOverlay').classList.add('hidden');
+      pageReady();
       const launchDateObj = new Date(LAUNCH_YEAR, LAUNCH_MONTH, LAUNCH_DAY);
       document.getElementById('puzzleDate').textContent = `Launching ${launchDateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`;
       document.querySelector('.grid-container').innerHTML = `
@@ -2028,17 +2027,12 @@ async function init() {
     });
     
     // Hide loading
-    document.getElementById('loadingOverlay').classList.add('hidden');
+    pageReady();
     
   } catch (error) {
     console.error('Error initializing game:', error);
-    document.getElementById('loadingOverlay').innerHTML = `
-      <div style="text-align: center; padding: 2rem;">
-        <p>Error loading game data</p>
-        <p style="color: var(--text-light); font-size: 0.9rem;">${error.message}</p>
-        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; cursor: pointer;">Retry</button>
-      </div>
-    `;
+    pageReady();
+    showPageError(error);
   }
 }
 
@@ -2046,11 +2040,7 @@ async function init() {
 init();
 </script>
 
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-</script>
 <script src="team-colors.js"></script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

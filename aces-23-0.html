@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>23-0 | Mountainside Aces</title>
+<title>23-0 - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -707,7 +707,7 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="loading-ball">⚾</div>
   <div class="loading-text">23-0</div>
   <div class="loading-sub" id="loadingStatus">Loading player data…</div>
@@ -715,7 +715,6 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
 
 <canvas id="confettiCanvas"></canvas>
 
-<div id="navContainer"></div>
 
 <header class="page-header">
   <div class="game-badge">Aces Fantasy Game</div>
@@ -848,9 +847,8 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
 </main>
 
 <script type="module">
-import { db } from './firebase-config.js';
-import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { NavigationComponent } from './nav-component.js';
+import { initPage, pageReady } from './js/core/app.js';
+import { db, collection, getDocs } from './js/core/firebase.js';
 
 // ——— Constants ———
 const PITCHER_MIN_SEASON = '2024-summer'; // Pitching data starts 2024-summer
@@ -890,8 +888,6 @@ let currentCombo = null;     // { season, team, key }
 let selectedPlayer = null;   // player obj user clicked
 let isSpinning = false;
 
-// ——— Nav ———
-NavigationComponent.init('navContainer', 'aces-23-0');
 
 // ——— Helpers ———
 function fmtSeason(s) {
@@ -944,6 +940,7 @@ function teamColor(team) {
 // ——— Data Loading ———
 async function loadData() {
   try {
+    await initPage({ title: '23-0' });
     document.getElementById('loadingStatus').textContent = 'Fetching players…';
     const snap = await getDocs(collection(db, 'aggregatedPlayerStats'));
     const players = [];
@@ -959,9 +956,7 @@ async function loadData() {
     document.getElementById('btnStartGame').disabled = false;
     document.getElementById('dataStatus').textContent =
       `${players.length} players loaded · ${Object.keys(hitterPool).length} hitter combos · ${Object.keys(pitcherPool).length} pitcher combos`;
-    setTimeout(() => {
-      document.getElementById('loadingOverlay').classList.add('hidden');
-    }, 500);
+    setTimeout(pageReady, 500);
   } catch(e) {
     console.error(e);
     document.getElementById('loadingStatus').textContent = 'Error loading data: ' + e.message;
