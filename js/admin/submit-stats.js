@@ -260,7 +260,8 @@ function updateTotals() {
   const g = sel?.g;
   const teamScore = g?.hasScores ? (sel.isHome ? g.homeScore : g.awayScore) : null;
   const el = $('sseCheck');
-  if (teamScore === null || teamScore === undefined || !rows.length) { el.textContent = ''; return; }
+  const entered = rows.some(p => p.played && ALL.some(([k]) => Number(p.v[k]) > 0));
+  if (teamScore === null || teamScore === undefined || !rows.length || !entered) { el.textContent = ''; el.className = 'sse-check'; return; }
   el.innerHTML = Number(teamScore) === runs
     ? `${icon('check')} Runs add up to the final score (${runs}).`
     : `${icon('alert')} Runs total ${runs}, but ${esc(sel.teamName)} scored ${esc(teamScore)}.`;

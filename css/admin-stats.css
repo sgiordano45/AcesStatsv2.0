@@ -112,3 +112,63 @@
   .sse-side { flex: 1; justify-content: space-between; }
   .sse-csv-sum { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ==========================================================================
+   Review tracked games: admin/game-tracker-review.html (js/admin/tracker-review.js)
+   ========================================================================== */
+
+.tr-filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.tr-h { margin: 0; font: var(--fw-semibold) var(--fs-md) / 1.2 var(--font-sans); }
+.tr-sub { margin: var(--space-4) 0 0; font-size: var(--fs-sm); }
+.tr-line table { width: auto; min-width: min(100%, 420px); }
+.tr-line thead th, .tr-bat thead th, .tr-pit thead th, .tr-hits thead th { position: static; }
+.tr-line th[scope="row"] { white-space: nowrap; text-align: left; padding-right: var(--space-6); }
+.tr-line td.is-num, .tr-line th.is-num { width: 2.5em; text-align: center; }
+.tr-line tr.is-mine th { color: var(--color-brand); }
+:root[data-theme="dark"] .tr-line tr.is-mine th { color: var(--color-link); }
+.tr-line .tr-r { font-weight: var(--fw-bold); }
+
+.tr-checks { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: var(--fs-sm); }
+.tr-check { display: flex; align-items: flex-start; gap: 6px; }
+.tr-check .aces-icon { flex: none; width: 16px; height: 16px; margin-top: 2px; }
+.tr-check.is-ok .aces-icon { color: var(--color-win); }
+.tr-check.is-warn .aces-icon { color: var(--color-alert); }
+
+.tr-bat th[scope="row"], .tr-bat td { white-space: nowrap; }
+.tr-bat .aces-select { min-height: 34px; min-width: 170px; }
+.tr-bat tr.is-skip th[scope="row"] { box-shadow: inset 3px 0 0 var(--color-alert); }
+.tr-bat tr.is-skip td.is-num { opacity: 0.45; }
+.tr-bat tfoot th, .tr-bat tfoot td { font-weight: var(--fw-bold); border-top: 2px solid var(--color-border-strong); }
+.tr-convert { align-items: center; }
+
+.tr-sec { border-top: 1px solid var(--color-border); padding-top: var(--space-3); }
+.tr-sec > summary { display: flex; align-items: baseline; gap: var(--space-2); cursor: pointer; list-style: none; }
+.tr-sec > summary::-webkit-details-marker { display: none; }
+.tr-sec > summary::before { content: "+"; display: inline-block; width: 1em; color: var(--color-text-muted); font-weight: var(--fw-bold); }
+.tr-sec[open] > summary::before { content: "-"; }
+.tr-sec-body { display: grid; gap: var(--space-3); margin-top: var(--space-3); }
+.tr-sec-body > .sse-sub { margin: 0; }
+.tr-sec-body .tr-sub { margin: var(--space-2) 0 0; }
+
+.tr-reassign { padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--color-surface-2); font-size: var(--fs-sm); }
+.tr-reassign summary { cursor: pointer; font-weight: var(--fw-semibold); }
+.tr-reassign-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); margin-top: var(--space-3); }
+.tr-reassign-row .sse-in { width: 5em; }
+
+.tr-inning h4 { margin: 0 0 4px; color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.tr-inning + .tr-inning { margin-top: var(--space-3); }
+.tr-plays { margin: 0; padding: 0; list-style: none; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.tr-plays li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: 4px var(--space-2); font-size: var(--fs-sm); }
+.tr-plays li + li { border-top: 1px solid var(--color-border); }
+.tr-n { min-width: 2em; color: var(--color-text-faint); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.tr-play { flex: 1; min-width: 200px; }
+.tr-runs { color: var(--color-loss); font-weight: var(--fw-semibold); }
+.tr-play-btns { display: flex; gap: 4px; }
+.tr-play-btns .aces-icon { width: 14px; height: 14px; }
+.tr-edit { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.tr-edit .aces-select { min-height: 34px; }
+
+.tr-prow { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); padding-bottom: var(--space-3); border-bottom: 1px solid var(--color-border); }
+.tr-prow .aces-field:first-child { min-width: 200px; }
+.tr-prow + .tr-prow { margin-top: var(--space-3); }
+.tr-pit th[scope="row"], .tr-hits th[scope="row"] { white-space: nowrap; }
