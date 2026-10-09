@@ -74,7 +74,6 @@ a.sn-game:hover { background: var(--color-surface-2); text-decoration: none; }
 .sn-game > .aces-icon { width: 16px; height: 16px; color: var(--color-text-faint); }
 .sn-when { color: var(--color-text-muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
 .sn-side { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.sn-side + .sn-at + .sn-side { justify-content: flex-start; }
 .sn-team { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sn-score { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
 .sn-side.is-win { font-weight: var(--fw-bold); }
@@ -84,8 +83,8 @@ a.sn-game:hover { background: var(--color-surface-2); text-decoration: none; }
   .sn-game { grid-template-columns: 48px minmax(0, 1fr) auto 16px; grid-template-areas: "when away tag go" "when home tag go"; row-gap: 2px; }
   .sn-when { grid-area: when; }
   .sn-at { display: none; }
-  .sn-side:nth-of-type(2) { grid-area: away; }
-  .sn-game > .sn-side:last-of-type { grid-area: home; }
+  .sn-side.is-away { grid-area: away; }
+  .sn-side.is-home { grid-area: home; }
   .sn-game > .aces-badge { grid-area: tag; }
   .sn-game > .aces-icon { grid-area: go; }
 }

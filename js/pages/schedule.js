@@ -37,6 +37,18 @@ const dot = (team) => { const k = String(team || '').toLowerCase(); return `<spa
 const isMine = (g) => !!state.myTeam && (g.home === state.myTeam || g.away === state.myTeam);
 const done = (g) => isDecided(g) && g.hasScores;
 const matches = (g) => (!state.team ? true : state.team === PLAYOFFS ? g.type === 'playoff' : g.home === state.team || g.away === state.team);
+/** The team results are shown for: the filtered team, else your own. */
+const viewTeam = () => (state.team && state.team !== PLAYOFFS ? state.team : state.myTeam);
+/** 'W' | 'L' | 'T' for a team in a finished game, else ''. */
+function resultFor(g, team) {
+  if (!team || !done(g) || (g.home !== team && g.away !== team)) return '';
+  if (g.result === 'tie') return 'T';
+  return (g.result === 'home') === (g.home === team) ? 'W' : 'L';
+}
+const resultBadge = (r, g, team) => {
+  const mine = g.home === team ? [g.homeScore, g.awayScore] : [g.awayScore, g.homeScore];
+  return `<span class="sc-result is-${r.toLowerCase()}" title="${r === 'W' ? 'Win' : r === 'L' ? 'Loss' : 'Tie'}"><b>${r}</b>${mine[0]}-${mine[1]}</span>`;
+};
 const visible = () => state.games.filter(g => matches(g) && (!state.hide || !done(g)));
 
 function gameHref(g) {
@@ -131,11 +143,13 @@ async function openCalendarMenu() {
 function chipHtml(g) {
   const k = String(g.home).toLowerCase();
   const color = TEAM_COLORS.has(k) ? ` data-team-color="${esc(k)}"` : '';
-  const score = done(g) ? `<span class="sc-chip-score">${g.awayScore}-${g.homeScore}${g.result === 'home' ? ' H' : g.result === 'away' ? ' A' : ''}</span>` : '';
-  return `<a class="sc-chip${isMine(g) ? ' is-mine' : ''}${g.type === 'playoff' ? ' is-playoff' : ''}${done(g) ? ' is-done' : ''}"${color} href="${esc(gameHref(g))}"
+  const r = resultFor(g, viewTeam());
+  const score = done(g) ? `<span class="sc-chip-score">${r ? `<b class="sc-chip-r">${r}</b> ` : ''}${g.awayScore}-${g.homeScore}</span>` : '';
+  const name = (team, win) => `<span class="${done(g) ? (win ? 'is-win' : g.result === 'tie' ? '' : 'is-loss') : ''}">${esc(cap(team))}</span>`;
+  return `<a class="sc-chip${isMine(g) ? ' is-mine' : ''}${g.type === 'playoff' ? ' is-playoff' : ''}${done(g) ? ' is-done' : ''}${r ? ` is-${r.toLowerCase()}` : ''}"${color} href="${esc(gameHref(g))}"
       title="${esc(`${cap(g.away)} at ${cap(g.home)}${g.time ? `, ${formatTime(g.time)}` : ''}${done(g) ? `: ${g.awayScore}-${g.homeScore}` : ''}`)}">
     ${g.time ? `<span class="sc-chip-time">${esc(formatTime(g.time))}</span>` : ''}
-    <span class="sc-chip-match">${esc(cap(g.away))} @ ${esc(cap(g.home))}</span>${score}
+    <span class="sc-chip-match">${name(g.away, g.result === 'away')} @ ${name(g.home, g.result === 'home')}</span>${score}
   </a>`;
 }
 
@@ -174,12 +188,13 @@ function renderCalendar(list) {
 }
 
 function rowHtml(g) {
-  const side = (team, score, win, which) => `<span class="sc-side is-${which}${win ? ' is-win' : ''}">${dot(team)}<span class="sc-team">${esc(cap(team) || 'TBD')}</span>${done(g) ? `<span class="sc-score">${score}</span>` : ''}</span>`;
+  const lost = (which) => done(g) && g.result && g.result !== 'tie' && g.result !== which;
+  const side = (team, score, win, which) => `<span class="sc-side is-${which}${win ? ' is-win' : ''}${lost(which) ? ' is-loss' : ''}">${dot(team)}<span class="sc-team">${esc(cap(team) || 'TBD')}</span>${done(g) ? `<span class="sc-score">${score}</span>` : ''}</span>`;
   const tag = g.type === 'playoff' ? `<span class="aces-badge is-accent">${esc(g.round ? cap(g.round) : 'Playoff')}</span>` : '';
   const mine = isMine(g) ? '<span class="aces-badge is-brand">Your game</span>' : '';
   const status = !done(g) && g.winner ? `<span class="aces-badge is-outline">${esc(g.winner === 'Tie' ? 'Tie' : `${g.winner} won`)}</span>` : '';
-  return `<li><a class="sc-row${isMine(g) ? ' is-mine' : ''}" href="${esc(gameHref(g))}">
-    <span class="sc-when">${esc(g.time ? formatTime(g.time) : '')}</span>
+  return `<li><a class="sc-row${isMine(g) ? ' is-mine' : ''}${done(g) ? ' is-done' : ''}" href="${esc(gameHref(g))}">
+    <span class="sc-when">${(() => { const t = viewTeam(); const r = resultFor(g, t); return r ? resultBadge(r, g, t) : done(g) ? '<span class="sc-final">Final</span>' : esc(g.time ? formatTime(g.time) : ''); })()}</span>
     ${side(g.away, g.awayScore, g.result === 'away', 'away')}<span class="sc-at">@</span>${side(g.home, g.homeScore, g.result === 'home', 'home')}
     <span class="sc-tags">${tag}${mine}${status}</span>${icon('chevron-right')}</a></li>`;
 }

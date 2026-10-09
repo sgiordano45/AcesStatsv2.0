@@ -260,11 +260,11 @@ function gameRow(g) {
   const homeWin = g.result === 'home', awayWin = g.result === 'away';
   const recap = done && g.id ? `game-recap.html?${new URLSearchParams({ gameId: g.id, seasonId: S.id })}` : '';
   const when = g.time ? formatTime(g.time) : '';
-  const side = (team, score, win) => `<span class="sn-side${win ? ' is-win' : ''}">${dot(team)}<span class="sn-team">${esc(cap(team) || 'TBD')}</span>${done ? `<span class="sn-score">${score}</span>` : ''}</span>`;
+  const side = (team, score, win, which) => `<span class="sn-side is-${which}${win ? ' is-win' : ''}">${dot(team)}<span class="sn-team">${esc(cap(team) || 'TBD')}</span>${done ? `<span class="sn-score">${score}</span>` : ''}</span>`;
   const tag = g.type === 'playoff' ? `<span class="aces-badge is-accent">${esc(g.round ? cap(g.round) : 'Playoff')}</span>` : '';
   const status = !done && g.winner ? `<span class="aces-badge is-outline">${esc(g.winner === 'Tie' ? 'Tie' : `${g.winner} won`)}</span>`
     : !done && g.unmatchedWinner ? `<span class="aces-badge is-outline">${esc(g.unmatchedWinner)}</span>` : '';
-  const inner = `<span class="sn-when">${esc(when)}</span>${side(g.away, g.awayScore, awayWin)}<span class="sn-at">@</span>${side(g.home, g.homeScore, homeWin)}${tag}${status}`;
+  const inner = `<span class="sn-when">${esc(when)}</span>${side(g.away, g.awayScore, awayWin, 'away')}<span class="sn-at">@</span>${side(g.home, g.homeScore, homeWin, 'home')}${tag}${status}`;
   return recap ? `<li><a class="sn-game is-done" href="${esc(recap)}">${inner}${icon('chevron-right')}</a></li>` : `<li><div class="sn-game">${inner}</div></li>`;
 }
 
