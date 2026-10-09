@@ -404,7 +404,7 @@ body {
 <body>
 
 <!-- Loading Overlay -->
-<div id="loadingOverlay" class="loading-overlay">
+<div id="loadingOverlay" class="loading-overlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -469,7 +469,8 @@ body {
 </div>
 
 <script type="module">
-import { getAllSeasons, getSeasonGames } from './firebase-data.js';
+import { initPage, pageReady, showPageError } from './js/core/app.js';
+import { getAllSeasons, getSeasonGames } from './js/data/index.js';
 
 // Team color mapping from team-colors.js
 const teamColors = {
@@ -492,12 +493,6 @@ const validAcesTeams = ['Green', 'Gold', 'White', 'Blue', 'Black', 'Red', 'Silve
 
 let seasonHistory = [];
 
-// Hide loading overlay
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    document.getElementById('loadingOverlay').classList.add('hidden');
-  }, 800);
-});
 
 // Capitalize team name
 function capitalize(str) {
@@ -806,23 +801,20 @@ function generateStats() {
 
 // Initialize page
 async function init() {
+  await initPage({ title: 'League History' });
   await loadSeasonHistory();
   generateChart();
   generateLegend();
   generateTimeline();
   generateStats();
+  pageReady();
 }
 
-init();
+init().catch((err) => { pageReady(); showPageError(err); });
 </script>
 
 <!-- Load navigation -->
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
-</script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 
 </body>
 </html>

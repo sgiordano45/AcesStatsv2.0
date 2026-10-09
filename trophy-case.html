@@ -962,7 +962,7 @@
 </head>
 <body>
   <!-- Loading Spinner -->
-  <div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-overlay" id="loadingOverlay" data-page-loading>
     <div class="trophy-spinner">🏆</div>
   </div>
 
@@ -1115,16 +1115,16 @@
   </div>
 
   <script type="module">
+    import { initPage, pageReady, showPageError } from './js/core/app.js';
     import { 
       db,
       collection, 
       doc, 
       getDocs, 
       getDoc
-    } from './firebase-config.js';
-    import { getCurrentSeason } from './firebase-data.js';
+    } from './js/core/firebase.js';
+    import { getCurrentSeason } from './js/data/index.js';
     import { getSeasonRange, getDisplaySeasonId, formatSeasonLabel } from './js/core/config.js';
-    import { NavigationComponent } from './nav-component.js';
     import { 
       BADGE_DEFINITIONS, 
       getBadgesByCategory,
@@ -1227,7 +1227,7 @@
         showNoDataState();
       }
       
-      document.getElementById('loadingOverlay').classList.add('hidden');
+      pageReady();
     }
 
     // ============================================
@@ -1784,12 +1784,12 @@
     // INITIALIZE
     // ============================================
 
-    document.addEventListener('DOMContentLoaded', async () => {
+    (async () => {
+      await initPage({ title: 'Trophy Case' });
       await initSeasons();
-      loadBadgeData();
-    });
+      await loadBadgeData();
+    })().catch((err) => { pageReady(); showPageError(err); });
   </script>
   <script src="mobile-enhancements.js"></script>
-  <script src="theme-toggle.js"></script>
 </body>
 </html>

@@ -696,7 +696,7 @@ body {
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -812,8 +812,9 @@ body {
 <canvas id="shareCanvas" width="600" height="400" style="display: none;"></canvas>
 
 <script type="module">
-import { db } from './firebase-config.js';
+import { initPage, pageReady, showPageError } from './js/core/app.js';
 import { 
+  db,
   collection, 
   query, 
   where, 
@@ -822,7 +823,7 @@ import {
   getDocs,
   startAfter,
   Timestamp 
-} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+} from './js/core/firebase.js';
 
 // State
 let allActivities = [];
@@ -843,13 +844,13 @@ const toast = document.getElementById('toast');
 const shareCanvas = document.getElementById('shareCanvas');
 const loadMoreBtn = document.getElementById('loadMoreBtn');
 const loadMoreContainer = document.getElementById('loadMoreContainer');
-const loadingOverlay = document.getElementById('loadingOverlay');
 
 // Initialize
 async function init() {
+  await initPage({ title: 'League Activity' });
   setupEventListeners();
   await loadActivities();
-  loadingOverlay.classList.add('hidden');
+  pageReady();
 }
 
 // Load activities from Firestore
@@ -1420,13 +1421,8 @@ async function copyDigestText() {
 }
 
 // Initialize
-init();
-</script>
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
+init().catch((err) => { pageReady(); showPageError(err); });
 </script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

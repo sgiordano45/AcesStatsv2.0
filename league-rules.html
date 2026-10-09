@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mountainside Aces - League Rules</title>
+    <title>League Rules - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -696,7 +696,7 @@
     🏠 Back Home
 	</a>
     <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-overlay" id="loadingOverlay" data-page-loading>
         <div class="softball-spinner"></div>
     </div>
 
@@ -1160,8 +1160,8 @@
     </footer>
     
     <script type="module">
-        import { db } from './firebase-config.js';
-        import { collection, query, where, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { initPage, pageReady } from './js/core/app.js';
+        import { db, collection, query, where, orderBy, getDocs } from './js/core/firebase.js';
 
         async function loadDocuments() {
             const grid = document.getElementById('documentsGrid');
@@ -1213,17 +1213,12 @@
             }
         }
 
-        loadDocuments();
+        initPage({ title: 'League Rules' })
+            .then(() => { pageReady(); return loadDocuments(); })
+            .catch((err) => { console.error('[rules]', err); pageReady(); });
     </script>
 
     <script>
-        // Loading overlay
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                document.getElementById('loadingOverlay').classList.add('hidden');
-            }, 800);
-        });
-
         // Mobile nav toggle
         const navToggle = document.getElementById('navToggle');
         const quickNav = document.getElementById('quickNav');
@@ -1348,12 +1343,7 @@
             });
         });
     </script>
-	<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
-</script>
     <script src="mobile-enhancements.js"></script>
-    <script src="theme-toggle.js"></script>
 </body>
 </html>
 

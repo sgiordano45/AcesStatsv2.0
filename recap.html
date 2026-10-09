@@ -816,7 +816,7 @@
 <body>
 
 <!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -844,18 +844,16 @@
 </div>
 
 <script type="module">
+  import { initPage, pageReady, showPageError } from './js/core/app.js';
   import {
     getSeasonGames,
     getSeasonPlayerStatsOptimized,
     getSeasonPitchingStatsOptimized,
     getSeasonAwards,
     getAllPlayerStatsOptimized,
-    getAllSeasons,
-    db,
-    doc,
-    getDoc
-  } from './firebase-data.js';
-  import { collection, getDocs, query, where, orderBy } from './firebase-config.js';
+    getAllSeasons
+  } from './js/data/index.js';
+  import { db, doc, getDoc, collection, getDocs, query, where, orderBy } from './js/core/firebase.js';
 
   // Fetch eulogies for a season
   async function getSeasonEulogies(seasonId) {
@@ -888,8 +886,9 @@
   let allPlayers = [];
 
   // Initialize page
-  document.addEventListener('DOMContentLoaded', async () => {
+  (async () => {
     try {
+      await initPage({ title: 'Year in Review' });
       // Get year from URL or siteConfig
       const urlParams = new URLSearchParams(window.location.search);
       let year = urlParams.get('year');
@@ -927,19 +926,14 @@
       // Load the recap data
       await loadYearRecap(currentYear);
       
-      // Hide loading overlay
-      document.getElementById('loadingOverlay').classList.add('hidden');
+      pageReady();
       
     } catch (error) {
       console.error('Error initializing recap page:', error);
-      document.getElementById('seasonsContainer').innerHTML = `
-        <div class="empty-state">
-          <p>Error loading recap data. Please try again later.</p>
-        </div>
-      `;
-      document.getElementById('loadingOverlay').classList.add('hidden');
+      pageReady();
+      showPageError(error, { container: document.getElementById('seasonsContainer') });
     }
-  });
+  })();
 
   function buildYearNav() {
     const navContainer = document.getElementById('yearNav');
@@ -1964,12 +1958,7 @@
   };
 </script>
 
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-  // Navigation auto-initializes on load!
-</script>
 <script src="team-colors.js"></script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>
