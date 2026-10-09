@@ -456,7 +456,7 @@
 <body>
 
 <!-- Loading overlay -->
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -597,19 +597,10 @@
     getAllPlayerStatsOptimized,
     getPlayerStatsOptimized,
     getCurrentSeason,
-    seasonsObjectToArray,
-    db
-  } from './firebase-data.js';
-
-  import {
-    doc,
-    getDoc,
-    collection,
-    getDocs
-  } from './firebase-config.js';
-
-  import { auth } from './firebase-auth.js';
-  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    seasonsObjectToArray
+  } from './js/data/index.js';
+  import { db, doc, getDoc, collection, getDocs } from './js/core/firebase.js';
+  import { initPage, pageReady } from './js/core/app.js';
 
   // ── State ────────────────────────────────────────────
   const SPLITS_2025_COLLECTION = 'aggregatedPlayerStats2025Splits';
@@ -1141,7 +1132,8 @@
   }
 
   // ── Init ─────────────────────────────────────────────
-  onAuthStateChanged(auth, async () => {
+  // The player list loads once (it used to reload on every sign-in change).
+  initPage({ title: 'Scouting Report' }).then(async () => {
     try {
       const players = await getAllPlayerStatsOptimized();
       allPlayers = players
@@ -1176,8 +1168,7 @@
 
     } catch(e) { console.error('Failed to load player list:', e); }
     finally {
-      // Hide loading overlay once player list is ready (auth resolved + data fetched)
-      document.getElementById('loadingOverlay')?.classList.add('hidden');
+      pageReady();   // hides the loading overlay once the player list is ready
     }
   });
 
@@ -1486,10 +1477,6 @@
 
 </script>
 
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-</script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

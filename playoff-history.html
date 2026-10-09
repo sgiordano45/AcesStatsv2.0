@@ -464,12 +464,11 @@
     </div>
   </div>
 
-  <!-- Navigation Component -->
-  <script src="nav-component.js"></script>
-
   <!-- Firebase and Data -->
   <script type="module">
-    import { getAllSeasons, getSeasonGames, db, doc, getDoc } from './firebase-data.js';
+    import { getAllSeasons, getSeasonGames } from './js/data/index.js';
+    import { db, doc, getDoc } from './js/core/firebase.js';
+    import { initPage } from './js/core/app.js';
 
     // Global state
     let allSeasons = [];
@@ -514,10 +513,8 @@
       { key: 'Championship (If Necessary)', display: '🏆 Championship Game 2 (If Necessary)', type: 'championship' }
     ];
 
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', async () => {
-      await loadSeasons();
-    });
+    // The header, theme and View As come from initPage (js/core/app.js).
+    initPage({ title: 'Playoff History' }).then(() => loadSeasons());
 
     async function loadSeasons() {
       try {
@@ -1038,31 +1035,6 @@
       return { homeTeam: resolvedHome, awayTeam: resolvedAway };
     }
   </script>
-  <script type="module">
-    import { NavigationComponent } from './nav-component.js';
-    import { onAuthChange } from './firebase-auth.js';
-    import { loadPageVisibility, getFilteredNavStructure } from './nav-config.js';
-    
-    async function initNav() {
-      // Load page visibility config
-      await loadPageVisibility();
-      
-      // Initialize nav with auth state
-      onAuthChange(async (user, userProfile) => {
-        const filteredNav = getFilteredNavStructure();
-        const nav = new NavigationComponent({
-          isAuthenticated: !!user,
-          userDisplayName: user?.displayName || user?.email?.split('@')[0],
-          userProfile: userProfile,
-          navStructure: filteredNav
-        });
-        nav.render();
-      });
-    }
-    
-    initNav();
-  </script>
   <script src="mobile-enhancements.js"></script>
-  <script src="theme-toggle.js"></script>
 </body>
 </html>

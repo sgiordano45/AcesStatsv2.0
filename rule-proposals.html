@@ -4,7 +4,7 @@
 <script type="module" src="js/core/preview-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mountainside Aces - Rule Proposals</title>
+    <title>Rule Proposals - Mountainside Aces</title>
     <meta name="theme-color" content="#2d5016">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -644,7 +644,7 @@
     </style>
 </head>
 <body>
-    <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-overlay" id="loadingOverlay" data-page-loading>
         <div class="softball-spinner"></div>
     </div>
 
@@ -803,10 +803,8 @@
     </footer>
     
     <script type="module">
-        import { doc, setDoc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { db } from './firebase-data.js';
-        import { auth } from './firebase-auth.js';
+        import { db, doc, setDoc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from './js/core/firebase.js';
+        import { initPage, pageReady, onAuthChange } from './js/core/app.js';
 
         // DOM Elements
         const loadingOverlay = document.getElementById('loadingOverlay');
@@ -846,8 +844,8 @@
             setupTabs();
         });
 
-        // Auth state listener
-        onAuthStateChanged(auth, async (user) => {
+        // Signed out: the page shows its sign-in card (it stays open to anyone with the link).
+        async function applyUser(user) {
             if (user) {
                 currentUser = user;
                 showMainContent(user);
@@ -856,7 +854,13 @@
                 currentUser = null;
                 showAuthRequired();
             }
-            loadingOverlay.classList.add('hidden');
+        }
+
+        initPage({ title: 'Rule Proposals' }).then(async ({ user }) => {
+            await applyUser(user);
+            pageReady();
+            // Signing in or out in another tab updates the page.
+            onAuthChange((u) => { if ((u?.uid || null) !== (currentUser?.uid || null)) applyUser(u); });
         });
 
         function showAuthRequired() {
@@ -1054,10 +1058,6 @@
             return str.charAt(0).toUpperCase() + str.slice(1);
         }
     </script>
-    <script type="module">
-        import { NavigationComponent } from './nav-component.js';
-    </script>
     <script src="mobile-enhancements.js"></script>
-    <script src="theme-toggle.js"></script>
 </body>
 </html>

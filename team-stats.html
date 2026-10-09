@@ -466,7 +466,7 @@
 <body>
 
 <!-- Loading overlay -->
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -586,11 +586,9 @@
 </div><!-- end .page-container -->
 
 <script type="module">
-  import { getAllPlayerStatsOptimized, getCurrentSeason, getAllSeasons, db } from './firebase-data.js';
-  import { auth } from './firebase-auth.js';
-  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-  import { collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-  import { NavigationComponent } from './nav-component.js';
+  import { getAllPlayerStatsOptimized, getCurrentSeason, getAllSeasons } from './js/data/index.js';
+  import { db, collection, getDocs, query, where } from './js/core/firebase.js';
+  import { initPage, pageReady } from './js/core/app.js';
   import { getDisplaySeasonId } from './js/core/config.js';
 
   // ── Team colors (used for dots) ───────────────────────
@@ -999,8 +997,8 @@
   window.shareRunningChartImage = shareRunningChartImage;
 
   // ── Init ─────────────────────────────────────────────
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) { window.location.href = 'index.html'; return; }
+  // Signed-in only: initPage sends signed-out visitors to sign in and back.
+  initPage({ title: 'Team Stats', requiresAuth: true }).then(async () => {
     try {
       [allPlayers, currentSeason] = await Promise.all([
         getAllPlayerStatsOptimized(),
@@ -1013,7 +1011,7 @@
       document.getElementById('tableWrap').innerHTML =
         `<div class="state-box"><div class="icon">⚠️</div><p>Failed to load stats.</p></div>`;
     } finally {
-      document.getElementById('loadingOverlay').classList.add('hidden');
+      pageReady();
     }
   });
 
@@ -1506,6 +1504,5 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>
