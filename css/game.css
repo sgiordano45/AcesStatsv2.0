@@ -139,7 +139,9 @@
 .gr-ha { color: var(--color-text-faint); font-size: 10px; font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
 .gr-final { color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
 .gr-line { margin-top: var(--space-3); }
-.gr-line th[scope="row"] { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.gr-line th[scope="row"] { white-space: nowrap; text-align: left; }
+.gr-line-team { display: inline-flex; align-items: center; gap: 6px; }
+.gr-line th.is-num, .gr-line td.is-num { width: 2.5em; text-align: center; }
 .gr-line tr.is-win th, .gr-line tr.is-win .gr-r { font-weight: var(--fw-bold); }
 .gr-line .gr-r { border-left: 2px solid var(--color-border); }
 .gm .aces-table thead th { position: static; }

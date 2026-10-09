@@ -133,7 +133,7 @@ function renderScoreboard() {
     const n = Math.max(ls.home.length, (ls.away || []).length);
     const cols = Array.from({ length: n }, (_, i) => i);
     const tot = (arr) => (arr || []).reduce((s, v) => s + (Number(v) || 0), 0);
-    const row = (team, arr, which) => `<tr class="${g.result === which ? 'is-win' : ''}"><th scope="row">${teamDot(team)}${esc(cap(team))}</th>${cols.map(i => `<td>${arr?.[i] ?? 0}</td>`).join('')}<td class="gr-r">${tot(arr)}</td></tr>`;
+    const row = (team, arr, which) => `<tr class="${g.result === which ? 'is-win' : ''}"><th scope="row"><span class="gr-line-team">${teamDot(team)}${esc(cap(team))}</span></th>${cols.map(i => `<td class="is-num">${arr?.[i] ?? 0}</td>`).join('')}<td class="is-num gr-r">${tot(arr)}</td></tr>`;
     line = `<div class="aces-table-wrap gr-line"><table class="aces-table is-compact"><thead><tr><th scope="col">Team</th>${cols.map(i => `<th scope="col" class="is-num">${i + 1}</th>`).join('')}<th scope="col" class="is-num gr-r">R</th></tr></thead>
       <tbody>${row(g.away, ls.away, 'away')}${row(g.home, ls.home, 'home')}</tbody></table></div>`;
   }
