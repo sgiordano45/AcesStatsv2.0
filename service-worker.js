@@ -2,7 +2,7 @@
 // Handles both offline functionality AND Firebase Cloud Messaging
 // Version 2.1.02 - Force cache refresh to fix PWA stale load
 
-const CACHE_VERSION = 'aces-v2.1.04';
+const CACHE_VERSION = 'aces-v2.1.05';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
@@ -388,7 +388,8 @@ async function networkFirstWithOfflinePage(request) {
 // ==============================================
 
 function isStaticAsset(url) {
-  return STATIC_ASSETS.some(asset => url.pathname === asset);
+  // CSS only: precached HTML pages must stay network-first or edits never reach users
+  return url.pathname.endsWith('.css') && STATIC_ASSETS.some(asset => url.pathname === asset);
 }
 
 function isJavaScriptFile(url) {
