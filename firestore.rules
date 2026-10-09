@@ -563,6 +563,26 @@ match /gameBoxScores/{gameId} {
 
 
     // ========================================
+    // ACEYS (awards ceremony)
+    // ========================================
+
+    match /aceyAwards/{awardId} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    match /aceyControl/{docId} {
+      allow read: if true;
+      allow write: if canManageContent();
+    }
+
+    match /aceyVotes/{userId} {
+      allow read: if isOwner(userId) || canManageContent();
+      allow create, update: if isOwner(userId);
+      allow delete: if canManageContent();
+    }
+
+    // ========================================
     // SPRAY CHART DATA
     // ========================================
 
@@ -784,6 +804,28 @@ match /gameBoxScores/{gameId} {
         (isSignedIn() &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']));
       allow delete: if isStaffOrAdmin();
+    }
+
+    // Wall of Shame photo gallery (violations.html): anyone can look;
+    // captains, league staff and Mall Cops add and remove photos.
+    match /violationPhotos/{photoId} {
+      allow read: if true;
+      allow create: if (isCaptain() || isStaffOrAdmin() || canManageContent() || hasSpecialRole('mallCop'))
+        && request.resource.data.uploadedByUid == request.auth.uid;
+      allow update: if isStaffOrAdmin() || canManageContent();
+      allow delete: if isCaptain() || isStaffOrAdmin() || canManageContent() || hasSpecialRole('mallCop');
+    }
+
+    // ========================================
+    // DRAFT QUESTIONNAIRES
+    // ========================================
+
+    // One doc per player, keyed by uid (player-questionnaire.html).
+    // Captains and league staff read them all (captain-questionnaire-review.html).
+    match /draftQuestionnaires/{userId} {
+      allow read: if isOwner(userId) || isCaptain() || isStaffOrAdmin() || canManageContent();
+      allow create, update: if isOwner(userId);
+      allow delete: if isStaffOrAdmin() || canManageContent();
     }
 
     // ========================================

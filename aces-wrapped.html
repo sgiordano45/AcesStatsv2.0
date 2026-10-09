@@ -615,7 +615,7 @@
 
 <script type="module">
   import { initPage, pageReady } from './js/core/app.js';
-  initPage({ title: 'Aces Wrapped' });
+  const pageInit = initPage({ title: 'Aces Wrapped' });   // resolves once sign-in is known
 import { db, collection, doc, getDoc, getDocs } from './js/core/firebase.js';
 import { getCurrentUser } from './js/core/auth.js';
 
@@ -1193,7 +1193,7 @@ async function loadPlayerData() {
     
     // If no ID in URL, try to get current user
     if (!playerId) {
-      const user = await getCurrentUser();
+      const user = (await pageInit).user || getCurrentUser();
       if (user?.linkedPlayer) {
         playerId = user.linkedPlayer;
       } else if (user) {

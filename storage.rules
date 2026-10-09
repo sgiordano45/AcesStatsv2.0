@@ -1,1 +1,55 @@
-Error: storage:rules:get is not a Firebase command
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Profile photos - stored in profile-photos/{userId}/
+    match /profile-photos/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+        (request.auth.uid == userId ||
+         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.userRole == 'admin');
+    }
+
+    // Player photos - stored in player-photos/{userId}/
+    match /player-photos/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+        (request.auth.uid == userId ||
+         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.userRole == 'admin');
+    }
+
+    // Team photos - stored in team-photos/{folder}/
+    match /team-photos/{folder}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // League documents - stored in league-documents/
+    match /league-documents/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.userRole == 'admin';
+    }
+
+    // Violation gallery photos (Wall of Shame). Captains, league staff and
+    // Mall Cops add and remove photos, same as the violationPhotos docs.
+    match /violation-gallery/{fileName} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*')
+        && (
+          firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isCaptain == true ||
+          firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+          firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.userRole in ['admin', 'staff', 'league-staff'] ||
+          firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.specialRoles.mallCop == true
+        );
+      allow delete: if request.auth != null && (
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isCaptain == true ||
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.userRole in ['admin', 'staff', 'league-staff'] ||
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.specialRoles.mallCop == true
+      );
+    }
+  }
+}
