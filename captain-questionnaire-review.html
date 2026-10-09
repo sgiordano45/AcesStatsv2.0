@@ -4,7 +4,7 @@
 <script type="module" src="js/core/preview-guard.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Draft Questionnaire Review - Mountainside Aces</title>
+  <title>Captain Questionnaires - Mountainside Aces</title>
   <meta name="theme-color" content="#2d5016">
   <link rel="stylesheet" href="nav-styles.css">
   <style>
@@ -198,7 +198,7 @@
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
   <div class="loading-text" id="loadingText">Checking access…</div>
 </div>
@@ -271,9 +271,10 @@
 </div>
 
 <script type="module">
-  import { db, doc, getDoc, getDocs, collection } from './firebase-config.js';
-  import { onAuthChange } from './firebase-auth.js';
-  import { NavigationComponent } from './nav-component.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Captain Questionnaires', requiresAuth: true });
+  import { db, doc, getDoc, getDocs, collection } from './js/core/firebase.js';
+  import { onAuthChange } from './js/core/auth.js';
 
   const LEVEL_ORDER = {
     'Beginner': 1,
@@ -467,7 +468,7 @@
   }
 
   function hideLoading() {
-    document.getElementById('loadingOverlay').classList.add('hidden');
+    pageReady();
   }
   function setLoadingText(t) {
     document.getElementById('loadingText').textContent = t;

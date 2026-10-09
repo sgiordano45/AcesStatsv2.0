@@ -149,8 +149,8 @@ function renderSteps(s) {
     note: s.missingSides ? 'If a team will never send stats for a game, mark it so it stops showing here.' : '',
     actions: s.missingScore || s.missingSides ? [
       ...(s.missingScore ? [['submit-score.html', 'Submit scores', true]] : []),
-      ['admin-submit-stats.html', 'Enter stats', !s.missingScore],
-      ['admin-mark-stats-submitted.html', 'Mark no stats coming']
+      ['admin/submit-stats.html', 'Enter stats', !s.missingScore],
+      ['admin/mark-stats-submitted.html', 'Mark no stats coming']
     ] : []
   }));
 
@@ -160,7 +160,7 @@ function renderSteps(s) {
     detail: !s.tracked.length ? 'No games were tracked live this season.'
       : s.trackedPending ? `${plural(s.trackedPending, 'tracked game')} not yet converted to official stats.`
         : `All ${plural(s.tracked.length, 'tracked game')} converted.`,
-    actions: s.trackedPending ? [['admin-game-tracker-review.html', 'Review tracked games', true]] : []
+    actions: s.trackedPending ? [['admin/game-tracker-review.html', 'Review tracked games', true]] : []
   }));
 
   const testStale = stale(s.test.at);
@@ -169,7 +169,7 @@ function renderSteps(s) {
     status: testStale ? 'todo' : 'done',
     detail: `Last test run: ${esc(when(s.test.at))}${s.test.at ? `, ${plural(s.test.players, 'player')}` : ''}.${testStale && s.test.at ? ' Stats have changed since.' : ''}`,
     note: testStale ? gapNote : '',
-    actions: [[`aggregate-stats.html?season=${sid}&test=1`, 'Open test run', testStale]]
+    actions: [[`admin/aggregate-stats.html?season=${sid}&test=1`, 'Open test run', testStale]]
   }));
 
   const prodStale = stale(s.prod.at);
@@ -180,7 +180,7 @@ function renderSteps(s) {
     detail: `Last production run: ${esc(when(s.prod.at))}${s.prod.at ? `, ${plural(s.prod.players, 'player')}` : ''}.${prodStale && s.prod.at ? ' Stats have changed since.' : ''}`,
     note: prodStale && testStale ? `${icon('alert')} Run the test aggregation first and check it looks right.`
       : prodStale && prodBeforeTest ? 'The test run is newer. If it looked right, run production.' : '',
-    actions: [[`aggregate-stats.html?season=${sid}`, 'Open production run', prodStale && !testStale]]
+    actions: [[`admin/aggregate-stats.html?season=${sid}`, 'Open production run', prodStale && !testStale]]
   }));
 
   const badgesStale = !s.badges || s.badges < s.prod.at;
@@ -190,8 +190,8 @@ function renderSteps(s) {
     detail: `Last calculated: ${esc(when(s.badges))}.${s.badgesTest ? ` Last test run: ${esc(when(s.badgesTest))}.` : ''}${badgesStale && s.badges ? ' Production stats have been rebuilt since.' : ''}`,
     note: badgesStale && prodStale ? 'Badges read production stats, so run the production aggregation first.' : '',
     actions: [
-      [`admin-badges.html?season=${sid}&test=1`, 'Test badges'],
-      [`admin-badges.html?season=${sid}`, 'Calculate badges', badgesStale && !prodStale]
+      [`admin/badges.html?season=${sid}&test=1`, 'Test badges'],
+      [`admin/badges.html?season=${sid}`, 'Calculate badges', badgesStale && !prodStale]
     ]
   }));
 

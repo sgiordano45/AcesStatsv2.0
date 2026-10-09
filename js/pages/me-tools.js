@@ -20,21 +20,21 @@ export const TOOL_GROUPS = [
   ] },
   { role: 'league-staff', title: 'League staff', icon: 'settings', guide: 'help.html#league-staff', tools: [
     ['admin/index.html', 'Admin home', 'To-dos and every staff tool', 'grid'],
-    ['league-staff-admin.html', 'League staff admin', 'Seasons, games and settings', 'sliders'],
+    ['admin/league-staff.html', 'League staff admin', 'Seasons, games and settings', 'sliders'],
     ['offseason.html', 'Offseason hub', 'Rosters, schedule and the draft', 'leaf'],
     ['offseason-roster.html', 'Offseason rosters', 'Team assignments for next season', 'users'],
     ['admin/schedule.html', 'Schedule', 'Build, tune, publish and fix it', 'calendar-days']
   ] },
   { role: 'admin', title: 'Admin', icon: 'shield-check', tools: [
     ['approve-links.html', 'Approve player links', 'Pending account-to-player requests', 'user-check'],
-    ['admin-link-players.html', 'Link players', 'Connect accounts to player records', 'link'],
-    ['admin-user-management.html', 'User management', 'Accounts, roles and View As', 'users'],
-    ['admin-roles.html', 'Role updater', 'Change roles in bulk', 'shield'],
+    ['admin/link-players.html', 'Link players', 'Connect accounts to player records', 'link'],
+    ['admin/user-management.html', 'User management', 'Accounts, roles and View As', 'users'],
+    ['admin/roles.html', 'Role updater', 'Change roles in bulk', 'shield'],
     ['admin/stats.html', 'Stats pipeline', 'Stats in, review, aggregate, badges', 'refresh'],
-    ['admin-badges.html', 'Badge calculator', 'Award player badges', 'medal'],
-    ['games-admin.html', 'Games admin', 'Daily games content', 'gamepad'],
-    ['admin-content.html', 'Content tools', 'Announcements and site content', 'megaphone'],
-    ['admin-features.html', 'Feature requests', 'What members have asked for', 'message']
+    ['admin/badges.html', 'Badge calculator', 'Award player badges', 'medal'],
+    ['admin/games.html', 'Games admin', 'Daily games content', 'gamepad'],
+    ['admin/content.html', 'Content tools', 'Announcements and site content', 'megaphone'],
+    ['admin/features.html', 'Feature requests', 'What members have asked for', 'message']
   ] },
   { role: 'contributor', title: 'Contributor', icon: 'sparkles', tools: [
     ['contributor.html', 'Contributor dashboard', 'Recaps, previews and photos', 'edit']

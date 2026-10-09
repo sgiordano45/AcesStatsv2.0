@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="../">
+<meta name="robots" content="noindex">
+<script type="module" src="js/core/preview-guard.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opening Day Countdown - Mountainside Aces</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+  min-height: 100vh;
+}
+
+/* AUTH GATE */
+#auth-gate {
+  display: flex; align-items: center; justify-content: center;
+  height: 100vh; flex-direction: column; gap: 12px; color: #8b949e;
+  font-size: 0.9rem;
+}
+#auth-gate a { color: #58a6ff; }
+
+/* HEADER */
+.admin-header {
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  padding: 13px 24px;
+  display: flex; align-items: center; gap: 10px;
+}
+.admin-header-title { font-size: 1rem; font-weight: 700; color: #f0f6fc; flex: 1; }
+.badge-admin {
+  background: #f0a500; color: #000;
+  font-size: 0.6rem; font-weight: 800;
+  padding: 2px 7px; border-radius: 4px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.badge-opening {
+  background: #238636; color: #fff;
+  font-size: 0.68rem; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+}
+
+/* DAY NAV */
+.day-nav-bar {
+  background: #161b22;
+  border-bottom: 1px solid #21262d;
+  padding: 10px 20px;
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+}
+.day-chip {
+  background: transparent;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  font-size: 0.72rem; font-weight: 600;
+  padding: 5px 12px; border-radius: 20px;
+  cursor: pointer; transition: all 0.15s;
+}
+.day-chip:hover { border-color: #58a6ff; color: #58a6ff; }
+.day-chip.active { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+.day-chip.is-today { border-color: #f0a500; }
+.day-chip.is-today.active { background: #f0a500; border-color: #f0a500; color: #000; }
+
+/* MAIN LAYOUT */
+.main-wrap {
+  display: flex; gap: 28px;
+  padding: 24px 20px;
+  max-width: 920px; margin: 0 auto;
+  align-items: flex-start;
+}
+
+/* CARD AREA */
+.card-column { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+.card-loading {
+  width: 390px; height: 600px;
+  background: #161b22; border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 12px; color: #8b949e; font-size: 0.82rem;
+}
+.spinner {
+  width: 26px; height: 26px;
+  border: 3px solid #30363d; border-top-color: #1f6feb;
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#card-target {
+  width: 390px; height: 600px;
+  border-radius: 20px; overflow: hidden;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.7);
+  flex-shrink: 0;
+}
+
+.card-actions { display: flex; gap: 7px; width: 390px; }
+.btn {
+  flex: 1; padding: 8px 10px;
+  border-radius: 8px; font-size: 0.75rem; font-weight: 700;
+  border: 1px solid #30363d; background: transparent;
+  color: #8b949e; cursor: pointer; transition: all 0.15s;
+}
+.btn:hover { border-color: #58a6ff; color: #58a6ff; }
+.btn-download { border-color: #6e40c9; color: #a371f7; }
+.btn-download:hover { background: #6e40c9; color: #fff; }
+.btn-download.working { background: #6e40c9; color: #fff; opacity: 0.7; cursor: wait; }
+
+/* CAPTION COLUMN */
+.caption-column { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+
+.section-label {
+  font-size: 0.68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: #484f58; margin-bottom: 5px;
+}
+.day-info-box {
+  background: #161b22; border: 1px solid #21262d;
+  border-radius: 10px; padding: 13px 16px;
+}
+.day-info-title { font-size: 0.95rem; font-weight: 800; color: #f0f6fc; margin-bottom: 3px; }
+.day-info-sub { font-size: 0.76rem; color: #8b949e; }
+
+.caption-textarea {
+  width: 100%; background: #161b22;
+  border: 1px solid #21262d; border-radius: 10px;
+  padding: 13px 15px; color: #c9d1d9;
+  font-size: 0.8rem; line-height: 1.65;
+  resize: vertical; min-height: 220px;
+  font-family: inherit; outline: none;
+  transition: border-color 0.15s;
+}
+.caption-textarea:focus { border-color: #1f6feb; }
+
+.copy-btn {
+  width: 100%; padding: 11px;
+  background: #238636; border: none;
+  border-radius: 8px; color: #fff;
+  font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; transition: background 0.15s;
+}
+.copy-btn:hover { background: #2ea043; }
+.copy-btn.copied { background: #1f6feb; }
+
+/* =====================================================
+   ACES CARD STYLES (inside the 390x600 card-target)
+   ===================================================== */
+.aces-card {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Topbar */
+.ac-topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 15px 20px 10px;
+}
+.ac-countdown-lbl {
+  font-size: 0.6rem; font-weight: 900;
+  letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.72;
+}
+.ac-brand {
+  font-size: 0.58rem; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.55;
+}
+
+/* Hero */
+.ac-hero { padding: 4px 20px 12px; }
+.ac-day-num {
+  font-size: 4.6rem; font-weight: 900;
+  line-height: 1; letter-spacing: -0.03em;
+}
+.ac-title { font-size: 1.2rem; font-weight: 800; line-height: 1.2; margin-top: 2px; }
+.ac-sub { font-size: 0.7rem; opacity: 0.6; margin-top: 3px; font-weight: 500; }
+
+.ac-divider { margin: 0 20px; height: 1px; background: rgba(255,255,255,0.12); }
+
+/* Content */
+.ac-content {
+  flex: 1; padding: 12px 20px;
+  display: flex; flex-direction: column; gap: 7px; overflow-y: auto;
+}
+
+/* Stat rows (Day 10) */
+.ac-stat {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 13px; border-radius: 9px;
+  background: rgba(255,255,255,0.09);
+}
+.ac-stat-lbl { font-size: 0.76rem; font-weight: 600; opacity: 0.87; }
+.ac-stat-val { font-size: 0.98rem; font-weight: 800; }
+
+/* Rank rows */
+.ac-rank {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 11px; border-radius: 8px;
+  background: rgba(255,255,255,0.07);
+}
+.ac-rank-pos { font-size: 0.72rem; font-weight: 800; opacity: 0.5; width: 20px; }
+.ac-rank-name { flex: 1; font-size: 0.8rem; font-weight: 700; }
+.ac-rank-val { font-size: 0.86rem; font-weight: 800; }
+.ac-rank-meta { font-size: 0.66rem; opacity: 0.5; min-width: 60px; text-align: right; }
+
+/* Champion rows */
+.ac-champ {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 11px; border-radius: 8px;
+  background: rgba(255,255,255,0.07);
+}
+.ac-champ-season { font-size: 0.7rem; font-weight: 700; opacity: 0.6; width: 88px; flex-shrink: 0; }
+.ac-champ-team { flex: 1; font-size: 0.84rem; font-weight: 800; }
+
+/* Footer */
+.ac-footer {
+  padding: 9px 20px 12px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.ac-footer-txt {
+  font-size: 0.58rem; font-weight: 700;
+  opacity: 0.4; text-transform: uppercase; letter-spacing: 0.07em;
+}
+
+/* =====================================================
+   THEME GRADIENTS (one per day)
+   ===================================================== */
+.th-11 { background: linear-gradient(148deg,#1a0a2e 0%,#6b21a8 55%,#1a0a2e 100%); color:#f3e8ff; }
+.th-10 { background: linear-gradient(148deg,#0c1c40 0%,#1a3978 55%,#0c1530 100%); color:#dde9ff; }
+.th-9  { background: linear-gradient(148deg,#2b1500 0%,#894409 55%,#2b1500 100%); color:#fff3d0; }
+.th-8  { background: linear-gradient(148deg,#081a0c 0%,#145530 55%,#081a0c 100%); color:#d5f7df; }
+.th-7  { background: linear-gradient(148deg,#200505 0%,#881414 55%,#200505 100%); color:#ffdfdf; }
+.th-6  { background: linear-gradient(148deg,#130720 0%,#591593 55%,#130720 100%); color:#ecdcff; }
+.th-5  { background: linear-gradient(148deg,#041818 0%,#0c6358 55%,#041818 100%); color:#c6f7ef; }
+.th-4  { background: linear-gradient(148deg,#090f1e 0%,#183868 55%,#090f1e 100%); color:#d6e8ff; }
+.th-3  { background: linear-gradient(148deg,#1c0800 0%,#9c3308 55%,#1c0800 100%); color:#ffe7d0; }
+.th-2  { background: linear-gradient(148deg,#051722 0%,#095490 55%,#051722 100%); color:#cee8ff; }
+.th-1  { background: linear-gradient(148deg,#120000 0%,#941010 40%,#892e00 100%); color:#ffeeee; }
+.th-0  { background: linear-gradient(148deg,#061600 0%,#0b6430 40%,#0e2b78 100%); color:#e6ffe8; }
+</style>
+</head>
+<body>
+
+<div id="auth-gate">
+  <div class="spinner"></div>
+  <p>Checking credentials&hellip;</p>
+</div>
+
+<div id="app" style="display:none">
+
+  <header class="admin-header">
+    <div class="admin-header-title">&#9917; Opening Day Countdown</div>
+    <span class="badge-admin">Admin</span>
+    <span class="badge-opening">Opening Day: April 26</span>
+  </header>
+
+  <nav class="day-nav-bar" id="dayNav"></nav>
+
+  <div class="main-wrap">
+
+    <div class="card-column">
+      <div id="card-target">
+        <div class="card-loading">
+          <div class="spinner"></div>
+          <p>Loading league data&hellip;</p>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="btn" onclick="shiftDay(-1)">&#8592; Prev</button>
+        <button class="btn" onclick="goToday()">Today</button>
+        <button class="btn" onclick="shiftDay(1)">Next &#8594;</button>
+        <button class="btn btn-download" id="dlBtn" onclick="downloadCard()">Download PNG</button>
+      </div>
+    </div>
+
+    <div class="caption-column">
+      <div class="day-info-box">
+        <div class="day-info-title" id="dayTitle">Loading&hellip;</div>
+        <div class="day-info-sub" id="daySub"></div>
+      </div>
+      <div>
+        <div class="section-label">WhatsApp Caption</div>
+        <textarea class="caption-textarea" id="captionBox"></textarea>
+      </div>
+      <button class="copy-btn" id="copyBtn" onclick="copyCaption()">Copy Caption</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script type="module">
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Opening Day Countdown', requiresAuth: true });
+import { auth } from './js/core/auth.js';
+import { db } from './js/core/firebase.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { doc, getDoc, collection, getDocs } from './js/core/firebase.js';
+import { getAllPlayerStatsOptimized, getAllSeasons, getSeasonGames } from './js/data/index.js';
+
+/* -------------------------------------------------------
+   CONFIG
+------------------------------------------------------- */
+const OPENING_DAY = new Date('2026-04-26T00:00:00');
+const ALL_DAYS    = [11,10,9,8,7,6,5,4,3,2,1,0];
+
+const DAY_META = {
+  11: { title: 'Top 10 Pauls',              sub: 'The most important ranking in league history' },
+  10: { title: 'The League by the Numbers', sub: 'Every season, every game, by the numbers' },
+  9:  { title: 'All-Time Hit Kings',        sub: 'Best with the bat, career totals' },
+  8:  { title: 'The Iron Men',              sub: 'Most games played in Aces history' },
+  7:  { title: 'Walk Kings',                sub: 'God rested on the 7th day \u2014 and so did these guys at the plate' },
+  6:  { title: 'Batting Legends',           sub: 'Best career averages (min 50 AB)' },
+  5:  { title: 'Peak Performance',          sub: 'Best single-season batting average' },
+  4:  { title: 'Run Scorers',               sub: 'All-time runs scored in Aces history' },
+  3:  { title: 'Hit Milestones',            sub: 'Players approaching career hit milestones in 2026' },
+  2:  { title: 'Run Milestones',            sub: 'Players approaching career run milestones in 2026' },
+  1:  { title: 'Championship Roll Call',    sub: 'Every champion, every season' },
+  0:  { title: 'Opening Day Is Here!',      sub: '2026 Summer Season \u2014 Play Ball!' },
+};
+
+/* -------------------------------------------------------
+   STATE
+------------------------------------------------------- */
+let currentDay  = null;
+let leagueData  = null;
+
+/* -------------------------------------------------------
+   AUTH
+------------------------------------------------------- */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    document.getElementById('auth-gate').innerHTML =
+      '<p>Please <a href="signin.html">sign in</a> to access this tool.</p>';
+    return;
+  }
+
+  try {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    if (!snap.exists()) {
+      document.getElementById('auth-gate').innerHTML =
+        '<p style="color:#f85149">No user profile found.</p>';
+      return;
+    }
+
+    const profile  = snap.data();
+    const userRole = (profile.userRole || '').toLowerCase();
+    const userType = (profile.userType || '').toLowerCase();
+    const role     = (profile.role     || '').toLowerCase();
+
+    const authorized =
+      profile.isAdmin === true ||
+      userRole === 'admin' || userRole === 'staff' ||
+      userType === 'admin' || userType === 'league-staff' ||
+      role     === 'admin' || role     === 'staff' || role === 'league-staff';
+
+    if (!authorized) {
+      document.getElementById('auth-gate').innerHTML =
+        '<p style="color:#f85149">Admin access required.</p>';
+      return;
+    }
+  } catch (err) {
+    console.error('Auth check failed:', err);
+    document.getElementById('auth-gate').innerHTML =
+      '<p style="color:#f85149">Authorization error. Check console.</p>';
+    return;
+  }
+
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('app').style.display      = 'block';
+
+  buildNav();
+  currentDay = getTodayDay();
+  renderDay(currentDay);         // show loading card immediately
+
+  await loadData();
+  renderDay(currentDay);         // re-render with real data
+});
+
+/* -------------------------------------------------------
+   DAY HELPERS
+------------------------------------------------------- */
+function getTodayDay() {
+  const ms   = OPENING_DAY - new Date();
+  const days = Math.round(ms / 86400000);
+  if (days <= 0) return 0;
+  if (days > 10) return 10;
+  return days;
+}
+
+function dayDate(n) {
+  const d = new Date(OPENING_DAY);
+  d.setDate(d.getDate() - n);
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function fmt(n)   { return Number(n).toLocaleString(); }
+function ba(v)    { return v.toFixed(3).replace(/^0/, ''); }
+function titleCase(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+/* -------------------------------------------------------
+   NAV
+------------------------------------------------------- */
+function buildNav() {
+  const nav   = document.getElementById('dayNav');
+  const today = getTodayDay();
+  ALL_DAYS.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'day-chip' + (d === today ? ' is-today' : '');
+    btn.id        = `chip-${d}`;
+    btn.textContent = d === 0 ? 'Opening Day' : d === 11 ? '\u{1F3B2} Bonus' : `Day ${d}`;
+    btn.onclick   = () => { currentDay = d; renderDay(d); };
+    nav.appendChild(btn);
+  });
+}
+
+function refreshNav(active) {
+  ALL_DAYS.forEach(d => {
+    const chip = document.getElementById(`chip-${d}`);
+    if (chip) chip.classList.toggle('active', d === active);
+  });
+}
+
+/* -------------------------------------------------------
+   GLOBAL NAV HANDLERS
+------------------------------------------------------- */
+window.shiftDay = (dir) => {
+  const idx = ALL_DAYS.indexOf(currentDay);
+  const next = idx - dir; // ALL_DAYS is descending so "prev" = higher index
+  if (next >= 0 && next < ALL_DAYS.length) {
+    currentDay = ALL_DAYS[next];
+    renderDay(currentDay);
+  }
+};
+
+window.goToday = () => {
+  currentDay = getTodayDay();
+  renderDay(currentDay);
+};
+
+window.downloadCard = async () => {
+  const btn = document.getElementById('dlBtn');
+  btn.textContent = 'Rendering\u2026';
+  btn.classList.add('working');
+  btn.disabled = true;
+
+  try {
+    const card = document.getElementById('card-target');
+
+    // Temporarily expand card and inner scroll container to fit all content
+    const originalHeight = card.style.height;
+    const originalOverflow = card.style.overflow;
+    const contentEl = card.querySelector('.ac-content');
+    const originalContentOverflow = contentEl ? contentEl.style.overflowY : null;
+    const originalContentHeight  = contentEl ? contentEl.style.height    : null;
+
+    if (contentEl) {
+      const scrollHeight = contentEl.scrollHeight;
+      const cardPadding  = card.scrollHeight - contentEl.clientHeight;
+      card.style.height   = (scrollHeight + cardPadding) + 'px';
+      card.style.overflow = 'visible';
+      contentEl.style.overflowY = 'visible';
+      contentEl.style.height    = scrollHeight + 'px';
+    }
+
+    const canvas = await html2canvas(card, {
+      scale: 3,
+      useCORS: true,
+      backgroundColor: null,
+      logging: false,
+    });
+
+    // Restore original dimensions
+    card.style.height   = originalHeight;
+    card.style.overflow = originalOverflow;
+    if (contentEl) {
+      contentEl.style.overflowY = originalContentOverflow;
+      contentEl.style.height    = originalContentHeight;
+    }
+
+    const link = document.createElement('a');
+    const meta = DAY_META[currentDay] || {};
+    const filename = currentDay === 0
+      ? 'aces-opening-day.png'
+      : `aces-day-${currentDay}-${meta.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')}.png`;
+
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (err) {
+    console.error('Download failed:', err);
+    alert('Download failed \u2014 check console for details.');
+  } finally {
+    btn.textContent = 'Download PNG';
+    btn.classList.remove('working');
+    btn.disabled = false;
+  }
+};
+
+window.copyCaption = async () => {
+  const text = document.getElementById('captionBox').value;
+  await navigator.clipboard.writeText(text);
+  const btn = document.getElementById('copyBtn');
+  btn.textContent = 'Copied!';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Copy Caption'; btn.classList.remove('copied'); }, 2000);
+};
+
+/* -------------------------------------------------------
+   DATA LOADING
+------------------------------------------------------- */
+async function loadData() {
+  try {
+    const [rawPlayers, seasons] = await Promise.all([
+      getAllPlayerStatsOptimized(),
+      getAllSeasons()
+    ]);
+
+    // Exclude migrated legacy docs — auth account doc is the canonical record
+    const players = rawPlayers.filter(p => p.migrated !== true);
+
+    // Sort seasons oldest first
+    seasons.sort((a, b) => {
+      if (a.year !== b.year) return Number(a.year) - Number(b.year);
+      const ord = { spring: 1, summer: 2, fall: 3 };
+      return (ord[a.season?.toLowerCase()] || 0) - (ord[b.season?.toLowerCase()] || 0);
+    });
+
+    // Load all games
+    const allGames = [];
+    for (const s of seasons) {
+      const games = await getSeasonGames(s.id);
+      games.forEach(g => {
+        g._sid   = s.id;
+        g._label = `${s.year} ${titleCase(s.season)}`;
+        g._active = !!s.isActive;
+      });
+      allGames.push(...games);
+    }
+
+    // Career totals (sum across players)
+    let totalHits = 0, totalRuns = 0;
+    const uniqueNames = new Set();
+    players.forEach(p => {
+      uniqueNames.add(p.name);
+      totalHits += Number(p.careerHits)     || sumField(p, 'hits');
+      totalRuns += Number(p.careerRuns)     || sumField(p, 'runs');
+    });
+
+    const completedGames = allGames.filter(g => g.status === 'completed').length;
+
+    // Load champions directly from /champions collection
+    const champSnap = await getDocs(collection(db, 'champions'));
+    const champions = champSnap.docs
+      .map(d => {
+        const data = d.data();
+        const sid  = data.seasonId || d.id;
+        const parts = sid.split('-');
+        const label = parts.length >= 2
+          ? `${parts[0]} ${titleCase(parts[1])}`
+          : sid;
+        return { label, champion: data.team, runnerUp: data.runnerUp, _sid: sid };
+      })
+      .sort((a, b) => b._sid.localeCompare(a._sid)); // most recent first
+
+    const completedSeasonIds = new Set(allGames.filter(g => g.status === 'completed').map(g => g._sid));
+
+    leagueData = {
+      seasons,
+      allGames,
+      totals: {
+        seasons:       completedSeasonIds.size,
+        games:         completedGames,
+        uniquePlayers: uniqueNames.size,
+        totalHits,
+        totalRuns,
+      },
+      champions,
+      leaders:    computeLeaders(players),
+      milestones: computeMilestones(players),
+    };
+  } catch (err) {
+    console.error('Error loading countdown data:', err);
+  }
+}
+
+function sumField(player, field) {
+  if (!player.seasons) return 0;
+  return Object.values(player.seasons).reduce((s, ss) => s + (Number(ss[field]) || 0), 0);
+}
+
+function careerVal(p, careerKey, seasonKey) {
+  const direct = Number(p[careerKey]);
+  if (direct > 0) return direct;
+  return sumField(p, seasonKey);
+}
+
+/* -------------------------------------------------------
+   LEADER COMPUTATION
+------------------------------------------------------- */
+function computeLeaders(players) {
+  const top = (arr, n = 5) => arr.filter(x => x.value > 0).sort((a,b) => b.value - a.value).slice(0, n);
+
+  const careerHits  = top(players.map(p => ({ name: p.name, value: careerVal(p,'careerHits','hits') })), 10);
+  const careerWalks = top(players.map(p => ({ name: p.name, value: careerVal(p,'careerWalks','walks') })), 10);
+  const careerGames = top(players.map(p => ({ name: p.name, value: careerVal(p,'careerGames','games') })), 10);
+  const careerRuns  = top(players.map(p => ({ name: p.name, value: careerVal(p,'careerRuns','runs') })), 10);
+
+  // Career BA (min 50 AB)
+  const careerBA = players.map(p => {
+    const ab = careerVal(p,'careerAtBats','atBats');
+    const h  = careerVal(p,'careerHits','hits');
+    if (ab < 150) return null;
+    return { name: p.name, value: h / ab, ab };
+  }).filter(Boolean).sort((a,b) => b.value - a.value).slice(0,10);
+
+  // Best single-season BA (min 15 AB) & AcesBPI (min 15 AB)
+  const ssBA  = [];
+  const bpiList = [];
+  players.forEach(p => {
+    if (!p.seasons) return;
+    Object.entries(p.seasons).forEach(([sid, s]) => {
+      const ab  = Number(s.atBats)  || 0;
+      const h   = Number(s.hits)    || 0;
+      const bpi = Number(s.acesBPI) || 0;
+      const parts = sid.split('-');
+      const lbl = parts.length >= 2 ? `${parts[0]} ${titleCase(parts[1])}` : sid;
+
+      if (ab >= 15 && h > 0) ssBA.push({ name: p.name, season: lbl, value: h / ab, ab });
+      if (ab >= 15 && bpi !== 0) bpiList.push({ name: p.name, season: lbl, value: bpi });
+    });
+  });
+
+  ssBA.sort((a,b)      => b.value - a.value);
+  bpiList.sort((a,b)   => b.value - a.value);
+
+  // The Pauls
+  const topPauls = players
+    .filter(p => (p.name || '').trim().toLowerCase().startsWith('paul'))
+    .map(p => ({
+      name: p.name,
+      team: p.currentTeam || p.team || '',
+      value: careerVal(p,'careerHits','hits'),
+    }))
+    .sort((a,b) => b.value - a.value)
+    .slice(0, 10);
+
+  return {
+    careerHits, careerWalks, careerGames, careerRuns, careerBA,
+    singleSeasonBA: ssBA.slice(0,10),
+    topBPI: bpiList.slice(0,10),
+    topPauls,
+  };
+}
+
+/* -------------------------------------------------------
+   MILESTONE COMPUTATION
+------------------------------------------------------- */
+function computeMilestones(players) {
+  const HIT_MARKS  = [100, 200, 300, 400];
+  const RUN_MARKS  = [50, 100, 150, 200];
+  const WALK_MARKS = [50, 100, 150, 200];
+
+  const hitsApproaching  = [];
+  const runsApproaching  = [];
+  const walksApproaching = [];
+
+  players.forEach(p => {
+    const career = p.career || {};
+    const hits   = Number(career.hits  || p.careerHits  || 0);
+    const runs   = Number(career.runs  || p.careerRuns  || 0);
+    const walks  = Number(career.walks || p.careerWalks || 0);
+    const name   = p.name;
+    const team   = p.currentTeam || p.team || '';
+
+    const check = (val, marks, bucket) => {
+      for (const m of marks) {
+        const threshold = Math.ceil(m * 0.9); // within 10%
+        if (val >= threshold && val < m) {
+          bucket.push({ name, team, current: val, milestone: m, gap: m - val });
+          break;
+        }
+      }
+    };
+
+    check(hits,  HIT_MARKS,  hitsApproaching);
+    check(runs,  RUN_MARKS,  runsApproaching);
+    check(walks, WALK_MARKS, walksApproaching);
+  });
+
+  hitsApproaching.sort((a,b)  => a.gap - b.gap);
+  runsApproaching.sort((a,b)  => a.gap - b.gap);
+  walksApproaching.sort((a,b) => a.gap - b.gap);
+
+  return {
+    hits:  hitsApproaching.slice(0, 10),
+    runs:  runsApproaching.slice(0, 10),
+    walks: walksApproaching.slice(0, 10),
+  };
+}
+
+/* -------------------------------------------------------
+   RENDER
+------------------------------------------------------- */
+function renderDay(d) {
+  refreshNav(d);
+  const meta = DAY_META[d] || {};
+  const lbl  = d === 0 ? 'Opening Day' : d === 11 ? '\u{1F3B2} Bonus Day' : `Day ${d}`;
+  document.getElementById('dayTitle').textContent = `${lbl}: ${meta.title}`;
+  document.getElementById('daySub').textContent   = `${dayDate(d)} \u2022 ${meta.sub}`;
+
+  if (!leagueData) {
+    document.getElementById('card-target').innerHTML =
+      '<div class="card-loading"><div class="spinner"></div><p>Loading\u2026</p></div>';
+    return;
+  }
+
+  document.getElementById('card-target').innerHTML = buildCard(d);
+  document.getElementById('captionBox').value      = buildCaption(d);
+}
+
+/* -------------------------------------------------------
+   CARD BUILDERS
+------------------------------------------------------- */
+const MEDALS = ['\u{1F947}','\u{1F948}','\u{1F949}','4.','5.'];
+
+function shell(day, body) {
+  const lbl = day === 0 ? 'OPENING DAY \u2014 APRIL 26' : `${day} DAYS TO OPENING DAY`;
+  return `<div class="aces-card th-${day}">
+  <div class="ac-topbar">
+    <span class="ac-countdown-lbl">${lbl}</span>
+    <span class="ac-brand">MOUNTAINSIDE ACES</span>
+  </div>
+  ${body}
+  <div class="ac-footer">
+    <span class="ac-footer-txt">2026 Summer Season</span>
+    <span class="ac-footer-txt">acessoftballreference.com</span>
+  </div>
+</div>`;
+}
+
+function hero(day, title, sub, icon) {
+  const numDisplay = day === 0 ? '\u26BE' : day;
+  return `<div class="ac-hero">
+  <div class="ac-day-num">${numDisplay}</div>
+  <div class="ac-title">${icon} ${title}</div>
+  <div class="ac-sub">${sub}</div>
+</div><div class="ac-divider"></div>`;
+}
+
+function statRow(label, value) {
+  return `<div class="ac-stat"><span class="ac-stat-lbl">${label}</span><span class="ac-stat-val">${value}</span></div>`;
+}
+
+function rankRow(i, name, value, meta) {
+  return `<div class="ac-rank">
+  <span class="ac-rank-pos">${MEDALS[i] || (i+1)+'.'}</span>
+  <span class="ac-rank-name">${name}</span>
+  <span class="ac-rank-val">${value}</span>
+  ${meta ? `<span class="ac-rank-meta">${meta}</span>` : ''}
+</div>`;
+}
+
+function champRow(label, champ) {
+  return `<div class="ac-champ">
+  <span class="ac-champ-season">${label}</span>
+  <span class="ac-champ-team">${champ}</span>
+  <span style="opacity:0.65">\u{1F3C6}</span>
+</div>`;
+}
+
+function buildCard(d) {
+  const { totals, champions, leaders } = leagueData;
+
+  /* DAY 11 — Top 10 Pauls */
+  if (d === 11) {
+    const pauls = leagueData.leaders.topPauls;
+    const rows = pauls.length
+      ? pauls.map((p,i) => rankRow(i, p.name, fmt(p.value)+' H', p.team)).join('')
+      : '<p style="opacity:0.5;font-size:0.82rem;padding:8px">Searching for Pauls\u2026</p>';
+    const footer = `<div style="margin-top:auto;padding:4px 2px 0;font-size:0.62rem;opacity:0.35;text-align:center;font-weight:700">Ranked by career hits \u2014 the only metric that matters for Pauls</div>`;
+    return shell(11, `${hero(11,'Top 10 Pauls','The most important ranking in league history','\u{1F3C6}')}<div class="ac-content">${rows}${footer}</div>`);
+  }
+
+  /* DAY 10 — League by the Numbers */
+  if (d === 10) {
+    const body = `
+${hero(10,'The League by the Numbers',`${totals.seasons} seasons of Mountainside Aces softball`,'\u{1F4CA}')}
+<div class="ac-content">
+  ${statRow('Seasons of Aces Softball', fmt(totals.seasons))}
+  ${statRow('Games Played All-Time', fmt(totals.games))}
+  ${statRow('Players Who Wore the Uniform', fmt(totals.uniquePlayers))}
+  ${statRow('All-Time Hits', fmt(totals.totalHits))}
+  ${statRow('All-Time Runs Scored', fmt(totals.totalRuns))}
+</div>`;
+    return shell(10, body);
+  }
+
+  /* DAY 9 — Hit Kings (top 10) */
+  if (d === 9) {
+    const rows = leaders.careerHits.length
+      ? leaders.careerHits.map((p,i) => rankRow(i, p.name, fmt(p.value)+' H')).join('')
+      : '<p style="opacity:0.5;font-size:0.82rem;padding:8px">Data loading\u2026</p>';
+    return shell(9, `${hero(9,'All-Time Hit Kings','Career totals \u2014 all seasons','\u{1F3CF}')}<div class="ac-content">${rows}</div>`);
+  }
+
+  /* DAY 8 — Iron Men */
+  if (d === 8) {
+    const rows = leaders.careerGames.length
+      ? leaders.careerGames.map((p,i) => rankRow(i, p.name, fmt(p.value)+' G')).join('')
+      : '<p style="opacity:0.5;font-size:0.82rem;padding:8px">Data loading\u2026</p>';
+    return shell(8, `${hero(8,'The Iron Men','Most games played in Aces history','\u26BE')}<div class="ac-content">${rows}</div>`);
+  }
+
+  /* DAY 7 — Walk Kings */
+  if (d === 7) {
+    const rows = leaders.careerWalks.length
+      ? leaders.careerWalks.map((p,i) => rankRow(i, p.name, fmt(p.value)+' BB')).join('')
+      : '<p style="opacity:0.5;font-size:0.82rem;padding:8px">Data loading\u2026</p>';
+    return shell(7, `${hero(7,'Walk Kings','God rested on the 7th day \u2014 and so did these guys at the plate','\u{1F6B6}')}<div class="ac-content">${rows}</div>`);
+  }
+
+  /* DAY 6 — Career BA */
+  if (d === 6) {
+    const rows = leaders.careerBA.length
+      ? leaders.careerBA.map((p,i) => rankRow(i, p.name, ba(p.value), fmt(p.ab)+' AB')).join('')
+      : '<p style="opacity:0.5;font-size:0.82rem;padding:8px">Data loading\u2026</p>';
+    return shell(6, `${hero(6,'Batting Legends','Best career averages (min 150 AB)','\u{1F4C8}')}<div class="ac-content">${rows}</div>`);
+  }
+
+  /* DAY 5 — Single-Season BA */
+  if (d === 5) {
+    const rows = leaders.singleSeasonBA.length
+      ? leaders.singleSeasonBA.map((p,i) => rankRow(i, p.name, ba(p.value), p.season)).join('')
+      : '<p style="opacity:0.5;font-size:0.82rem;padding:8px">Data loading\u2026</p>';
+    return shell(5, `${hero(5,'Peak Performance','Best single-season batting average','\u2B50')}<div class="ac-content">${rows}</div>`);
+  }
+
+  /* DAY 4 — Career Runs */
+  if (d === 4) {
+    const rows = leaders.careerRuns.length
+      ? leaders.careerRuns.map((p,i) => rankRow(i, p.name, fmt(p.value)+' R')).join('')
+      : '<p style="opacity:0.5;font-size:0.82rem;padding:8px">Data loading\u2026</p>';
+    return shell(4, `${hero(4,'Run Scorers','All-time runs scored in Aces history','\u{1F3C3}')}<div class="ac-content">${rows}</div>`);
+  }
+
+  /* DAY 3 — Hit Milestones */
+  if (d === 3) {
+    const ms = leagueData.milestones;
+    const milestoneRow = (p, stat) => {
+      const pct = Math.round((p.current / p.milestone) * 100);
+      return `<div class="ac-rank" style="flex-direction:column;align-items:stretch;gap:4px;padding:8px 11px">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="ac-rank-name">${p.name}</span>
+    <span style="font-size:0.64rem;opacity:0.5;font-weight:600">${p.team}</span>
+    <span class="ac-rank-val" style="margin-left:auto">${p.current} / ${p.milestone} ${stat}</span>
+  </div>
+  <div style="height:4px;border-radius:2px;background:rgba(255,255,255,0.12);overflow:hidden">
+    <div style="height:100%;width:${pct}%;background:rgba(255,255,255,0.55);border-radius:2px"></div>
+  </div>
+  <div style="font-size:0.62rem;opacity:0.45;font-weight:700">${p.gap} away from ${p.milestone}</div>
+</div>`;
+    };
+    const rows = ms.hits.length
+      ? ms.hits.map(p => milestoneRow(p, 'H')).join('')
+      : '<p style="opacity:0.4;font-size:0.82rem;padding:8px">No players currently within 10% of a hit milestone.</p>';
+    return shell(3, `${hero(3,'Hit Milestones',"Who\u2019s knocking on the door entering 2026",'\u{1F3CF}')}<div class="ac-content" style="gap:5px;overflow-y:auto">${rows}</div>`);
+  }
+
+  /* DAY 2 — Run Milestones */
+  if (d === 2) {
+    const ms = leagueData.milestones;
+    const milestoneRow = (p, stat) => {
+      const pct = Math.round((p.current / p.milestone) * 100);
+      return `<div class="ac-rank" style="flex-direction:column;align-items:stretch;gap:4px;padding:8px 11px">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="ac-rank-name">${p.name}</span>
+    <span style="font-size:0.64rem;opacity:0.5;font-weight:600">${p.team}</span>
+    <span class="ac-rank-val" style="margin-left:auto">${p.current} / ${p.milestone} ${stat}</span>
+  </div>
+  <div style="height:4px;border-radius:2px;background:rgba(255,255,255,0.12);overflow:hidden">
+    <div style="height:100%;width:${pct}%;background:rgba(255,255,255,0.55);border-radius:2px"></div>
+  </div>
+  <div style="font-size:0.62rem;opacity:0.45;font-weight:700">${p.gap} away from ${p.milestone}</div>
+</div>`;
+    };
+    const rows = ms.runs.length
+      ? ms.runs.map(p => milestoneRow(p, 'R')).join('')
+      : '<p style="opacity:0.4;font-size:0.82rem;padding:8px">No players currently within 10% of a run milestone.</p>';
+    return shell(2, `${hero(2,'Run Milestones',"Who\u2019s closing in on the next century entering 2026",'\u{1F3C3}')}<div class="ac-content" style="gap:5px;overflow-y:auto">${rows}</div>`);
+  }
+
+  /* DAY 1 — Championship Roll Call */
+  if (d === 1) {
+    const rows = champions.length
+      ? champions.map(c => champRow(c.label, c.champion)).join('')
+      : '<p style="opacity:0.5;font-size:0.82rem;padding:8px">Championship data loading\u2026</p>';
+    return shell(1, `${hero(1,'Championship Roll Call','Every champion. Every season.','\u{1F3C6}')}<div class="ac-content">${rows}</div>`);
+  }
+
+  /* DAY 0 — Opening Day */
+  if (d === 0) {
+    const body = `
+<div class="ac-hero" style="padding:10px 20px 14px">
+  <div style="font-size:2.8rem;line-height:1">\u26BE</div>
+  <div class="ac-day-num" style="font-size:2.9rem;line-height:1.1;margin-top:6px">PLAY BALL!</div>
+  <div class="ac-sub" style="font-size:0.9rem;opacity:0.92;font-weight:700;margin-top:10px">Opening Day \u2014 2026 Summer Season</div>
+</div>
+<div class="ac-divider"></div>
+<div class="ac-content" style="justify-content:center;align-items:center;text-align:center;gap:14px;padding-top:18px">
+  <div style="font-size:0.88rem;opacity:0.85;font-weight:600;line-height:1.8">
+    ${fmt(totals.seasons)} seasons.<br>
+    ${fmt(totals.games)} games played.<br>
+    ${fmt(totals.uniquePlayers)} players. Countless memories.<br><br>
+    <span style="font-size:1.05rem;font-weight:900;opacity:1">Season ${totals.seasons+1} starts NOW.</span>
+  </div>
+</div>`;
+    return shell(0, body);
+  }
+
+  return shell(d, '<div class="ac-content"><p style="opacity:0.4">No content for this day.</p></div>');
+}
+
+/* -------------------------------------------------------
+   CAPTION BUILDERS
+   Note: Unicode escapes used in caption strings so emojis
+   survive clipboard → WhatsApp without corruption
+------------------------------------------------------- */
+function buildCaption(d) {
+  if (!leagueData) return '';
+  const { totals, champions, leaders } = leagueData;
+  const URL = 'acessoftballreference.com';
+  const fba = (v) => v.toFixed(3).replace(/^0/,'');
+
+  /* Emoji constants (Unicode escapes safe for clipboard copy) */
+  const BB  = '\u26BE';
+  const TRP = '\u{1F3C6}';
+  const FIR = '\u{1F525}';
+  const STR = '\u2B50';
+  const UP  = '\u{1F4C8}';
+  const MUS = '\u{1F4AA}';
+  const BAT = '\u{1F3CF}';
+  const BRN = '\u{1F9E0}';
+
+  if (d === 11) {
+    const pauls = leagueData.leaders.topPauls;
+    if (!pauls.length) {
+      return `\u{1F3B2} BONUS DAY \u{1F3B2}\n\nWe searched the entire Aces roster for Pauls.\n\nWe found none. This is both a statistical anomaly and a personal failing.\n\n${URL}`;
+    }
+    const lines = pauls.map((p,i) => `${i+1}. ${p.name}${p.team ? ' (' + p.team + ')' : ''} \u2014 ${fmt(p.value)} career hits`).join('\n');
+    return `\u{1F3B2} BONUS DAY \u{1F3B2}\n\nBefore the real countdown begins, we need to address the most pressing question in Aces history.\n\nThe definitive Paul Power Rankings:\n\n${lines}\n\nThis is the content we\u2019re here for.\n\n${URL}`;
+  }
+
+  if (d === 10) {
+    return `${BB} 10 DAYS TO OPENING DAY ${BB}\n\nThe Mountainside Aces are back \u2014 and the numbers don\u2019t lie.\n\n${UP} ${fmt(totals.seasons)} seasons of Aces softball\n${BB} ${fmt(totals.games)} games played all-time\n\u{1F465} ${fmt(totals.uniquePlayers)} players who\u2019ve worn the uniform\n${BAT} ${fmt(totals.totalHits)} career hits\n\u{1F3C3} ${fmt(totals.totalRuns)} runs scored\n\nSeason ${totals.seasons+1} starts Sunday. Let\u2019s add to the legacy.\n\n${URL}`;
+  }
+
+  if (d === 9) {
+    const lines = leaders.careerHits.map((p,i) => `${i+1}. ${p.name} \u2014 ${fmt(p.value)} hits`).join('\n');
+    return `${BAT} 9 DAYS TO OPENING DAY ${BAT}\n\nAll-time hit leaders in Aces history (top 10):\n\n${lines}\n\nWill any of them move up the list in 2026?\n\n${URL}`;
+  }
+
+  if (d === 8) {
+    const lines = leaders.careerGames.map((p,i) => `${i+1}. ${p.name} \u2014 ${fmt(p.value)} games`).join('\n');
+    return `${BB} 8 DAYS TO OPENING DAY ${BB}\n\nThe Iron Men of the Aces \u2014 most games played in league history:\n\n${lines}\n\nConsistency is its own kind of greatness.\n\n${URL}`;
+  }
+
+  if (d === 7) {
+    const lines = leaders.careerWalks.map((p,i) => `${i+1}. ${p.name} \u2014 ${fmt(p.value)} BB`).join('\n');
+    return `\u{1F6B6} 7 DAYS TO OPENING DAY \u{1F6B6}\n\nGod rested on the 7th day \u2014 and these guys took their base.\n\nAll-time walk leaders:\n\n${lines}\n\nPatience is a skill. See you Sunday.\n\n${URL}`;
+  }
+
+  if (d === 6) {
+    const lines = leaders.careerBA.map((p,i) => `${i+1}. ${p.name} \u2014 ${fba(p.value)} avg (${fmt(p.ab)} AB)`).join('\n');
+    return `${UP} 6 DAYS TO OPENING DAY ${UP}\n\nBest career batting averages in Aces history (min 150 AB):\n\n${lines}\n\nWho keeps their average elite in 2026?\n\n${URL}`;
+  }
+
+  if (d === 5) {
+    const lines = leaders.singleSeasonBA.map((p,i) => `${i+1}. ${p.name} \u2014 ${fba(p.value)} (${p.season})`).join('\n');
+    return `${STR} 5 DAYS TO OPENING DAY ${STR}\n\nBest single-season batting averages in Aces history:\n\n${lines}\n\nPeak performance. Can anyone top these in 2026 Summer?\n\n${URL}`;
+  }
+
+  if (d === 4) {
+    const lines = leaders.careerRuns.map((p,i) => `${i+1}. ${p.name} \u2014 ${fmt(p.value)} R`).join('\n');
+    return `\u{1F3C3} 4 DAYS TO OPENING DAY \u{1F3C3}\n\nAll-time run scorers in Aces history:\n\n${lines}\n\nWho crosses home first in 2026 Summer?\n\n${URL}`;
+  }
+
+  if (d === 3) {
+    const ms = leagueData.milestones;
+    if (!ms.hits.length) {
+      return `\u{1F3CF} 3 DAYS TO OPENING DAY \u{1F3CF}\n\nNo players are currently within 10% of a career hit milestone entering 2026 Summer.\n\n${URL}`;
+    }
+    const lines = ms.hits.map(p => `  ${p.name} (${p.team}) \u2014 ${p.current}/${p.milestone} H (${p.gap} away)`).join('\n');
+    return `\u{1F3CF} 3 DAYS TO OPENING DAY \u{1F3CF}\n\nThese players enter 2026 Summer within reach of a career hit milestone:\n\n${lines}\n\nWho gets there first this season?\n\n${URL}`;
+  }
+
+  if (d === 2) {
+    const ms = leagueData.milestones;
+    if (!ms.runs.length) {
+      return `\u{1F3C3} 2 DAYS TO OPENING DAY \u{1F3C3}\n\nNo players are currently within 10% of a career run milestone entering 2026 Summer.\n\n${URL}`;
+    }
+    const lines = ms.runs.map(p => `  ${p.name} (${p.team}) \u2014 ${p.current}/${p.milestone} R (${p.gap} away)`).join('\n');
+    return `\u{1F3C3} 2 DAYS TO OPENING DAY \u{1F3C3}\n\nThese players enter 2026 Summer within reach of a career run milestone:\n\n${lines}\n\nWho scores the milestone run in 2026?\n\n${URL}`;
+  }
+
+  if (d === 1) {
+    const lines = champions.map(c => `${TRP} ${c.label}: ${c.champion}`).join('\n');
+    return `${TRP} 1 DAY TO OPENING DAY ${TRP}\n\nEvery championship in Aces history:\n\n${lines}\n\nWho writes their name on the 2026 Summer trophy?\n\n${URL}`;
+  }
+
+  if (d === 0) {
+    return `${BB}${FIR} IT\u2019S OPENING DAY! ${FIR}${BB}\n\n2026 Summer Season is officially here.\n\nSeason ${totals.seasons+1}. ${fmt(totals.uniquePlayers)} players. Let\u2019s goooo!\n\n${URL}`;
+  }
+
+  return '';
+}
+</script>
+</body>
+</html>

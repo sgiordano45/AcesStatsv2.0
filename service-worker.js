@@ -2,7 +2,7 @@
 // Handles both offline functionality AND Firebase Cloud Messaging
 // Version 2.1.02 - Force cache refresh to fix PWA stale load
 
-const CACHE_VERSION = 'aces-v2.1.05';
+const CACHE_VERSION = 'aces-v2.1.06';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
@@ -45,7 +45,7 @@ const HTML_PAGES = [
   `${BASE_PATH}/offline.html`,
   `${BASE_PATH}/offseason.html`,
   `${BASE_PATH}/offseason-roster.html`,
-  `${BASE_PATH}/schedule-generator.html`,
+  `${BASE_PATH}/admin/schedule-generator.html`,
   `${BASE_PATH}/game-tracker.html`,
   `${BASE_PATH}/roster-management.html`,
   `${BASE_PATH}/me.html`,
@@ -60,7 +60,7 @@ const HTML_PAGES = [
   `${BASE_PATH}/explore.html`,
   `${BASE_PATH}/recap.html`,
   `${BASE_PATH}/champions.html`,
-  `${BASE_PATH}/aggregate-stats.html`,
+  `${BASE_PATH}/admin/aggregate-stats.html`,
   `${BASE_PATH}/manage-team.html`,
   `${BASE_PATH}/approve-links.html`,
   `${BASE_PATH}/current-season-team.html`,

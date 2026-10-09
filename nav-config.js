@@ -140,7 +140,7 @@ export const NAV_HUBS = [
         { id: 'offseason-schedule', href: 'admin/schedule.html', also: ['offseason-schedule.html'], label: 'Schedule', icon: 'calendar-days', role: 'league-staff', ignoreSiteConfig: true },
         { id: 'offseason-roster', href: 'offseason-roster.html', label: 'Rosters', icon: 'users', role: 'league-staff', ignoreSiteConfig: true },
         { id: 'draft', href: 'draft.html', label: 'Draft', icon: 'shuffle', role: 'league-staff', ignoreSiteConfig: true },
-        { id: 'countdown', href: 'countdown.html', label: 'Countdown', icon: 'timer', role: 'league-staff', ignoreSiteConfig: true },
+        { id: 'countdown', href: 'admin/countdown.html', label: 'Countdown', icon: 'timer', role: 'league-staff', ignoreSiteConfig: true },
       ] },
     ],
   },
@@ -165,7 +165,7 @@ export const NAV_HUBS = [
       { id: 'teams', href: 'teams.html', label: 'Teams', icon: 'shield',
         also: ['team.html'] },
       { id: 'players', href: 'players.html', label: 'Players', icon: 'user',
-        also: ['player.html', 'pitcher.html', 'player-splits.html', 'card-export.html'] },
+        also: ['player.html', 'pitcher.html', 'player-splits.html', 'admin/card-export.html'] },
       { id: 'roster-tracker', href: 'roster-tracker.html', label: 'Roster tracker', icon: 'clipboard' },
       { id: 'directory', href: 'aces-directory.html', label: 'Directory', icon: 'id-card', signedIn: true },
     ],
@@ -227,7 +227,7 @@ export const ME_MENU = [
         also: ['my-dashboard.html'] },
       { id: 'favorites', href: 'me.html#favorites', label: 'Favorites', icon: 'star', signedIn: true,
         also: ['favorites.html'] },
-      { id: 'notifications', href: 'notifications.html', label: 'Notifications', icon: 'bell', signedIn: true },
+      { id: 'notifications', href: 'me.html#notifications', label: 'Notifications', icon: 'bell', signedIn: true },
       { id: 'photo-upload', href: 'media.html#upload', label: 'Upload photos', icon: 'upload', signedIn: true,
         role: ['team-staff', 'league-staff', 'photographer'] },
     ],
@@ -241,6 +241,7 @@ export const ME_MENU = [
       { id: 'captain-roster-edit', href: 'captain-roster-edit.html', label: 'Edit roster', icon: 'edit', role: 'team-staff' },
       { id: 'manage-team', href: 'manage-team.html', label: 'Manage team', icon: 'settings', role: 'team-staff' },
       { id: 'team-scouting-report', href: 'team-scouting-report.html', label: 'Team scouting report', icon: 'binoculars', role: 'captain' },
+      { id: 'send-notifications', href: 'notifications.html', label: 'Send notifications', icon: 'megaphone', role: 'captain' },
     ],
   },
   {
@@ -250,15 +251,15 @@ export const ME_MENU = [
   },
   {
     key: 'staff', label: 'League staff', pages: [
-      { id: 'commissioner-hub', href: 'commissioner-hub.html', label: 'Commissioner hub', icon: 'megaphone', role: 'league-staff' },
-      { id: 'league-staff-admin', href: 'league-staff-admin.html', label: 'League staff admin', icon: 'shield', role: 'league-staff' },
-      { id: 'aceys-admin', href: 'admin-aceys.html', label: 'Aceys admin', icon: 'award', role: 'league-staff' },
+      { id: 'commissioner-hub', href: 'admin/commissioner-hub.html', label: 'Commissioner hub', icon: 'megaphone', role: 'league-staff' },
+      { id: 'league-staff-admin', href: 'admin/league-staff.html', label: 'League staff admin', icon: 'shield', role: 'league-staff' },
+      { id: 'aceys-admin', href: 'admin/aceys.html', label: 'Aceys admin', icon: 'award', role: 'league-staff' },
     ],
   },
   {
     key: 'admin', label: 'Admin', pages: [
       { id: 'admin-hub', href: 'admin/index.html', label: 'Admin', icon: 'settings', role: 'league-staff', also: ['admin-pages.html'] },
-      { id: 'admin-view-as', href: 'admin-view-as.html', label: 'View As', icon: 'eye', role: 'admin' },
+      { id: 'admin-view-as', href: 'admin/view-as.html', label: 'View As', icon: 'eye', role: 'admin' },
     ],
   },
   {
@@ -280,11 +281,11 @@ export const MORE_SHEET = ['history', 'play', 'help'];
 export const NAV_UNLISTED = {
   noNav: ['signin.html', 'signup.html', 'reset-password.html', 'verify-email.html', 'offline.html'],
   hidden: ['boxes-pool.html', 'link-player.html', 'player-questionnaire.html'],
-  adminTools: ['aggregate-stats.html', 'approve-links.html', 'captain-questionnaire-review.html',
-    'games-admin.html', 'league-schedule-editor.html', 'player-import.html', 'playoff-eligibility-tracker.html',
-    'schedule-balancer.html', 'schedule-generator.html', 'schedule-rework.html',
-    'schedule-workshop.html', 'season-setup-wizard.html', 'signup-card-export.html', 'wordle-admin.html',
-    'aggregate-stats-legacy.html', 'gc-data-cleaner.html', 'submit-stats-legacy.html', 'bwar-explorer.html'],
+  adminTools: ['admin/aggregate-stats.html', 'approve-links.html', 'captain-questionnaire-review.html',
+    'admin/games.html', 'admin/schedule-editor.html', 'admin/player-import.html', 'admin/playoff-eligibility.html',
+    'schedule-balancer.html', 'admin/schedule-generator.html', 'admin/schedule-rework.html',
+    'admin/schedule-workshop.html', 'admin/season-setup.html', 'admin/signup-card-export.html', 'admin/wordle.html',
+    'admin/aggregate-stats-legacy.html', 'admin/gc-data-cleaner.html', 'admin/submit-stats-legacy.html', 'bwar-explorer.html'],
   toDelete: [],
 };
 
@@ -437,18 +438,18 @@ export const NAV_STRUCTURE = {
     { id: 'captain-guide', href: 'captain-guide.html', label: "Captain's Guide", icon: '👨‍✈️', priority: 4, requiresAuth: true, requiresRole: 'captain' },
     { id: 'captain-roster-edit', href: 'captain-roster-edit.html', label: 'Edit Roster', icon: '✏️', priority: 4, requiresAuth: true, requiresRole: 'captain' },
     { id: 'team-scouting-report', href: 'team-scouting-report.html', label: 'Team Scouting Report', icon: '📋', priority: 4, requiresAuth: true, requiresRole: 'captain' },
-    { id: 'league-staff-admin', href: 'league-staff-admin.html', label: 'League Staff Admin', icon: '⚙️', priority: 4, requiresAuth: true, requiresRole: 'league_staff' },
-    { id: 'commissioner-hub', href: 'commissioner-hub.html', label: 'Commissioner Hub', icon: '📢', priority: 4, requiresAuth: true, requiresRole: 'league_staff' },
+    { id: 'league-staff-admin', href: 'admin/league-staff.html', label: 'League Staff Admin', icon: '⚙️', priority: 4, requiresAuth: true, requiresRole: 'league_staff' },
+    { id: 'commissioner-hub', href: 'admin/commissioner-hub.html', label: 'Commissioner Hub', icon: '📢', priority: 4, requiresAuth: true, requiresRole: 'league_staff' },
     { id: 'directory', href: 'aces-directory.html', label: 'Aces Directory', icon: '📇', priority: 4, requiresAuth: true },
     { id: 'submit-score', href: 'submit-score.html', label: 'Submit Scores', icon: '🔢️', priority: 4, requiresAuth: true },
     { id: 'submit-stats', href: 'submit-stats.html', label: 'Submit Stats', icon: '🧮', priority: 4, requiresAuth: true },
     { id: 'photo-upload', href: 'photo-upload.html', label: 'Upload Photos', icon: '📤️', priority: 4, requiresAuth: true },
     { id: 'offseason-hub', href: 'offseason.html', label: 'Offseason Hub', icon: '🎣️', priority: 4, requiresAuth: true },
     { id: 'aces-shop', href: 'https://acesmountainside.com/', label: 'Aces Shop', icon: '🛒', priority: 4, requiresAuth: true, external: true },
-    { id: 'spray-intake', href: 'admin-spray-intake.html', label: 'Spray Chart Intake', icon: '🎯', priority: 4, requiresAuth: true, requiresRole: 'admin' },
-    { id: 'aceys-admin', href: 'admin-aceys.html', label: 'Aceys Admin', icon: '🏆', priority: 4, requiresAuth: true, requiresRole: 'league_staff' },
+    { id: 'spray-intake', href: 'admin/spray-intake.html', label: 'Spray Chart Intake', icon: '🎯', priority: 4, requiresAuth: true, requiresRole: 'admin' },
+    { id: 'aceys-admin', href: 'admin/aceys.html', label: 'Aceys Admin', icon: '🏆', priority: 4, requiresAuth: true, requiresRole: 'league_staff' },
     { id: 'admin-hub', href: 'admin/index.html', label: 'Admin Hub', icon: '🛠️', priority: 4, requiresAuth: true, requiresRole: 'admin' },
-    { id: 'admin-view-as', href: 'admin-view-as.html', label: 'View As User', icon: '🎭', priority: 4, requiresAuth: true, requiresRole: 'admin' },
+    { id: 'admin-view-as', href: 'admin/view-as.html', label: 'View As User', icon: '🎭', priority: 4, requiresAuth: true, requiresRole: 'admin' },
   ],
 
   // Public auth pages (signin handles both signin and signup - don't show in nav)
@@ -646,20 +647,20 @@ export const PAGE_CONFIGS = {
     desktop: ['home', 'roster-management', 'submit-stats', 'game-tracker']
   },
   
-  'league-staff-admin.html': {
+  'admin/league-staff.html': {
     desktop: []
   },
 
-  'commissioner-hub.html': {
+  'admin/commissioner-hub.html': {
     desktop: []
   },
 
-  'admin-spray-intake.html': {
+  'admin/spray-intake.html': {
     desktop: []
   },
 
 
-  'admin-aceys.html': {
+  'admin/aceys.html': {
     desktop: []
   },
 

@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="../">
+<meta name="robots" content="noindex">
+<script type="module" src="js/core/preview-guard.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Games Admin - Mountainside Aces</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  :root {
+    --bg-dark: #0a0e14;
+    --bg-card: #0f1419;
+    --accent-cyan: #00d4ff;
+    --accent-green: #00ff88;
+    --accent-red: #ff4757;
+    --accent-gold: #ffd700;
+    --text-white: #ffffff;
+    --text-gray: #8899a6;
+    --border-dark: #1e2a36;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-white);
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    color: var(--accent-cyan);
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: var(--text-gray);
+    margin-bottom: 2rem;
+  }
+
+  .admin-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .admin-section h2 {
+    margin-top: 0;
+    color: var(--accent-cyan);
+    font-size: 1.2rem;
+    border-bottom: 1px solid var(--border-dark);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  label {
+    display: block;
+    color: var(--text-gray);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  select, input {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    color: var(--text-white);
+    font-size: 1rem;
+  }
+
+  select:focus, input:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent-cyan);
+    color: var(--bg-dark);
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.1);
+  }
+
+  .btn-danger {
+    background: var(--accent-red);
+    color: white;
+  }
+
+  .btn-success {
+    background: var(--accent-green);
+    color: var(--bg-dark);
+  }
+
+  .btn-secondary {
+    background: var(--border-dark);
+    color: var(--text-white);
+  }
+
+  .log-area {
+    background: #000;
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: monospace;
+    font-size: 0.85rem;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+
+  .log-success { color: var(--accent-green); }
+  .log-error { color: var(--accent-red); }
+  .log-info { color: var(--accent-cyan); }
+  .log-warn { color: var(--accent-gold); }
+
+  .user-list {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-dark);
+  }
+
+  .user-item:last-child {
+    border-bottom: none;
+  }
+
+  .user-name {
+    font-weight: 600;
+  }
+
+  .user-id {
+    color: var(--text-gray);
+    font-size: 0.8rem;
+    font-family: monospace;
+  }
+
+  .game-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .game-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .badge-complete {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--accent-green);
+  }
+
+  .badge-incomplete {
+    background: rgba(255, 71, 87, 0.2);
+    color: var(--accent-red);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .stat-card {
+    background: var(--bg-dark);
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+  }
+
+  .stat-label {
+    color: var(--text-gray);
+    font-size: 0.85rem;
+  }
+
+  .hidden { display: none; }
+
+  .auth-warning {
+    background: rgba(255, 71, 87, 0.1);
+    border: 1px solid var(--accent-red);
+    padding: 1rem;
+    border-radius: 8px;
+    color: var(--accent-red);
+    text-align: center;
+  }
+
+  .json-viewer {
+    background: #000;
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 0.85rem;
+    max-height: 400px;
+    overflow: auto;
+    white-space: pre-wrap;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <div>
+      <h1>🎮 Games Admin</h1>
+      <p class="subtitle">Manage daily games data in Firebase</p>
+    </div>
+    <a href="admin/wordle.html" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+      🔤 Wordle Admin
+    </a>
+  </div>
+
+  <div id="authWarning" class="auth-warning">
+    ⚠️ Please sign in with an admin account to use this page.
+    <br><br>
+    <a href="signin.html" style="color: var(--accent-cyan);">Sign In</a>
+  </div>
+
+  <div id="adminContent" class="hidden">
+    
+    <!-- Quick Stats -->
+    <div class="admin-section">
+      <h2>📊 Quick Stats</h2>
+      <div class="stats-grid" id="quickStats">
+        <div class="stat-card">
+          <div class="stat-value" id="statTotalUsers">-</div>
+          <div class="stat-label">Total Players</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statGridPlayers">-</div>
+          <div class="stat-label">Grid Players</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statConnectionsPlayers">-</div>
+          <div class="stat-label">Connections Players</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statWordlePlayers">-</div>
+          <div class="stat-label">Wordle Players</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statRecallPlayers">-</div>
+          <div class="stat-label">Recall Players</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day Number Migration Tool -->
+    <div class="admin-section">
+      <h2>🔄 Migrate Day Numbers</h2>
+      <p style="color: var(--text-gray); margin-bottom: 1rem;">
+        Copy all users' game data from one day number to another. Useful for fixing launch date sync issues.
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Game Collection</label>
+          <select id="migrateGame">
+            <option value="acesGridGames">Aces Grid</option>
+            <option value="acesConnectionsGames">Aces Connections</option>
+            <option value="acesWordleGames">Aces Wordle</option>
+            <option value="acesHigherLowerGames">Higher or Lower</option>
+            <option value="acesWhoAmIGames">Who Am I</option>
+            <option value="acesRosterRecallGames">Roster Recall</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>From Day #</label>
+          <input type="number" id="migrateFromDay" value="3" min="1">
+        </div>
+        <div class="form-group">
+          <label>To Day #</label>
+          <input type="number" id="migrateToDay" value="2" min="1">
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn-primary" onclick="previewMigration()">Preview Migration</button>
+        <button class="btn-success" onclick="executeMigration()">Execute Migration</button>
+      </div>
+    </div>
+
+    <!-- View/Edit User Game Data -->
+    <div class="admin-section">
+      <h2>👤 View User Game Data</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Game Collection</label>
+          <select id="viewGame">
+            <option value="acesGridGames">Aces Grid</option>
+            <option value="acesConnectionsGames">Aces Connections</option>
+            <option value="acesWordleGames">Aces Wordle</option>
+            <option value="acesHigherLowerGames">Higher or Lower</option>
+            <option value="acesWhoAmIGames">Who Am I</option>
+            <option value="acesRosterRecallGames">Roster Recall</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>User ID</label>
+          <input type="text" id="viewUserId" placeholder="Enter user ID or select from list below">
+        </div>
+        <div class="form-group">
+          <label>Day # (optional, leave blank for stats)</label>
+          <input type="number" id="viewDayNum" placeholder="e.g., 2">
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn-primary" onclick="viewUserData()">View Data</button>
+        <button class="btn-secondary" onclick="listAllUsers()">List All Users</button>
+      </div>
+      <div id="userData" class="json-viewer hidden" style="margin-top: 1rem;"></div>
+    </div>
+
+    <!-- Update User Data -->
+    <div class="admin-section">
+      <h2>✏️ Update Game Data</h2>
+      <p style="color: var(--text-gray); margin-bottom: 1rem;">
+        Manually update a specific field in a user's game document.
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Game Collection</label>
+          <select id="updateGame">
+            <option value="acesGridGames">Aces Grid</option>
+            <option value="acesConnectionsGames">Aces Connections</option>
+            <option value="acesWordleGames">Aces Wordle</option>
+            <option value="acesHigherLowerGames">Higher or Lower</option>
+            <option value="acesWhoAmIGames">Who Am I</option>
+            <option value="acesRosterRecallGames">Roster Recall</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>User ID</label>
+          <input type="text" id="updateUserId" placeholder="User ID">
+        </div>
+        <div class="form-group">
+          <label>Day # (leave blank for stats doc)</label>
+          <input type="number" id="updateDayNum" placeholder="e.g., 2">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Field Name</label>
+          <input type="text" id="updateField" placeholder="e.g., gameOver">
+        </div>
+        <div class="form-group">
+          <label>New Value</label>
+          <input type="text" id="updateValue" placeholder="e.g., true">
+        </div>
+        <div class="form-group">
+          <label>Value Type</label>
+          <select id="updateType">
+            <option value="boolean">Boolean</option>
+            <option value="number">Number</option>
+            <option value="string">String</option>
+          </select>
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn-danger" onclick="updateUserData()">Update Field</button>
+      </div>
+    </div>
+
+    <!-- Batch Fix: Set gameOver=true -->
+    <div class="admin-section">
+      <h2>🔧 Batch Fix: Mark Games Complete</h2>
+      <p style="color: var(--text-gray); margin-bottom: 1rem;">
+        Set gameOver=true for all users who have completed a game (9/9 cells for Grid, isComplete for Connections, etc.)
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Game Collection</label>
+          <select id="batchGame">
+            <option value="acesGridGames">Aces Grid (score=9)</option>
+            <option value="acesConnectionsGames">Aces Connections (isComplete)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Day #</label>
+          <input type="number" id="batchDayNum" value="2" min="1">
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn-primary" onclick="previewBatchFix()">Preview</button>
+        <button class="btn-success" onclick="executeBatchFix()">Execute Fix</button>
+      </div>
+    </div>
+
+    <!-- Aces Connections Stats Recalculation -->
+    <div class="admin-section">
+      <h2>🔗 Connections Stats Recalculation</h2>
+      <p style="color: var(--text-gray); margin-bottom: 1rem;">
+        Recalculate user stats (gamesPlayed, wins, perfectGames, totalCorrect, totalGuesses) from their daily game history.
+        Useful after adding the new "wins" field or fixing data inconsistencies.
+      </p>
+      <div class="action-buttons">
+        <button class="btn-primary" onclick="previewConnectionsRecalc()">Preview Changes</button>
+        <button class="btn-success" onclick="executeConnectionsRecalc()">Recalculate All Stats</button>
+      </div>
+      <div id="connectionsRecalcLog" class="log-area" style="margin-top: 1rem; display: none; max-height: 400px;"></div>
+    </div>
+
+    <!-- Roster Recall Stats Recalculation -->
+    <div class="admin-section">
+      <h2>🧠 Roster Recall Stats Recalculation</h2>
+      <p style="color: var(--text-gray); margin-bottom: 1rem;">
+        Recalculate user stats (gamesPlayed, perfectGames, totalScore, bestScore) from their daily game history.
+        Useful after version updates that may have cleared localStorage and overwrote Firebase stats.
+      </p>
+      <div class="action-buttons">
+        <button class="btn-primary" onclick="previewRecallRecalc()">Preview Changes</button>
+        <button class="btn-success" onclick="executeRecallRecalc()">Recalculate All Stats</button>
+      </div>
+      <div id="recallRecalcLog" class="log-area" style="margin-top: 1rem; display: none; max-height: 400px;"></div>
+    </div>
+
+    <!-- Log Output -->
+    <div class="admin-section">
+      <h2>📋 Log Output</h2>
+      <div class="log-area" id="logOutput">Ready...\n</div>
+      <div class="action-buttons">
+        <button class="btn-secondary" onclick="clearLog()">Clear Log</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Daily Games Admin', requiresAuth: true });
+import { 
+  db, 
+  collection, 
+  doc, 
+  getDocs, 
+  getDoc,
+  query,
+  where
+} from './js/core/firebase.js';
+
+import { 
+  setDoc,
+  updateDoc,
+  serverTimestamp
+} from './js/core/firebase.js';
+
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+const auth = getAuth();
+
+// Make functions available globally
+window.db = db;
+window.collection = collection;
+window.doc = doc;
+window.getDocs = getDocs;
+window.getDoc = getDoc;
+window.setDoc = setDoc;
+window.updateDoc = updateDoc;
+window.serverTimestamp = serverTimestamp;
+
+// Subcollection names for each game
+const GAME_SUBCOLLECTIONS = {
+  'acesGridGames': { sub: 'puzzles', idFormat: (d) => `puzzle_${d}` },
+  'acesConnectionsGames': { sub: 'dailyGames', idFormat: (d) => String(d) },
+  'acesWordleGames': { sub: 'dailyGames', idFormat: (d) => String(d) },
+  'acesHigherLowerGames': { sub: 'puzzles', idFormat: (d) => `puzzle_${d}` },
+  'acesWhoAmIGames': { sub: 'dailyGames', idFormat: (d) => String(d) },
+  'acesRosterRecallGames': { sub: 'dailyGames', idFormat: (d) => String(d) }
+};
+
+let currentUser = null;
+let userProfile = null;
+
+// Auth check - matching pattern from other admin pages
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    await checkAuthorization();
+  } else {
+    document.getElementById('authWarning').innerHTML = '⚠️ Please sign in to access this page.<br><br><a href="signin.html" style="color: var(--accent-cyan);">Sign In</a>';
+  }
+});
+
+async function checkAuthorization() {
+  try {
+    console.log('🔐 Checking authorization for UID:', currentUser.uid);
+    
+    const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+    
+    if (!userDoc.exists()) {
+      console.log('❌ No user document found');
+      document.getElementById('authWarning').innerHTML = '⚠️ User profile not found.';
+      return;
+    }
+
+    userProfile = userDoc.data();
+    console.log('📋 User profile:', userProfile);
+
+    // Normalize values for comparison
+    const userRole = (userProfile.userRole || '').toLowerCase();
+    const userType = (userProfile.userType || '').toLowerCase();
+    const role = (userProfile.role || '').toLowerCase();
+    
+    // Check if user is admin or league-staff
+    const isAuthorized = 
+      userProfile.isAdmin === true || 
+      userType === 'league-staff' ||
+      userType === 'admin' ||
+      userRole === 'admin' ||
+      userRole === 'league-staff' ||
+      role === 'admin' ||
+      role === 'league-staff';
+
+    console.log('✅ Authorization result:', isAuthorized);
+
+    if (isAuthorized) {
+      document.getElementById('authWarning').classList.add('hidden');
+      document.getElementById('adminContent').classList.remove('hidden');
+      log('✅ Signed in as admin: ' + currentUser.displayName, 'success');
+      loadQuickStats();
+    } else {
+      console.log('❌ User not authorized. Fields:', Object.keys(userProfile));
+      document.getElementById('authWarning').innerHTML = `⚠️ You do not have admin permissions.<br><br>
+        isAdmin: ${userProfile.isAdmin}<br>
+        userRole: ${userProfile.userRole}<br>
+        userType: ${userProfile.userType}<br>
+        role: ${userProfile.role}`;
+    }
+  } catch (error) {
+    console.error('Auth error:', error);
+    document.getElementById('authWarning').innerHTML = '⚠️ Error checking authorization: ' + error.message;
+  }
+}
+
+// Logging
+window.log = function(message, type = 'info') {
+  const logArea = document.getElementById('logOutput');
+  const timestamp = new Date().toLocaleTimeString();
+  const className = `log-${type}`;
+  logArea.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+  logArea.scrollTop = logArea.scrollHeight;
+};
+
+window.clearLog = function() {
+  document.getElementById('logOutput').innerHTML = 'Log cleared.\n';
+};
+
+// Load quick stats
+async function loadQuickStats() {
+  try {
+    const collections = ['acesGridGames', 'acesConnectionsGames', 'acesWordleGames', 'acesRosterRecallGames'];
+    const userIds = new Set();
+    
+    for (const col of collections) {
+      const snapshot = await getDocs(collection(db, col));
+      snapshot.forEach(doc => userIds.add(doc.id));
+      
+      if (col === 'acesGridGames') {
+        document.getElementById('statGridPlayers').textContent = snapshot.size;
+      } else if (col === 'acesConnectionsGames') {
+        document.getElementById('statConnectionsPlayers').textContent = snapshot.size;
+      } else if (col === 'acesWordleGames') {
+        document.getElementById('statWordlePlayers').textContent = snapshot.size;
+      } else if (col === 'acesRosterRecallGames') {
+        document.getElementById('statRecallPlayers').textContent = snapshot.size;
+      }
+    }
+    
+    document.getElementById('statTotalUsers').textContent = userIds.size;
+    log('📊 Stats loaded', 'success');
+  } catch (error) {
+    log('Error loading stats: ' + error.message, 'error');
+  }
+}
+
+// Preview migration
+window.previewMigration = async function() {
+  const game = document.getElementById('migrateGame').value;
+  const fromDay = parseInt(document.getElementById('migrateFromDay').value);
+  const toDay = parseInt(document.getElementById('migrateToDay').value);
+  const config = GAME_SUBCOLLECTIONS[game];
+  
+  log(`\n🔍 Previewing migration: ${game}`, 'info');
+  log(`   From: ${config.sub}/${config.idFormat(fromDay)}`, 'info');
+  log(`   To: ${config.sub}/${config.idFormat(toDay)}`, 'info');
+  
+  try {
+    const usersSnapshot = await getDocs(collection(db, game));
+    let count = 0;
+    
+    for (const userDoc of usersSnapshot.docs) {
+      const userId = userDoc.id;
+      const fromDocId = config.idFormat(fromDay);
+      const fromRef = doc(db, game, userId, config.sub, fromDocId);
+      const fromSnap = await getDoc(fromRef);
+      
+      if (fromSnap.exists()) {
+        count++;
+        const data = fromSnap.data();
+        log(`   ✓ ${userDoc.data().displayName || userId}: Found data (score: ${data.score || data.solved?.length || 'N/A'})`, 'info');
+      }
+    }
+    
+    log(`\n📋 Found ${count} users with data in day ${fromDay}`, 'warn');
+    log('   Click "Execute Migration" to copy this data to day ' + toDay, 'warn');
+  } catch (error) {
+    log('Error: ' + error.message, 'error');
+  }
+};
+
+// Execute migration
+window.executeMigration = async function() {
+  const game = document.getElementById('migrateGame').value;
+  const fromDay = parseInt(document.getElementById('migrateFromDay').value);
+  const toDay = parseInt(document.getElementById('migrateToDay').value);
+  const config = GAME_SUBCOLLECTIONS[game];
+  
+  if (!confirm(`Are you sure you want to copy all data from day ${fromDay} to day ${toDay} in ${game}?`)) {
+    return;
+  }
+  
+  log(`\n🚀 Executing migration: ${game} day ${fromDay} → day ${toDay}`, 'warn');
+  
+  try {
+    const usersSnapshot = await getDocs(collection(db, game));
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const userDoc of usersSnapshot.docs) {
+      const userId = userDoc.id;
+      const fromDocId = config.idFormat(fromDay);
+      const toDocId = config.idFormat(toDay);
+      
+      const fromRef = doc(db, game, userId, config.sub, fromDocId);
+      const toRef = doc(db, game, userId, config.sub, toDocId);
+      
+      const fromSnap = await getDoc(fromRef);
+      
+      if (fromSnap.exists()) {
+        try {
+          const data = fromSnap.data();
+          // Update day number in the data
+          if (data.dayNum !== undefined) data.dayNum = toDay;
+          if (data.puzzleNum !== undefined) data.puzzleNum = toDay;
+          data.migratedFrom = fromDay;
+          data.migratedAt = new Date().toISOString();
+          
+          await setDoc(toRef, data);
+          successCount++;
+          log(`   ✓ ${userDoc.data().displayName || userId}: Copied`, 'success');
+        } catch (err) {
+          errorCount++;
+          log(`   ✗ ${userId}: ${err.message}`, 'error');
+        }
+      }
+    }
+    
+    log(`\n✅ Migration complete: ${successCount} copied, ${errorCount} errors`, 'success');
+  } catch (error) {
+    log('Migration failed: ' + error.message, 'error');
+  }
+};
+
+// View user data
+window.viewUserData = async function() {
+  const game = document.getElementById('viewGame').value;
+  const userId = document.getElementById('viewUserId').value.trim();
+  const dayNum = document.getElementById('viewDayNum').value;
+  const config = GAME_SUBCOLLECTIONS[game];
+  
+  if (!userId) {
+    log('Please enter a user ID', 'error');
+    return;
+  }
+  
+  try {
+    let docRef;
+    let path;
+    
+    if (dayNum) {
+      const docId = config.idFormat(parseInt(dayNum));
+      docRef = doc(db, game, userId, config.sub, docId);
+      path = `${game}/${userId}/${config.sub}/${docId}`;
+    } else {
+      docRef = doc(db, game, userId);
+      path = `${game}/${userId}`;
+    }
+    
+    log(`\n📄 Fetching: ${path}`, 'info');
+    
+    const snapshot = await getDoc(docRef);
+    const display = document.getElementById('userData');
+    
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      display.textContent = JSON.stringify(data, null, 2);
+      display.classList.remove('hidden');
+      log('   Data found ✓', 'success');
+    } else {
+      display.textContent = 'No document found at this path.';
+      display.classList.remove('hidden');
+      log('   No data found', 'warn');
+    }
+  } catch (error) {
+    log('Error: ' + error.message, 'error');
+  }
+};
+
+// List all users
+window.listAllUsers = async function() {
+  const game = document.getElementById('viewGame').value;
+  
+  log(`\n👥 Listing users in ${game}:`, 'info');
+  
+  try {
+    const snapshot = await getDocs(collection(db, game));
+    const display = document.getElementById('userData');
+    
+    let userList = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      userList.push({
+        id: doc.id,
+        name: data.displayName || 'Anonymous',
+        gamesPlayed: data.gamesPlayed || 0,
+        lastPlayed: data.lastPlayedPuzzle || data.lastPuzzle || '-'
+      });
+    });
+    
+    userList.sort((a, b) => (b.gamesPlayed || 0) - (a.gamesPlayed || 0));
+    
+    display.textContent = userList.map(u => 
+      `${u.name} (${u.id})\n  Games: ${u.gamesPlayed}, Last: Day ${u.lastPlayed}`
+    ).join('\n\n');
+    display.classList.remove('hidden');
+    
+    log(`   Found ${userList.length} users`, 'success');
+  } catch (error) {
+    log('Error: ' + error.message, 'error');
+  }
+};
+
+// Update user data
+window.updateUserData = async function() {
+  const game = document.getElementById('updateGame').value;
+  const userId = document.getElementById('updateUserId').value.trim();
+  const dayNum = document.getElementById('updateDayNum').value;
+  const field = document.getElementById('updateField').value.trim();
+  const valueRaw = document.getElementById('updateValue').value.trim();
+  const valueType = document.getElementById('updateType').value;
+  const config = GAME_SUBCOLLECTIONS[game];
+  
+  if (!userId || !field) {
+    log('Please enter user ID and field name', 'error');
+    return;
+  }
+  
+  // Convert value to correct type
+  let value;
+  if (valueType === 'boolean') {
+    value = valueRaw.toLowerCase() === 'true';
+  } else if (valueType === 'number') {
+    value = parseFloat(valueRaw);
+  } else {
+    value = valueRaw;
+  }
+  
+  let docRef;
+  let path;
+  
+  if (dayNum) {
+    const docId = config.idFormat(parseInt(dayNum));
+    docRef = doc(db, game, userId, config.sub, docId);
+    path = `${game}/${userId}/${config.sub}/${docId}`;
+  } else {
+    docRef = doc(db, game, userId);
+    path = `${game}/${userId}`;
+  }
+  
+  if (!confirm(`Update ${path}\nSet "${field}" = ${JSON.stringify(value)} (${valueType})?`)) {
+    return;
+  }
+  
+  try {
+    await updateDoc(docRef, { [field]: value });
+    log(`✅ Updated ${path}: ${field} = ${JSON.stringify(value)}`, 'success');
+  } catch (error) {
+    log('Error: ' + error.message, 'error');
+  }
+};
+
+// Preview batch fix
+window.previewBatchFix = async function() {
+  const game = document.getElementById('batchGame').value;
+  const dayNum = parseInt(document.getElementById('batchDayNum').value);
+  const config = GAME_SUBCOLLECTIONS[game];
+  
+  log(`\n🔍 Previewing batch fix for ${game} day ${dayNum}:`, 'info');
+  
+  try {
+    const usersSnapshot = await getDocs(collection(db, game));
+    let needsFix = [];
+    
+    for (const userDoc of usersSnapshot.docs) {
+      const userId = userDoc.id;
+      const docId = config.idFormat(dayNum);
+      const gameRef = doc(db, game, userId, config.sub, docId);
+      const gameSnap = await getDoc(gameRef);
+      
+      if (gameSnap.exists()) {
+        const data = gameSnap.data();
+        let isComplete = false;
+        let currentGameOver = data.gameOver || data.isComplete || false;
+        
+        if (game === 'acesGridGames') {
+          isComplete = data.score === 9 || (data.cellStates && data.cellStates.filter(c => c && c.correct).length === 9);
+        } else if (game === 'acesConnectionsGames') {
+          isComplete = data.isComplete === true || (data.solved && data.solved.length === 4);
+        }
+        
+        if (isComplete && !currentGameOver) {
+          needsFix.push({
+            userId,
+            name: userDoc.data().displayName || userId,
+            data
+          });
+          log(`   ⚠️ ${userDoc.data().displayName || userId}: Complete but gameOver=${currentGameOver}`, 'warn');
+        }
+      }
+    }
+    
+    log(`\n📋 Found ${needsFix.length} users needing gameOver=true fix`, 'warn');
+  } catch (error) {
+    log('Error: ' + error.message, 'error');
+  }
+};
+
+// Execute batch fix
+window.executeBatchFix = async function() {
+  const game = document.getElementById('batchGame').value;
+  const dayNum = parseInt(document.getElementById('batchDayNum').value);
+  const config = GAME_SUBCOLLECTIONS[game];
+  
+  if (!confirm(`Set gameOver=true for all completed games in ${game} day ${dayNum}?`)) {
+    return;
+  }
+  
+  log(`\n🚀 Executing batch fix for ${game} day ${dayNum}:`, 'warn');
+  
+  try {
+    const usersSnapshot = await getDocs(collection(db, game));
+    let fixCount = 0;
+    
+    for (const userDoc of usersSnapshot.docs) {
+      const userId = userDoc.id;
+      const docId = config.idFormat(dayNum);
+      const gameRef = doc(db, game, userId, config.sub, docId);
+      const gameSnap = await getDoc(gameRef);
+      
+      if (gameSnap.exists()) {
+        const data = gameSnap.data();
+        let isComplete = false;
+        
+        if (game === 'acesGridGames') {
+          isComplete = data.score === 9 || (data.cellStates && data.cellStates.filter(c => c && c.correct).length === 9);
+        } else if (game === 'acesConnectionsGames') {
+          isComplete = data.isComplete === true || (data.solved && data.solved.length === 4);
+        }
+        
+        if (isComplete && !data.gameOver) {
+          await updateDoc(gameRef, { gameOver: true });
+          fixCount++;
+          log(`   ✓ ${userDoc.data().displayName || userId}: Set gameOver=true`, 'success');
+        }
+      }
+    }
+    
+    log(`\n✅ Batch fix complete: ${fixCount} documents updated`, 'success');
+  } catch (error) {
+    log('Error: ' + error.message, 'error');
+  }
+};
+
+// ============================================
+// CONNECTIONS STATS RECALCULATION
+// ============================================
+function logConnections(message, type = 'info') {
+  const logArea = document.getElementById('connectionsRecalcLog');
+  logArea.style.display = 'block';
+  const className = `log-${type}`;
+  logArea.innerHTML += `<span class="${className}">${message}</span>\n`;
+  logArea.scrollTop = logArea.scrollHeight;
+}
+
+function clearConnectionsLog() {
+  const logArea = document.getElementById('connectionsRecalcLog');
+  logArea.innerHTML = '';
+}
+
+window.previewConnectionsRecalc = async function() {
+  clearConnectionsLog();
+  logConnections('🔍 Previewing Connections stats recalculation...', 'info');
+  
+  try {
+    const usersSnapshot = await getDocs(collection(db, 'acesConnectionsGames'));
+    logConnections(`Found ${usersSnapshot.size} players with Connections data\n`, 'info');
+    
+    let needsUpdate = 0;
+    
+    for (const userDoc of usersSnapshot.docs) {
+      const userId = userDoc.id;
+      const userData = userDoc.data();
+      const displayName = userData.displayName || userId.substring(0, 8);
+      
+      // Get all daily games for this user
+      const gamesSnapshot = await getDocs(collection(db, 'acesConnectionsGames', userId, 'dailyGames'));
+      
+      // Recalculate stats from games
+      let gamesPlayed = 0;
+      let wins = 0;
+      let perfectGames = 0;
+      let totalCorrect = 0;
+      let totalGuesses = 0;
+      let lastPlayedPuzzle = 0;
+      
+      gamesSnapshot.forEach(gameDoc => {
+        const game = gameDoc.data();
+        if (game.isComplete) {
+          gamesPlayed++;
+          
+          // Count correct categories (not 'X' in solveOrder)
+          const solveOrder = game.solveOrder || [];
+          const correct = solveOrder.filter(d => d !== 'X').length;
+          totalCorrect += correct;
+          
+          // Win = all 4 categories correct
+          if (correct === 4) {
+            wins++;
+            // Perfect = win with 0 mistakes
+            if (game.mistakes === 0) {
+              perfectGames++;
+            }
+          }
+          
+          // Count guesses
+          totalGuesses += (game.guessHistory?.length || 0);
+          
+          const dayNum = parseInt(gameDoc.id) || game.dayNum || 0;
+          lastPlayedPuzzle = Math.max(lastPlayedPuzzle, dayNum);
+        }
+      });
+      
+      // Compare with current stats
+      const current = {
+        gamesPlayed: userData.gamesPlayed || 0,
+        wins: userData.wins || 0,
+        perfectGames: userData.perfectGames || 0,
+        totalCorrect: userData.totalCorrect || 0,
+        totalGuesses: userData.totalGuesses || 0
+      };
+      
+      const hasChanges = 
+        current.gamesPlayed !== gamesPlayed ||
+        current.wins !== wins ||
+        current.perfectGames !== perfectGames ||
+        current.totalCorrect !== totalCorrect ||
+        current.totalGuesses !== totalGuesses;
+      
+      if (hasChanges) {
+        needsUpdate++;
+        logConnections(`⚠️ ${displayName}:`, 'warn');
+        logConnections(`   Current: ${current.gamesPlayed} played, ${current.wins} wins, ${current.perfectGames} perfect, ${current.totalCorrect} correct`, 'warn');
+        logConnections(`   Should be: ${gamesPlayed} played, ${wins} wins, ${perfectGames} perfect, ${totalCorrect} correct`, 'success');
+      } else {
+        logConnections(`✓ ${displayName}: ${gamesPlayed} games, ${wins} wins, ${perfectGames} perfect - OK`, 'success');
+      }
+    }
+    
+    logConnections(`\n📊 Summary: ${needsUpdate} users need updates`, 'info');
+    logConnections('✅ Preview complete. Click "Recalculate All Stats" to apply changes.', 'info');
+  } catch (error) {
+    logConnections(`❌ Error: ${error.message}`, 'error');
+    console.error(error);
+  }
+};
+
+window.executeConnectionsRecalc = async function() {
+  if (!confirm('This will recalculate Connections stats for ALL players from their game history. Continue?')) {
+    return;
+  }
+  
+  clearConnectionsLog();
+  logConnections('🚀 Recalculating all Connections player stats...', 'info');
+  
+  try {
+    const usersSnapshot = await getDocs(collection(db, 'acesConnectionsGames'));
+    let updatedCount = 0;
+    let errorCount = 0;
+    
+    for (const userDoc of usersSnapshot.docs) {
+      const userId = userDoc.id;
+      const userData = userDoc.data();
+      const displayName = userData.displayName || userId.substring(0, 8);
+      
+      try {
+        // Get all daily games for this user
+        const gamesSnapshot = await getDocs(collection(db, 'acesConnectionsGames', userId, 'dailyGames'));
+        
+        // Recalculate stats from games
+        let gamesPlayed = 0;
+        let wins = 0;
+        let perfectGames = 0;
+        let totalCorrect = 0;
+        let totalGuesses = 0;
+        let lastPlayedPuzzle = 0;
+        let currentStreak = 0;
+        let longestStreak = userData.longestStreak || 0;
+        
+        // Sort games by day number to calculate streaks
+        const sortedGames = [];
+        gamesSnapshot.forEach(gameDoc => {
+          const game = gameDoc.data();
+          const dayNum = parseInt(gameDoc.id) || game.dayNum || 0;
+          sortedGames.push({ dayNum, game });
+        });
+        sortedGames.sort((a, b) => a.dayNum - b.dayNum);
+        
+        let previousDayNum = 0;
+        
+        for (const { dayNum, game } of sortedGames) {
+          if (game.isComplete) {
+            gamesPlayed++;
+            
+            // Count correct categories (not 'X' in solveOrder)
+            const solveOrder = game.solveOrder || [];
+            const correct = solveOrder.filter(d => d !== 'X').length;
+            totalCorrect += correct;
+            
+            // Win = all 4 categories correct
+            if (correct === 4) {
+              wins++;
+              // Perfect = win with 0 mistakes
+              if (game.mistakes === 0) {
+                perfectGames++;
+              }
+            }
+            
+            // Count guesses
+            totalGuesses += (game.guessHistory?.length || 0);
+            
+            // Streak calculation
+            if (previousDayNum === dayNum - 1) {
+              currentStreak++;
+            } else {
+              currentStreak = 1;
+            }
+            longestStreak = Math.max(longestStreak, currentStreak);
+            previousDayNum = dayNum;
+            
+            lastPlayedPuzzle = Math.max(lastPlayedPuzzle, dayNum);
+          }
+        }
+        
+        // Update user stats
+        await setDoc(doc(db, 'acesConnectionsGames', userId), {
+          ...userData,
+          gamesPlayed,
+          wins,
+          perfectGames,
+          totalCorrect,
+          totalGuesses,
+          currentStreak,
+          longestStreak,
+          lastPlayedPuzzle,
+          statsRecalculatedAt: serverTimestamp()
+        }, { merge: true });
+        
+        updatedCount++;
+        logConnections(`✓ ${displayName}: ${gamesPlayed} games, ${wins} wins, ${perfectGames} perfect`, 'success');
+        
+      } catch (err) {
+        errorCount++;
+        logConnections(`❌ ${displayName}: ${err.message}`, 'error');
+      }
+    }
+    
+    logConnections(`\n✅ Complete: ${updatedCount} updated, ${errorCount} errors`, 'success');
+  } catch (error) {
+    logConnections(`❌ Error: ${error.message}`, 'error');
+    console.error(error);
+  }
+};
+
+// ============================================
+// ROSTER RECALL STATS RECALCULATION
+// ============================================
+function logRecall(message, type = 'info') {
+  const logArea = document.getElementById('recallRecalcLog');
+  logArea.style.display = 'block';
+  const className = `log-${type}`;
+  logArea.innerHTML += `<span class="${className}">${message}</span>\n`;
+  logArea.scrollTop = logArea.scrollHeight;
+}
+
+function clearRecallLog() {
+  const logArea = document.getElementById('recallRecalcLog');
+  logArea.innerHTML = '';
+}
+
+window.previewRecallRecalc = async function() {
+  clearRecallLog();
+  logRecall('🔍 Previewing Roster Recall stats recalculation...', 'info');
+  
+  try {
+    const usersSnapshot = await getDocs(collection(db, 'acesRosterRecallGames'));
+    logRecall(`Found ${usersSnapshot.size} players with Roster Recall data\n`, 'info');
+    
+    for (const userDoc of usersSnapshot.docs) {
+      const userId = userDoc.id;
+      const userData = userDoc.data();
+      const displayName = userData.displayName || userId.substring(0, 8);
+      
+      // Get all daily games for this user
+      const gamesSnapshot = await getDocs(collection(db, 'acesRosterRecallGames', userId, 'dailyGames'));
+      
+      // Recalculate stats from games
+      let gamesPlayed = 0;
+      let perfectGames = 0;
+      let totalScore = 0;
+      let bestScore = 0;
+      let lastPlayedPuzzle = 0;
+      
+      gamesSnapshot.forEach(gameDoc => {
+        const game = gameDoc.data();
+        if (game.phase === 'finished') {
+          gamesPlayed++;
+          const score = game.score || 0;
+          totalScore += score;
+          bestScore = Math.max(bestScore, score);
+          
+          // Check if perfect (found all players)
+          const foundCount = game.foundPlayers?.length || 0;
+          // We need the total count from the category, but we may not have it
+          // Perfect is typically when timeRemaining > 0 and all found
+          // For now, check if they had a high score or time remaining
+          if (game.foundPlayers && game.totalTime && game.timeRemaining > 0) {
+            // This might be a perfect game, but we need category player count
+            // Marking as perfect if bonus would have been added (score % indicates it)
+            // Actually, let's check if score includes 50pt bonus
+            // Player points = foundCount * 10, time bonus = timeRemaining, perfect = 50
+            // If (score - timeRemaining - foundCount*10) >= 50, might be perfect
+            const playerPoints = foundCount * 10;
+            const timeBonus = game.timeRemaining || 0;
+            const remainder = score - playerPoints - timeBonus;
+            if (remainder >= 50) {
+              perfectGames++;
+            }
+          }
+          
+          const dayNum = parseInt(gameDoc.id) || game.dayNum || 0;
+          lastPlayedPuzzle = Math.max(lastPlayedPuzzle, dayNum);
+        }
+      });
+      
+      // Compare with current stats
+      const current = {
+        gamesPlayed: userData.gamesPlayed || 0,
+        perfectGames: userData.perfectGames || 0,
+        totalScore: userData.totalScore || 0,
+        bestScore: userData.bestScore || 0
+      };
+      
+      const hasChanges = 
+        current.gamesPlayed !== gamesPlayed ||
+        current.perfectGames !== perfectGames ||
+        current.totalScore !== totalScore ||
+        current.bestScore !== bestScore;
+      
+      if (hasChanges) {
+        logRecall(`⚠️ ${displayName}:`, 'warn');
+        logRecall(`   Current: ${current.gamesPlayed} played, ${current.perfectGames} perfect, ${current.totalScore} total, ${current.bestScore} best`, 'warn');
+        logRecall(`   Should be: ${gamesPlayed} played, ${perfectGames} perfect, ${totalScore} total, ${bestScore} best`, 'success');
+      } else {
+        logRecall(`✓ ${displayName}: ${gamesPlayed} games, ${totalScore} total - OK`, 'success');
+      }
+    }
+    
+    logRecall('\n✅ Preview complete. Click "Recalculate All Stats" to apply changes.', 'info');
+  } catch (error) {
+    logRecall(`❌ Error: ${error.message}`, 'error');
+    console.error(error);
+  }
+};
+
+window.executeRecallRecalc = async function() {
+  if (!confirm('This will recalculate Roster Recall stats for ALL players from their game history. Continue?')) {
+    return;
+  }
+  
+  clearRecallLog();
+  logRecall('🚀 Recalculating all Roster Recall player stats...', 'info');
+  
+  try {
+    const usersSnapshot = await getDocs(collection(db, 'acesRosterRecallGames'));
+    let updatedCount = 0;
+    let errorCount = 0;
+    
+    for (const userDoc of usersSnapshot.docs) {
+      const userId = userDoc.id;
+      const userData = userDoc.data();
+      const displayName = userData.displayName || userId.substring(0, 8);
+      
+      try {
+        // Get all daily games for this user
+        const gamesSnapshot = await getDocs(collection(db, 'acesRosterRecallGames', userId, 'dailyGames'));
+        
+        // Recalculate stats from games
+        let gamesPlayed = 0;
+        let perfectGames = 0;
+        let totalScore = 0;
+        let bestScore = 0;
+        let lastPlayedPuzzle = 0;
+        
+        gamesSnapshot.forEach(gameDoc => {
+          const game = gameDoc.data();
+          if (game.phase === 'finished') {
+            gamesPlayed++;
+            const score = game.score || 0;
+            totalScore += score;
+            bestScore = Math.max(bestScore, score);
+            
+            // Check if perfect
+            const foundCount = game.foundPlayers?.length || 0;
+            if (game.foundPlayers && game.timeRemaining > 0) {
+              const playerPoints = foundCount * 10;
+              const timeBonus = game.timeRemaining || 0;
+              const remainder = score - playerPoints - timeBonus;
+              if (remainder >= 50) {
+                perfectGames++;
+              }
+            }
+            
+            const dayNum = parseInt(gameDoc.id) || game.dayNum || 0;
+            lastPlayedPuzzle = Math.max(lastPlayedPuzzle, dayNum);
+          }
+        });
+        
+        // Update user stats
+        await setDoc(doc(db, 'acesRosterRecallGames', userId), {
+          ...userData,
+          gamesPlayed,
+          perfectGames,
+          totalScore,
+          bestScore,
+          lastPlayedPuzzle,
+          statsRecalculatedAt: serverTimestamp()
+        }, { merge: true });
+        
+        updatedCount++;
+        logRecall(`✓ ${displayName}: ${gamesPlayed} games, ${perfectGames} perfect, ${totalScore} total, ${bestScore} best`, 'success');
+        
+      } catch (err) {
+        errorCount++;
+        logRecall(`❌ ${displayName}: ${err.message}`, 'error');
+      }
+    }
+    
+    logRecall(`\n✅ Complete: ${updatedCount} updated, ${errorCount} errors`, 'success');
+  } catch (error) {
+    logRecall(`❌ Error: ${error.message}`, 'error');
+    console.error(error);
+  }
+};
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="../">
+<meta name="robots" content="noindex">
+<script type="module" src="js/core/preview-guard.js"></script>
+<link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Player Stats Editor - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --admin-color: #6b21a8;
+    --admin-secondary: #7c3aed;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --success-color: #22c55e;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --info-color: #3b82f6;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0; padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+
+  .loading-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 9999; transition: opacity 0.5s ease;
+  }
+  .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+  .loading-spinner {
+    width: 48px; height: 48px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--admin-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .page-header {
+    background: linear-gradient(135deg, var(--admin-color), var(--admin-secondary));
+    color: white; padding: 1.5rem 2rem;
+  }
+  .page-header h1 { margin: 0; font-size: 1.5rem; }
+  .page-header p { margin: 0.25rem 0 0; opacity: 0.85; font-size: 0.9rem; }
+
+  .main-content { padding: 1.5rem 2rem; max-width: 1600px; margin: 0 auto; }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .card h2 { margin: 0 0 1rem; font-size: 1.1rem; color: var(--admin-color); }
+
+  .controls-row {
+    display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+  .form-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; }
+  .form-group select, .form-group input {
+    padding: 0.5rem 0.75rem; border: 1px solid var(--border-color);
+    border-radius: 8px; font-size: 0.95rem; background: white;
+    min-width: 160px;
+  }
+
+  .btn {
+    padding: 0.5rem 1.25rem; border: none; border-radius: 8px;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-primary { background: var(--admin-color); color: white; }
+  .btn-primary:hover { background: var(--admin-secondary); }
+  .btn-danger { background: var(--danger-color); color: white; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-warning { background: var(--warning-color); color: white; }
+  .btn-warning:hover { background: #d97706; }
+  .btn-success { background: var(--success-color); color: white; }
+  .btn-success:hover { background: #16a34a; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border-color); color: var(--text-dark); }
+  .btn-ghost:hover { background: #f7fafc; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.8rem; }
+
+  .message-bar {
+    padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem;
+    font-size: 0.9rem; font-weight: 500; display: none;
+  }
+  .message-bar.show { display: block; }
+  .message-bar.info { background: #eff6ff; color: #1d4ed8; border-left: 4px solid var(--info-color); }
+  .message-bar.success { background: #f0fdf4; color: #15803d; border-left: 4px solid var(--success-color); }
+  .message-bar.error { background: #fef2f2; color: #dc2626; border-left: 4px solid var(--danger-color); }
+  .message-bar.warning { background: #fffbeb; color: #92400e; border-left: 4px solid var(--warning-color); }
+
+  .filter-row {
+    display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;
+    padding: 0.75rem; background: #f7fafc; border-radius: 8px; margin-bottom: 1rem;
+  }
+  .filter-row input {
+    padding: 0.4rem 0.75rem; border: 1px solid var(--border-color);
+    border-radius: 6px; font-size: 0.85rem; min-width: 180px;
+  }
+  .filter-row label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
+
+  .bulk-actions {
+    display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+    padding: 0.75rem; background: #fef2f2; border-radius: 8px; margin-bottom: 0.75rem;
+    border: 1px solid #fecaca;
+  }
+  .bulk-actions span { font-size: 0.85rem; font-weight: 600; color: #dc2626; }
+
+  .stats-table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  thead th {
+    background: #f7fafc; padding: 0.6rem 0.5rem; text-align: left;
+    font-weight: 700; font-size: 0.75rem; color: var(--text-light);
+    text-transform: uppercase; border-bottom: 2px solid var(--border-color);
+    white-space: nowrap; position: sticky; top: 0; z-index: 1;
+  }
+  tbody tr { border-bottom: 1px solid var(--border-color); }
+  tbody tr:hover { background: #f7fafc; }
+  tbody tr.selected { background: #fef3c7; }
+  tbody tr.editing { background: #eff6ff; }
+  td { padding: 0.5rem; vertical-align: middle; }
+  td.doc-id { font-family: monospace; font-size: 0.75rem; color: var(--text-light); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  td input {
+    width: 100%; padding: 0.25rem 0.4rem; border: 1px solid var(--info-color);
+    border-radius: 4px; font-size: 0.82rem;
+  }
+  td input[type="checkbox"] { width: auto; }
+
+  .stat-num { text-align: center; }
+  .badge {
+    display: inline-block; padding: 0.2rem 0.5rem;
+    border-radius: 12px; font-size: 0.7rem; font-weight: 700;
+  }
+  .badge-home { background: #dcfce7; color: #15803d; }
+  .badge-away { background: #eff6ff; color: #1d4ed8; }
+  .badge-pitching { background: #f3e8ff; color: #7c3aed; }
+  .badge-batting { background: #fef9c3; color: #854d0e; }
+
+  .summary-bar {
+    display: flex; gap: 1.5rem; flex-wrap: wrap;
+    padding: 0.75rem 1rem; background: #f7fafc; border-radius: 8px;
+    margin-bottom: 1rem; font-size: 0.85rem;
+  }
+  .summary-item { display: flex; flex-direction: column; align-items: center; }
+  .summary-item .val { font-size: 1.4rem; font-weight: 800; color: var(--admin-color); }
+  .summary-item .lbl { font-size: 0.7rem; color: var(--text-light); text-transform: uppercase; }
+
+  .tab-bar {
+    display: flex; gap: 0.5rem; margin-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+  }
+  .tab {
+    padding: 0.5rem 1rem; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+    color: var(--text-light); border-bottom: 3px solid transparent; margin-bottom: -2px;
+    transition: all 0.15s;
+  }
+  .tab.active { color: var(--admin-color); border-bottom-color: var(--admin-color); }
+
+  .empty-state { text-align: center; padding: 3rem; color: var(--text-light); }
+  .empty-state p { margin: 0.5rem 0; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
+  <div class="loading-spinner"></div>
+  <p style="margin-top:1rem;color:#718096">Loading editor...</p>
+</div>
+
+<div id="mainApp" style="display:none">
+  <div class="page-header">
+    <h1>🛠 Player Stats Editor</h1>
+    <p>View, edit, and delete individual game stat documents by team</p>
+  </div>
+
+  <div class="main-content">
+    <div id="messageBar" class="message-bar"></div>
+
+    <!-- Load Controls -->
+    <div class="card">
+      <h2>Load Team Stats</h2>
+      <div class="controls-row">
+        <div class="form-group">
+          <label>Team</label>
+          <select id="teamSelect"><option value="">-- Select team --</option></select>
+        </div>
+        <div class="form-group">
+          <label>Season</label>
+          <select id="seasonSelect"><option value="">-- Select season --</option></select>
+        </div>
+        <div class="form-group">
+          <label>Stat Type</label>
+          <select id="statTypeSelect">
+            <option value="batting">Batting (playerStats)</option>
+            <option value="pitching">Pitching (pitchingStats)</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <div class="form-group" style="justify-content:flex-end">
+          <button class="btn btn-primary" onclick="loadTeamStats()">Load Stats</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsSection" style="display:none">
+      <div class="card">
+        <div id="summaryBar" class="summary-bar"></div>
+
+        <!-- Filters -->
+        <div class="filter-row">
+          <label>Filter:</label>
+          <input type="text" id="filterPlayer" placeholder="Player name..." oninput="applyFilters()">
+          <input type="text" id="filterOpponent" placeholder="Opponent..." oninput="applyFilters()">
+          <input type="text" id="filterDocId" placeholder="Game doc ID..." oninput="applyFilters()">
+          <input type="text" id="filterDate" placeholder="Date (YYYY-MM-DD)..." oninput="applyFilters()">
+          <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="bulk-actions" id="bulkActions" style="display:none">
+          <span id="selectedCount">0 selected</span>
+          <button class="btn btn-danger btn-sm" onclick="deleteSelected()">🗑 Delete Selected</button>
+          <button class="btn btn-ghost btn-sm" onclick="deselectAll()">Deselect All</button>
+        </div>
+
+        <!-- Tab bar (shown when loading both) -->
+        <div class="tab-bar" id="tabBar" style="display:none">
+          <div class="tab active" id="tabBatting" onclick="switchTab('batting')">Batting</div>
+          <div class="tab" id="tabPitching" onclick="switchTab('pitching')">Pitching</div>
+        </div>
+
+        <div id="tableWrap" class="stats-table-wrap"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Player Stats Editor', requiresAuth: true });
+import { db, collection, getDocs, doc, getDoc, query, where, orderBy } from './js/core/firebase.js';
+import { deleteDoc, setDoc, updateDoc, serverTimestamp } from './js/core/firebase.js';
+import { auth } from './js/core/auth.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getAllTeams, getCurrentSeason } from './js/data/index.js';
+import { getTeamRosterDoc } from './firebase-roster.js';
+
+let currentUser = null;
+let allSeasons = [];
+let allDocs = [];        // raw loaded docs {type, playerId, playerName, docId, ref, data}
+let filteredDocs = [];
+let selectedIds = new Set();
+let currentTab = 'batting';
+let loadedType = 'batting';
+
+// ── Init ──────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async (user) => {
+  try {
+    if (!user) { window.location.href = 'index.html'; return; }
+    // Read user doc directly — matches pattern used by other admin pages
+    const userSnap = await getDoc(doc(db, 'users', user.uid));
+    if (!userSnap.exists()) {
+      document.getElementById('loadingOverlay').innerHTML =
+        '<p style="color:#dc2626;font-weight:600">User not found.</p>';
+      return;
+    }
+    const p = userSnap.data();
+    const role  = (p.role  || '').toLowerCase();
+    const uRole = (p.userRole || '').toLowerCase();
+    const uType = (p.userType || '').toLowerCase();
+    const ok = p.isAdmin === true ||
+      ['admin','staff','league-staff'].includes(role) ||
+      ['admin','staff','league-staff'].includes(uRole) ||
+      ['admin','league-staff'].includes(uType);
+    if (!ok) {
+      document.getElementById('loadingOverlay').innerHTML =
+        '<p style="color:#dc2626;font-weight:600">Admin access required.</p>';
+      return;
+    }
+    currentUser = user;
+    await Promise.all([loadSeasons(), loadTeams()]);
+    document.getElementById('mainApp').style.display = 'block';
+    pageReady();
+  } catch (err) {
+    console.error('❌ Init error:', err);
+    document.getElementById('loadingOverlay').innerHTML =
+      `<p style="color:#dc2626;font-weight:600">Error loading page:</p><p style="color:#718096;font-size:0.85rem">${err.message}</p>`;
+  }
+});
+
+async function loadSeasons() {
+  const snap = await getDocs(collection(db, 'seasons'));
+  allSeasons = [];
+  let active = null;
+  snap.forEach(d => {
+    const s = { id: d.id, ...d.data() };
+    allSeasons.push(s);
+    if (s.isActive) active = s;
+  });
+  allSeasons.sort((a, b) => (b.id || '').localeCompare(a.id || ''));
+  const sel = document.getElementById('seasonSelect');
+  sel.innerHTML = allSeasons.map(s =>
+    `<option value="${s.id}" ${s.id === (active?.id) ? 'selected' : ''}>${s.name || s.id}${s.isActive ? ' (Active)' : ''}</option>`
+  ).join('');
+}
+
+async function loadTeams() {
+  const teams = await getAllTeams();
+  teams.sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
+  const sel = document.getElementById('teamSelect');
+  sel.innerHTML = '<option value="">-- Select team --</option>' +
+    teams.map(t => `<option value="${t.id}" data-name="${t.name || t.id}">${t.name || t.id}</option>`).join('');
+}
+
+// ── Load Stats ────────────────────────────────────────────────────────
+window.loadTeamStats = async function() {
+  const teamId   = document.getElementById('teamSelect').value;
+  const seasonId = document.getElementById('seasonSelect').value;
+  const statType = document.getElementById('statTypeSelect').value;
+
+  if (!teamId || !seasonId) { showMessage('error', 'Select a team and season.'); return; }
+
+  showMessage('info', 'Loading stats...');
+  allDocs = [];
+  selectedIds.clear();
+  loadedType = statType;
+
+  try {
+    const roster = await getTeamRosterDoc(teamId, seasonId);
+    if (!roster.length) { showMessage('warning', 'No roster found for this team/season.'); return; }
+
+    const playerIds = roster.map(p => p.legacyId).filter(Boolean);
+
+    const loadCollection = async (collName, type) => {
+      const results = [];
+      await Promise.all(playerIds.map(async (legacyId) => {
+        const playerName = roster.find(p => p.legacyId === legacyId)?.name || legacyId;
+        try {
+          const gamesRef = collection(db, collName, legacyId, 'games');
+          const q = query(gamesRef, where('seasonId', '==', seasonId));
+          const snap = await getDocs(q);
+          snap.forEach(d => {
+            results.push({
+              type,
+              playerId: legacyId,
+              playerName,
+              docId: d.id,
+              ref: doc(db, collName, legacyId, 'games', d.id),
+              data: d.data()
+            });
+          });
+        } catch (e) {
+          console.warn(`Could not load ${collName}/${legacyId}/games:`, e.message);
+        }
+      }));
+      return results;
+    };
+
+    if (statType === 'batting' || statType === 'both') {
+      const batting = await loadCollection('playerStats', 'batting');
+      allDocs.push(...batting);
+    }
+    if (statType === 'pitching' || statType === 'both') {
+      const pitching = await loadCollection('pitchingStats', 'pitching');
+      allDocs.push(...pitching);
+    }
+
+    // Sort by player then date
+    allDocs.sort((a, b) => {
+      const np = a.playerName.localeCompare(b.playerName);
+      if (np !== 0) return np;
+      return (a.data.gameDateFormatted || '').localeCompare(b.data.gameDateFormatted || '');
+    });
+
+    document.getElementById('resultsSection').style.display = 'block';
+    document.getElementById('tabBar').style.display = statType === 'both' ? 'flex' : 'none';
+    if (statType === 'both') currentTab = 'batting';
+
+    clearFilters();
+    applyFilters();
+    showMessage('success', `Loaded ${allDocs.length} game doc(s) for ${roster.length} players.`);
+  } catch (err) {
+    console.error(err);
+    showMessage('error', `Error loading stats: ${err.message}`);
+  }
+};
+
+// ── Filtering ─────────────────────────────────────────────────────────
+window.applyFilters = function() {
+  const fp = document.getElementById('filterPlayer').value.toLowerCase().trim();
+  const fo = document.getElementById('filterOpponent').value.toLowerCase().trim();
+  const fd = document.getElementById('filterDocId').value.toLowerCase().trim();
+  const fdate = document.getElementById('filterDate').value.toLowerCase().trim();
+
+  let source = allDocs;
+  if (loadedType === 'both') source = allDocs.filter(d => d.type === currentTab);
+
+  filteredDocs = source.filter(d => {
+    if (fp && !d.playerName.toLowerCase().includes(fp)) return false;
+    if (fo && !(d.data.opponent || '').toLowerCase().includes(fo)) return false;
+    if (fd && !d.docId.toLowerCase().includes(fd)) return false;
+    if (fdate && !(d.data.gameDateFormatted || '').toLowerCase().includes(fdate)) return false;
+    return true;
+  });
+
+  renderTable();
+  updateSummary();
+};
+
+window.clearFilters = function() {
+  ['filterPlayer','filterOpponent','filterDocId','filterDate'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  applyFilters();
+};
+
+window.switchTab = function(tab) {
+  currentTab = tab;
+  document.getElementById('tabBatting').classList.toggle('active', tab === 'batting');
+  document.getElementById('tabPitching').classList.toggle('active', tab === 'pitching');
+  selectedIds.clear();
+  applyFilters();
+};
+
+// ── Render ────────────────────────────────────────────────────────────
+function renderTable() {
+  const wrap = document.getElementById('tableWrap');
+  const bulk = document.getElementById('bulkActions');
+
+  if (!filteredDocs.length) {
+    wrap.innerHTML = '<div class="empty-state"><p>No documents match the current filters.</p></div>';
+    bulk.style.display = 'none';
+    return;
+  }
+
+  const isBatting = currentTab === 'batting' || loadedType === 'batting';
+
+  let html = `<table><thead><tr>
+    <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)"></th>
+    <th>Player</th>
+    <th>Date</th>
+    <th>Opponent</th>
+    <th>H/A</th>
+    <th>Team ID</th>`;
+
+  if (isBatting) {
+    html += `<th class="stat-num">AB</th><th class="stat-num">H</th><th class="stat-num">R</th>
+             <th class="stat-num">BB</th><th class="stat-num">HR</th>`;
+  } else {
+    html += `<th class="stat-num">IP</th><th class="stat-num">RA</th>`;
+  }
+
+  html += `<th>Game Doc ID</th><th>Actions</th></tr></thead><tbody>`;
+
+  filteredDocs.forEach((entry, idx) => {
+    const d = entry.data;
+    const rowId = `row_${idx}`;
+    const isSelected = selectedIds.has(entry.docId);
+    const isHome = d.isHome;
+
+    html += `<tr id="${rowId}" class="${isSelected ? 'selected' : ''}">
+      <td><input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${entry.docId}', this.checked)"></td>
+      <td>${entry.playerName}</td>
+      <td>${d.gameDateFormatted || '—'}</td>
+      <td>${d.opponent || '—'}</td>
+      <td><span class="badge ${isHome ? 'badge-home' : 'badge-away'}">${isHome ? 'Home' : 'Away'}</span></td>
+      <td>${d.teamId || '—'}</td>`;
+
+    if (isBatting) {
+      html += `<td class="stat-num">${d.atBats ?? '—'}</td>
+               <td class="stat-num">${d.hits ?? '—'}</td>
+               <td class="stat-num">${d.runs ?? '—'}</td>
+               <td class="stat-num">${d.walks ?? '—'}</td>
+               <td class="stat-num">${d.homeRuns ?? '—'}</td>`;
+    } else {
+      html += `<td class="stat-num">${d.inningsPitched ?? '—'}</td>
+               <td class="stat-num">${d.runsAllowed ?? '—'}</td>`;
+    }
+
+    html += `<td class="doc-id" title="${entry.docId}">${entry.docId}</td>
+      <td>
+        <button class="btn btn-warning btn-sm" onclick="openEditModal(${idx})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteSingle('${entry.docId}', ${idx})">Del</button>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  updateBulkActions();
+}
+
+function updateSummary() {
+  const batting = allDocs.filter(d => d.type === 'batting').length;
+  const pitching = allDocs.filter(d => d.type === 'pitching').length;
+  const players = new Set(allDocs.map(d => d.playerId)).size;
+  const games   = new Set(allDocs.map(d => d.data.gameDocId)).size;
+
+  document.getElementById('summaryBar').innerHTML = `
+    <div class="summary-item"><span class="val">${players}</span><span class="lbl">Players</span></div>
+    <div class="summary-item"><span class="val">${games}</span><span class="lbl">Unique Games</span></div>
+    <div class="summary-item"><span class="val">${batting}</span><span class="lbl">Batting Docs</span></div>
+    <div class="summary-item"><span class="val">${pitching}</span><span class="lbl">Pitching Docs</span></div>
+    <div class="summary-item"><span class="val">${filteredDocs.length}</span><span class="lbl">Showing</span></div>
+  `;
+}
+
+// ── Selection ─────────────────────────────────────────────────────────
+window.toggleSelect = function(docId, checked) {
+  checked ? selectedIds.add(docId) : selectedIds.delete(docId);
+  updateBulkActions();
+  // Update row highlight
+  filteredDocs.forEach((e, i) => {
+    const row = document.getElementById(`row_${i}`);
+    if (row && e.docId === docId) row.classList.toggle('selected', checked);
+  });
+};
+
+window.toggleSelectAll = function(checked) {
+  filteredDocs.forEach(e => checked ? selectedIds.add(e.docId) : selectedIds.delete(e.docId));
+  renderTable();
+};
+
+window.deselectAll = function() {
+  selectedIds.clear();
+  renderTable();
+};
+
+function updateBulkActions() {
+  const bulk = document.getElementById('bulkActions');
+  const count = selectedIds.size;
+  document.getElementById('selectedCount').textContent = `${count} selected`;
+  bulk.style.display = count > 0 ? 'flex' : 'none';
+}
+
+// ── Delete ────────────────────────────────────────────────────────────
+window.deleteSingle = async function(docId, idx) {
+  const entry = filteredDocs[idx];
+  if (!confirm(`Delete stats doc:\n${docId}\nfor ${entry.playerName}?\n\nThis cannot be undone.`)) return;
+  try {
+    await deleteDoc(entry.ref);
+    allDocs = allDocs.filter(d => d.docId !== docId || d.playerId !== entry.playerId || d.type !== entry.type);
+    selectedIds.delete(docId);
+    applyFilters();
+    showMessage('success', `Deleted ${docId}`);
+  } catch (err) {
+    showMessage('error', `Delete failed: ${err.message}`);
+  }
+};
+
+window.deleteSelected = async function() {
+  const toDelete = allDocs.filter(d => selectedIds.has(d.docId));
+  if (!toDelete.length) return;
+  if (!confirm(`Delete ${toDelete.length} document(s)?\n\nThis cannot be undone. Re-aggregate after deletion.`)) return;
+
+  showMessage('info', `Deleting ${toDelete.length} docs...`);
+  let deleted = 0, failed = 0;
+  for (const entry of toDelete) {
+    try {
+      await deleteDoc(entry.ref);
+      deleted++;
+    } catch (e) {
+      console.error(`Failed to delete ${entry.docId}:`, e);
+      failed++;
+    }
+  }
+  allDocs = allDocs.filter(d => !selectedIds.has(d.docId));
+  selectedIds.clear();
+  applyFilters();
+  showMessage(failed ? 'warning' : 'success',
+    `Deleted ${deleted} doc(s).${failed ? ` ${failed} failed — check console.` : ''} Re-aggregate to update leaderboards.`);
+};
+
+// ── Edit Modal ────────────────────────────────────────────────────────
+let editingEntry = null;
+
+window.openEditModal = function(idx) {
+  editingEntry = filteredDocs[idx];
+  const d = editingEntry.data;
+  const isBatting = editingEntry.type === 'batting';
+
+  document.getElementById('editDocId').textContent      = editingEntry.docId;
+  document.getElementById('editPlayer').textContent     = editingEntry.playerName;
+  document.getElementById('editTeamId').value           = d.teamId || '';
+  document.getElementById('editOpponent').value         = d.opponent || '';
+  document.getElementById('editIsHome').value           = d.isHome ? 'true' : 'false';
+  document.getElementById('editDate').value             = d.gameDateFormatted || '';
+
+  // Batting fields
+  document.getElementById('editAB').value    = d.atBats ?? '';
+  document.getElementById('editH').value     = d.hits ?? '';
+  document.getElementById('editR').value     = d.runs ?? '';
+  document.getElementById('editBB').value    = d.walks ?? '';
+  document.getElementById('editHR').value    = d.homeRuns ?? '';
+  // Pitching fields
+  document.getElementById('editIP').value    = d.inningsPitched ?? '';
+  document.getElementById('editRA').value    = d.runsAllowed ?? '';
+
+  document.getElementById('battingFields').style.display  = isBatting ? '' : 'none';
+  document.getElementById('pitchingFields').style.display = !isBatting ? '' : 'none';
+
+  document.getElementById('editModal').style.display = 'flex';
+};
+
+window.closeEditModal = function() {
+  document.getElementById('editModal').style.display = 'none';
+  editingEntry = null;
+};
+
+window.saveEdit = async function() {
+  if (!editingEntry) return;
+  const d = editingEntry.data;
+  const isBatting = editingEntry.type === 'batting';
+
+  const updates = {
+    teamId:           document.getElementById('editTeamId').value.trim(),
+    opponent:         document.getElementById('editOpponent').value.trim(),
+    isHome:           document.getElementById('editIsHome').value === 'true',
+    gameDateFormatted: document.getElementById('editDate').value.trim(),
+    lastModified:     serverTimestamp(),
+  };
+
+  if (isBatting) {
+    updates.atBats    = parseInt(document.getElementById('editAB').value) || 0;
+    updates.hits      = parseInt(document.getElementById('editH').value) || 0;
+    updates.runs      = parseInt(document.getElementById('editR').value) || 0;
+    updates.walks     = parseInt(document.getElementById('editBB').value) || 0;
+    updates.homeRuns  = parseInt(document.getElementById('editHR').value) || 0;
+  } else {
+    updates.inningsPitched = parseFloat(document.getElementById('editIP').value) || 0;
+    updates.runsAllowed    = parseInt(document.getElementById('editRA').value) || 0;
+  }
+
+  try {
+    await updateDoc(editingEntry.ref, updates);
+    // Update in-memory
+    Object.assign(editingEntry.data, updates);
+    const savedDocId = editingEntry.docId; // capture before closeEditModal nulls editingEntry
+    closeEditModal();
+    applyFilters();
+    showMessage('success', `Saved changes to ${savedDocId}`);
+  } catch (err) {
+    showMessage('error', `Save failed: ${err.message}`);
+  }
+};
+
+// ── Message ───────────────────────────────────────────────────────────
+function showMessage(type, msg) {
+  const el = document.getElementById('messageBar');
+  el.className = `message-bar show ${type}`;
+  el.textContent = msg;
+  if (type === 'success' || type === 'info') setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+// Make loadable from outside
+window._showMessage = showMessage;
+</script>
+
+<!-- Edit Modal -->
+<div id="editModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9000;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:12px;padding:1.5rem;max-width:520px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <h2 style="margin:0 0 0.5rem;font-size:1.1rem;color:#6b21a8">Edit Stats Doc</h2>
+    <p style="margin:0 0 1rem;font-size:0.75rem;font-family:monospace;color:#718096" id="editDocId"></p>
+    <p style="margin:0 0 1.25rem;font-size:0.9rem;font-weight:600" id="editPlayer"></p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem">
+      <div class="form-group"><label>Team ID</label><input id="editTeamId" type="text"></div>
+      <div class="form-group"><label>Opponent</label><input id="editOpponent" type="text"></div>
+      <div class="form-group"><label>Home/Away</label>
+        <select id="editIsHome" style="padding:0.5rem;border:1px solid #e2e8f0;border-radius:8px">
+          <option value="true">Home</option>
+          <option value="false">Away</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Date (formatted)</label><input id="editDate" type="text" placeholder="YYYY-MM-DD"></div>
+    </div>
+
+    <div id="battingFields" style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.5rem;margin-bottom:1rem">
+      <div class="form-group"><label>AB</label><input id="editAB" type="number" min="0"></div>
+      <div class="form-group"><label>H</label><input id="editH" type="number" min="0"></div>
+      <div class="form-group"><label>R</label><input id="editR" type="number" min="0"></div>
+      <div class="form-group"><label>BB</label><input id="editBB" type="number" min="0"></div>
+      <div class="form-group"><label>HR</label><input id="editHR" type="number" min="0"></div>
+    </div>
+
+    <div id="pitchingFields" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1rem">
+      <div class="form-group"><label>IP</label><input id="editIP" type="number" step="0.1" min="0"></div>
+      <div class="form-group"><label>RA</label><input id="editRA" type="number" min="0"></div>
+    </div>
+
+    <div style="display:flex;gap:0.75rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-success" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

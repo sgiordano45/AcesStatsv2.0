@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="../">
+<meta name="robots" content="noindex">
+<script type="module" src="js/core/preview-guard.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Any Roster - Mountainside Aces</title>
+  <meta name="theme-color" content="#2d5016">
+  <link rel="stylesheet" href="nav-styles.css">
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --secondary-color: #1a6b4a;
+      --accent-color: #ffd700;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      min-height: 100vh;
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.95);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; gap: 1rem;
+    }
+    .loading-overlay.hidden { display: none; }
+    .softball-spinner::before {
+      content: '\26BE'; font-size: 72px;
+      animation: spin 1.5s ease-in-out infinite; display: block;
+    }
+    @keyframes spin {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50%       { transform: rotate(180deg) scale(1.1); }
+    }
+    .loading-text { color: var(--text-light); font-size: 1rem; }
+
+    /* Page header */
+    .page-header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      padding: 1.5rem 1.5rem 1.25rem;
+    }
+    .page-header h1 { margin: 0 0 0.25rem; font-size: 1.6rem; font-weight: 700; }
+    .page-header .subtitle { margin: 0; font-size: 0.9rem; opacity: 0.85; }
+    .header-meta { margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .header-badge {
+      background: rgba(255,255,255,0.2);
+      border-radius: 999px; padding: 0.25rem 0.75rem;
+      font-size: 0.8rem; font-weight: 600;
+    }
+    .header-back {
+      display: inline-block; margin-bottom: 0.75rem;
+      color: rgba(255,255,255,0.8); text-decoration: none;
+      font-size: 0.875rem; transition: color 0.15s;
+    }
+    .header-back:hover { color: white; }
+
+    /* Season selector bar */
+    .selector-bar {
+      background: white;
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 1.5rem;
+      display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap;
+    }
+    .selector-group { display: flex; flex-direction: column; gap: 0.3rem; }
+    .selector-group label {
+      font-size: 0.78rem; font-weight: 700;
+      color: var(--text-light); text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .selector-group select {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border-color); border-radius: 8px;
+      font-size: 0.95rem; cursor: pointer; background: white; min-width: 200px;
+    }
+    .selector-group select:focus { outline: none; border-color: var(--primary-color); }
+
+    .btn-load {
+      padding: 0.5rem 1.5rem;
+      background: var(--primary-color); color: white;
+      border: none; border-radius: 8px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      transition: background 0.15s; align-self: flex-end;
+    }
+    .btn-load:hover { background: #224011; }
+    .btn-load:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    /* Main container */
+    .page-container { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+
+    /* Team section card */
+    .team-card {
+      background: white; border-radius: 12px;
+      box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 1.75rem;
+    }
+    .team-card-header {
+      padding: 0.9rem 1.25rem;
+      background: #f8fafc; border-bottom: 1px solid var(--border-color);
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .team-card-title {
+      font-weight: 700; font-size: 1rem; color: var(--text-dark);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .team-card-count { font-size: 0.82rem; color: var(--text-light); }
+
+    .team-card-actions {
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .team-save-status {
+      font-size: 0.85rem; color: var(--text-light);
+    }
+    .team-save-status.success { color: #276749; font-weight: 600; }
+    .team-save-status.error   { color: #c53030; font-weight: 600; }
+
+    .btn-team-save {
+      padding: 0.45rem 1.1rem;
+      background: var(--primary-color); color: white;
+      border: none; border-radius: 7px;
+      font-size: 0.88rem; font-weight: 700; cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-team-save:hover { background: #224011; }
+    .btn-team-save:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    /* Roster table */
+    .roster-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .roster-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.9rem; min-width: 560px;
+    }
+    .roster-table thead tr { background: var(--primary-color); color: white; }
+    .roster-table th {
+      padding: 0.65rem 1rem; text-align: left;
+      font-weight: 600; white-space: nowrap;
+      font-size: 0.8rem; letter-spacing: 0.03em; text-transform: uppercase;
+    }
+    .roster-table th.center { text-align: center; }
+    .roster-table td {
+      padding: 0.55rem 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle;
+    }
+    .roster-table tr:last-child td { border-bottom: none; }
+    .roster-table tr:hover td { background: #fafbfc; }
+
+    .player-name {
+      font-weight: 600; color: var(--text-dark);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .captain-badge {
+      background: #fef3c7; color: #92400e;
+      border: 1px solid #fbbf24; border-radius: 999px;
+      padding: 1px 8px; font-size: 0.72rem; font-weight: 700;
+    }
+    .auth-dot    { width: 8px; height: 8px; border-radius: 50%; background: #48bb78; flex-shrink: 0; }
+    .no-auth-dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e0; flex-shrink: 0; }
+
+    .jersey-input {
+      width: 70px; padding: 0.3rem 0.5rem;
+      border: 1px solid var(--border-color); border-radius: 6px;
+      font-size: 0.9rem; text-align: center;
+    }
+    .jersey-input:focus { outline: none; border-color: var(--primary-color); }
+
+    .roster-select {
+      padding: 0.3rem 0.4rem;
+      border: 1px solid var(--border-color); border-radius: 6px;
+      font-size: 0.9rem; background: white; cursor: pointer; min-width: 68px;
+    }
+    .roster-select:focus { outline: none; border-color: var(--primary-color); }
+
+    .legend {
+      padding: 0.65rem 1.25rem; font-size: 0.8rem; color: var(--text-light);
+      border-top: 1px solid var(--border-color);
+      display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: center;
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+    .legend-dot-green { width: 8px; height: 8px; border-radius: 50%; background: #48bb78; }
+    .legend-dot-gray  { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e0; }
+
+    .empty-state { padding: 2rem 1.5rem; text-align: center; color: var(--text-light); }
+
+    /* Access denied */
+    .access-denied {
+      max-width: 480px; margin: 4rem auto; text-align: center;
+      padding: 2rem; background: white; border-radius: 16px; box-shadow: var(--shadow-md);
+    }
+    .access-denied .icon { font-size: 3rem; margin-bottom: 1rem; }
+    .access-denied h2 { color: var(--text-dark); margin: 0 0 0.5rem; }
+    .access-denied p  { color: var(--text-light); margin: 0; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 600px) {
+      .page-header { padding: 1.25rem 1rem 1rem; }
+      .page-header h1 { font-size: 1.35rem; }
+      .page-container { padding: 1rem; }
+      .team-card-header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
+  <div class="softball-spinner"></div>
+  <div class="loading-text" id="loadingText">Loading…</div>
+</div>
+
+<!-- Nav -->
+
+<div class="page-header" id="pageHeader" style="display:none;">
+  <a href="admin-pages.html" class="header-back">← Admin Hub</a>
+  <h1>🛡️ Admin Roster Editor</h1>
+  <p class="subtitle">Edit all teams' rosters for any season</p>
+  <div class="header-meta"><span class="header-badge">🔑 Admin</span></div>
+</div>
+
+<div class="selector-bar" id="selectorBar" style="display:none;">
+  <div class="selector-group">
+    <label for="seasonSelect">Season</label>
+    <select id="seasonSelect">
+      <option value="">— Select a season —</option>
+    </select>
+  </div>
+  <button class="btn-load" id="loadBtn" onclick="loadAllRosters()" disabled>
+    Load All Rosters
+  </button>
+</div>
+
+<div class="page-container" id="mainContent" style="display:none;"></div>
+
+<div id="accessDenied" style="display:none;">
+  <div class="access-denied">
+    <div class="icon">🔒</div>
+    <h2>Admin Access Required</h2>
+    <p>This page is restricted to league admins and staff.</p>
+  </div>
+</div>
+
+<script type="module">
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Edit Any Roster', requiresAuth: true });
+  import { auth } from './js/core/auth.js';
+  import { getUserProfile, updateUserProfile } from './js/data/users.js';
+  import { getTeamRosterDoc }                  from './firebase-roster.js';
+  import { getAllTeams, getCurrentSeason } from './js/data/index.js';
+  import { db } from './js/core/firebase.js';
+  import { doc, getDoc, setDoc, getDocs, collection, serverTimestamp }
+    from './js/core/firebase.js';
+  import './nav-component.js';
+
+  const POSITIONS   = ['-','P','C','1B','2B','3B','SS','IF','IF/OF','LF','CF','RF','OF','DH','UT','Flex'];
+  const BATS_OPTS   = ['-','L','R','S'];
+  const THROWS_OPTS = ['-','L','R'];
+
+  // rosterState[teamId] = { players: [...], dirty: false }
+  const rosterState = {};
+  let allTeams      = [];
+  let selectedSeasonId = null;
+
+  // ──────────────────────────────────────────
+  // Auth
+  // ──────────────────────────────────────────
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) { window.location.href = 'login.html'; return; }
+    await init(user);
+  });
+
+  async function init(user) {
+    try {
+      setLoading('Checking permissions…');
+      const userSnap = await getDoc(doc(db, 'users', user.uid));
+      if (!userSnap.exists()) { showAccessDenied(); return; }
+
+      const p     = userSnap.data();
+      const role  = (p.role      || '').toLowerCase();
+      const uRole = (p.userRole  || '').toLowerCase();
+      const uType = (p.userType  || '').toLowerCase();
+      const ok    = p.isAdmin === true ||
+        ['admin','staff','league-staff'].includes(role)  ||
+        ['admin','staff','league-staff'].includes(uRole) ||
+        ['admin','league-staff'].includes(uType);
+
+      if (!ok) { showAccessDenied(); return; }
+
+      document.getElementById('pageHeader').style.display = '';
+      setLoading('Loading seasons and teams…');
+
+      const [, teams] = await Promise.all([loadSeasons(), getAllTeams()]);
+      allTeams = await getAllTeams();
+
+      document.getElementById('selectorBar').style.display = '';
+      hideLoading();
+
+    } catch (err) {
+      console.error('Init error:', err);
+      showError('Failed to initialise: ' + err.message);
+    }
+  }
+
+  // ──────────────────────────────────────────
+  // Seasons
+  // ──────────────────────────────────────────
+  async function loadSeasons() {
+    const snap = await getDocs(collection(db, 'seasons'));
+    const seasons = [];
+    snap.forEach(d => seasons.push({ id: d.id, ...d.data() }));
+    const seasonSortKey = (s) => {
+      const sd = s.startDate;
+      if (sd && typeof sd.toDate === 'function') return sd.toDate().toISOString();
+      if (sd instanceof Date) return sd.toISOString();
+      if (typeof sd === 'string' && sd) return sd;
+      return s.id || '';
+    };
+    seasons.sort((a, b) => seasonSortKey(b).localeCompare(seasonSortKey(a)));
+
+    const sel = document.getElementById('seasonSelect');
+    seasons.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name || s.id;
+      sel.appendChild(opt);
+    });
+
+    const current = await getCurrentSeason();
+    if (current?.id) sel.value = current.id;
+
+    sel.addEventListener('change', () => {
+      document.getElementById('loadBtn').disabled = !sel.value;
+    });
+    document.getElementById('loadBtn').disabled = !sel.value;
+  }
+
+  // ──────────────────────────────────────────
+  // Load all rosters
+  // ──────────────────────────────────────────
+  window.loadAllRosters = async function() {
+    selectedSeasonId = document.getElementById('seasonSelect').value;
+    if (!selectedSeasonId) return;
+
+    // Warn if any team is dirty
+    const anyDirty = Object.values(rosterState).some(s => s.dirty);
+    if (anyDirty && !confirm('You have unsaved changes. Reload anyway?')) return;
+
+    Object.keys(rosterState).forEach(k => delete rosterState[k]);
+
+    const container = document.getElementById('mainContent');
+    container.innerHTML = '';
+    container.style.display = '';
+    setLoading(`Loading all rosters for ${selectedSeasonId}…`);
+
+    try {
+      const teams = allTeams.length ? allTeams : await getAllTeams();
+
+      // Fetch all roster docs in parallel
+      const results = await Promise.allSettled(
+        teams.map(t => getTeamRosterDoc((t.id || t.name).toLowerCase(), selectedSeasonId)
+          .then(players => ({ team: t, players }))
+        )
+      );
+
+      hideLoading();
+
+      let anyLoaded = false;
+      results.forEach(r => {
+        if (r.status !== 'fulfilled') return;
+        const { team, players } = r.value;
+        const teamId = (team.id || team.name).toLowerCase();
+        const teamDisplay = team.name || team.id;
+
+        // Build working state
+        rosterState[teamId] = {
+          dirty: false,
+          players: (players || []).map(p => ({
+            id:         p.legacyId  || '',
+            authId:     p.authId    || '',
+            name:       p.name      || '',
+            captain:    p.isCaptain || false,
+            number:     p.number    != null ? String(p.number) : '',
+            position:   p.position  || '-',
+            bats:       p.bats      || '-',
+            throws:     p.throws    || '-',
+            hasAccount: !!(p.authId && p.authId !== ''),
+            cardName:   p.cardName  || '',
+          })),
+        };
+
+        container.appendChild(buildTeamCard(teamId, teamDisplay));
+        anyLoaded = true;
+      });
+
+      if (!anyLoaded) {
+        container.innerHTML = `<div style="text-align:center;padding:3rem;color:#718096;">No roster data found for ${selectedSeasonId}.</div>`;
+      }
+
+    } catch (err) {
+      console.error('Load error:', err);
+      showError('Failed to load rosters: ' + err.message);
+    }
+  };
+
+  // ──────────────────────────────────────────
+  // Build a team card element
+  // ──────────────────────────────────────────
+  function buildTeamCard(teamId, teamDisplay) {
+    const state = rosterState[teamId];
+    const card  = document.createElement('div');
+    card.className = 'team-card';
+    card.id = `card-${teamId}`;
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'team-card-header';
+    header.innerHTML = `
+      <div>
+        <div class="team-card-title">👥 ${escHtml(teamDisplay)}</div>
+        <div class="team-card-count">${state.players.length} player${state.players.length !== 1 ? 's' : ''}</div>
+      </div>
+      <div class="team-card-actions">
+        <span class="team-save-status" id="status-${teamId}">—</span>
+        <button class="btn-team-save" id="savebtn-${teamId}" onclick="saveTeam('${teamId}')">Save</button>
+      </div>`;
+    card.appendChild(header);
+
+    // Table
+    const tableWrap = document.createElement('div');
+    tableWrap.className = 'roster-table-wrap';
+
+    if (state.players.length === 0) {
+      tableWrap.innerHTML = `<div class="empty-state">No players on this roster for ${selectedSeasonId}.</div>`;
+    } else {
+      const table = document.createElement('table');
+      table.className = 'roster-table';
+      table.innerHTML = `<thead><tr>
+        <th>Player</th>
+        <th class="center">Jersey #</th>
+        <th class="center">Position</th>
+        <th class="center">Bats</th>
+        <th class="center">Throws</th>
+      </tr></thead>`;
+      const tbody = document.createElement('tbody');
+      tbody.id = `tbody-${teamId}`;
+      renderTeamRows(tbody, teamId);
+      table.appendChild(tbody);
+      tableWrap.appendChild(table);
+    }
+
+    card.appendChild(tableWrap);
+
+    // Legend
+    const legend = document.createElement('div');
+    legend.className = 'legend';
+    legend.innerHTML = `
+      <span class="legend-item"><span class="legend-dot-green"></span> Linked account</span>
+      <span class="legend-item"><span class="legend-dot-gray"></span> No account</span>`;
+    card.appendChild(legend);
+
+    return card;
+  }
+
+  function renderTeamRows(tbody, teamId) {
+    tbody.innerHTML = '';
+    rosterState[teamId].players.forEach((p, idx) => {
+      const tr = document.createElement('tr');
+
+      // Name
+      const nameTd = document.createElement('td');
+      nameTd.innerHTML = `
+        <div class="player-name">
+          <span class="${p.hasAccount ? 'auth-dot' : 'no-auth-dot'}"
+                title="${p.hasAccount ? 'Linked account' : 'No account'}"></span>
+          ${escHtml(p.name)}
+          ${p.captain ? '<span class="captain-badge">C</span>' : ''}
+        </div>`;
+
+      // Card Name input
+      const cardNameWrap = document.createElement('div');
+      cardNameWrap.style.cssText = 'margin-top:5px; display:flex; align-items:center; gap:5px;';
+      cardNameWrap.innerHTML = `<label style="font-size:0.72rem;color:#718096;white-space:nowrap;font-weight:600;">Card Name</label>`;
+      const cardNameInput = document.createElement('input');
+      cardNameInput.type = 'text';
+      cardNameInput.style.cssText = 'flex:1; min-width:0; max-width:160px; padding:0.25rem 0.4rem; border:1px solid #e2e8f0; border-radius:6px; font-size:0.82rem;';
+      cardNameInput.value = p.cardName;
+      cardNameInput.placeholder = p.name || 'Card display name';
+      cardNameInput.title = 'Custom name shown on player cards (overrides display name)';
+      cardNameInput.addEventListener('focus', () => cardNameInput.style.borderColor = 'var(--primary-color)');
+      cardNameInput.addEventListener('blur',  () => cardNameInput.style.borderColor = '#e2e8f0');
+      cardNameInput.addEventListener('change', () => handleChange(teamId, idx, 'cardName', cardNameInput.value.trim()));
+      cardNameWrap.appendChild(cardNameInput);
+      nameTd.appendChild(cardNameWrap);
+
+      tr.appendChild(nameTd);
+
+      // Jersey #
+      const numTd = document.createElement('td');
+      numTd.style.textAlign = 'center';
+      const numInput = document.createElement('input');
+      numInput.className = 'jersey-input';
+      numInput.type = 'text';
+      numInput.inputMode = 'numeric';
+      numInput.pattern = '[0-9]*';
+      numInput.maxLength = 3;
+      numInput.value = p.number;
+      numInput.placeholder = '—';
+      numInput.addEventListener('change', () => handleChange(teamId, idx, 'number', numInput.value));
+      numTd.appendChild(numInput);
+      tr.appendChild(numTd);
+
+      // Position
+      const posTd = document.createElement('td');
+      posTd.style.textAlign = 'center';
+      posTd.appendChild(buildSelect(POSITIONS, p.position, teamId, idx, 'position'));
+      tr.appendChild(posTd);
+
+      // Bats
+      const batsTd = document.createElement('td');
+      batsTd.style.textAlign = 'center';
+      batsTd.appendChild(buildSelect(BATS_OPTS, p.bats, teamId, idx, 'bats'));
+      tr.appendChild(batsTd);
+
+      // Throws
+      const throwsTd = document.createElement('td');
+      throwsTd.style.textAlign = 'center';
+      throwsTd.appendChild(buildSelect(THROWS_OPTS, p.throws, teamId, idx, 'throws'));
+      tr.appendChild(throwsTd);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function buildSelect(options, current, teamId, idx, field) {
+    const sel = document.createElement('select');
+    sel.className = 'roster-select';
+    sel.addEventListener('change', () => handleChange(teamId, idx, field, sel.value));
+    options.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt; o.textContent = opt;
+      if (opt === current) o.selected = true;
+      sel.appendChild(o);
+    });
+    return sel;
+  }
+
+  // ──────────────────────────────────────────
+  // Change handler
+  // ──────────────────────────────────────────
+  function handleChange(teamId, idx, field, value) {
+    rosterState[teamId].players[idx][field] = value;
+    rosterState[teamId].dirty = true;
+    const statusEl = document.getElementById(`status-${teamId}`);
+    if (statusEl) { statusEl.textContent = 'Unsaved changes'; statusEl.className = 'team-save-status'; }
+  }
+
+  // ──────────────────────────────────────────
+  // Save a single team
+  // ──────────────────────────────────────────
+  window.saveTeam = async function(teamId) {
+    const state   = rosterState[teamId];
+    const btn     = document.getElementById(`savebtn-${teamId}`);
+    const statusEl = document.getElementById(`status-${teamId}`);
+
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    statusEl.textContent = 'Saving…';
+    statusEl.className = 'team-save-status';
+
+    try {
+      const docId     = `${selectedSeasonId}-${teamId}`;
+      const rosterRef = doc(db, 'rosters', docId);
+
+      const playersToWrite = state.players.map(p => ({
+        id:       p.id,
+        authId:   p.authId,
+        name:     p.name,
+        number:   p.number !== '' ? p.number : null,
+        position: p.position,
+        bats:     p.bats,
+        throws:   p.throws,
+        captain:  p.captain,
+        cardName: p.cardName !== '' ? p.cardName : null,
+      }));
+
+      await setDoc(rosterRef, {
+        players:   playersToWrite,
+        teamName:  teamId,
+        seasonId:  selectedSeasonId,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+
+      // Sync user profiles
+      const profileUpdates = state.players
+        .filter(p => p.hasAccount && p.authId)
+        .map(p => updateUserProfile(p.authId, {
+          number:   p.number !== '' ? p.number : null,
+          position: p.position,
+          bats:     p.bats,
+          throws:   p.throws,
+        }));
+
+      const results = await Promise.allSettled(profileUpdates);
+      const failed  = results.filter(r =>
+        r.status === 'rejected' ||
+        (r.status === 'fulfilled' && r.value && !r.value.success)
+      ).length;
+
+      state.dirty = false;
+      btn.textContent = 'Save';
+      btn.disabled = false;
+
+      if (failed > 0) {
+        statusEl.textContent = `✅ Saved (${failed} profile sync failed)`;
+        statusEl.className = 'team-save-status';
+      } else {
+        const synced = state.players.filter(p => p.hasAccount).length;
+        statusEl.textContent = `✅ Saved${synced > 0 ? ` · ${synced} profile${synced !== 1 ? 's' : ''} synced` : ''}`;
+        statusEl.className = 'team-save-status success';
+      }
+
+    } catch (err) {
+      console.error(`Save error for ${teamId}:`, err);
+      btn.textContent = 'Save';
+      btn.disabled = false;
+      statusEl.textContent = `❌ ${err.message || 'Save failed'}`;
+      statusEl.className = 'team-save-status error';
+    }
+  };
+
+  // ──────────────────────────────────────────
+  // Helpers
+  // ──────────────────────────────────────────
+  function setLoading(msg) {
+    document.getElementById('loadingText').textContent = msg || 'Loading…';
+    document.getElementById('loadingOverlay').classList.remove('hidden');
+  }
+  function hideLoading() {
+    pageReady();
+  }
+  function showAccessDenied() {
+    hideLoading();
+    document.getElementById('accessDenied').style.display = '';
+  }
+  function showError(msg) {
+    hideLoading();
+    const c = document.getElementById('mainContent');
+    c.style.display = '';
+    c.innerHTML = `<div class="access-denied"><div class="icon">⚠️</div><h2>Error</h2><p>${escHtml(msg)}</p></div>`;
+  }
+  function escHtml(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,3239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="../">
+<meta name="robots" content="noindex">
+<script type="module" src="js/core/preview-guard.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roster Sync - Mountainside Aces</title>
+  <link rel="stylesheet" href="nav-styles.css">
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --secondary-color: #1a6b4a;
+      --accent-color: #ffd700;
+      --success-color: #48bb78;
+      --warning-color: #ed8936;
+      --error-color: #f56565;
+      --border-color: #e2e8f0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 800;
+    }
+
+    .header p {
+      margin: 0.5rem 0 0 0;
+      opacity: 0.95;
+      font-size: 1.05rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .card h2 {
+      margin: 0 0 1rem 0;
+      color: var(--primary-color);
+      font-size: 1.3rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    .form-group select:focus,
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--secondary-color);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(45, 80, 22, 0.3);
+    }
+
+    .btn-primary:disabled {
+      background: #cbd5e0;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: var(--accent-color);
+      color: #1a1a2e;
+    }
+
+    .btn-secondary:hover {
+      background: #ffb300;
+      transform: translateY(-2px);
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .alert.show {
+      display: block;
+    }
+
+    .alert-success {
+      background: #e6fffa;
+      color: #22543d;
+      border-left: 4px solid var(--success-color);
+    }
+
+    .alert-error {
+      background: #fff5f5;
+      color: #742a2a;
+      border-left: 4px solid var(--error-color);
+    }
+
+    .alert-warning {
+      background: #fffaf0;
+      color: #7c2d12;
+      border-left: 4px solid var(--warning-color);
+    }
+
+    .progress-container {
+      margin-top: 1.5rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--border-color);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--success-color);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: #718096;
+    }
+
+    .roster-preview {
+      margin-top: 1.5rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .roster-preview h3 {
+      margin: 0 0 1rem 0;
+      color: var(--primary-color);
+    }
+
+    .roster-team {
+      background: #f7fafc;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border-left: 4px solid var(--primary-color);
+    }
+
+    .roster-team-name {
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .roster-players {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .player-item {
+      background: white;
+      padding: 0.5rem;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+
+    .player-number {
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    .loading {
+      display: inline-block;
+      margin-left: 0.5rem;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .info-box {
+      background: #e6f2ff;
+      border-left: 4px solid #3182ce;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      color: #1e3a8a;
+      font-size: 0.95rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .stat-box {
+      background: #f7fafc;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid var(--border-color);
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary-color);
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: #718096;
+      margin-top: 0.5rem;
+    }
+
+    .section-divider {
+      border: none;
+      border-top: 2px dashed var(--border-color);
+      margin: 2rem 0;
+    }
+
+    .authid-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+    }
+
+    .authid-table th {
+      background: var(--primary-color);
+      color: white;
+      padding: 0.65rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .authid-table td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+
+    .authid-table tr:hover td {
+      background: #f7fafc;
+    }
+
+    .authid-table tr.has-match td {
+      background: #f0fff4;
+    }
+
+    .authid-table tr.already-set td {
+      background: #f7fafc;
+      color: #a0aec0;
+    }
+
+    .tag-missing {
+      display: inline-block;
+      background: #fff5f5;
+      color: #c53030;
+      border: 1px solid #feb2b2;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .tag-found {
+      display: inline-block;
+      background: #e6fffa;
+      color: #22543d;
+      border: 1px solid #9ae6b4;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .tag-set {
+      display: inline-block;
+      background: #ebf8ff;
+      color: #2b6cb0;
+      border: 1px solid #90cdf4;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.8rem;
+    }
+
+    .uid-text {
+      font-family: monospace;
+      font-size: 0.78rem;
+      color: #4a5568;
+      word-break: break-all;
+    }
+
+    .btn-patch {
+      background: #3182ce;
+      color: white;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.82rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-patch:hover { background: #2b6cb0; }
+    .btn-patch:disabled { background: #cbd5e0; cursor: not-allowed; }
+
+    .btn-patch-all {
+      background: #2b6cb0;
+      color: white;
+    }
+
+    .btn-patch-all:hover { background: #2c5282; }
+    .btn-patch-all:disabled { background: #cbd5e0; cursor: not-allowed; }
+
+    .authid-summary {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin: 1rem 0;
+    }
+
+    .authid-stat {
+      background: #f7fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.75rem 1.25rem;
+      text-align: center;
+      min-width: 100px;
+    }
+
+    .authid-stat .val {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--primary-color);
+    }
+
+    .authid-stat .lbl {
+      font-size: 0.8rem;
+      color: #718096;
+      margin-top: 2px;
+    }
+
+    #authidAlert {
+      margin-top: 1rem;
+    }
+
+    /* ===== Fix Roster IDs tool ===== */
+    .idfix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin-top: 1rem;
+    }
+    .idfix-table th {
+      background: var(--primary-color);
+      color: white;
+      padding: 0.65rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+    }
+    .idfix-table td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    .idfix-table tr:hover td { background: #f7fafc; }
+    .idfix-table tr.idfix-clean td { background: #f7fafc; color: #a0aec0; }
+    .idfix-table tr.idfix-fixable td { background: #fffaf0; }
+    .idfix-table tr.idfix-manual td { background: #fff5f5; }
+    .tag-uid-bad {
+      display: inline-block;
+      background: #fff5f5; color: #c53030;
+      border: 1px solid #feb2b2;
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    .tag-clean {
+      display: inline-block;
+      background: #e6fffa; color: #22543d;
+      border: 1px solid #9ae6b4;
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    .tag-manual {
+      display: inline-block;
+      background: #fff5f5; color: #c53030;
+      border: 1px solid #feb2b2;
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    #idfixAlert { margin-top: 1rem; }
+
+    /* ===== Jersey Number Sync tool ===== */
+    .jersey-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin-top: 1rem;
+    }
+    .jersey-table th {
+      background: var(--primary-color);
+      color: white;
+      padding: 0.65rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+    }
+    .jersey-table td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    .jersey-table tr:hover td { background: #f7fafc; }
+    .jersey-table tr.jersey-clean td { background: #f7fafc; color: #a0aec0; }
+    .jersey-table tr.jersey-update td { background: #fffaf0; }
+    .jersey-table tr.jersey-no-account td { background: #f7fafc; color: #a0aec0; }
+    .tag-jersey-new {
+      display: inline-block;
+      background: #e6fffa; color: #22543d;
+      border: 1px solid #9ae6b4;
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 0.82rem; font-weight: 700;
+    }
+    .tag-jersey-old {
+      display: inline-block;
+      background: #fff5f5; color: #c53030;
+      border: 1px solid #feb2b2;
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 0.82rem;
+      text-decoration: line-through;
+    }
+    .tag-jersey-same {
+      display: inline-block;
+      background: #ebf8ff; color: #2b6cb0;
+      border: 1px solid #90cdf4;
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 0.82rem;
+    }
+    #jerseyAlert { margin-top: 1rem; }
+
+    /* ===== Legacy ID Mismatch tool ===== */
+    .legacymatch-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin-top: 1rem;
+    }
+    .legacymatch-table th {
+      background: var(--primary-color);
+      color: white;
+      padding: 0.65rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+    }
+    .legacymatch-table td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    .legacymatch-table tr:hover td { background: #f7fafc; }
+    .legacymatch-table tr.lm-clean td { background: #f7fafc; color: #a0aec0; }
+    .legacymatch-table tr.lm-mismatch td { background: #fffaf0; }
+    .legacymatch-table tr.lm-noauth td { background: #f7fafc; color: #a0aec0; }
+    .tag-lm-bad {
+      display: inline-block;
+      background: #fffbeb; color: #92400e;
+      border: 1px solid #fcd34d;
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    .tag-lm-good {
+      display: inline-block;
+      background: #e6fffa; color: #22543d;
+      border: 1px solid #9ae6b4;
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    #legacymatchAlert { margin-top: 1rem; }
+
+    /* ===== Field Copy Summer->Fall tool ===== */
+    .fieldcopy-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 1rem;
+    }
+    .fieldcopy-table th {
+      background: var(--primary-color);
+      color: white;
+      padding: 0.65rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+    }
+    .fieldcopy-table td {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    .fieldcopy-table tr:hover td { background: var(--hover-color); }
+    .fc-copy   td { background: #f0fff4; }
+    .fc-same   td { background: #f7fafc; color: #718096; }
+    .fc-no-summer td { background: #fffbeb; color: #92400e; }
+    .tag-fc-copy   { background: #48bb78; color: white; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.75rem; font-weight: 600; }
+    .tag-fc-same   { background: #a0aec0; color: white; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.75rem; font-weight: 600; }
+    .tag-fc-skip   { background: #ed8936; color: white; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.75rem; font-weight: 600; }
+    #fieldCopyAlert { margin-top: 1rem; }
+
+    /* ===== Player Profile Sync tool ===== */
+    .profsync-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.87rem;
+      margin-top: 1rem;
+    }
+    .profsync-table th {
+      background: var(--primary-color);
+      color: white;
+      padding: 0.65rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+    }
+    .profsync-table td {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    .profsync-table tr:hover td { background: #f7fafc; }
+    .profsync-table tr.profsync-match td { background: #f7fafc; color: #718096; }
+    .profsync-table tr.profsync-mismatch td { background: #fffaf0; }
+    .profsync-table tr.profsync-missing td { background: #fff5f5; }
+    .profsync-table tr.profsync-nolink td { background: #f7fafc; color: #a0aec0; }
+    .profsync-table tr.profsync-player-top td { border-top: 2px solid #cbd5e0; }
+    .tag-profsync-match {
+      display: inline-block;
+      background: #e6fffa; color: #22543d;
+      border: 1px solid #9ae6b4;
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 0.8rem; font-weight: 600;
+    }
+    .tag-profsync-mismatch {
+      display: inline-block;
+      background: #fffbeb; color: #92400e;
+      border: 1px solid #fcd34d;
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 0.8rem; font-weight: 600;
+    }
+    .tag-profsync-missing {
+      display: inline-block;
+      background: #fff5f5; color: #c53030;
+      border: 1px solid #feb2b2;
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 0.8rem; font-weight: 600;
+    }
+    .tag-profsync-val {
+      display: inline-block;
+      background: #ebf8ff; color: #2b6cb0;
+      border: 1px solid #90cdf4;
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 0.8rem;
+    }
+    .btn-to-roster {
+      background: #3182ce;
+      color: white;
+      padding: 0.28rem 0.6rem;
+      font-size: 0.77rem;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .btn-to-roster:hover { background: #2b6cb0; }
+    .btn-to-roster:disabled { background: #cbd5e0; cursor: not-allowed; }
+    .btn-to-profile {
+      background: #805ad5;
+      color: white;
+      padding: 0.28rem 0.6rem;
+      font-size: 0.77rem;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .btn-to-profile:hover { background: #6b46c1; }
+    .btn-to-profile:disabled { background: #cbd5e0; cursor: not-allowed; }
+    #profileSyncAlert { margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔄 Roster Sync Admin</h1>
+      <p>Copy rosters from offseasonRosters to rosters/{seasonId} collection</p>
+    </div>
+
+    <div class="card">
+      <h2>📋 Source Data</h2>
+      <div class="info-box">
+        <strong>Source:</strong> offseasonRosters/current.teams<br>
+        <strong>Target:</strong> rosters/{seasonId}/{teamName}<br>
+        This tool copies the current offseason rosters to the new centralized rosters collection organized by season.
+      </div>
+
+      <div class="form-group">
+        <label for="seasonSelect">Select Target Season:</label>
+        <select id="seasonSelect">
+          <option value="">-- Loading seasons --</option>
+        </select>
+      </div>
+
+      <div id="alert" class="alert"></div>
+
+      <div class="button-group">
+        <button class="btn-primary" id="previewBtn" disabled>👁️ Preview Roster Data</button>
+        <button class="btn-secondary" id="syncBtn" disabled>🚀 Sync All Teams to Rosters</button>
+      </div>
+    </div>
+
+    <div class="card" id="previewCard" style="display: none;">
+      <h2>👀 Preview</h2>
+      <div class="stats" id="previewStats"></div>
+      <div class="roster-preview" id="rosterPreview"></div>
+    </div>
+
+    <div class="card" id="resultCard" style="display: none;">
+      <h2>✅ Sync Results</h2>
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">0 / 0 teams</div>
+      </div>
+      <div id="resultList" style="margin-top: 1.5rem;"></div>
+    </div>
+
+    <!-- ==================== BACKFILL AUTH IDs ==================== -->
+    <hr class="section-divider">
+
+    <div class="card">
+      <h2>🔑 Backfill Auth IDs</h2>
+      <div class="info-box">
+        <strong>What this does:</strong> Scans <code>rosters/{seasonId}-{teamName}</code> docs for players missing an <code>authId</code>, queries <code>/users</code> by <code>linkedPlayer</code> name, and writes the UID back into the roster entry.<br><br>
+        <strong>Use when:</strong> A player signed up <em>after</em> rosters were synced and their auth account isn't reflected in the roster doc.
+      </div>
+
+      <div class="form-group">
+        <label for="authidSeasonSelect">Select Season:</label>
+        <select id="authidSeasonSelect">
+          <option value="">-- Select a season --</option>
+        </select>
+      </div>
+
+      <div id="authidAlert" class="alert"></div>
+
+      <div class="button-group">
+        <button class="btn-primary" id="authidScanBtn" disabled>🔍 Scan for Missing Auth IDs</button>
+        <button class="btn-secondary btn-patch-all" id="authidPatchAllBtn" disabled>⚡ Patch All Found</button>
+      </div>
+    </div>
+
+    <div class="card" id="authidResultCard" style="display: none;">
+      <h2>🔎 Scan Results</h2>
+      <div class="authid-summary" id="authidSummary"></div>
+      <div style="overflow-x: auto;">
+        <table class="authid-table" id="authidTable">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Team</th>
+              <th>Current Auth ID</th>
+              <th>Match Found</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="authidTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ==================== FIX ROSTER IDs ==================== -->
+    <hr class="section-divider">
+
+    <div class="card">
+      <h2>&#x1F527; Fix Roster Player IDs</h2>
+      <div class="info-box">
+        <strong>What this does:</strong> Scans all roster docs for the selected season and detects players where the <code>id</code> field contains an Auth UID instead of a legacy snake_case ID (e.g. <code>ralph_pombo</code>). For each bad entry it looks up <code>mergedFromProfile</code> on the user doc to recover the correct legacy ID, then writes it back &mdash; moving the UID to <code>authId</code>.<br><br>
+        <strong>Use when:</strong> Players were added via Auth UID rather than their legacy player ID, causing mismatches with batting orders and stats lookups.
+      </div>
+      <div class="form-group">
+        <label for="idfixSeasonSelect">Select Season:</label>
+        <select id="idfixSeasonSelect">
+          <option value="">-- Select a season --</option>
+        </select>
+      </div>
+      <div id="idfixAlert" class="alert"></div>
+      <div class="button-group">
+        <button class="btn-primary" id="idfixScanBtn" disabled>&#x1F50D; Scan for ID Issues</button>
+        <button class="btn-secondary btn-patch-all" id="idfixFixAllBtn" disabled>&#x26A1; Fix All Resolvable</button>
+      </div>
+    </div>
+
+    <div class="card" id="idfixResultCard" style="display: none;">
+      <h2>&#x1F50E; ID Scan Results</h2>
+      <div class="authid-summary" id="idfixSummary"></div>
+      <div style="overflow-x: auto;">
+        <table class="idfix-table" id="idfixTable">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Team</th>
+              <th>Current id field</th>
+              <th>Current authId</th>
+              <th>Proposed Fix</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="idfixTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ==================== JERSEY NUMBER SYNC ==================== -->
+    <hr class="section-divider">
+
+    <div class="card">
+      <h2>&#x1F4DF; Sync Jersey Numbers from User Profiles</h2>
+      <div class="info-box">
+        <strong>What this does:</strong> Scans roster docs for the selected season and looks up each player's <code>number</code> field from their user profile doc. For players with an <code>authId</code> it fetches directly by UID; for legacy-only players it queries by <code>mergedFromProfile</code>. Shows a preview of all changes before writing.<br><br>
+        <strong>Use when:</strong> Players have updated their jersey number in their profile and you want those numbers reflected in the roster doc (used by game tracker, roster management, etc.)
+      </div>
+      <div class="form-group">
+        <label for="jerseySeasonSelect">Select Season:</label>
+        <select id="jerseySeasonSelect">
+          <option value="">-- Select a season --</option>
+        </select>
+      </div>
+      <div id="jerseyAlert" class="alert"></div>
+      <div class="button-group">
+        <button class="btn-primary" id="jerseyScanBtn" disabled>&#x1F50D; Scan Jersey Numbers</button>
+        <button class="btn-secondary btn-patch-all" id="jerseyUpdateAllBtn" disabled>&#x26A1; Update All Changed</button>
+      </div>
+    </div>
+
+    <div class="card" id="jerseyResultCard" style="display: none;">
+      <h2>&#x1F4CB; Jersey Scan Results</h2>
+      <div class="authid-summary" id="jerseySummary"></div>
+      <div style="overflow-x: auto;">
+        <table class="jersey-table" id="jerseyTable">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Team</th>
+              <th>Roster #</th>
+              <th>Profile #</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="jerseyTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <!-- ==================== LEGACY ID MISMATCH SCAN ==================== -->
+    <hr class="section-divider">
+
+    <div class="card">
+      <h2>&#x1F50D; Scan for Legacy ID Mismatches</h2>
+      <div class="info-box">
+        <strong>What this does:</strong> Scans roster docs for the selected season and compares each player's <code>id</code> field against their <code>mergedFromProfile</code> on their user doc (looked up via <code>authId</code>). Flags players where the two don't match &mdash; for example <code>justin_r_hannon</code> vs <code>justin_hannon</code>. These mismatches cause stats lookups to silently fail.<br><br>
+        <strong>Use when:</strong> A player's stats aren't loading in submit-stats or the game tracker despite being on the roster.
+      </div>
+      <div class="form-group">
+        <label for="legacymatchSeasonSelect">Select Season:</label>
+        <select id="legacymatchSeasonSelect">
+          <option value="">-- Select a season --</option>
+        </select>
+      </div>
+      <div id="legacymatchAlert" class="alert"></div>
+      <div class="button-group">
+        <button class="btn-primary" id="legacymatchScanBtn" disabled>&#x1F50D; Scan for Mismatches</button>
+        <button class="btn-secondary btn-patch-all" id="legacymatchFixAllBtn" disabled>&#x26A1; Fix All Mismatches</button>
+      </div>
+    </div>
+
+    <div class="card" id="legacymatchResultCard" style="display: none;">
+      <h2>&#x1F4CB; Mismatch Scan Results</h2>
+      <div class="authid-summary" id="legacymatchSummary"></div>
+      <div style="overflow-x: auto;">
+        <table class="legacymatch-table" id="legacymatchTable">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Team</th>
+              <th>Roster id (current)</th>
+              <th>mergedFromProfile (correct)</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="legacymatchTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ==================== PLAYER PROFILE SYNC ==================== -->
+    <hr class="section-divider">
+
+    <div class="card">
+      <h2>&#x1F501; Player Profile Sync</h2>
+      <div class="info-box">
+        <strong>What this does:</strong> Compares four fields &mdash; position, jersey number, throwing side, and batting side &mdash; between each player's roster entry and their user profile doc. Shows all matches and mismatches, and lets you update in either direction.<br><br>
+        <strong>Use when:</strong> Players have updated their profile but the roster doesn't reflect it (or vice versa), and you want a field-by-field view before deciding which side is authoritative.
+      </div>
+      <div class="form-group">
+        <label for="profileSyncSeasonSelect">Select Season:</label>
+        <select id="profileSyncSeasonSelect">
+          <option value="">-- Select a season --</option>
+        </select>
+      </div>
+      <div id="profileSyncAlert" class="alert"></div>
+      <div class="button-group">
+        <button class="btn-primary" id="profileSyncScanBtn" disabled>&#x1F50D; Scan Player Profiles</button>
+        <button class="btn-secondary btn-patch-all" id="profileSyncUpdateAllRosterBtn" disabled>&#x26A1; Update All &rarr; Roster</button>
+        <button class="btn-secondary btn-patch-all" id="profileSyncUpdateAllProfileBtn" disabled>&#x26A1; Update All &rarr; Profile</button>
+      </div>
+    </div>
+
+    <div class="card" id="profileSyncResultCard" style="display: none;">
+      <h2>&#x1F4CB; Profile Sync Results</h2>
+      <div class="authid-summary" id="profileSyncSummary"></div>
+      <div style="overflow-x: auto;">
+        <table class="profsync-table" id="profileSyncTable">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Team</th>
+              <th>Field</th>
+              <th>Roster Value</th>
+              <th>Profile Value</th>
+              <th>Status</th>
+              <th>&rarr; Roster</th>
+              <th>&rarr; Profile</th>
+            </tr>
+          </thead>
+          <tbody id="profileSyncTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== Field Copy: 2026 Summer → Fall ===== -->
+    <hr style="margin:2rem 0; border:none; border-top:2px solid var(--border-color);">
+    <div class="card">
+      <h2>&#x1F4CB; Copy Fields: 2026 Summer &#x2192; 2026 Fall</h2>
+      <div class="info-box">
+        <strong>Source:</strong> rosters/2026-summer-{team}<br>
+        <strong>Target:</strong> rosters/2026-fall-{team}<br>
+        Copies <strong>number</strong>, <strong>position</strong>, <strong>throws</strong>, and <strong>bats</strong>
+        from each summer roster player to the matching fall roster player (matched by <code>id</code>, then <code>name</code>).
+        Blank / dash summer values are skipped.
+      </div>
+      <div id="fieldCopyAlert" class="alert"></div>
+      <div class="button-group">
+        <button class="btn-primary"   id="fieldCopyScanBtn">&#x1F50D; Scan Fields</button>
+        <button class="btn-secondary btn-patch-all" id="fieldCopyApplyBtn" disabled>&#x26A1; Copy All to Fall</button>
+      </div>
+    </div>
+
+    <div class="card" id="fieldCopyResultCard" style="display: none;">
+      <h3>Field Copy Preview</h3>
+      <div class="authid-summary" id="fieldCopySummary"></div>
+      <div style="overflow-x:auto;">
+        <table class="fieldcopy-table" id="fieldCopyTable">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Team</th>
+              <th>Field</th>
+              <th>Summer Value</th>
+              <th>Fall Value (current)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="fieldCopyTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Roster Sync', requiresAuth: true });
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, writeBatch, query, where } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+    
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAEWkrTcprzJ2KPPJu-vFJPvYOVU4ky20",
+      authDomain: "acessoftballreference-84791.firebaseapp.com",
+      projectId: "acessoftballreference-84791",
+      storageBucket: "acessoftballreference-84791.firebasestorage.app",
+      messagingSenderId: "777699560175",
+      appId: "1:777699560175:web:4092b422e7d7116352e91a",
+      measurementId: "G-1F8JKZH6DZ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+    let selectedSeason = null;
+    let offseasonRostersData = null;
+
+    // Auth check
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        showAlert('❌ You must be signed in.', 'error');
+        document.querySelector('.card').style.display = 'none';
+        console.error('❌ No user authenticated');
+        return;
+      }
+
+      console.log('✅ User authenticated:', user.email);
+      currentUser = user;
+      await loadSeasons();
+      await loadOffseasonRosters();
+    });
+
+    async function loadSeasons() {
+      try {
+        const seasonsRef = collection(db, 'seasons');
+        const snapshot = await getDocs(seasonsRef);
+        const select = document.getElementById('seasonSelect');
+        select.innerHTML = '<option value="">-- Select a season --</option>';
+
+        const seasons = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          seasons.push({
+            id: doc.id,
+            name: `${data.year} ${data.season.charAt(0).toUpperCase() + data.season.slice(1)}`,
+            data
+          });
+        });
+
+        seasons.sort((a, b) => {
+          if (b.data.year !== a.data.year) return b.data.year - a.data.year;
+          const seasonOrder = { summer: 0, fall: 1, winter: 2, spring: 3 };
+          return seasonOrder[a.data.season] - seasonOrder[b.data.season];
+        });
+
+        seasons.forEach(season => {
+          const option = document.createElement('option');
+          option.value = season.id;
+          option.textContent = season.name;
+          select.appendChild(option);
+        });
+
+        select.addEventListener('change', (e) => {
+          selectedSeason = e.target.value;
+          if (selectedSeason) {
+            document.getElementById('previewBtn').disabled = false;
+          } else {
+            document.getElementById('previewBtn').disabled = true;
+            document.getElementById('previewCard').style.display = 'none';
+          }
+        });
+      } catch (error) {
+        console.error('Error loading seasons:', error);
+        showAlert('❌ Error loading seasons: ' + error.message, 'error');
+      }
+    }
+
+    async function loadOffseasonRosters() {
+      try {
+        const docRef = doc(db, 'offseasonRosters', 'current');
+        const snapshot = await getDoc(docRef);
+        if (snapshot.exists()) {
+          offseasonRostersData = snapshot.data();
+          console.log('✅ Loaded offseasonRosters:', offseasonRostersData);
+          console.log('📋 Teams found:', Object.keys(offseasonRostersData.teams || {}).join(', '));
+          
+          // Log first team structure for debugging
+          const firstTeamName = Object.keys(offseasonRostersData.teams || {})[0];
+          if (firstTeamName) {
+            console.log(`📊 First team (${firstTeamName}) structure:`, offseasonRostersData.teams[firstTeamName]);
+          }
+        } else {
+          console.error('❌ offseasonRosters/current does not exist');
+          showAlert('❌ offseasonRosters/current document not found', 'error');
+        }
+      } catch (error) {
+        console.error('Error loading offseason rosters:', error);
+        showAlert('❌ Error loading offseason rosters: ' + error.message, 'error');
+      }
+    }
+
+    document.getElementById('previewBtn').addEventListener('click', async () => {
+      if (!selectedSeason || !offseasonRostersData) {
+        showAlert('❌ Missing season or roster data', 'error');
+        return;
+      }
+
+      await previewRosters();
+    });
+
+    async function previewRosters() {
+      const teams = offseasonRostersData.teams || {};
+      const teamNames = Object.keys(teams);
+
+      if (teamNames.length === 0) {
+        showAlert('⚠️ No teams found in offseasonRosters', 'warning');
+        return;
+      }
+
+      console.log('🔍 Starting preview with teams:', teamNames);
+      console.log('📊 Full teams object:', teams);
+
+      let totalPlayers = 0;
+      let previewHTML = '';
+
+      for (const teamName of teamNames) {
+        const team = teams[teamName];
+        console.log(`\n📋 Processing team: ${teamName}`, team);
+        
+        let players = [];
+        if (Array.isArray(team?.players)) {
+          players = team.players;
+          console.log(`  ✅ Found players array: ${players.length} players`);
+        } else if (Array.isArray(team)) {
+          players = team;
+          console.log(`  ✅ Team is array: ${players.length} players`);
+        } else {
+          console.warn(`  ⚠️ Unknown structure for ${teamName}:`, Object.keys(team || {}));
+        }
+        
+        totalPlayers += players.length;
+
+        const playerHTML = players
+          .slice(0, 5)
+          .map(p => `<div class="player-item"><span class="player-number">#${p.number || '-'}</span> ${p.name}</div>`)
+          .join('');
+
+        const moreCount = players.length > 5 ? ` (+${players.length - 5} more)` : '';
+
+        previewHTML += `
+          <div class="roster-team">
+            <div class="roster-team-name">⚾ ${teamName}</div>
+            <div class="roster-players">${playerHTML}</div>
+            <div style="font-size: 0.85rem; color: #718096; margin-top: 0.5rem;">${players.length} players${moreCount}</div>
+          </div>
+        `;
+      }
+
+      document.getElementById('previewStats').innerHTML = `
+        <div class="stat-box">
+          <div class="stat-value">${teamNames.length}</div>
+          <div class="stat-label">Teams</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">${totalPlayers}</div>
+          <div class="stat-label">Total Players</div>
+        </div>
+      `;
+
+      document.getElementById('rosterPreview').innerHTML = previewHTML;
+      document.getElementById('previewCard').style.display = 'block';
+      document.getElementById('syncBtn').disabled = false;
+
+      showAlert('✅ Preview loaded. Ready to sync?', 'success');
+    }
+
+    document.getElementById('syncBtn').addEventListener('click', async () => {
+      if (!selectedSeason || !offseasonRostersData) {
+        showAlert('❌ Missing season or roster data', 'error');
+        return;
+      }
+
+      await syncRosters();
+    });
+
+    async function syncRosters() {
+      const teams = offseasonRostersData.teams || {};
+      const teamNames = Object.keys(teams);
+
+      if (teamNames.length === 0) {
+        showAlert('❌ No teams to sync', 'error');
+        return;
+      }
+
+      document.getElementById('resultCard').style.display = 'block';
+      document.getElementById('syncBtn').disabled = true;
+      document.getElementById('previewBtn').disabled = true;
+
+      let successful = 0;
+      let failed = 0;
+      let resultHTML = '';
+
+      for (let i = 0; i < teamNames.length; i++) {
+        const teamName = teamNames[i];
+        const team = teams[teamName];
+        
+        // Handle different possible structures
+        let players = [];
+        if (Array.isArray(team.players)) {
+          players = team.players;
+        } else if (Array.isArray(team)) {
+          players = team;
+        } else if (team.roster && Array.isArray(team.roster)) {
+          players = team.roster;
+        } else {
+          console.warn(`⚠️ Unknown structure for team ${teamName}:`, team);
+          failed++;
+          resultHTML += `<div style="padding: 0.75rem; background: #fff5f5; border-left: 4px solid #f56565; border-radius: 4px; margin-bottom: 0.5rem;">❌ <strong>${teamName}</strong> - Unknown data structure</div>`;
+          continue;
+        }
+
+        try {
+          const batch = writeBatch(db);
+          // Fix: rosters collection with document ID as "{seasonId}-{teamName}" in lowercase
+          const docId = `${selectedSeason}-${teamName.toLowerCase()}`;
+          const docRef = doc(db, 'rosters', docId);
+
+          // Ensure all players have required fields
+          // Look up authId from users collection by linkedPlayer name
+          const cleanedPlayers = await Promise.all(players.map(async (p) => {
+            let authId = p.authId || p.uid || '';
+            
+            // If no authId, try to find it by looking up linkedPlayer in users collection
+            if (!authId && p.name) {
+              try {
+                const usersRef = collection(db, 'users');
+                const q = query(usersRef, where('linkedPlayer', '==', p.name));
+                const snapshot = await getDocs(q);
+                if (!snapshot.empty) {
+                  authId = snapshot.docs[0].id;
+                  console.log(`  ✅ Found authId for ${p.name}: ${authId}`);
+                }
+              } catch (e) {
+                console.warn(`  ⚠️ Could not lookup authId for ${p.name}`);
+              }
+            }
+            
+            return {
+              id: p.id || p.playerId || '',
+              authId: authId,
+              name: p.name || '',
+              number: p.number || null,
+              position: p.position || '-',
+              bats: p.bats || '-',
+              throws: p.throws || '-',
+              captain: p.captain === true || p.captain === 'Yes'
+            };
+          })).then(ps => ps.filter(p => p.name)); // Filter out players with no name
+
+          batch.set(docRef, {
+            players: cleanedPlayers,
+            teamName: teamName,
+            seasonId: selectedSeason,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+
+          await batch.commit();
+          successful++;
+
+          resultHTML += `<div style="padding: 0.75rem; background: #e6fffa; border-left: 4px solid #48bb78; border-radius: 4px; margin-bottom: 0.5rem;">✅ <strong>${teamName}</strong> - ${cleanedPlayers.length} players</div>`;
+          console.log(`✅ Synced ${teamName}: ${cleanedPlayers.length} players to rosters/${docId}`);
+        } catch (error) {
+          failed++;
+          console.error(`❌ Error syncing ${teamName}:`, error);
+          const errorDetail = error.code || error.message || 'Unknown error';
+          resultHTML += `<div style="padding: 0.75rem; background: #fff5f5; border-left: 4px solid #f56565; border-radius: 4px; margin-bottom: 0.5rem;">❌ <strong>${teamName}</strong> - ${errorDetail}<br><small style="opacity: 0.7;">${error.message}</small></div>`;
+        }
+
+        const progress = ((i + 1) / teamNames.length) * 100;
+        document.getElementById('progressFill').style.width = progress + '%';
+        document.getElementById('progressText').textContent = `${i + 1} / ${teamNames.length} teams`;
+      }
+
+      document.getElementById('resultList').innerHTML = resultHTML;
+
+      const message = `✅ Sync complete! ${successful} succeeded, ${failed} failed.`;
+      showAlert(message, failed === 0 ? 'success' : 'warning');
+    }
+
+    function showAlert(message, type) {
+      const alert = document.getElementById('alert');
+      alert.textContent = message;
+      alert.className = `alert show alert-${type}`;
+      setTimeout(() => alert.classList.remove('show'), 5000);
+    }
+
+    // ==================== BACKFILL AUTH IDs ====================
+
+    // Populate the second season dropdown once seasons are loaded
+    async function populateAuthidSeasonSelect() {
+      try {
+        const seasonsRef = collection(db, 'seasons');
+        const snapshot = await getDocs(seasonsRef);
+        const select = document.getElementById('authidSeasonSelect');
+        select.innerHTML = '<option value="">-- Select a season --</option>';
+
+        const seasons = [];
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          seasons.push({
+            id: docSnap.id,
+            name: `${data.year} ${data.season.charAt(0).toUpperCase() + data.season.slice(1)}`,
+            data
+          });
+        });
+
+        seasons.sort((a, b) => {
+          if (b.data.year !== a.data.year) return b.data.year - a.data.year;
+          const seasonOrder = { summer: 0, fall: 1, winter: 2, spring: 3 };
+          return seasonOrder[a.data.season] - seasonOrder[b.data.season];
+        });
+
+        seasons.forEach(season => {
+          const option = document.createElement('option');
+          option.value = season.id;
+          option.textContent = season.name;
+          select.appendChild(option);
+        });
+
+        select.addEventListener('change', (e) => {
+          const val = e.target.value;
+          document.getElementById('authidScanBtn').disabled = !val;
+          document.getElementById('authidPatchAllBtn').disabled = true;
+          document.getElementById('authidResultCard').style.display = 'none';
+        });
+      } catch (error) {
+        console.error('Error populating authid season select:', error);
+      }
+    }
+
+    // Store scan results so patch-all can use them
+    let scanResults = []; // { rosterDocId, playerIndex, playerName, team, foundUid }
+
+    function showAuthidAlert(message, type) {
+      const alert = document.getElementById('authidAlert');
+      alert.textContent = message;
+      alert.className = `alert show alert-${type}`;
+      setTimeout(() => alert.classList.remove('show'), 6000);
+    }
+
+    document.getElementById('authidScanBtn').addEventListener('click', async () => {
+      const seasonId = document.getElementById('authidSeasonSelect').value;
+      if (!seasonId) return;
+
+      document.getElementById('authidScanBtn').disabled = true;
+      document.getElementById('authidScanBtn').textContent = 'Scanning...';
+      scanResults = [];
+
+      try {
+        // Find all roster docs for this season: ID starts with "{seasonId}-"
+        const rostersRef = collection(db, 'rosters');
+        const snapshot = await getDocs(rostersRef);
+
+        const rosterDocs = [];
+        snapshot.forEach(docSnap => {
+          if (docSnap.id.startsWith(seasonId + '-')) {
+            rosterDocs.push({ id: docSnap.id, data: docSnap.data() });
+          }
+        });
+
+        if (rosterDocs.length === 0) {
+          showAuthidAlert('No roster docs found for this season. Run Roster Sync first.', 'warning');
+          document.getElementById('authidScanBtn').disabled = false;
+          document.getElementById('authidScanBtn').textContent = 'Scan for Missing Auth IDs';
+          return;
+        }
+
+        // Pre-load all users who have linkedPlayer set — one query
+        const usersRef = collection(db, 'users');
+        const usersSnap = await getDocs(usersRef);
+        const linkedPlayerMap = {}; // name (lowercase) -> uid
+        usersSnap.forEach(u => {
+          const d = u.data();
+          if (d.linkedPlayer) {
+            linkedPlayerMap[d.linkedPlayer.toLowerCase().trim()] = u.id;
+          }
+        });
+
+        const tableBody = document.getElementById('authidTableBody');
+        tableBody.innerHTML = '';
+
+        let totalPlayers = 0;
+        let alreadySet = 0;
+        let missingNoMatch = 0;
+        let missingWithMatch = 0;
+
+        for (const rosterDoc of rosterDocs) {
+          const teamName = rosterDoc.data.teamName || rosterDoc.id.replace(seasonId + '-', '');
+          const players = rosterDoc.data.players || [];
+
+          players.forEach((player, idx) => {
+            totalPlayers++;
+            const hasAuthId = !!(player.authId && player.authId.trim());
+            const nameKey = (player.name || '').toLowerCase().trim();
+            const foundUid = linkedPlayerMap[nameKey] || null;
+
+            if (hasAuthId) {
+              alreadySet++;
+              const tr = document.createElement('tr');
+              tr.className = 'already-set';
+              tr.innerHTML = `
+                <td>${player.name || '—'}</td>
+                <td>${teamName}</td>
+                <td><span class="tag-set uid-text">${player.authId}</span></td>
+                <td>—</td>
+                <td style="color:#a0aec0; font-size:0.82rem;">Already set</td>
+              `;
+              tableBody.appendChild(tr);
+              return;
+            }
+
+            // Missing authId
+            if (foundUid) {
+              missingWithMatch++;
+              scanResults.push({ rosterDocId: rosterDoc.id, playerIndex: idx, playerName: player.name, team: teamName, foundUid });
+
+              const tr = document.createElement('tr');
+              tr.className = 'has-match';
+              tr.id = `authid-row-${rosterDoc.id}-${idx}`;
+              tr.innerHTML = `
+                <td><strong>${player.name || '—'}</strong></td>
+                <td>${teamName}</td>
+                <td><span class="tag-missing">Missing</span></td>
+                <td><span class="tag-found">Found</span> <span class="uid-text">${foundUid}</span></td>
+                <td>
+                  <button class="btn-patch" onclick="patchSingle('${rosterDoc.id}', ${idx}, '${foundUid}', this)">
+                    Patch
+                  </button>
+                </td>
+              `;
+              tableBody.appendChild(tr);
+            } else {
+              missingNoMatch++;
+              const tr = document.createElement('tr');
+              tr.id = `authid-row-${rosterDoc.id}-${idx}`;
+              tr.innerHTML = `
+                <td>${player.name || '—'}</td>
+                <td>${teamName}</td>
+                <td><span class="tag-missing">Missing</span></td>
+                <td style="color:#a0aec0; font-size:0.85rem;">No account found</td>
+                <td style="color:#a0aec0; font-size:0.82rem;">—</td>
+              `;
+              tableBody.appendChild(tr);
+            }
+          });
+        }
+
+        document.getElementById('authidSummary').innerHTML = `
+          <div class="authid-stat"><div class="val">${totalPlayers}</div><div class="lbl">Total Players</div></div>
+          <div class="authid-stat"><div class="val">${alreadySet}</div><div class="lbl">Auth ID Set</div></div>
+          <div class="authid-stat" style="border-color:#9ae6b4;"><div class="val" style="color:#276749;">${missingWithMatch}</div><div class="lbl">Match Found</div></div>
+          <div class="authid-stat" style="border-color:#feb2b2;"><div class="val" style="color:#c53030;">${missingNoMatch}</div><div class="lbl">No Account</div></div>
+        `;
+
+        document.getElementById('authidResultCard').style.display = 'block';
+        document.getElementById('authidPatchAllBtn').disabled = missingWithMatch === 0;
+
+        if (missingWithMatch > 0) {
+          showAuthidAlert(`Scan complete. ${missingWithMatch} player(s) can be patched.`, 'success');
+        } else {
+          showAuthidAlert(`Scan complete. No missing Auth IDs with a matching account found.`, 'warning');
+        }
+
+      } catch (error) {
+        console.error('Scan error:', error);
+        showAuthidAlert('Error during scan: ' + error.message, 'error');
+      }
+
+      document.getElementById('authidScanBtn').disabled = false;
+      document.getElementById('authidScanBtn').textContent = 'Scan for Missing Auth IDs';
+    });
+
+    // Patch a single player row
+    window.patchSingle = async function(rosterDocId, playerIndex, foundUid, btn) {
+      btn.disabled = true;
+      btn.textContent = 'Patching...';
+
+      try {
+        const docRef = doc(db, 'rosters', rosterDocId);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) throw new Error('Roster doc not found');
+
+        const data = docSnap.data();
+        const players = [...(data.players || [])];
+        players[playerIndex] = { ...players[playerIndex], authId: foundUid };
+        await updateDoc(docRef, { players, updatedAt: new Date().toISOString() });
+
+        btn.textContent = 'Patched';
+        btn.style.background = '#48bb78';
+
+        const row = document.getElementById(`authid-row-${rosterDocId}-${playerIndex}`);
+        if (row) {
+          row.className = 'already-set';
+          const actionCell = row.cells[4];
+          if (actionCell) actionCell.innerHTML = '<span style="color:#48bb78; font-weight:600; font-size:0.85rem;">Done</span>';
+          const currentCell = row.cells[2];
+          if (currentCell) currentCell.innerHTML = `<span class="tag-set uid-text">${foundUid}</span>`;
+        }
+
+      } catch (error) {
+        console.error('Patch error:', error);
+        btn.textContent = 'Error';
+        btn.style.background = '#f56565';
+        btn.disabled = false;
+        showAuthidAlert('Error patching: ' + error.message, 'error');
+      }
+    };
+
+    // Patch all matched players
+    document.getElementById('authidPatchAllBtn').addEventListener('click', async () => {
+      if (scanResults.length === 0) return;
+
+      document.getElementById('authidPatchAllBtn').disabled = true;
+      document.getElementById('authidPatchAllBtn').textContent = 'Patching...';
+
+      // Group by rosterDocId to minimize reads
+      const grouped = {};
+      scanResults.forEach(r => {
+        if (!grouped[r.rosterDocId]) grouped[r.rosterDocId] = [];
+        grouped[r.rosterDocId].push(r);
+      });
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const [rosterDocId, entries] of Object.entries(grouped)) {
+        try {
+          const docRef = doc(db, 'rosters', rosterDocId);
+          const docSnap = await getDoc(docRef);
+          if (!docSnap.exists()) { errorCount += entries.length; continue; }
+
+          const data = docSnap.data();
+          const players = [...(data.players || [])];
+
+          entries.forEach(e => {
+            players[e.playerIndex] = { ...players[e.playerIndex], authId: e.foundUid };
+          });
+
+          await updateDoc(docRef, { players, updatedAt: new Date().toISOString() });
+
+          entries.forEach(e => {
+            const row = document.getElementById(`authid-row-${rosterDocId}-${e.playerIndex}`);
+            if (row) {
+              row.className = 'already-set';
+              const actionCell = row.cells[4];
+              if (actionCell) actionCell.innerHTML = '<span style="color:#48bb78; font-weight:600; font-size:0.85rem;">Done</span>';
+              const currentCell = row.cells[2];
+              if (currentCell) currentCell.innerHTML = `<span class="tag-set uid-text">${e.foundUid}</span>`;
+              const matchCell = row.cells[3];
+              if (matchCell) matchCell.innerHTML = '—';
+            }
+          });
+
+          successCount += entries.length;
+        } catch (error) {
+          console.error('Patch all error for', rosterDocId, error);
+          errorCount += entries.length;
+        }
+      }
+
+      scanResults = [];
+
+      const msg = successCount > 0
+        ? `Patched ${successCount} player(s) successfully.${errorCount > 0 ? ` ${errorCount} failed.` : ''}`
+        : `All patches failed. Check console for details.`;
+      showAuthidAlert(msg, errorCount === 0 ? 'success' : 'warning');
+      document.getElementById('authidPatchAllBtn').textContent = 'Patch All Found';
+    });
+
+    // Kick off second dropdown population after auth is confirmed
+    populateAuthidSeasonSelect();
+  </script>
+
+  <script type="module">
+    import { getApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getFirestore, collection, getDocs, doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+    // Reuse the default app already initialized by the main script above
+    const app3 = getApp();
+    const db3 = getFirestore(app3);
+    const auth3 = getAuth(app3);
+
+    // Auth UIDs have no underscores and are 28 chars of alphanumeric
+    function isAuthUid(str) {
+      if (!str) return false;
+      return str.length > 20 && !str.includes('_');
+    }
+
+    function showIdfixAlert(message, type) {
+      const el = document.getElementById('idfixAlert');
+      el.textContent = message;
+      el.className = `alert show alert-${type}`;
+      setTimeout(() => el.classList.remove('show'), 6000);
+    }
+
+    async function populateIdfixSeasonSelect() {
+      try {
+        const snapshot = await getDocs(collection(db3, 'seasons'));
+        const select = document.getElementById('idfixSeasonSelect');
+        select.innerHTML = '<option value="">-- Select a season --</option>';
+
+        const seasons = [];
+        snapshot.forEach(d => {
+          const data = d.data();
+          seasons.push({ id: d.id, name: `${data.year} ${data.season.charAt(0).toUpperCase() + data.season.slice(1)}`, data });
+        });
+        seasons.sort((a, b) => {
+          if (b.data.year !== a.data.year) return b.data.year - a.data.year;
+          const order = { summer: 0, fall: 1, winter: 2, spring: 3 };
+          return order[a.data.season] - order[b.data.season];
+        });
+        seasons.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = s.name;
+          select.appendChild(opt);
+        });
+
+        select.addEventListener('change', (e) => {
+          document.getElementById('idfixScanBtn').disabled = !e.target.value;
+          document.getElementById('idfixFixAllBtn').disabled = true;
+          document.getElementById('idfixResultCard').style.display = 'none';
+        });
+      } catch (err) {
+        console.error('Error loading seasons for ID fix tool:', err);
+      }
+    }
+
+    // Holds fixable entries for fix-all
+    let idfixResults = [];
+
+    document.getElementById('idfixScanBtn').addEventListener('click', async () => {
+      const seasonId = document.getElementById('idfixSeasonSelect').value;
+      if (!seasonId) return;
+
+      const scanBtn = document.getElementById('idfixScanBtn');
+      scanBtn.disabled = true;
+      scanBtn.textContent = 'Scanning...';
+      idfixResults = [];
+
+      try {
+        // Load all roster docs for this season
+        const rostersSnap = await getDocs(collection(db3, 'rosters'));
+        const rosterDocs = [];
+        rostersSnap.forEach(d => {
+          if (d.id.startsWith(seasonId + '-')) rosterDocs.push({ id: d.id, data: d.data() });
+        });
+
+        if (rosterDocs.length === 0) {
+          showIdfixAlert('No roster docs found for this season. Run Roster Sync first.', 'warning');
+          scanBtn.disabled = false;
+          scanBtn.textContent = 'Scan for ID Issues';
+          return;
+        }
+
+        // Pre-load all users: build UID -> legacy snake_case ID map
+        // mergedFromProfile is already snake_case (e.g. "ralph_pombo")
+        // Fall back to converting linkedPlayer display name if mergedFromProfile missing
+        const usersSnap = await getDocs(collection(db3, 'users'));
+        const uidToLegacyId = {};
+        usersSnap.forEach(u => {
+          const d = u.data();
+          if (d.mergedFromProfile) {
+            uidToLegacyId[u.id] = d.mergedFromProfile;
+          } else if (d.linkedPlayer) {
+            // Convert "Ralph Pombo" -> "ralph_pombo" as fallback
+            uidToLegacyId[u.id] = d.linkedPlayer.trim().toLowerCase().replace(/\s+/g, '_');
+          }
+        });
+
+        const tableBody = document.getElementById('idfixTableBody');
+        tableBody.innerHTML = '';
+
+        let countClean = 0;
+        let countFixable = 0;
+        let countManual = 0;
+
+        for (const rosterDoc of rosterDocs) {
+          const teamName = rosterDoc.data.teamName || rosterDoc.id.replace(seasonId + '-', '');
+          const players = rosterDoc.data.players || [];
+
+          players.forEach((player, idx) => {
+            const currentId = player.id || '';
+            const currentAuthId = player.authId || '';
+            const rowKey = `idfix-${rosterDoc.id}-${idx}`;
+
+            if (!isAuthUid(currentId)) {
+              // id looks like a legacy snake_case ID — clean
+              countClean++;
+              const tr = document.createElement('tr');
+              tr.className = 'idfix-clean';
+              tr.innerHTML = `
+                <td>${player.name || '—'}</td>
+                <td>${teamName}</td>
+                <td><span class="tag-clean uid-text">${currentId || '(empty)'}</span></td>
+                <td><span class="uid-text" style="color:#a0aec0;">${currentAuthId ? currentAuthId.substring(0, 14) + '...' : '—'}</span></td>
+                <td>—</td>
+                <td style="color:#a0aec0; font-size:0.82rem;">Clean</td>
+              `;
+              tableBody.appendChild(tr);
+              return;
+            }
+
+            // id IS an Auth UID — try to recover legacy ID from linkedPlayer
+            const legacyId = uidToLegacyId[currentId];
+            const correctAuthId = currentId; // the UID belongs in authId
+
+            if (legacyId) {
+              countFixable++;
+              idfixResults.push({
+                rosterDocId: rosterDoc.id,
+                playerIndex: idx,
+                playerName: player.name,
+                team: teamName,
+                correctLegacyId: legacyId,
+                correctAuthId
+              });
+
+              const tr = document.createElement('tr');
+              tr.className = 'idfix-fixable';
+              tr.id = rowKey;
+              tr.innerHTML = `
+                <td><strong>${player.name || '—'}</strong></td>
+                <td>${teamName}</td>
+                <td><span class="tag-uid-bad uid-text">${currentId.substring(0, 16)}...</span></td>
+                <td><span class="uid-text" style="color:#a0aec0;">${currentAuthId ? currentAuthId.substring(0, 14) + '...' : '—'}</span></td>
+                <td>
+                  <div style="font-size:0.8rem; line-height:1.7;">
+                    <div>id &rarr; <strong>${legacyId}</strong></div>
+                    <div style="color:#718096;">authId &rarr; <span class="uid-text">${correctAuthId.substring(0, 14)}...</span></div>
+                  </div>
+                </td>
+                <td>
+                  <button class="btn-patch"
+                    data-doc="${rosterDoc.id}"
+                    data-idx="${idx}"
+                    data-legacy="${legacyId}"
+                    data-auth="${correctAuthId}">
+                    Fix
+                  </button>
+                </td>
+              `;
+              tableBody.appendChild(tr);
+            } else {
+              // UID in id field but no linkedPlayer mapping exists — needs manual fix
+              countManual++;
+              const tr = document.createElement('tr');
+              tr.className = 'idfix-manual';
+              tr.id = rowKey;
+              tr.innerHTML = `
+                <td><strong>${player.name || '—'}</strong></td>
+                <td>${teamName}</td>
+                <td><span class="tag-uid-bad uid-text">${currentId.substring(0, 16)}...</span></td>
+                <td><span class="uid-text" style="color:#a0aec0;">${currentAuthId ? currentAuthId.substring(0, 14) + '...' : '—'}</span></td>
+                <td><span class="tag-manual">No linkedPlayer found</span></td>
+                <td style="color:#c53030; font-size:0.82rem;">Manual fix needed</td>
+              `;
+              tableBody.appendChild(tr);
+            }
+          });
+        }
+
+        // Wire up individual Fix buttons (event delegation)
+        tableBody.addEventListener('click', (e) => {
+          const btn = e.target.closest('.btn-patch[data-doc]');
+          if (!btn) return;
+          idfixSingle(btn.dataset.doc, parseInt(btn.dataset.idx), btn.dataset.legacy, btn.dataset.auth, btn);
+        });
+
+        document.getElementById('idfixSummary').innerHTML = `
+          <div class="authid-stat" style="border-color:#9ae6b4;">
+            <div class="val" style="color:#276749;">${countClean}</div>
+            <div class="lbl">Clean</div>
+          </div>
+          <div class="authid-stat" style="border-color:#f6e05e;">
+            <div class="val" style="color:#b7791f;">${countFixable}</div>
+            <div class="lbl">Auto-Fixable</div>
+          </div>
+          <div class="authid-stat" style="border-color:#feb2b2;">
+            <div class="val" style="color:#c53030;">${countManual}</div>
+            <div class="lbl">Manual Review</div>
+          </div>
+        `;
+
+        document.getElementById('idfixResultCard').style.display = 'block';
+        document.getElementById('idfixFixAllBtn').disabled = countFixable === 0;
+
+        if (countFixable > 0) {
+          showIdfixAlert(`Found ${countFixable} player(s) with Auth UIDs in the id field that can be fixed automatically.`, 'success');
+        } else if (countManual > 0) {
+          showIdfixAlert(`No auto-fixable issues, but ${countManual} player(s) need manual review (no linkedPlayer on their account).`, 'warning');
+        } else {
+          showIdfixAlert('All roster IDs look clean.', 'success');
+        }
+
+      } catch (err) {
+        console.error('ID fix scan error:', err);
+        showIdfixAlert('Error during scan: ' + err.message, 'error');
+      }
+
+      scanBtn.disabled = false;
+      scanBtn.textContent = 'Scan for ID Issues';
+    });
+
+    async function idfixSingle(rosterDocId, playerIndex, legacyId, authUid, btn) {
+      btn.disabled = true;
+      btn.textContent = 'Fixing...';
+      try {
+        const docRef = doc(db3, 'rosters', rosterDocId);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) throw new Error('Roster doc not found');
+
+        const players = [...(docSnap.data().players || [])];
+        players[playerIndex] = { ...players[playerIndex], id: legacyId, authId: authUid };
+        await updateDoc(docRef, { players, updatedAt: new Date().toISOString() });
+
+        btn.textContent = 'Fixed';
+        btn.style.background = '#48bb78';
+        btn.disabled = true;
+
+        const row = document.getElementById(`idfix-${rosterDocId}-${playerIndex}`);
+        if (row) {
+          row.className = 'idfix-clean';
+          row.cells[2].innerHTML = `<span class="tag-clean uid-text">${legacyId}</span>`;
+          row.cells[3].innerHTML = `<span class="uid-text" style="color:#a0aec0;">${authUid.substring(0, 14)}...</span>`;
+          row.cells[4].innerHTML = '—';
+          row.cells[5].innerHTML = '<span style="color:#48bb78; font-weight:600; font-size:0.85rem;">Done</span>';
+        }
+
+        // Remove from idfixResults so fix-all skips it
+        idfixResults = idfixResults.filter(r => !(r.rosterDocId === rosterDocId && r.playerIndex === playerIndex));
+        document.getElementById('idfixFixAllBtn').disabled = idfixResults.length === 0;
+
+        console.log(`Fixed ${players[playerIndex]?.name}: id=${legacyId}, authId=${authUid}`);
+      } catch (err) {
+        console.error('idfixSingle error:', err);
+        btn.textContent = 'Error';
+        btn.style.background = '#f56565';
+        btn.disabled = false;
+        showIdfixAlert('Error fixing player: ' + err.message, 'error');
+      }
+    }
+
+    document.getElementById('idfixFixAllBtn').addEventListener('click', async () => {
+      if (idfixResults.length === 0) return;
+
+      const fixAllBtn = document.getElementById('idfixFixAllBtn');
+      fixAllBtn.disabled = true;
+      fixAllBtn.textContent = 'Fixing...';
+
+      // Group by rosterDocId to minimise reads/writes
+      const grouped = {};
+      idfixResults.forEach(r => {
+        if (!grouped[r.rosterDocId]) grouped[r.rosterDocId] = [];
+        grouped[r.rosterDocId].push(r);
+      });
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const [rosterDocId, entries] of Object.entries(grouped)) {
+        try {
+          const docRef = doc(db3, 'rosters', rosterDocId);
+          const docSnap = await getDoc(docRef);
+          if (!docSnap.exists()) { errorCount += entries.length; continue; }
+
+          const players = [...(docSnap.data().players || [])];
+          entries.forEach(e => {
+            players[e.playerIndex] = { ...players[e.playerIndex], id: e.correctLegacyId, authId: e.correctAuthId };
+          });
+
+          await updateDoc(docRef, { players, updatedAt: new Date().toISOString() });
+
+          entries.forEach(e => {
+            const row = document.getElementById(`idfix-${rosterDocId}-${e.playerIndex}`);
+            if (row) {
+              row.className = 'idfix-clean';
+              row.cells[2].innerHTML = `<span class="tag-clean uid-text">${e.correctLegacyId}</span>`;
+              row.cells[3].innerHTML = `<span class="uid-text" style="color:#a0aec0;">${e.correctAuthId.substring(0, 14)}...</span>`;
+              row.cells[4].innerHTML = '—';
+              row.cells[5].innerHTML = '<span style="color:#48bb78; font-weight:600; font-size:0.85rem;">Done</span>';
+            }
+          });
+
+          successCount += entries.length;
+          console.log(`Fixed ${entries.length} player(s) in ${rosterDocId}`);
+        } catch (err) {
+          console.error('idfixAll error for', rosterDocId, err);
+          errorCount += entries.length;
+        }
+      }
+
+      idfixResults = [];
+
+      const msg = successCount > 0
+        ? `Fixed ${successCount} player(s) successfully.${errorCount > 0 ? ` ${errorCount} failed.` : ''}`
+        : 'All fixes failed. Check console for details.';
+      showIdfixAlert(msg, errorCount === 0 ? 'success' : 'warning');
+      fixAllBtn.textContent = 'Fix All Resolvable';
+    });
+
+    onAuthStateChanged(auth3, async (user) => {
+      if (user) await populateIdfixSeasonSelect();
+    });
+  </script>
+
+  <script type="module">
+    import { getApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+    const appJ = getApp();
+    const dbJ = getFirestore(appJ);
+    const authJ = getAuth(appJ);
+
+    function showJerseyAlert(message, type) {
+      const el = document.getElementById('jerseyAlert');
+      el.textContent = message;
+      el.className = `alert show alert-${type}`;
+      setTimeout(() => el.classList.remove('show'), 6000);
+    }
+
+    async function populateJerseySeasonSelect() {
+      try {
+        const snapshot = await getDocs(collection(dbJ, 'seasons'));
+        const select = document.getElementById('jerseySeasonSelect');
+        select.innerHTML = '<option value="">-- Select a season --</option>';
+
+        const seasons = [];
+        snapshot.forEach(d => {
+          const data = d.data();
+          seasons.push({ id: d.id, name: `${data.year} ${data.season.charAt(0).toUpperCase() + data.season.slice(1)}`, data });
+        });
+        seasons.sort((a, b) => {
+          if (b.data.year !== a.data.year) return b.data.year - a.data.year;
+          const order = { summer: 0, fall: 1, winter: 2, spring: 3 };
+          return order[a.data.season] - order[b.data.season];
+        });
+        seasons.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = s.name;
+          select.appendChild(opt);
+        });
+
+        select.addEventListener('change', (e) => {
+          document.getElementById('jerseyScanBtn').disabled = !e.target.value;
+          document.getElementById('jerseyUpdateAllBtn').disabled = true;
+          document.getElementById('jerseyResultCard').style.display = 'none';
+        });
+      } catch (err) {
+        console.error('Error loading seasons for jersey tool:', err);
+      }
+    }
+
+    // Holds rows that have a changed number
+    let jerseyUpdateResults = [];
+
+    document.getElementById('jerseyScanBtn').addEventListener('click', async () => {
+      const seasonId = document.getElementById('jerseySeasonSelect').value;
+      if (!seasonId) return;
+
+      const scanBtn = document.getElementById('jerseyScanBtn');
+      scanBtn.disabled = true;
+      scanBtn.textContent = 'Scanning...';
+      jerseyUpdateResults = [];
+
+      try {
+        // Load all roster docs for this season
+        const rostersSnap = await getDocs(collection(dbJ, 'rosters'));
+        const rosterDocs = [];
+        rostersSnap.forEach(d => {
+          if (d.id.startsWith(seasonId + '-')) rosterDocs.push({ id: d.id, data: d.data() });
+        });
+
+        if (rosterDocs.length === 0) {
+          showJerseyAlert('No roster docs found for this season. Run Roster Sync first.', 'warning');
+          scanBtn.disabled = false;
+          scanBtn.textContent = 'Scan Jersey Numbers';
+          return;
+        }
+
+        // Pre-load all users into a map keyed two ways:
+        //   authIdMap[uid]        -> { number }
+        //   legacyIdMap[legacyId] -> { number }   (via mergedFromProfile)
+        const usersSnap = await getDocs(collection(dbJ, 'users'));
+        const authIdMap = {};
+        const legacyIdMap = {};
+        usersSnap.forEach(u => {
+          const d = u.data();
+          const num = d.number ? String(d.number).trim() : null;
+          if (num) {
+            authIdMap[u.id] = num;
+            if (d.mergedFromProfile) legacyIdMap[d.mergedFromProfile] = num;
+          }
+        });
+
+        const tableBody = document.getElementById('jerseyTableBody');
+        tableBody.innerHTML = '';
+
+        let countSame = 0;
+        let countUpdate = 0;
+        let countNoAccount = 0;
+
+        for (const rosterDoc of rosterDocs) {
+          const teamName = rosterDoc.data.teamName || rosterDoc.id.replace(seasonId + '-', '');
+          const players = rosterDoc.data.players || [];
+
+          players.forEach((player, idx) => {
+            const rowKey = `jersey-${rosterDoc.id}-${idx}`;
+            const rosterNum = player.number ? String(player.number).trim() : null;
+
+            // Try to find profile number — authId first, then legacy id
+            const profileNum = (player.authId && authIdMap[player.authId])
+              || (player.id && legacyIdMap[player.id])
+              || null;
+
+            if (!profileNum) {
+              // No user account or no number set in profile
+              countNoAccount++;
+              const tr = document.createElement('tr');
+              tr.className = 'jersey-no-account';
+              tr.innerHTML = `
+                <td>${player.name || '—'}</td>
+                <td>${teamName}</td>
+                <td>${rosterNum ? `<span class="tag-jersey-same">#${rosterNum}</span>` : '<span style="color:#a0aec0;">—</span>'}</td>
+                <td style="color:#a0aec0; font-size:0.82rem;">No profile #</td>
+                <td style="color:#a0aec0; font-size:0.82rem;">—</td>
+              `;
+              tableBody.appendChild(tr);
+              return;
+            }
+
+            if (rosterNum === profileNum) {
+              // Already in sync
+              countSame++;
+              const tr = document.createElement('tr');
+              tr.className = 'jersey-clean';
+              tr.innerHTML = `
+                <td>${player.name || '—'}</td>
+                <td>${teamName}</td>
+                <td><span class="tag-jersey-same">#${rosterNum}</span></td>
+                <td><span class="tag-jersey-same">#${profileNum}</span></td>
+                <td style="color:#a0aec0; font-size:0.82rem;">In sync</td>
+              `;
+              tableBody.appendChild(tr);
+              return;
+            }
+
+            // Number differs — needs update
+            countUpdate++;
+            jerseyUpdateResults.push({
+              rosterDocId: rosterDoc.id,
+              playerIndex: idx,
+              playerName: player.name,
+              team: teamName,
+              oldNumber: rosterNum,
+              newNumber: profileNum
+            });
+
+            const tr = document.createElement('tr');
+            tr.className = 'jersey-update';
+            tr.id = rowKey;
+            tr.innerHTML = `
+              <td><strong>${player.name || '—'}</strong></td>
+              <td>${teamName}</td>
+              <td>${rosterNum ? `<span class="tag-jersey-old">#${rosterNum}</span>` : '<span style="color:#a0aec0;">—</span>'}</td>
+              <td><span class="tag-jersey-new">#${profileNum}</span></td>
+              <td>
+                <button class="btn-patch"
+                  data-doc="${rosterDoc.id}"
+                  data-idx="${idx}"
+                  data-num="${profileNum}">
+                  Update
+                </button>
+              </td>
+            `;
+            tableBody.appendChild(tr);
+          });
+        }
+
+        // Wire up individual Update buttons
+        tableBody.addEventListener('click', (e) => {
+          const btn = e.target.closest('.btn-patch[data-doc]');
+          if (!btn) return;
+          jerseyUpdateSingle(btn.dataset.doc, parseInt(btn.dataset.idx), btn.dataset.num, btn);
+        });
+
+        document.getElementById('jerseySummary').innerHTML = `
+          <div class="authid-stat" style="border-color:#9ae6b4;">
+            <div class="val" style="color:#276749;">${countSame}</div>
+            <div class="lbl">In Sync</div>
+          </div>
+          <div class="authid-stat" style="border-color:#f6e05e;">
+            <div class="val" style="color:#b7791f;">${countUpdate}</div>
+            <div class="lbl">Need Update</div>
+          </div>
+          <div class="authid-stat" style="border-color:#e2e8f0;">
+            <div class="val" style="color:#718096;">${countNoAccount}</div>
+            <div class="lbl">No Profile #</div>
+          </div>
+        `;
+
+        document.getElementById('jerseyResultCard').style.display = 'block';
+        document.getElementById('jerseyUpdateAllBtn').disabled = countUpdate === 0;
+
+        if (countUpdate > 0) {
+          showJerseyAlert(`Found ${countUpdate} player(s) with jersey numbers to update.`, 'success');
+        } else {
+          showJerseyAlert('All jersey numbers are already in sync.', 'success');
+        }
+
+      } catch (err) {
+        console.error('Jersey scan error:', err);
+        showJerseyAlert('Error during scan: ' + err.message, 'error');
+      }
+
+      scanBtn.disabled = false;
+      scanBtn.textContent = 'Scan Jersey Numbers';
+    });
+
+    async function jerseyUpdateSingle(rosterDocId, playerIndex, newNumber, btn) {
+      btn.disabled = true;
+      btn.textContent = 'Updating...';
+      try {
+        const docRef = doc(dbJ, 'rosters', rosterDocId);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) throw new Error('Roster doc not found');
+
+        const players = [...(docSnap.data().players || [])];
+        players[playerIndex] = { ...players[playerIndex], number: newNumber };
+        await updateDoc(docRef, { players, updatedAt: new Date().toISOString() });
+
+        btn.textContent = 'Updated';
+        btn.style.background = '#48bb78';
+        btn.disabled = true;
+
+        const row = document.getElementById(`jersey-${rosterDocId}-${playerIndex}`);
+        if (row) {
+          row.className = 'jersey-clean';
+          row.cells[2].innerHTML = `<span class="tag-jersey-same">#${newNumber}</span>`;
+          row.cells[3].innerHTML = `<span class="tag-jersey-same">#${newNumber}</span>`;
+          row.cells[4].innerHTML = '<span style="color:#48bb78; font-weight:600; font-size:0.85rem;">Done</span>';
+        }
+
+        jerseyUpdateResults = jerseyUpdateResults.filter(
+          r => !(r.rosterDocId === rosterDocId && r.playerIndex === playerIndex)
+        );
+        document.getElementById('jerseyUpdateAllBtn').disabled = jerseyUpdateResults.length === 0;
+
+      } catch (err) {
+        console.error('jerseyUpdateSingle error:', err);
+        btn.textContent = 'Error';
+        btn.style.background = '#f56565';
+        btn.disabled = false;
+        showJerseyAlert('Error updating player: ' + err.message, 'error');
+      }
+    }
+
+    document.getElementById('jerseyUpdateAllBtn').addEventListener('click', async () => {
+      if (jerseyUpdateResults.length === 0) return;
+
+      const updateAllBtn = document.getElementById('jerseyUpdateAllBtn');
+      updateAllBtn.disabled = true;
+      updateAllBtn.textContent = 'Updating...';
+
+      // Group by rosterDocId to minimise reads/writes
+      const grouped = {};
+      jerseyUpdateResults.forEach(r => {
+        if (!grouped[r.rosterDocId]) grouped[r.rosterDocId] = [];
+        grouped[r.rosterDocId].push(r);
+      });
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const [rosterDocId, entries] of Object.entries(grouped)) {
+        try {
+          const docRef = doc(dbJ, 'rosters', rosterDocId);
+          const docSnap = await getDoc(docRef);
+          if (!docSnap.exists()) { errorCount += entries.length; continue; }
+
+          const players = [...(docSnap.data().players || [])];
+          entries.forEach(e => {
+            players[e.playerIndex] = { ...players[e.playerIndex], number: e.newNumber };
+          });
+
+          await updateDoc(docRef, { players, updatedAt: new Date().toISOString() });
+
+          entries.forEach(e => {
+            const row = document.getElementById(`jersey-${rosterDocId}-${e.playerIndex}`);
+            if (row) {
+              row.className = 'jersey-clean';
+              row.cells[2].innerHTML = `<span class="tag-jersey-same">#${e.newNumber}</span>`;
+              row.cells[3].innerHTML = `<span class="tag-jersey-same">#${e.newNumber}</span>`;
+              row.cells[4].innerHTML = '<span style="color:#48bb78; font-weight:600; font-size:0.85rem;">Done</span>';
+            }
+          });
+
+          successCount += entries.length;
+        } catch (err) {
+          console.error('jerseyUpdateAll error for', rosterDocId, err);
+          errorCount += entries.length;
+        }
+      }
+
+      jerseyUpdateResults = [];
+      const msg = successCount > 0
+        ? `Updated ${successCount} player(s).${errorCount > 0 ? ` ${errorCount} failed.` : ''}`
+        : 'All updates failed. Check console for details.';
+      showJerseyAlert(msg, errorCount === 0 ? 'success' : 'warning');
+      updateAllBtn.textContent = 'Update All Changed';
+    });
+
+    onAuthStateChanged(authJ, async (user) => {
+      if (user) await populateJerseySeasonSelect();
+    });
+  </script>
+
+  <script type="module">
+    import { initializeApp, getApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getFirestore, collection, getDocs, doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+    let dbLM, authLM;
+    try {
+      const existingApp = getApp();
+      dbLM = getFirestore(existingApp);
+      authLM = getAuth(existingApp);
+    } catch (e) {
+      const lmApp = initializeApp({
+        apiKey: "AIzaSyCAEWkrTcprzJ2KPPJu-vFJPvYOVU4ky20",
+        authDomain: "acessoftballreference-84791.firebaseapp.com",
+        projectId: "acessoftballreference-84791",
+        storageBucket: "acessoftballreference-84791.firebasestorage.app",
+        messagingSenderId: "777699560175",
+        appId: "1:777699560175:web:4092b422e7d7116352e91a"
+      }, 'legacymatch');
+      dbLM = getFirestore(lmApp);
+      authLM = getAuth(lmApp);
+    }
+
+    let lmMismatches = [];
+
+    function showLMAlert(msg, type) {
+      const el = document.getElementById('legacymatchAlert');
+      el.textContent = msg;
+      el.className = `alert alert-${type}`;
+      el.style.display = 'block';
+    }
+
+    async function populateLMSeasonSelect() {
+      try {
+        const snap = await getDocs(collection(dbLM, 'seasons'));
+        const sel = document.getElementById('legacymatchSeasonSelect');
+        const seasons = [];
+        snap.forEach(d => seasons.push({ id: d.id, ...d.data() }));
+        const seasonSortKey = (s) => {
+          const sd = s.startDate;
+          if (sd && typeof sd.toDate === 'function') return sd.toDate().toISOString();
+          if (sd instanceof Date) return sd.toISOString();
+          if (typeof sd === 'string' && sd) return sd;
+          return s.id || '';
+        };
+        seasons.sort((a, b) => seasonSortKey(b).localeCompare(seasonSortKey(a)));
+        seasons.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = s.name || s.id;
+          sel.appendChild(opt);
+        });
+      } catch (err) {
+        console.error('LM season load error:', err);
+      }
+    }
+
+    document.getElementById('legacymatchSeasonSelect').addEventListener('change', e => {
+      document.getElementById('legacymatchScanBtn').disabled = !e.target.value;
+    });
+
+    document.getElementById('legacymatchScanBtn').addEventListener('click', async () => {
+      const seasonId = document.getElementById('legacymatchSeasonSelect').value;
+      if (!seasonId) return;
+
+      const scanBtn = document.getElementById('legacymatchScanBtn');
+      scanBtn.disabled = true;
+      scanBtn.textContent = 'Scanning...';
+      lmMismatches = [];
+      document.getElementById('legacymatchFixAllBtn').disabled = true;
+
+      try {
+        const rostersSnap = await getDocs(collection(dbLM, 'rosters'));
+        const rosterDocs = [];
+        rostersSnap.forEach(d => {
+          if (d.id.startsWith(seasonId + '-')) rosterDocs.push({ id: d.id, data: d.data() });
+        });
+
+        if (rosterDocs.length === 0) {
+          showLMAlert('No roster docs found for this season.', 'warning');
+          scanBtn.disabled = false;
+          scanBtn.textContent = 'Scan for Mismatches';
+          return;
+        }
+
+        const tableBody = document.getElementById('legacymatchTableBody');
+        tableBody.innerHTML = '';
+        let countClean = 0, countMismatch = 0, countNoAuth = 0;
+
+        for (const rosterDoc of rosterDocs) {
+          const teamName = rosterDoc.data.teamName || rosterDoc.id.replace(seasonId + '-', '');
+          const players = rosterDoc.data.players || [];
+
+          for (let idx = 0; idx < players.length; idx++) {
+            const player = players[idx];
+            const rosterId = player.id || '';
+            const authId = player.authId || '';
+            const tr = document.createElement('tr');
+
+            if (!authId) {
+              countNoAuth++;
+              tr.className = 'lm-noauth';
+              tr.innerHTML = `
+                <td>${player.name || '&mdash;'}</td>
+                <td>${teamName}</td>
+                <td><span class="uid-text" style="color:#a0aec0;">${rosterId || '(empty)'}</span></td>
+                <td><span style="color:#a0aec0; font-size:0.82rem;">No authId</span></td>
+                <td style="color:#a0aec0; font-size:0.82rem;">Skipped</td>
+              `;
+              tableBody.appendChild(tr);
+              continue;
+            }
+
+            let mergedFrom = null;
+            try {
+              const userSnap = await getDoc(doc(dbLM, 'users', authId));
+              if (userSnap.exists()) mergedFrom = userSnap.data().mergedFromProfile || null;
+            } catch (err) {
+              console.warn('Could not fetch user doc for authId:', authId, err);
+            }
+
+            if (!mergedFrom) {
+              countNoAuth++;
+              tr.className = 'lm-noauth';
+              tr.innerHTML = `
+                <td>${player.name || '&mdash;'}</td>
+                <td>${teamName}</td>
+                <td><span class="uid-text" style="color:#a0aec0;">${rosterId || '(empty)'}</span></td>
+                <td><span style="color:#a0aec0; font-size:0.82rem;">No mergedFromProfile</span></td>
+                <td style="color:#a0aec0; font-size:0.82rem;">Skipped</td>
+              `;
+              tableBody.appendChild(tr);
+              continue;
+            }
+
+            if (rosterId === mergedFrom) {
+              countClean++;
+              tr.className = 'lm-clean';
+              tr.innerHTML = `
+                <td>${player.name || '&mdash;'}</td>
+                <td>${teamName}</td>
+                <td><span class="tag-lm-good uid-text">${rosterId}</span></td>
+                <td><span class="uid-text" style="color:#a0aec0;">${mergedFrom}</span></td>
+                <td style="color:#a0aec0; font-size:0.82rem;">Clean</td>
+              `;
+              tableBody.appendChild(tr);
+            } else {
+              countMismatch++;
+              const rowId = `lm-row-${rosterDoc.id}-${idx}`;
+              lmMismatches.push({ rosterDocId: rosterDoc.id, playerIndex: idx, playerName: player.name, team: teamName, correctId: mergedFrom, currentId: rosterId });
+              tr.className = 'lm-mismatch';
+              tr.id = rowId;
+              tr.innerHTML = `
+                <td><strong>${player.name || '&mdash;'}</strong></td>
+                <td>${teamName}</td>
+                <td><span class="tag-lm-bad uid-text">${rosterId}</span></td>
+                <td><span class="tag-lm-good uid-text">${mergedFrom}</span></td>
+                <td>
+                  <button class="btn-patch"
+                    data-doc="${rosterDoc.id}"
+                    data-idx="${idx}"
+                    data-correct="${mergedFrom}"
+                    data-rowid="${rowId}">Fix</button>
+                </td>
+              `;
+              tableBody.appendChild(tr);
+            }
+          }
+        }
+
+        document.getElementById('legacymatchSummary').innerHTML = `
+          <div class="authid-stat"><div class="val">${countClean + countMismatch + countNoAuth}</div><div class="lbl">Total Players</div></div>
+          <div class="authid-stat" style="border-color:#9ae6b4;"><div class="val" style="color:#276749;">${countClean}</div><div class="lbl">Clean</div></div>
+          <div class="authid-stat" style="border-color:#fcd34d;"><div class="val" style="color:#92400e;">${countMismatch}</div><div class="lbl">Mismatch</div></div>
+          <div class="authid-stat"><div class="val" style="color:#718096;">${countNoAuth}</div><div class="lbl">No Profile</div></div>
+        `;
+
+        document.getElementById('legacymatchResultCard').style.display = 'block';
+        document.getElementById('legacymatchFixAllBtn').disabled = lmMismatches.length === 0;
+        showLMAlert(
+          countMismatch > 0
+            ? `Found ${countMismatch} mismatch(es) across ${countClean + countMismatch} linked players.`
+            : 'All linked players have matching IDs.',
+          countMismatch > 0 ? 'warning' : 'success'
+        );
+
+      } catch (err) {
+        console.error('LM scan error:', err);
+        showLMAlert('Scan failed: ' + err.message, 'error');
+      }
+
+      scanBtn.disabled = false;
+      scanBtn.textContent = 'Scan for Mismatches';
+    });
+
+    document.getElementById('legacymatchTableBody').addEventListener('click', async (e) => {
+      const btn = e.target.closest('.btn-patch[data-doc]');
+      if (!btn) return;
+      btn.disabled = true;
+      btn.textContent = 'Fixing...';
+      try {
+        const rosterDocId = btn.dataset.doc;
+        const playerIndex = parseInt(btn.dataset.idx);
+        const correctId = btn.dataset.correct;
+        const rowId = btn.dataset.rowid;
+        const docRef = doc(dbLM, 'rosters', rosterDocId);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) throw new Error('Roster doc not found');
+        const players = [...(docSnap.data().players || [])];
+        players[playerIndex] = { ...players[playerIndex], id: correctId };
+        await updateDoc(docRef, { players, updatedAt: new Date().toISOString() });
+        const row = document.getElementById(rowId);
+        if (row) {
+          row.className = 'lm-clean';
+          row.cells[2].innerHTML = `<span class="tag-lm-good uid-text">${correctId}</span>`;
+          row.cells[4].innerHTML = '<span style="color:#48bb78; font-weight:600; font-size:0.85rem;">Fixed</span>';
+        }
+        lmMismatches = lmMismatches.filter(m => !(m.rosterDocId === rosterDocId && m.playerIndex === playerIndex));
+        if (lmMismatches.length === 0) document.getElementById('legacymatchFixAllBtn').disabled = true;
+      } catch (err) {
+        console.error('lmFixSingle error:', err);
+        btn.textContent = 'Error';
+        btn.style.background = '#f56565';
+      }
+    });
+
+    document.getElementById('legacymatchFixAllBtn').addEventListener('click', async () => {
+      if (lmMismatches.length === 0) return;
+      const fixAllBtn = document.getElementById('legacymatchFixAllBtn');
+      fixAllBtn.disabled = true;
+      fixAllBtn.textContent = 'Fixing...';
+
+      const grouped = {};
+      lmMismatches.forEach(m => {
+        if (!grouped[m.rosterDocId]) grouped[m.rosterDocId] = [];
+        grouped[m.rosterDocId].push(m);
+      });
+
+      let successCount = 0, errorCount = 0;
+
+      for (const [rosterDocId, entries] of Object.entries(grouped)) {
+        try {
+          const docRef = doc(dbLM, 'rosters', rosterDocId);
+          const docSnap = await getDoc(docRef);
+          if (!docSnap.exists()) { errorCount += entries.length; continue; }
+          const players = [...(docSnap.data().players || [])];
+          entries.forEach(e => { players[e.playerIndex] = { ...players[e.playerIndex], id: e.correctId }; });
+          await updateDoc(docRef, { players, updatedAt: new Date().toISOString() });
+          entries.forEach(e => {
+            const row = document.getElementById(`lm-row-${rosterDocId}-${e.playerIndex}`);
+            if (row) {
+              row.className = 'lm-clean';
+              row.cells[2].innerHTML = `<span class="tag-lm-good uid-text">${e.correctId}</span>`;
+              row.cells[4].innerHTML = '<span style="color:#48bb78; font-weight:600; font-size:0.85rem;">Fixed</span>';
+            }
+          });
+          successCount += entries.length;
+        } catch (err) {
+          console.error('lmFixAll error for', rosterDocId, err);
+          errorCount += entries.length;
+        }
+      }
+
+      lmMismatches = [];
+      fixAllBtn.textContent = 'Fix All Mismatches';
+      showLMAlert(
+        successCount > 0
+          ? `Fixed ${successCount} player(s).${errorCount > 0 ? ` ${errorCount} failed.` : ''}`
+          : 'All fixes failed. Check console.',
+        errorCount === 0 ? 'success' : 'warning'
+      );
+    });
+
+    onAuthStateChanged(authLM, async (user) => {
+      if (user) await populateLMSeasonSelect();
+    });
+  </script>
+
+  <script type="module">
+    import { getApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getFirestore, collection, getDocs, doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+    const appPS = getApp();
+    const dbPS = getFirestore(appPS);
+    const authPS = getAuth(appPS);
+
+    // The four fields we compare, in display order
+    const PS_FIELDS = [
+      { key: 'position', label: 'Position' },
+      { key: 'number',   label: 'Jersey #' },
+      { key: 'throws',   label: 'Throws'   },
+      { key: 'bats',     label: 'Bats'     },
+    ];
+
+    // Treat null / '' / '-' as "not set"
+    function psNorm(v) {
+      if (v == null) return null;
+      const s = String(v).trim();
+      return (s === '' || s === '-') ? null : s;
+    }
+
+    // Guard: returns true if a value must NOT be written to Firestore
+    // (null, undefined, empty string, or the placeholder dash)
+    function psIsBlank(v) {
+      if (v == null) return true;
+      const s = String(v).trim();
+      return s === '' || s === '-';
+    }
+
+    function showPSAlert(msg, type) {
+      const el = document.getElementById('profileSyncAlert');
+      el.textContent = msg;
+      el.className = `alert show alert-${type}`;
+      setTimeout(() => el.classList.remove('show'), 7000);
+    }
+
+    // ── Season dropdown ──────────────────────────────────────────────
+    async function populatePSSeasonSelect() {
+      try {
+        const snap = await getDocs(collection(dbPS, 'seasons'));
+        const sel  = document.getElementById('profileSyncSeasonSelect');
+        sel.innerHTML = '<option value="">-- Select a season --</option>';
+        const seasons = [];
+        snap.forEach(d => {
+          const data = d.data();
+          seasons.push({ id: d.id, name: `${data.year} ${data.season.charAt(0).toUpperCase() + data.season.slice(1)}`, data });
+        });
+        seasons.sort((a, b) => {
+          if (b.data.year !== a.data.year) return b.data.year - a.data.year;
+          const order = { summer: 0, fall: 1, winter: 2, spring: 3 };
+          return order[a.data.season] - order[b.data.season];
+        });
+        seasons.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = s.name;
+          sel.appendChild(opt);
+        });
+        sel.addEventListener('change', e => {
+          document.getElementById('profileSyncScanBtn').disabled = !e.target.value;
+          document.getElementById('profileSyncUpdateAllRosterBtn').disabled  = true;
+          document.getElementById('profileSyncUpdateAllProfileBtn').disabled = true;
+          document.getElementById('profileSyncResultCard').style.display = 'none';
+        });
+      } catch (err) {
+        console.error('PS: season load error', err);
+      }
+    }
+
+    // ── State ────────────────────────────────────────────────────────
+    // Each entry = one (player × field) row that has an actionable difference
+    // { rosterDocId, playerIndex, field, playerName, team, rosterVal, profileVal, profileUid, rowId, status }
+    let psMismatches = [];
+
+    // ── Scan ─────────────────────────────────────────────────────────
+    document.getElementById('profileSyncScanBtn').addEventListener('click', async () => {
+      const seasonId = document.getElementById('profileSyncSeasonSelect').value;
+      if (!seasonId) return;
+
+      const scanBtn = document.getElementById('profileSyncScanBtn');
+      scanBtn.disabled  = true;
+      scanBtn.textContent = 'Scanning…';
+      psMismatches = [];
+
+      document.getElementById('profileSyncUpdateAllRosterBtn').disabled  = true;
+      document.getElementById('profileSyncUpdateAllProfileBtn').disabled = true;
+
+      try {
+        // Load roster docs for this season
+        const rostersSnap = await getDocs(collection(dbPS, 'rosters'));
+        const rosterDocs  = [];
+        rostersSnap.forEach(d => {
+          if (d.id.startsWith(seasonId + '-')) rosterDocs.push({ id: d.id, data: d.data() });
+        });
+
+        if (rosterDocs.length === 0) {
+          showPSAlert('No roster docs found for this season. Run Roster Sync first.', 'warning');
+          scanBtn.disabled = false;
+          scanBtn.textContent = '🔍 Scan Player Profiles';
+          return;
+        }
+
+        // Pre-load all user profiles — build two lookup maps
+        // authProfileMap[uid]      -> { number, position, bats, throws }
+        // legacyProfileMap[legId]  -> { number, position, bats, throws }  (via mergedFromProfile)
+        const usersSnap = await getDocs(collection(dbPS, 'users'));
+        const authProfileMap   = {};
+        const legacyProfileMap = {};
+        usersSnap.forEach(u => {
+          const d = u.data();
+          const profile = {
+            number:   psNorm(d.number),
+            position: psNorm(d.position),
+            bats:     psNorm(d.bats),
+            throws:   psNorm(d.throws),
+            uid:      u.id,
+          };
+          authProfileMap[u.id] = profile;
+          if (d.mergedFromProfile) legacyProfileMap[d.mergedFromProfile] = profile;
+        });
+
+        const tbody = document.getElementById('profileSyncTableBody');
+        tbody.innerHTML = '';
+
+        let countMatch = 0, countMismatch = 0, countMissingRoster = 0,
+            countMissingProfile = 0, countNoLink = 0;
+        let canUpdateRoster = false, canUpdateProfile = false;
+
+        for (const rosterDoc of rosterDocs) {
+          const teamName = rosterDoc.data.teamName || rosterDoc.id.replace(seasonId + '-', '');
+          const players  = rosterDoc.data.players || [];
+
+          players.forEach((player, pIdx) => {
+            // Look up the linked profile
+            const profileData = (player.authId && authProfileMap[player.authId])
+                              || (player.id   && legacyProfileMap[player.id])
+                              || null;
+
+            PS_FIELDS.forEach((field, fIdx) => {
+              const rosterVal  = psNorm(player[field.key]);
+              const profileVal = profileData ? psNorm(profileData[field.key]) : null;
+              const profileUid = profileData ? profileData.uid : null;
+              const rowId = `ps-row-${rosterDoc.id}-${pIdx}-${field.key}`;
+
+              // Determine status
+              let status, rowClass, statusTag;
+              if (!profileData) {
+                status = 'no_link'; rowClass = 'profsync-nolink';
+                statusTag = '<span style="color:#a0aec0; font-size:0.82rem;">No profile</span>';
+                countNoLink++;
+              } else if (rosterVal === profileVal) {
+                // Covers both-null AND value match
+                status = 'match'; rowClass = 'profsync-match';
+                statusTag = '<span class="tag-profsync-match">Match</span>';
+                countMatch++;
+              } else if (!rosterVal && profileVal) {
+                status = 'missing_roster'; rowClass = 'profsync-missing';
+                statusTag = '<span class="tag-profsync-missing">Missing in roster</span>';
+                countMissingRoster++;
+              } else if (rosterVal && !profileVal) {
+                status = 'missing_profile'; rowClass = 'profsync-missing';
+                statusTag = '<span class="tag-profsync-missing">Missing in profile</span>';
+                countMissingProfile++;
+              } else {
+                status = 'mismatch'; rowClass = 'profsync-mismatch';
+                statusTag = '<span class="tag-profsync-mismatch">Mismatch</span>';
+                countMismatch++;
+              }
+
+              // Determine button availability
+              const canRoster  = profileData && profileVal && status !== 'match';
+              const canProfile = profileData && rosterVal  && status !== 'match';
+
+              if (canRoster)  canUpdateRoster  = true;
+              if (canProfile) canUpdateProfile = true;
+
+              // Track for bulk update
+              if (status !== 'match' && status !== 'no_link') {
+                psMismatches.push({
+                  rosterDocId: rosterDoc.id,
+                  playerIndex: pIdx,
+                  field:       field.key,
+                  playerName:  player.name,
+                  team:        teamName,
+                  rosterVal,
+                  profileVal,
+                  profileUid,
+                  rowId,
+                  status,
+                });
+              }
+
+              // Display values
+              const rosterDisplay  = rosterVal  ? `<span class="tag-profsync-val">${escPS(rosterVal)}</span>`
+                                                : '<span style="color:#a0aec0;">—</span>';
+              const profileDisplay = profileVal ? `<span class="tag-profsync-val">${escPS(profileVal)}</span>`
+                                                : '<span style="color:#a0aec0;">—</span>';
+
+              const toRosterBtn  = canRoster
+                ? `<button class="btn-to-roster"
+                     data-doc="${rosterDoc.id}" data-idx="${pIdx}"
+                     data-field="${field.key}" data-val="${escPS(profileVal)}"
+                     data-playername="${escPS(player.name || '')}"
+                     data-rowid="${rowId}">Use profile</button>`
+                : '<span style="color:#cbd5e0; font-size:0.78rem;">—</span>';
+
+              const toProfileBtn = canProfile
+                ? `<button class="btn-to-profile"
+                     data-uid="${profileUid}" data-field="${field.key}"
+                     data-val="${escPS(rosterVal)}" data-rowid="${rowId}">Use roster</button>`
+                : '<span style="color:#cbd5e0; font-size:0.78rem;">—</span>';
+
+              const tr = document.createElement('tr');
+              tr.className = rowClass + (fIdx === 0 ? ' profsync-player-top' : '');
+              tr.id = rowId;
+              tr.innerHTML = `
+                <td>${fIdx === 0 ? `<strong>${escPS(player.name || '—')}</strong>` : ''}</td>
+                <td>${fIdx === 0 ? escPS(teamName) : ''}</td>
+                <td style="font-weight:600; color:#4a5568;">${field.label}</td>
+                <td>${rosterDisplay}</td>
+                <td>${profileDisplay}</td>
+                <td>${statusTag}</td>
+                <td>${toRosterBtn}</td>
+                <td>${toProfileBtn}</td>
+              `;
+              tbody.appendChild(tr);
+            });
+          });
+        }
+
+        // Wire up row-level button clicks via delegation
+        tbody.addEventListener('click', e => {
+          const rBtn = e.target.closest('.btn-to-roster[data-doc]');
+          if (rBtn && !rBtn.disabled) {
+            psUpdateRoster(rBtn.dataset.doc, parseInt(rBtn.dataset.idx), rBtn.dataset.field, rBtn.dataset.val, rBtn, rBtn.dataset.playername || '');
+            return;
+          }
+          const pBtn = e.target.closest('.btn-to-profile[data-uid]');
+          if (pBtn && !pBtn.disabled) {
+            psUpdateProfile(pBtn.dataset.uid, pBtn.dataset.field, pBtn.dataset.val, pBtn);
+          }
+        });
+
+        // Summary stats
+        document.getElementById('profileSyncSummary').innerHTML = `
+          <div class="authid-stat" style="border-color:#9ae6b4;">
+            <div class="val" style="color:#276749;">${countMatch}</div>
+            <div class="lbl">Match</div>
+          </div>
+          <div class="authid-stat" style="border-color:#fcd34d;">
+            <div class="val" style="color:#92400e;">${countMismatch}</div>
+            <div class="lbl">Mismatch</div>
+          </div>
+          <div class="authid-stat" style="border-color:#feb2b2;">
+            <div class="val" style="color:#c53030;">${countMissingRoster}</div>
+            <div class="lbl">Missing in Roster</div>
+          </div>
+          <div class="authid-stat" style="border-color:#feb2b2;">
+            <div class="val" style="color:#c53030;">${countMissingProfile}</div>
+            <div class="lbl">Missing in Profile</div>
+          </div>
+          <div class="authid-stat">
+            <div class="val" style="color:#a0aec0;">${countNoLink}</div>
+            <div class="lbl">No Profile</div>
+          </div>
+        `;
+
+        document.getElementById('profileSyncResultCard').style.display = 'block';
+        document.getElementById('profileSyncUpdateAllRosterBtn').disabled  = !canUpdateRoster;
+        document.getElementById('profileSyncUpdateAllProfileBtn').disabled = !canUpdateProfile;
+
+        const totalDiff = countMismatch + countMissingRoster + countMissingProfile;
+        showPSAlert(
+          totalDiff > 0
+            ? `Scan complete — ${totalDiff} field difference(s) found across ${PS_FIELDS.length}-field comparison.`
+            : 'Scan complete — all fields match.',
+          totalDiff > 0 ? 'warning' : 'success'
+        );
+
+      } catch (err) {
+        console.error('PS scan error:', err);
+        showPSAlert('Error during scan: ' + err.message, 'error');
+      }
+
+      scanBtn.disabled = false;
+      scanBtn.textContent = '🔍 Scan Player Profiles';
+    });
+
+    // ── Single update: write profile value → roster ───────────────
+    async function psUpdateRoster(rosterDocId, playerIndex, field, newVal, btn, playerName) {
+      // Never write a blank value over existing data
+      if (psIsBlank(newVal)) {
+        console.warn(`psUpdateRoster: refusing to write blank value for field "${field}" on player "${playerName}"`);
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = '…';
+      try {
+        const ref  = doc(dbPS, 'rosters', rosterDocId);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) throw new Error('Roster doc not found');
+
+        const players = [...(snap.data().players || [])];
+
+        // Verify the stored index still points to the correct player.
+        // If the array was modified between scan and write, fall back to name search.
+        let idx = playerIndex;
+        if (playerName && players[idx]?.name !== playerName) {
+          const found = players.findIndex(p => p.name === playerName);
+          if (found >= 0) {
+            console.warn(`psUpdateRoster: index ${playerIndex} shifted for "${playerName}"; using found index ${found}`);
+            idx = found;
+          } else {
+            throw new Error(`Player "${playerName}" not found in live roster array`);
+          }
+        }
+
+        players[idx] = { ...players[idx], [field]: newVal };
+        await updateDoc(ref, { players, updatedAt: new Date().toISOString() });
+
+        btn.textContent = '✓ Done';
+        btn.style.background = '#48bb78';
+
+        // Mark row as resolved
+        const row = document.getElementById(btn.dataset.rowid || btn.closest('tr')?.id);
+        if (row) psMarkRowResolved(row, 'roster', newVal);
+
+        // Remove from bulk list
+        psMismatches = psMismatches.filter(
+          m => !(m.rosterDocId === rosterDocId && m.playerIndex === playerIndex && m.field === field)
+        );
+        document.getElementById('profileSyncUpdateAllRosterBtn').disabled  = !psMismatches.some(m => !psIsBlank(m.profileVal));
+        document.getElementById('profileSyncUpdateAllProfileBtn').disabled = !psMismatches.some(m => !psIsBlank(m.rosterVal));
+
+      } catch (err) {
+        console.error('psUpdateRoster error:', err);
+        btn.textContent = 'Error';
+        btn.style.background = '#f56565';
+        btn.disabled = false;
+        showPSAlert('Error updating roster: ' + err.message, 'error');
+      }
+    }
+
+    // ── Single update: write roster value → profile ───────────────
+    async function psUpdateProfile(uid, field, newVal, btn) {
+      // Never write a blank value over existing data
+      if (psIsBlank(newVal)) {
+        console.warn(`psUpdateProfile: refusing to write blank value for field "${field}" on uid "${uid}"`);
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = '…';
+      try {
+        const ref = doc(dbPS, 'users', uid);
+        await updateDoc(ref, { [field]: newVal, updatedAt: new Date().toISOString() });
+
+        btn.textContent = '✓ Done';
+        btn.style.background = '#48bb78';
+
+        // Mark row as resolved
+        const row = document.getElementById(btn.dataset.rowid || btn.closest('tr')?.id);
+        if (row) psMarkRowResolved(row, 'profile', newVal);
+
+        // Remove from bulk list
+        psMismatches = psMismatches.filter(
+          m => !(m.profileUid === uid && m.field === field)
+        );
+        document.getElementById('profileSyncUpdateAllRosterBtn').disabled  = !psMismatches.some(m => !psIsBlank(m.profileVal));
+        document.getElementById('profileSyncUpdateAllProfileBtn').disabled = !psMismatches.some(m => !psIsBlank(m.rosterVal));
+
+      } catch (err) {
+        console.error('psUpdateProfile error:', err);
+        btn.textContent = 'Error';
+        btn.style.background = '#f56565';
+        btn.disabled = false;
+        showPSAlert('Error updating profile: ' + err.message, 'error');
+      }
+    }
+
+    // ── Visual row update after a successful single write ─────────
+    function psMarkRowResolved(row, updatedSide, resolvedVal) {
+      row.className = row.className.replace('profsync-mismatch', 'profsync-match')
+                                   .replace('profsync-missing',  'profsync-match');
+      // cols: 0=Player, 1=Team, 2=Field, 3=Roster, 4=Profile, 5=Status, 6=→Roster, 7=→Profile
+      const valTag = `<span class="tag-profsync-val">${escPS(resolvedVal)}</span>`;
+      if (updatedSide === 'roster')  row.cells[3].innerHTML = valTag;
+      if (updatedSide === 'profile') row.cells[4].innerHTML = valTag;
+      row.cells[5].innerHTML = '<span class="tag-profsync-match">Match</span>';
+      row.cells[6].innerHTML = '<span style="color:#a0aec0; font-size:0.78rem;">—</span>';
+      row.cells[7].innerHTML = '<span style="color:#a0aec0; font-size:0.78rem;">—</span>';
+    }
+
+    // ── Bulk: Update All → Roster (copy profile values to roster) ─
+    document.getElementById('profileSyncUpdateAllRosterBtn').addEventListener('click', async () => {
+      // Only process entries where profileVal is genuinely non-blank
+      const toUpdate = psMismatches.filter(m => !psIsBlank(m.profileVal));
+      if (toUpdate.length === 0) return;
+
+      const btn = document.getElementById('profileSyncUpdateAllRosterBtn');
+      btn.disabled = true;
+      btn.textContent = 'Updating…';
+
+      // Group by rosterDocId only — read each doc ONCE and apply all player/field
+      // updates in a single write, eliminating redundant reads and race conditions.
+      const grouped = {};
+      toUpdate.forEach(m => {
+        if (!grouped[m.rosterDocId]) grouped[m.rosterDocId] = [];
+        grouped[m.rosterDocId].push(m);
+      });
+
+      let successCount = 0, errorCount = 0;
+
+      for (const [rosterDocId, items] of Object.entries(grouped)) {
+        try {
+          const ref  = doc(dbPS, 'rosters', rosterDocId);
+          const snap = await getDoc(ref);
+          if (!snap.exists()) { errorCount += items.length; continue; }
+
+          const players = [...(snap.data().players || [])];
+          const applied = [];
+
+          items.forEach(m => {
+            // Double-guard: skip if value is blank (should never happen after filter, but be safe)
+            if (psIsBlank(m.profileVal)) {
+              console.warn(`Bulk→Roster: skipping blank profileVal for "${m.playerName}" field "${m.field}"`);
+              return;
+            }
+            // Verify the stored index still points to the correct player.
+            // Fall back to a name search if the array was modified since the scan.
+            let idx = m.playerIndex;
+            if (players[idx]?.name !== m.playerName) {
+              const found = players.findIndex(p => p.name === m.playerName);
+              if (found < 0) {
+                console.warn(`Bulk→Roster: player "${m.playerName}" not found in live array for ${rosterDocId}; skipping`);
+                errorCount++;
+                return;
+              }
+              console.warn(`Bulk→Roster: index ${idx} shifted for "${m.playerName}"; using found index ${found}`);
+              idx = found;
+            }
+            players[idx] = { ...players[idx], [m.field]: m.profileVal };
+            applied.push(m);
+          });
+
+          if (applied.length > 0) {
+            await updateDoc(ref, { players, updatedAt: new Date().toISOString() });
+            applied.forEach(m => {
+              const row = document.getElementById(m.rowId);
+              if (row) psMarkRowResolved(row, 'roster', m.profileVal);
+            });
+            successCount += applied.length;
+          }
+        } catch (err) {
+          console.error('psUpdateAllRoster error for', rosterDocId, err);
+          errorCount += items.length;
+        }
+      }
+
+      // Clear resolved entries from the mismatch list
+      const resolvedKeys = new Set(toUpdate.map(m => `${m.rosterDocId}::${m.playerIndex}::${m.field}`));
+      psMismatches = psMismatches.filter(
+        m => !resolvedKeys.has(`${m.rosterDocId}::${m.playerIndex}::${m.field}`)
+      );
+
+      btn.textContent = '⚡ Update All → Roster';
+      btn.disabled = !psMismatches.some(m => !psIsBlank(m.profileVal));
+      document.getElementById('profileSyncUpdateAllProfileBtn').disabled = !psMismatches.some(m => !psIsBlank(m.rosterVal));
+
+      showPSAlert(
+        successCount > 0
+          ? `Updated ${successCount} field(s) in roster.${errorCount > 0 ? ` ${errorCount} failed.` : ''}`
+          : 'All updates failed. Check console.',
+        errorCount === 0 ? 'success' : 'warning'
+      );
+    });
+
+    // ── Bulk: Update All → Profile (copy roster values to profile) ─
+    document.getElementById('profileSyncUpdateAllProfileBtn').addEventListener('click', async () => {
+      // Only process entries where rosterVal is genuinely non-blank
+      const toUpdate = psMismatches.filter(m => !psIsBlank(m.rosterVal));
+      if (toUpdate.length === 0) return;
+
+      const btn = document.getElementById('profileSyncUpdateAllProfileBtn');
+      btn.disabled = true;
+      btn.textContent = 'Updating…';
+
+      // Group by profileUid to batch per user doc
+      const grouped = {};
+      toUpdate.forEach(m => {
+        if (!m.profileUid) {
+          console.warn(`Bulk→Profile: no profileUid for "${m.playerName}" field "${m.field}"; skipping`);
+          return;
+        }
+        if (!grouped[m.profileUid]) grouped[m.profileUid] = [];
+        grouped[m.profileUid].push(m);
+      });
+
+      let successCount = 0, errorCount = 0;
+
+      for (const [uid, fields] of Object.entries(grouped)) {
+        try {
+          const updates = {};
+          fields.forEach(m => {
+            // Double-guard: never write a blank value to a profile field
+            if (psIsBlank(m.rosterVal)) {
+              console.warn(`Bulk→Profile: skipping blank rosterVal for "${m.playerName}" field "${m.field}"`);
+              return;
+            }
+            updates[m.field] = m.rosterVal;
+          });
+          // Skip the write entirely if nothing survived the guard
+          if (Object.keys(updates).length === 0) continue;
+          updates.updatedAt = new Date().toISOString();
+          await updateDoc(doc(dbPS, 'users', uid), updates);
+
+          fields.forEach(m => {
+            if (psIsBlank(m.rosterVal)) return;
+            const row = document.getElementById(m.rowId);
+            if (row) psMarkRowResolved(row, 'profile', m.rosterVal);
+          });
+          successCount += Object.keys(updates).length - 1; // subtract updatedAt
+        } catch (err) {
+          console.error('psUpdateAllProfile error for uid', uid, err);
+          errorCount += fields.length;
+        }
+      }
+
+      // Clear resolved entries from the mismatch list
+      const resolvedKeys = new Set(toUpdate.map(m => `${m.profileUid}::${m.field}`));
+      psMismatches = psMismatches.filter(
+        m => !resolvedKeys.has(`${m.profileUid}::${m.field}`)
+      );
+
+      btn.textContent = '⚡ Update All → Profile';
+      btn.disabled = !psMismatches.some(m => !psIsBlank(m.rosterVal));
+      document.getElementById('profileSyncUpdateAllRosterBtn').disabled = !psMismatches.some(m => !psIsBlank(m.profileVal));
+
+      showPSAlert(
+        successCount > 0
+          ? `Updated ${successCount} field(s) in profiles.${errorCount > 0 ? ` ${errorCount} failed.` : ''}`
+          : 'All updates failed. Check console.',
+        errorCount === 0 ? 'success' : 'warning'
+      );
+    });
+
+    function escPS(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    onAuthStateChanged(authPS, async user => {
+      if (user) await populatePSSeasonSelect();
+    });
+  </script>
+
+  <!-- ===== Field Copy: 2026 Summer → Fall script ===== -->
+  <script type="module">
+    import { getApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getFirestore, collection, getDocs, doc, writeBatch } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+    const appFC   = getApp();
+    const dbFC    = getFirestore(appFC);
+    const authFC  = getAuth(appFC);
+
+    const COPY_FIELDS = ['number', 'position', 'throws', 'bats'];
+    const BLANK       = v => v === undefined || v === null || String(v).trim() === '' || String(v).trim() === '-';
+
+    // rows collected during scan: { team, playerName, field, summerVal, fallVal, fallDocId, fallPlayerIndex }
+    let fcRows = [];
+
+    function fcAlert(msg, type = 'error') {
+      const el = document.getElementById('fieldCopyAlert');
+      el.textContent = msg;
+      el.className   = `alert ${type === 'success' ? 'alert-success' : type === 'info' ? 'alert-info' : 'alert-error'}`;
+      el.style.display = msg ? 'block' : 'none';
+    }
+
+    function escFC(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    document.getElementById('fieldCopyScanBtn').addEventListener('click', async () => {
+      fcRows = [];
+      fcAlert('');
+      const scanBtn  = document.getElementById('fieldCopyScanBtn');
+      const applyBtn = document.getElementById('fieldCopyApplyBtn');
+      scanBtn.disabled  = true;
+      applyBtn.disabled = true;
+      document.getElementById('fieldCopyResultCard').style.display = 'none';
+      fcAlert('Scanning rosters…', 'info');
+
+      try {
+        // Load all rosters docs
+        const snap = await getDocs(collection(dbFC, 'rosters'));
+        const summerDocs = {};
+        const fallDocs   = {};
+
+        snap.forEach(d => {
+          const id = d.id;
+          if (id.startsWith('2026-summer-')) summerDocs[id] = { id, data: d.data() };
+          if (id.startsWith('2026-fall-'))   fallDocs[id]   = { id, data: d.data() };
+        });
+
+        const summerKeys = Object.keys(summerDocs);
+        if (!summerKeys.length) { fcAlert('No 2026-summer-* roster docs found.'); scanBtn.disabled = false; return; }
+
+        // Build rows
+        summerKeys.forEach(sumId => {
+          const teamName = sumId.replace('2026-summer-', '');
+          const fallId   = `2026-fall-${teamName}`;
+          const sumData  = summerDocs[sumId].data;
+          const fallData = fallDocs[fallId]?.data;
+
+          const sumPlayers  = sumData.players  || [];
+          const fallPlayers = fallData?.players || [];
+
+          sumPlayers.forEach(sp => {
+            // Find matching fall player by id, then by name (case-insensitive)
+            let fallIdx = fallPlayers.findIndex(fp => fp.id && sp.id && fp.id === sp.id);
+            if (fallIdx === -1) {
+              const spName = (sp.name || '').toLowerCase().trim();
+              fallIdx = fallPlayers.findIndex(fp => (fp.name || '').toLowerCase().trim() === spName);
+            }
+
+            const fp = fallIdx !== -1 ? fallPlayers[fallIdx] : null;
+
+            COPY_FIELDS.forEach(field => {
+              const sumVal  = sp[field];
+              const fallVal = fp ? fp[field] : undefined;
+
+              if (BLANK(sumVal)) {
+                // Summer value blank — skip but still record for display
+                fcRows.push({ team: teamName, playerName: sp.name || sp.id || '?', field,
+                              summerVal: sumVal, fallVal, fallDocId: fallId, fallPlayerIndex: fallIdx,
+                              status: 'skip' });
+              } else if (!fp) {
+                // Player not found in fall roster — skip
+                fcRows.push({ team: teamName, playerName: sp.name || sp.id || '?', field,
+                              summerVal: sumVal, fallVal: '(player not in fall)', fallDocId: fallId, fallPlayerIndex: -1,
+                              status: 'skip' });
+              } else if (String(sumVal).trim() === String(fallVal ?? '').trim()) {
+                fcRows.push({ team: teamName, playerName: sp.name || sp.id || '?', field,
+                              summerVal: sumVal, fallVal, fallDocId: fallId, fallPlayerIndex: fallIdx,
+                              status: 'same' });
+              } else {
+                fcRows.push({ team: teamName, playerName: sp.name || sp.id || '?', field,
+                              summerVal: sumVal, fallVal, fallDocId: fallId, fallPlayerIndex: fallIdx,
+                              status: 'copy' });
+              }
+            });
+          });
+        });
+
+        // Render table
+        const tbody = document.getElementById('fieldCopyTableBody');
+        const copyCount = fcRows.filter(r => r.status === 'copy').length;
+        const sameCount = fcRows.filter(r => r.status === 'same').length;
+        const skipCount = fcRows.filter(r => r.status === 'skip').length;
+
+        document.getElementById('fieldCopySummary').innerHTML =
+          `<span class="tag-fc-copy">${copyCount} to copy</span>&nbsp;
+           <span class="tag-fc-same">${sameCount} already match</span>&nbsp;
+           <span class="tag-fc-skip">${skipCount} skipped (blank summer or player missing)</span>`;
+
+        tbody.innerHTML = fcRows.map(r => {
+          const cls  = r.status === 'copy' ? 'fc-copy' : r.status === 'same' ? 'fc-same' : 'fc-no-summer';
+          const tag  = r.status === 'copy' ? `<span class="tag-fc-copy">Copy</span>`
+                     : r.status === 'same' ? `<span class="tag-fc-same">Same</span>`
+                     :                       `<span class="tag-fc-skip">Skip</span>`;
+          return `<tr class="${cls}">
+            <td>${escFC(r.playerName)}</td>
+            <td>${escFC(r.team)}</td>
+            <td>${escFC(r.field)}</td>
+            <td>${escFC(r.summerVal ?? '—')}</td>
+            <td>${escFC(r.fallVal   ?? '—')}</td>
+            <td>${tag}</td>
+          </tr>`;
+        }).join('');
+
+        document.getElementById('fieldCopyResultCard').style.display = 'block';
+        applyBtn.disabled = copyCount === 0;
+        fcAlert(copyCount > 0
+          ? `Found ${copyCount} field value${copyCount !== 1 ? 's' : ''} to copy. Review above, then click "Copy All to Fall".`
+          : 'All fields already match — nothing to copy.', copyCount > 0 ? 'info' : 'success');
+
+      } catch (err) {
+        console.error(err);
+        fcAlert('Error scanning rosters: ' + err.message);
+      } finally {
+        scanBtn.disabled = false;
+      }
+    });
+
+    document.getElementById('fieldCopyApplyBtn').addEventListener('click', async () => {
+      const toApply = fcRows.filter(r => r.status === 'copy');
+      if (!toApply.length) { fcAlert('Nothing to copy.'); return; }
+
+      const applyBtn = document.getElementById('fieldCopyApplyBtn');
+      const scanBtn  = document.getElementById('fieldCopyScanBtn');
+      applyBtn.disabled = true;
+      scanBtn.disabled  = true;
+      fcAlert('Applying changes…', 'info');
+
+      try {
+        // Load fall roster docs we need to update, group by fallDocId
+        const snap = await getDocs(collection(dbFC, 'rosters'));
+        const fallDataMap = {};
+        snap.forEach(d => { if (d.id.startsWith('2026-fall-')) fallDataMap[d.id] = d.data(); });
+
+        // Build updated players arrays per fall doc
+        const updatesMap = {}; // fallDocId -> players array (mutable clone)
+        toApply.forEach(r => {
+          if (!updatesMap[r.fallDocId]) {
+            const existing = fallDataMap[r.fallDocId];
+            if (!existing) return;
+            updatesMap[r.fallDocId] = JSON.parse(JSON.stringify(existing.players || []));
+          }
+          const players = updatesMap[r.fallDocId];
+          if (r.fallPlayerIndex >= 0 && r.fallPlayerIndex < players.length) {
+            players[r.fallPlayerIndex][r.field] = r.summerVal;
+          }
+        });
+
+        // Write in batches (500 ops max per batch)
+        const BATCH_SIZE = 400;
+        const docIds = Object.keys(updatesMap);
+        for (let i = 0; i < docIds.length; i += BATCH_SIZE) {
+          const batch = writeBatch(dbFC);
+          docIds.slice(i, i + BATCH_SIZE).forEach(docId => {
+            batch.update(doc(dbFC, 'rosters', docId), { players: updatesMap[docId] });
+          });
+          await batch.commit();
+        }
+
+        // Mark applied rows as same
+        toApply.forEach(r => { r.fallVal = r.summerVal; r.status = 'same'; });
+        fcRows.filter(r => r.status === 'copy').forEach(r => { r.status = 'same'; });
+
+        fcAlert(`Done! ${toApply.length} field value${toApply.length !== 1 ? 's' : ''} copied to fall rosters.`, 'success');
+        applyBtn.disabled = true;
+      } catch (err) {
+        console.error(err);
+        fcAlert('Error applying changes: ' + err.message);
+        applyBtn.disabled = false;
+      } finally {
+        scanBtn.disabled = false;
+      }
+    });
+
+    onAuthStateChanged(authFC, user => {
+      if (!user) return;
+      document.getElementById('fieldCopyScanBtn').disabled = false;
+    });
+  </script>
+
+</body>
+</html>

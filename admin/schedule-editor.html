@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="../">
+<meta name="robots" content="noindex">
+<script type="module" src="js/core/preview-guard.js"></script>
+<link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schedule Editor - Mountainside Aces</title>
+<meta name="theme-color" content="#2d5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="nav-styles.css">
+<style>
+  :root {
+    --primary-color: #2d5016;
+    --secondary-color: #1a6b4a;
+    --accent-color: #ffd700;
+    --league-color: #0369a1;
+    --league-secondary: #0284c7;
+    --card-bg: #ffffff;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    --success-color: #22c55e;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --whatsapp-color: #25D366;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+
+  .loading-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .softball-spinner::before {
+    content: '📅';
+    font-size: 80px;
+    animation: spin 1.5s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+  }
+
+  /* Auth Gate */
+  .auth-gate {
+    max-width: 500px;
+    margin: 4rem auto;
+    padding: 3rem;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+  }
+
+  .auth-gate h2 {
+    color: var(--danger-color);
+    margin-bottom: 1rem;
+  }
+
+  .auth-gate p {
+    color: var(--text-light);
+    margin-bottom: 2rem;
+  }
+
+  .auth-gate a {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--league-color) 0%, var(--league-secondary) 100%);
+    color: white;
+    padding: 2.5rem 2rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .header::after {
+    content: '📅';
+    position: absolute;
+    bottom: -40px;
+    left: -30px;
+    font-size: 180px;
+    opacity: 0.08;
+  }
+
+  .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+  }
+
+  .header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.95rem;
+  }
+
+  .header-buttons {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  /* Navigation Buttons */
+  .nav-btn {
+    padding: 0.875rem 1.5rem;
+    border: 2px solid white;
+    background: white;
+    color: var(--league-color);
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .league-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+  }
+
+  /* Container */
+  .container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+  }
+
+  /* Section Cards */
+  .section {
+    background: var(--card-bg);
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+  }
+
+  .section-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 1.25rem 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-content {
+    padding: 1.5rem;
+  }
+
+  /* Season Selector */
+  .season-selector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .season-selector label {
+    font-weight: 600;
+  }
+
+  .season-selector select {
+    width: auto;
+    min-width: 200px;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+
+  /* Form Styles */
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--league-color);
+    box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-primary {
+    background: var(--league-color);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--league-secondary);
+    transform: translateY(-2px);
+  }
+
+  .btn-success {
+    background: var(--success-color);
+    color: white;
+  }
+
+  .btn-success:hover {
+    background: #16a34a;
+  }
+
+  .btn-whatsapp {
+    background: var(--whatsapp-color);
+    color: white;
+  }
+
+  .btn-whatsapp:hover {
+    background: #128C7E;
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background: #e2e8f0;
+    color: var(--text-dark);
+  }
+
+  .btn-secondary:hover {
+    background: #cbd5e1;
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+
+  /* Item List */
+  .item-list {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .item-row {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .item-row:last-child {
+    border-bottom: none;
+  }
+
+  .item-row:hover {
+    background: #f8fafc;
+  }
+
+  .item-row.selected {
+    background: #e0f2fe;
+    border-left: 4px solid var(--league-color);
+  }
+
+  .item-info {
+    flex: 1;
+  }
+
+  .item-title {
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .item-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+  }
+
+  .item-badges {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: 1rem;
+  }
+
+  .badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .badge-locked {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .badge-completed {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .badge-scheduled {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .badge-playoff {
+    background: #fce7f3;
+    color: #9d174d;
+  }
+
+  /* Editor Panel */
+  .editor-panel {
+    background: #f8fafc;
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-top: 1.5rem;
+  }
+
+  .editor-panel.active {
+    border-style: solid;
+    border-color: var(--league-color);
+    background: white;
+  }
+
+  .editor-panel h3 {
+    margin: 0 0 1.5rem 0;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .no-selection {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+  }
+
+  .no-selection .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Change Preview */
+  .change-preview {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 2px solid var(--success-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .change-preview h4 {
+    margin: 0 0 1rem 0;
+    color: var(--success-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .change-preview pre {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: inherit;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    border: 1px solid var(--border-color);
+  }
+
+  .original-info {
+    background: #fef3c7;
+    border-left: 4px solid var(--warning-color);
+    padding: 1rem;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 1.5rem;
+  }
+
+  .original-info h5 {
+    margin: 0 0 0.5rem 0;
+    color: #92400e;
+  }
+
+  .original-info p {
+    margin: 0;
+    color: #78350f;
+    font-size: 0.9rem;
+  }
+
+  /* Toast Notifications */
+  .toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .toast {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .toast-success { background: var(--success-color); }
+  .toast-error { background: var(--danger-color); }
+  .toast-warning { background: var(--warning-color); }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* Checkbox */
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-top: 1rem;
+  }
+
+  .checkbox-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+
+  .checkbox-group label {
+    margin: 0;
+    cursor: pointer;
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+  }
+
+  /* Filter Row */
+  .filter-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-row select {
+    width: auto;
+    min-width: 150px;
+  }
+
+  .filter-row input[type="text"] {
+    width: auto;
+    min-width: 200px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header {
+      padding: 1.5rem 1rem;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+    }
+
+    .header-content {
+      flex-direction: column;
+      text-align: center;
+      gap: 1rem;
+    }
+
+    .header-buttons {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .container {
+      padding: 0 1rem;
+    }
+
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+
+    .btn-group {
+      flex-direction: column;
+    }
+
+    .btn-group .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .toast-container {
+      left: 1rem;
+      right: 1rem;
+      bottom: 1rem;
+    }
+
+    .filter-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .filter-row select,
+    .filter-row input[type="text"] {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
+  <div class="softball-spinner"></div>
+</div>
+
+<!-- Auth Gate (shown if not authorized) -->
+<div class="auth-gate" id="authGate" style="display: none;">
+  <h2>🔒 League Staff Access Required</h2>
+  <p>You must be logged in as an admin or league staff to access this page.</p>
+  <a href="signin.html">Sign In</a>
+</div>
+
+<!-- Main Content (shown when authorized) -->
+<div id="mainContent" style="display: none;">
+  <header class="header">
+    <div class="header-content">
+      <div>
+        <h1>📅 Schedule Editor</h1>
+        <p>Edit game schedules and share updates</p>
+        <div class="league-badge" id="userBadge">League Staff</div>
+      </div>
+      <div class="header-buttons">
+        <a href="profile.html" class="nav-btn">← Back to Profile</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="section">
+      <div class="section-header">
+        ⚾ Game Schedule Editor
+      </div>
+      <div class="section-content">
+        <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+          Select a game to edit its schedule. After making changes, you can share the update via WhatsApp.
+        </p>
+
+        <div class="season-selector">
+          <label>Season:</label>
+          <select id="seasonSelect">
+            <option value="">Loading seasons...</option>
+          </select>
+          <button class="btn btn-secondary" onclick="loadGames()">🔄 Refresh</button>
+        </div>
+
+        <div class="filter-row">
+          <label>Filter by Team:</label>
+          <select id="teamFilter" onchange="filterGames()">
+            <option value="">All Teams</option>
+          </select>
+          <label>Status:</label>
+          <select id="statusFilter" onchange="filterGames()">
+            <option value="">All Statuses</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="completed">Completed</option>
+            <option value="postponed">Postponed</option>
+          </select>
+        </div>
+
+        <div class="item-list" id="gameList">
+          <div class="empty-state">Select a season to load games</div>
+        </div>
+
+        <div class="editor-panel" id="gameEditor">
+          <div class="no-selection">
+            <div class="icon">📋</div>
+            <p>Select a game from the list to edit its schedule</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Navigation Component -->
+
+<script type="module">
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Schedule Editor', requiresAuth: true });
+  import { db, collection, doc, getDocs, getDoc, query } from './js/core/firebase.js';
+  import { updateDoc, Timestamp, serverTimestamp } from './js/core/firebase.js';
+  import { onAuthChange, hasLeagueRole, isAdmin, isLeagueStaff } from './js/core/auth.js';
+import { getPrimaryDisplayRole } from './firebase-auth.js'; // TODO v2: not moved
+
+  const TEAMS = ['Black', 'Blue', 'Green', 'Red', 'White', 'Orange', 'Silver', 'Purple', 'Gold', 'Carolina', 'Army'];
+
+  let gamesCache = [];
+  let filteredGames = [];
+  let selectedGame = null;
+  let originalGameData = null;
+  let currentUserProfile = null;
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    onAuthChange(async (user) => {
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            currentUserProfile = userDoc.data();
+            
+            // Check if user has league-level access
+            if (hasLeagueRole(currentUserProfile)) {
+              document.getElementById('authGate').style.display = 'none';
+              document.getElementById('mainContent').style.display = 'block';
+              
+              // Update badge
+              const roleInfo = getPrimaryDisplayRole(currentUserProfile);
+              document.getElementById('userBadge').textContent = `${roleInfo.icon} ${roleInfo.label}`;
+              
+              await loadSeasons();
+              await populateTeamFilter();
+            } else {
+              showAuthGate();
+            }
+          } else {
+            showAuthGate();
+          }
+        } catch (error) {
+          console.error('Error checking auth:', error);
+          showAuthGate();
+        }
+      } else {
+        showAuthGate();
+      }
+      pageReady();
+    });
+  });
+
+  function showAuthGate() {
+    document.getElementById('authGate').style.display = 'block';
+    document.getElementById('mainContent').style.display = 'none';
+  }
+
+  async function loadSeasons() {
+    try {
+      const seasonsSnap = await getDocs(collection(db, 'seasons'));
+      const seasons = [];
+      
+      seasonsSnap.forEach(doc => {
+        seasons.push({ id: doc.id, ...doc.data() });
+      });
+
+      // Sort by year descending, then by season type
+      seasons.sort((a, b) => {
+        const yearA = parseInt(a.year) || 0;
+        const yearB = parseInt(b.year) || 0;
+        if (yearB !== yearA) return yearB - yearA;
+        // Fall before Summer within same year
+        if (a.id.includes('fall') && !b.id.includes('fall')) return -1;
+        if (!a.id.includes('fall') && b.id.includes('fall')) return 1;
+        return 0;
+      });
+
+      const select = document.getElementById('seasonSelect');
+      select.innerHTML = seasons.map(s => {
+        const isActive = s.isActive ? ' (Active)' : '';
+        return `<option value="${s.id}">${s.name || s.id}${isActive}</option>`;
+      }).join('');
+
+      // Auto-select active season or first
+      const activeSeason = seasons.find(s => s.isActive);
+      if (activeSeason) {
+        select.value = activeSeason.id;
+      }
+
+      // Load games for selected season
+      if (select.value) {
+        await loadGames();
+      }
+
+    } catch (error) {
+      console.error('Error loading seasons:', error);
+      showToast('Error loading seasons', 'error');
+    }
+  }
+
+  async function populateTeamFilter() {
+    const select = document.getElementById('teamFilter');
+    select.innerHTML = '<option value="">All Teams</option>' + 
+      TEAMS.map(t => `<option value="${t.toLowerCase()}">${t}</option>`).join('');
+  }
+
+  window.loadGames = async function() {
+    const seasonId = document.getElementById('seasonSelect').value;
+    if (!seasonId) return;
+
+    const listEl = document.getElementById('gameList');
+    listEl.innerHTML = '<div class="empty-state">Loading games...</div>';
+
+    try {
+      const gamesSnap = await getDocs(collection(db, 'seasons', seasonId, 'games'));
+      
+      gamesCache = gamesSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })).sort((a, b) => {
+        const dateA = a.date?.seconds || 0;
+        const dateB = b.date?.seconds || 0;
+        return dateA - dateB;
+      });
+
+      filteredGames = [...gamesCache];
+      renderGameList();
+
+    } catch (error) {
+      console.error('Error loading games:', error);
+      listEl.innerHTML = '<div class="empty-state">Error loading games</div>';
+      showToast('Error loading games', 'error');
+    }
+  };
+
+  window.filterGames = function() {
+    const teamFilter = document.getElementById('teamFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+
+    filteredGames = gamesCache.filter(game => {
+      if (teamFilter) {
+        const matchesTeam = game.homeTeamId === teamFilter || game.awayTeamId === teamFilter;
+        if (!matchesTeam) return false;
+      }
+      if (statusFilter && game.status !== statusFilter) {
+        return false;
+      }
+      return true;
+    });
+
+    renderGameList();
+  };
+
+  function renderGameList() {
+    const listEl = document.getElementById('gameList');
+
+    if (filteredGames.length === 0) {
+      listEl.innerHTML = '<div class="empty-state">No games found</div>';
+      return;
+    }
+
+    listEl.innerHTML = filteredGames.map((game, idx) => {
+      const dateStr = formatDate(game.date);
+      const timeStr = formatTime(game.date);
+      const homeTeam = game.homeTeamName || capitalize(game.homeTeamId);
+      const awayTeam = game.awayTeamName || capitalize(game.awayTeamId);
+      const gameType = (game.gameType || game.game_type || 'regular').toLowerCase();
+      
+      let statusBadge = '';
+      if (game.status === 'completed') {
+        const score = `${game.awayScore || 0} - ${game.homeScore || 0}`;
+        statusBadge = `<span class="badge badge-completed">Final ${score}</span>`;
+      } else if (game.status === 'postponed') {
+        statusBadge = '<span class="badge badge-locked">Postponed</span>';
+      } else {
+        statusBadge = '<span class="badge badge-scheduled">Scheduled</span>';
+      }
+
+      return `
+        <div class="item-row" data-idx="${idx}" onclick="selectGame(${idx})">
+          <div class="item-info">
+            <div class="item-title">${awayTeam} @ ${homeTeam}</div>
+            <div class="item-subtitle">${dateStr} • ${timeStr} • ${capitalize(gameType)}</div>
+          </div>
+          <div class="item-badges">
+            ${statusBadge}
+            ${game.manuallyEdited ? '<span class="badge badge-locked">🔒</span>' : ''}
+            ${gameType === 'playoff' ? '<span class="badge badge-playoff">Playoff</span>' : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.selectGame = function(idx) {
+    selectedGame = filteredGames[idx];
+    originalGameData = { ...selectedGame }; // Store original for comparison
+    
+    document.querySelectorAll('#gameList .item-row').forEach((row, i) => {
+      row.classList.toggle('selected', i === idx);
+    });
+
+    const homeTeam = selectedGame.homeTeamName || capitalize(selectedGame.homeTeamId);
+    const awayTeam = selectedGame.awayTeamName || capitalize(selectedGame.awayTeamId);
+    
+    // Parse date for input
+    let dateValue = '';
+    let timeValue = '';
+    if (selectedGame.date?.seconds) {
+      const d = new Date(selectedGame.date.seconds * 1000);
+      const yy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      dateValue = `${yy}-${mm}-${dd}`;
+      timeValue = d.toTimeString().slice(0, 5);
+    }
+
+    const teamOptions = TEAMS.map(t => `<option value="${t.toLowerCase()}">${t}</option>`).join('');
+
+    const editorEl = document.getElementById('gameEditor');
+    editorEl.classList.add('active');
+    editorEl.innerHTML = `
+      <h3>✏️ Edit: ${awayTeam} @ ${homeTeam}</h3>
+      
+      <div class="original-info">
+        <h5>📋 Original Schedule</h5>
+        <p><strong>Date:</strong> ${formatDate(originalGameData.date)} at ${formatTime(originalGameData.date)}</p>
+        <p><strong>Matchup:</strong> ${awayTeam} @ ${homeTeam}</p>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Game Date</label>
+          <input type="date" id="gameDateInput" value="${dateValue}" onchange="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label>Game Time</label>
+          <input type="time" id="gameTimeInput" value="${timeValue}" onchange="updatePreview()">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Away Team</label>
+          <select id="awayTeamSelect" onchange="updatePreview()">
+            ${teamOptions}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Home Team</label>
+          <select id="homeTeamSelect" onchange="updatePreview()">
+            ${teamOptions}
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Status</label>
+          <select id="gameStatusSelect" onchange="updatePreview()">
+            <option value="scheduled" ${selectedGame.status === 'scheduled' ? 'selected' : ''}>Scheduled</option>
+            <option value="postponed" ${selectedGame.status === 'postponed' ? 'selected' : ''}>Postponed</option>
+            <option value="completed" ${selectedGame.status === 'completed' ? 'selected' : ''}>Completed</option>
+            <option value="cancelled" ${selectedGame.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Notes <span style="color: var(--text-light); font-weight: normal;">(optional)</span></label>
+          <input type="text" id="changeNotes" placeholder="e.g., Rain delay, field change" onchange="updatePreview()">
+        </div>
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="manualEditCheck" ${selectedGame.manuallyEdited ? 'checked' : ''} checked>
+        <label for="manualEditCheck">🔒 Mark as manually edited (protects from automatic updates)</label>
+      </div>
+      
+      <div class="change-preview" id="changePreview" style="display: none;">
+        <h4>📱 WhatsApp Message Preview</h4>
+        <pre id="whatsappMessage"></pre>
+      </div>
+      
+      <div class="btn-group">
+        <button class="btn btn-success" onclick="saveAndShare()">💾 Save Changes</button>
+        <button class="btn btn-whatsapp" onclick="shareToWhatsApp()" id="shareBtn" disabled>
+          📲 Share to WhatsApp
+        </button>
+        <button class="btn btn-secondary" onclick="clearSelection()">Cancel</button>
+      </div>
+    `;
+
+    // Set team select values after DOM is ready
+    setTimeout(() => {
+      document.getElementById('awayTeamSelect').value = selectedGame.awayTeamId || '';
+      document.getElementById('homeTeamSelect').value = selectedGame.homeTeamId || '';
+      updatePreview();
+    }, 0);
+  };
+
+  window.updatePreview = function() {
+    if (!selectedGame || !originalGameData) return;
+
+    const newDate = document.getElementById('gameDateInput').value;
+    const newTime = document.getElementById('gameTimeInput').value;
+    const newAwayTeam = document.getElementById('awayTeamSelect').value;
+    const newHomeTeam = document.getElementById('homeTeamSelect').value;
+    const newStatus = document.getElementById('gameStatusSelect').value;
+    const notes = document.getElementById('changeNotes').value.trim();
+
+    // Check what changed
+    const changes = [];
+    
+    const oldDate = originalGameData.date?.seconds ? new Date(originalGameData.date.seconds * 1000) : null;
+    const oldDateStr = oldDate ? oldDate.toISOString().split('T')[0] : '';
+    const oldTimeStr = oldDate ? oldDate.toTimeString().slice(0, 5) : '';
+
+    if (newDate !== oldDateStr || newTime !== oldTimeStr) {
+      changes.push('schedule');
+    }
+    if (newAwayTeam !== originalGameData.awayTeamId || newHomeTeam !== originalGameData.homeTeamId) {
+      changes.push('teams');
+    }
+    if (newStatus !== originalGameData.status) {
+      changes.push('status');
+    }
+
+    const previewEl = document.getElementById('changePreview');
+    const messageEl = document.getElementById('whatsappMessage');
+    const shareBtn = document.getElementById('shareBtn');
+
+    if (changes.length === 0 && !notes) {
+      previewEl.style.display = 'none';
+      shareBtn.disabled = true;
+      return;
+    }
+
+    previewEl.style.display = 'block';
+    shareBtn.disabled = false;
+
+    // Build WhatsApp message
+    const awayTeamName = capitalize(newAwayTeam);
+    const homeTeamName = capitalize(newHomeTeam);
+    const newDateTime = new Date(`${newDate}T${newTime || '00:00'}`);
+    const formattedDate = newDateTime.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      month: 'long', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+    const formattedTime = newTime ? newDateTime.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit'
+    }) : 'TBD';
+
+    let message = `⚾ *SCHEDULE UPDATE*\n\n`;
+    message += `*${awayTeamName} @ ${homeTeamName}*\n\n`;
+
+    if (newStatus === 'postponed') {
+      message += `⚠️ *POSTPONED*\n`;
+      if (notes) message += `Reason: ${notes}\n`;
+      message += `\nNew date/time to be announced.\n`;
+    } else if (newStatus === 'cancelled') {
+      message += `❌ *CANCELLED*\n`;
+      if (notes) message += `Reason: ${notes}\n`;
+    } else {
+      if (changes.includes('schedule')) {
+        message += `📅 *New Date:* ${formattedDate}\n`;
+        message += `⏰ *New Time:* ${formattedTime}\n`;
+      } else {
+        message += `📅 ${formattedDate}\n`;
+        message += `⏰ ${formattedTime}\n`;
+      }
+      
+      if (notes) {
+        message += `\n📝 ${notes}\n`;
+      }
+    }
+
+    message += `\n— Mountainside Aces League`;
+
+    messageEl.textContent = message;
+  };
+
+  window.saveAndShare = async function() {
+    if (!selectedGame) return;
+
+    const seasonId = document.getElementById('seasonSelect').value;
+    
+    const dateInput = document.getElementById('gameDateInput').value;
+    const timeInput = document.getElementById('gameTimeInput').value;
+    const awayTeamId = document.getElementById('awayTeamSelect').value;
+    const homeTeamId = document.getElementById('homeTeamSelect').value;
+    const status = document.getElementById('gameStatusSelect').value;
+    const manuallyEdited = document.getElementById('manualEditCheck').checked;
+
+    if (!dateInput || !awayTeamId || !homeTeamId) {
+      showToast('Please fill in all required fields', 'warning');
+      return;
+    }
+
+    try {
+      // Combine date and time
+      const dateTimeStr = timeInput ? `${dateInput}T${timeInput}` : dateInput;
+      const gameDate = new Date(dateTimeStr);
+
+      const gameRef = doc(db, 'seasons', seasonId, 'games', selectedGame.id);
+      
+      await updateDoc(gameRef, {
+        date: Timestamp.fromDate(gameDate),
+        homeTeamId: homeTeamId,
+        awayTeamId: awayTeamId,
+        homeTeamName: capitalize(homeTeamId),
+        awayTeamName: capitalize(awayTeamId),
+        status: status,
+        manuallyEdited: manuallyEdited,
+        lastUpdate: serverTimestamp(),
+        lastUpdatedBy: currentUserProfile?.displayName || 'League Staff'
+      });
+
+      showToast('Game saved successfully!', 'success');
+      
+      // Enable share button
+      document.getElementById('shareBtn').disabled = false;
+      
+      // Reload games list
+      await loadGames();
+
+    } catch (error) {
+      console.error('Error saving game:', error);
+      showToast('Error saving game: ' + error.message, 'error');
+    }
+  };
+
+  window.shareToWhatsApp = function() {
+    const messageEl = document.getElementById('whatsappMessage');
+    if (!messageEl) return;
+
+    const message = encodeURIComponent(messageEl.textContent);
+    const whatsappUrl = `https://wa.me/?text=${message}`;
+    
+    window.open(whatsappUrl, '_blank');
+    showToast('Opening WhatsApp...', 'success');
+  };
+
+  window.clearSelection = function() {
+    selectedGame = null;
+    originalGameData = null;
+    
+    document.querySelectorAll('#gameList .item-row').forEach(row => {
+      row.classList.remove('selected');
+    });
+    
+    document.getElementById('gameEditor').classList.remove('active');
+    document.getElementById('gameEditor').innerHTML = `
+      <div class="no-selection">
+        <div class="icon">📋</div>
+        <p>Select a game from the list to edit its schedule</p>
+      </div>
+    `;
+  };
+
+  function formatDate(timestamp) {
+    if (!timestamp?.seconds) return 'TBD';
+    const d = new Date(timestamp.seconds * 1000);
+    return d.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+
+  function formatTime(timestamp) {
+    if (!timestamp?.seconds) return 'TBD';
+    const d = new Date(timestamp.seconds * 1000);
+    return d.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit'
+    });
+  }
+
+  function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
+    toast.innerHTML = `<span>${icon}</span> ${message}`;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
+</script>
+
+<script src="team-colors.js"></script>
+<script src="mobile-enhancements.js"></script>
+</body>
+</html>

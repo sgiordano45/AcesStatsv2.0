@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="../">
+<meta name="robots" content="noindex">
+<script type="module" src="js/core/preview-guard.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Link Players - Mountainside Aces</title>
+  <meta name="theme-color" content="#2d5016">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mountainside Aces">
+  <style>
+    :root {
+      --primary-color: #2d5016;
+      --secondary-color: #1a6b4a;
+      --accent-color: #ffd700;
+      --danger-color: #dc2626;
+      --danger-secondary: #991b1b;
+      --card-bg: #ffffff;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+      --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      min-height: 100vh;
+    }
+    
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .loading-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .softball-spinner::before {
+      content: '⚾';
+      font-size: 80px;
+      display: block;
+      animation: spin 1.5s ease-in-out infinite;
+    }
+    
+    .loading-overlay p {
+      margin-top: 1rem;
+      color: var(--text-light);
+      font-size: 1rem;
+    }
+    
+    @keyframes spin {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.1); }
+    }
+    
+    /* Header - Admin variant (red) */
+    .header {
+      background: linear-gradient(135deg, var(--danger-color) 0%, var(--danger-secondary) 100%);
+      padding: 2.5rem 2rem;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    
+    .header::after {
+      content: '🔐';
+      position: absolute;
+      bottom: -40px;
+      left: -30px;
+      font-size: 180px;
+      opacity: 0.08;
+    }
+    
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header h1 {
+      color: white;
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.25rem;
+    }
+    
+    .header p {
+      color: rgba(255,255,255,0.9);
+      font-size: 0.95rem;
+    }
+    
+    .header-buttons {
+      display: flex;
+      gap: 0.75rem;
+    }
+    
+    /* Navigation Buttons */
+    .nav-btn {
+      padding: 0.875rem 1.5rem;
+      border: 2px solid white;
+      background: white;
+      color: var(--danger-color);
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+    }
+    
+    .nav-btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: var(--accent-color);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: -1;
+    }
+    
+    .nav-btn:hover::before {
+      transform: translateX(0);
+    }
+    
+    .nav-btn:hover {
+      color: var(--danger-color);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    /* Dashboard Container */
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+    
+    /* Stats Cards Row */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+    
+    .stat-card h3 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--primary-color);
+      margin-bottom: 0.25rem;
+    }
+    
+    .stat-card p {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    
+    /* Section Title */
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .section-title::before {
+      content: "";
+      width: 6px;
+      height: 32px;
+      background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      border-radius: 3px;
+    }
+    
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(90deg, var(--border-color) 0%, transparent 100%);
+    }
+    
+    /* Card */
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      border-radius: 16px 16px 0 0;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    .card-header h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+    
+    /* Filter Buttons */
+    .filter-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid var(--border-color);
+      background: white;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--text-dark);
+    }
+    
+    .filter-btn:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+    
+    .filter-btn.active {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+    
+    /* Search Box */
+    .search-box {
+      width: 100%;
+      max-width: 400px;
+      padding: 0.875rem 1.25rem;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    
+    .search-box:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+    }
+    
+    /* Fan List */
+    .fan-list {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    /* Fan Card */
+    .fan-card {
+      background: #f8fafc;
+      border: 2px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      animation: fadeInUp 0.6s ease backwards;
+    }
+    
+    .fan-card:nth-child(1) { animation-delay: 0.05s; }
+    .fan-card:nth-child(2) { animation-delay: 0.1s; }
+    .fan-card:nth-child(3) { animation-delay: 0.15s; }
+    .fan-card:nth-child(4) { animation-delay: 0.2s; }
+    .fan-card:nth-child(5) { animation-delay: 0.25s; }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .fan-card:hover {
+      border-color: var(--primary-color);
+      background: white;
+    }
+    
+    .fan-card.expanded {
+      border-color: var(--primary-color);
+      background: white;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .fan-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .fan-details { flex: 1; min-width: 250px; }
+    
+    .fan-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 0.25rem;
+    }
+    
+    .fan-email {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .fan-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .badge-fan { background: #dbeafe; color: #1d4ed8; }
+    .badge-skipped { background: #fef3c7; color: #92400e; }
+    .badge-pending { background: #fce7f3; color: #be185d; }
+    .badge-google { background: #dcfce7; color: #166534; }
+    .badge-email { background: #f3e8ff; color: #7c3aed; }
+    
+    .meta-text {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    /* Action Buttons */
+    .fan-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.25rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: inherit;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger-color) 0%, var(--danger-secondary) 100%);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+    }
+    
+    /* Player Select Section */
+    .player-select-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 2px dashed var(--border-color);
+      display: none;
+    }
+    
+    .fan-card.expanded .player-select-section {
+      display: block;
+      animation: fadeInUp 0.3s ease;
+    }
+    
+    .player-select-section h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 1rem;
+    }
+    
+    .player-search-wrapper {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .player-search-wrapper input {
+      flex: 1;
+    }
+    
+    .player-results {
+      max-height: 320px;
+      overflow-y: auto;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      background: white;
+    }
+    
+    .player-option {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .player-option:last-child { border-bottom: none; }
+    
+    .player-option:hover {
+      background: linear-gradient(135deg, rgba(45, 80, 22, 0.05) 0%, rgba(26, 107, 74, 0.05) 100%);
+    }
+    
+    .player-option.selected {
+      background: linear-gradient(135deg, rgba(45, 80, 22, 0.1) 0%, rgba(26, 107, 74, 0.1) 100%);
+      border-left: 4px solid var(--primary-color);
+    }
+    
+    .player-option.claimed {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: #fef2f2;
+    }
+    
+    .player-option-name {
+      font-weight: 700;
+      color: var(--text-dark);
+      font-size: 0.95rem;
+    }
+    
+    .player-option-team {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-top: 0.25rem;
+    }
+    
+    .player-option-stats {
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+    
+    .claimed-badge {
+      font-size: 0.7rem;
+      color: var(--danger-color);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    
+    .match-high { color: #10b981; font-weight: 700; }
+    .match-likely { color: #f59e0b; font-weight: 600; }
+    
+    /* Link Action Area */
+    .link-action {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    .selected-player-preview {
+      background: linear-gradient(135deg, rgba(45, 80, 22, 0.1) 0%, rgba(26, 107, 74, 0.1) 100%);
+      padding: 0.875rem 1.25rem;
+      border-radius: 10px;
+      border: 1px solid rgba(45, 80, 22, 0.2);
+      font-size: 0.9rem;
+    }
+    
+    .selected-player-preview strong {
+      color: var(--primary-color);
+      font-weight: 700;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-light);
+    }
+    
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+    
+    .empty-state h3 {
+      color: var(--text-dark);
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    /* Not Authorized */
+    .not-authorized {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    
+    .not-authorized h2 {
+      color: var(--danger-color);
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .not-authorized p {
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+    }
+    
+    /* Toast Notifications */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white;
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      font-weight: 600;
+      animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .toast.error {
+      background: linear-gradient(135deg, var(--danger-color) 0%, var(--danger-secondary) 100%);
+    }
+    
+    @keyframes slideInRight {
+      from {
+        transform: translateX(120%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header { padding: 1.5rem 1rem; }
+      .header h1 { font-size: 1.5rem; }
+      .header-content { flex-direction: column; text-align: center; gap: 1rem; }
+      .header-buttons { width: 100%; justify-content: center; }
+      
+      .dashboard-container { padding: 0 1rem; margin: 1rem auto; }
+      
+      .section-title { font-size: 1.35rem; }
+      .section-title::after { display: none; }
+      
+      .card { padding: 1.25rem; }
+      .card-header { flex-direction: column; align-items: flex-start; }
+      
+      .fan-info { flex-direction: column; }
+      .fan-actions { width: 100%; }
+      
+      .nav-btn { width: 100%; justify-content: center; }
+      
+      .link-action { flex-direction: column; }
+      .link-action .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay" data-page-loading>
+    <div class="softball-spinner"></div>
+    <p>Loading admin dashboard...</p>
+  </div>
+  
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div>
+        <h1>🔐 Admin: Player Linking Dashboard</h1>
+        <p>Manually link fan accounts to player profiles</p>
+      </div>
+      <div class="header-buttons">
+        <a href="profile.html" class="nav-btn">← Back</a>
+        <button onclick="refreshData()" class="nav-btn">🔄 Refresh</button>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Not Authorized State -->
+  <div id="notAuthorized" class="dashboard-container" style="display: none;">
+    <div class="card not-authorized">
+      <div class="empty-state-icon">⛔</div>
+      <h2>Access Denied</h2>
+      <p>You must be an admin or league staff to access this page.</p>
+      <a href="signin.html" class="btn btn-primary">Sign In</a>
+    </div>
+  </div>
+  
+  <!-- Main Content -->
+  <div id="mainContent" class="dashboard-container" style="display: none;">
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3 id="totalFans">0</h3>
+        <p>Unlinked Fans</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="skippedCount">0</h3>
+        <p>Skipped Linking</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="pendingCount">0</h3>
+        <p>Pending Requests</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="availablePlayers">0</h3>
+        <p>Available Players</p>
+      </div>
+    </div>
+    
+    <!-- Fan List Card -->
+    <div class="card">
+      <div class="card-header">
+        <h2>👥 Unlinked Fan Accounts</h2>
+        <div class="filter-row">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="skipped">Skipped</button>
+          <button class="filter-btn" data-filter="pending">Has Pending</button>
+          <button class="filter-btn" data-filter="new">New (7 days)</button>
+        </div>
+      </div>
+      
+      <input type="text" id="fanSearchBox" class="search-box" placeholder="🔍 Search by name or email...">
+      
+      <div id="fanList" class="fan-list">
+        <!-- Fan cards inserted here -->
+      </div>
+    </div>
+  </div>
+  
+  <script type="module">
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Link Players', requiresAuth: true });
+    import { db, app } from './js/core/firebase.js';
+    import { 
+      collection, 
+      getDocs, 
+      doc, 
+      getDoc, 
+      updateDoc,
+      serverTimestamp 
+    } from './js/core/firebase.js';
+    import { 
+      getAuth, 
+      onAuthStateChanged 
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { aggregatePlayerStats } from './js/data/player-links.js';
+    
+    const auth = getAuth(app);
+    
+    let currentUser = null;
+    let currentUserProfile = null;
+    let allFans = [];
+    let allPlayers = [];
+    let claimedPlayers = new Set();
+    let expandedFanId = null;
+    let selectedPlayers = {};
+    
+    // Initialize
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        await checkAdminAccess();
+      } else {
+        hideLoading();
+        showNotAuthorized();
+      }
+    });
+    
+    async function checkAdminAccess() {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        if (!userDoc.exists()) {
+          hideLoading();
+          showNotAuthorized();
+          return;
+        }
+        
+        currentUserProfile = userDoc.data();
+        
+        if (currentUserProfile.userRole !== 'admin' && currentUserProfile.userRole !== 'league-staff') {
+          hideLoading();
+          showNotAuthorized();
+          return;
+        }
+        
+        await loadData();
+        hideLoading();
+        showMainContent();
+        
+      } catch (error) {
+        console.error('Error checking admin access:', error);
+        hideLoading();
+        showNotAuthorized();
+      }
+    }
+    
+    async function loadData() {
+      try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        allFans = [];
+        claimedPlayers = new Set();
+        
+        usersSnapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          
+          if (data.linkedPlayer) {
+            claimedPlayers.add(data.linkedPlayer);
+          }
+          
+          // Only include ACTUAL authenticated users who are fans
+          // Must have: email (all auth users have this) AND userRole = 'fan'
+          // Exclude: legacy profiles (no email, or ID format is first_last)
+          const isAuthenticatedUser = data.email && data.createdAt;
+          const isFanRole = data.userRole === 'fan';
+          const notLinked = !data.linkedPlayer;
+          const notMigrated = !data.migrated;
+          
+          // Also check document ID format - Firebase UIDs are long alphanumeric
+          // Legacy profiles use format like "steve_giordano"
+          const isFirebaseUID = docSnap.id.length > 20 && !docSnap.id.includes('_');
+          
+          if (isAuthenticatedUser && isFanRole && notLinked && notMigrated && isFirebaseUID) {
+            allFans.push({ id: docSnap.id, ...data });
+          }
+        });
+        
+        allFans.sort((a, b) => {
+          const timeA = a.createdAt?.seconds || 0;
+          const timeB = b.createdAt?.seconds || 0;
+          return timeB - timeA;
+        });
+        
+        const statsSnapshot = await getDocs(collection(db, 'aggregatedPlayerStats'));
+        allPlayers = [];
+        
+        statsSnapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          if (data.migrated === true) return;
+          
+          allPlayers.push({
+            id: docSnap.id,
+            name: data.name || data.displayName,
+            currentTeam: data.currentTeam || 'Unknown',
+            career: data.career || {},
+            isClaimed: claimedPlayers.has(data.name || data.displayName)
+          });
+        });
+        
+        allPlayers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        
+        updateStats();
+        renderFans();
+        setupEventListeners();
+        
+        console.log(`✅ Loaded ${allFans.length} unlinked fans, ${allPlayers.length} players`);
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showToast('Error loading data', true);
+      }
+    }
+    
+    function updateStats() {
+      document.getElementById('totalFans').textContent = allFans.length;
+      document.getElementById('skippedCount').textContent = allFans.filter(f => f.linkingSkipped).length;
+      document.getElementById('pendingCount').textContent = allFans.filter(f => 
+        (f.playerLinkRequests || []).some(r => r.status === 'pending')
+      ).length;
+      document.getElementById('availablePlayers').textContent = allPlayers.filter(p => !p.isClaimed).length;
+    }
+    
+    function renderFans(filter = 'all', searchTerm = '') {
+      const container = document.getElementById('fanList');
+      container.innerHTML = '';
+      
+      let filtered = [...allFans];
+      
+      if (filter === 'skipped') {
+        filtered = filtered.filter(f => f.linkingSkipped);
+      } else if (filter === 'pending') {
+        filtered = filtered.filter(f => (f.playerLinkRequests || []).some(r => r.status === 'pending'));
+      } else if (filter === 'new') {
+        const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        filtered = filtered.filter(f => {
+          const created = f.createdAt?.seconds ? f.createdAt.seconds * 1000 : 0;
+          return created > oneWeekAgo;
+        });
+      }
+      
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        filtered = filtered.filter(f => 
+          (f.displayName || '').toLowerCase().includes(term) ||
+          (f.email || '').toLowerCase().includes(term)
+        );
+      }
+      
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🎉</div>
+            <h3>No unlinked fans found</h3>
+            <p>All users are linked or no matches for your filter</p>
+          </div>
+        `;
+        return;
+      }
+      
+      filtered.forEach(fan => {
+        container.appendChild(createFanCard(fan));
+      });
+    }
+    
+    function createFanCard(fan) {
+      const card = document.createElement('div');
+      card.className = `fan-card ${expandedFanId === fan.id ? 'expanded' : ''}`;
+      card.dataset.fanId = fan.id;
+      
+      const createdDate = fan.createdAt?.seconds 
+        ? new Date(fan.createdAt.seconds * 1000).toLocaleDateString()
+        : 'Unknown';
+      
+      const authMethod = fan.registrationMethod || (fan.photoURL ? 'google' : 'email');
+      const hasPending = (fan.playerLinkRequests || []).some(r => r.status === 'pending');
+      const pendingRequest = hasPending ? (fan.playerLinkRequests || []).find(r => r.status === 'pending') : null;
+      
+      let badges = `<span class="badge badge-fan">Fan</span>`;
+      if (fan.linkingSkipped) badges += `<span class="badge badge-skipped">Skipped</span>`;
+      if (hasPending) badges += `<span class="badge badge-pending">Pending</span>`;
+      badges += `<span class="badge badge-${authMethod}">${authMethod}</span>`;
+      
+      card.innerHTML = `
+        <div class="fan-info">
+          <div class="fan-details">
+            <div class="fan-name">${fan.displayName || 'No Name'}</div>
+            <div class="fan-email">${fan.email || 'No Email'}</div>
+            <div class="fan-meta">
+              ${badges}
+              <span class="meta-text">📅 ${createdDate}</span>
+              ${pendingRequest ? `<span class="meta-text">⏳ Requested: ${pendingRequest.playerName}</span>` : ''}
+            </div>
+          </div>
+          <div class="fan-actions">
+            ${hasPending && pendingRequest ? `
+              <button class="btn btn-sm btn-primary" onclick="quickApprove('${fan.id}', '${pendingRequest.requestId}')">
+                ✓ Approve
+              </button>
+            ` : ''}
+            <button class="btn btn-sm ${expandedFanId === fan.id ? 'btn-danger' : 'btn-primary'}" 
+                    onclick="toggleExpand('${fan.id}')">
+              ${expandedFanId === fan.id ? '✕ Cancel' : '🔗 Link Player'}
+            </button>
+          </div>
+        </div>
+        
+        <div class="player-select-section">
+          <h4>⚾ Select Player to Link</h4>
+          <div class="player-search-wrapper">
+            <input type="text" class="search-box" placeholder="Search players..." 
+                   data-fan-id="${fan.id}" oninput="filterPlayers('${fan.id}', this.value)">
+          </div>
+          <div class="player-results" id="playerResults-${fan.id}">
+            ${renderPlayerOptions(fan.id, '')}
+          </div>
+          
+          <div class="link-action">
+            <div class="selected-player-preview" id="selectedPreview-${fan.id}" style="display: none;">
+              Linking to: <strong id="selectedName-${fan.id}"></strong>
+            </div>
+            <button class="btn btn-primary" id="linkBtn-${fan.id}" disabled onclick="confirmLink('${fan.id}')">
+              Link Player Account
+            </button>
+          </div>
+        </div>
+      `;
+      
+      return card;
+    }
+    
+    function renderPlayerOptions(fanId, searchTerm = '') {
+      const fan = allFans.find(f => f.id === fanId);
+      const fanName = (fan?.displayName || '').toLowerCase();
+      
+      let filtered = [...allPlayers];
+      
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        filtered = filtered.filter(p => 
+          (p.name || '').toLowerCase().includes(term) ||
+          (p.currentTeam || '').toLowerCase().includes(term)
+        );
+      }
+      
+      filtered.sort((a, b) => {
+        if (!a.isClaimed && b.isClaimed) return -1;
+        if (a.isClaimed && !b.isClaimed) return 1;
+        
+        const aMatch = calculateSimilarity(fanName, (a.name || '').toLowerCase());
+        const bMatch = calculateSimilarity(fanName, (b.name || '').toLowerCase());
+        if (aMatch !== bMatch) return bMatch - aMatch;
+        
+        return (a.name || '').localeCompare(b.name || '');
+      });
+      
+      filtered = filtered.slice(0, 50);
+      
+      if (filtered.length === 0) {
+        return '<div class="empty-state" style="padding: 2rem;"><p>No players found</p></div>';
+      }
+      
+      return filtered.map(player => {
+        const similarity = calculateSimilarity(fanName, (player.name || '').toLowerCase());
+        const isSelected = selectedPlayers[fanId] === player.id;
+        const games = player.career?.games || 0;
+        const avg = player.career?.battingAverage?.toFixed(3) || '.000';
+        
+        let matchBadge = '';
+        if (similarity >= 0.9) matchBadge = '<span class="match-high">✓ High Match</span>';
+        else if (similarity >= 0.6) matchBadge = '<span class="match-likely">~ Likely</span>';
+        
+        return `
+          <div class="player-option ${isSelected ? 'selected' : ''} ${player.isClaimed ? 'claimed' : ''}"
+               onclick="${player.isClaimed ? '' : `selectPlayer('${fanId}', '${player.id}', '${(player.name || '').replace(/'/g, "\\'")}')`}">
+            <div>
+              <div class="player-option-name">${player.name || 'Unknown'}</div>
+              <div class="player-option-team">${player.currentTeam} ${matchBadge}</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="player-option-stats">${games} games • ${avg} AVG</div>
+              ${player.isClaimed ? '<div class="claimed-badge">Already Claimed</div>' : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function calculateSimilarity(name1, name2) {
+      if (!name1 || !name2) return 0;
+      if (name1 === name2) return 1.0;
+      
+      const parts1 = name1.split(/\s+/);
+      const parts2 = name2.split(/\s+/);
+      
+      const shorter = parts1.length <= parts2.length ? parts1 : parts2;
+      const longer = parts1.length > parts2.length ? parts1 : parts2;
+      
+      let matches = 0;
+      shorter.forEach(part => {
+        if (longer.some(p => p.includes(part) || part.includes(p))) {
+          matches++;
+        }
+      });
+      
+      return matches / Math.max(parts1.length, parts2.length);
+    }
+    
+    window.toggleExpand = function(fanId) {
+      if (expandedFanId === fanId) {
+        expandedFanId = null;
+        delete selectedPlayers[fanId];
+      } else {
+        expandedFanId = fanId;
+      }
+      renderFans(getCurrentFilter(), document.getElementById('fanSearchBox').value);
+    };
+    
+    window.filterPlayers = function(fanId, searchTerm) {
+      const container = document.getElementById(`playerResults-${fanId}`);
+      if (container) {
+        container.innerHTML = renderPlayerOptions(fanId, searchTerm);
+      }
+    };
+    
+    window.selectPlayer = function(fanId, playerId, playerName) {
+      selectedPlayers[fanId] = playerId;
+      
+      const container = document.getElementById(`playerResults-${fanId}`);
+      if (container) {
+        container.innerHTML = renderPlayerOptions(fanId, '');
+      }
+      
+      const preview = document.getElementById(`selectedPreview-${fanId}`);
+      const nameEl = document.getElementById(`selectedName-${fanId}`);
+      const btn = document.getElementById(`linkBtn-${fanId}`);
+      
+      if (preview && nameEl && btn) {
+        preview.style.display = 'block';
+        nameEl.textContent = playerName;
+        btn.disabled = false;
+      }
+    };
+    
+    window.confirmLink = async function(fanId) {
+      const playerId = selectedPlayers[fanId];
+      if (!playerId) {
+        showToast('Please select a player first', true);
+        return;
+      }
+      
+      const player = allPlayers.find(p => p.id === playerId);
+      const fan = allFans.find(f => f.id === fanId);
+      
+      if (!player || !fan) {
+        showToast('Player or fan not found', true);
+        return;
+      }
+      
+      if (!confirm(`Link "${fan.displayName || fan.email}" to player "${player.name}"?\n\nThis will:\n• Set their role to "player"\n• Link them to team "${player.currentTeam}"\n• Update their display name`)) {
+        return;
+      }
+      
+      const btn = document.getElementById(`linkBtn-${fanId}`);
+      btn.disabled = true;
+      btn.textContent = 'Linking...';
+      
+      try {
+        await performManualLink(fanId, player);
+        showToast(`✅ Linked ${fan.displayName} → ${player.name}`);
+        
+        await loadData();
+        expandedFanId = null;
+        
+      } catch (error) {
+        console.error('Error linking player:', error);
+        showToast(`Error: ${error.message}`, true);
+        btn.disabled = false;
+        btn.textContent = 'Link Player Account';
+      }
+    };
+    
+    window.quickApprove = async function(fanId, requestId) {
+      const fan = allFans.find(f => f.id === fanId);
+      const request = (fan?.playerLinkRequests || []).find(r => r.requestId === requestId);
+      
+      if (!request) {
+        showToast('Request not found', true);
+        return;
+      }
+      
+      if (!confirm(`Approve link request for "${fan.displayName}" to player "${request.playerName}"?`)) {
+        return;
+      }
+      
+      try {
+        const player = allPlayers.find(p => p.name === request.playerName);
+        if (!player) {
+          showToast('Player not found in database', true);
+          return;
+        }
+        
+        await performManualLink(fanId, player, requestId);
+        showToast(`✅ Approved: ${request.playerName}`);
+        
+        await loadData();
+        
+      } catch (error) {
+        console.error('Error approving:', error);
+        showToast(`Error: ${error.message}`, true);
+      }
+    };
+    
+    async function performManualLink(fanId, player, requestId = null) {
+      const userRef = doc(db, 'users', fanId);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        throw new Error('User not found');
+      }
+      
+      const userData = userDoc.data();
+      
+      const legacyId = (player.name || '').toLowerCase().replace(/\s+/g, '_');
+      let legacyData = null;
+      
+      try {
+        const legacyDoc = await getDoc(doc(db, 'users', legacyId));
+        if (legacyDoc.exists()) {
+          legacyData = legacyDoc.data();
+          console.log('Found legacy profile to merge:', legacyId);
+        }
+      } catch (e) {
+        console.log('No legacy profile found');
+      }
+      
+      const updates = {
+        displayName: player.name,
+        linkedPlayer: player.name,
+        linkedTeam: player.currentTeam,
+        userRole: 'player',
+        linkingSkipped: false,
+        linkedAt: serverTimestamp(),
+        linkedBy: currentUser.uid,
+        linkedByAdmin: true,
+        updatedAt: serverTimestamp()
+      };
+      
+      if (legacyData) {
+        if (legacyData.role === 'captain' || legacyData.isCaptain === true) {
+          updates.userRole = 'captain';
+          updates.isCaptain = true;
+          updates.teamRoles = {
+            [player.currentTeam]: {
+              role: 'captain',
+              approvedBy: currentUser.uid,
+              approvedAt: new Date().toISOString(),
+              canBeRemovedBy: [],
+              status: 'active'
+            }
+          };
+        }
+        
+        if (legacyData.favoriteTeams) updates.favoriteTeams = legacyData.favoriteTeams;
+        if (legacyData.favoritePlayers) updates.favoritePlayers = legacyData.favoritePlayers;
+        if (legacyData.bats) updates.bats = legacyData.bats;
+        if (legacyData.throws) updates.throws = legacyData.throws;
+        if (legacyData.position) updates.position = legacyData.position;
+        if (legacyData.number) updates.number = legacyData.number;
+        if (legacyData.nickname) updates.nickname = legacyData.nickname;
+        
+        updates.mergedFromProfile = legacyId;
+        updates.mergedAt = serverTimestamp();
+      }
+      
+      if (requestId) {
+        const requests = userData.playerLinkRequests || [];
+        updates.playerLinkRequests = requests.map(r => {
+          if (r.requestId === requestId) {
+            return {
+              ...r,
+              status: 'approved',
+              reviewedBy: currentUser.uid,
+              reviewedAt: new Date().toISOString(),
+              notes: 'Admin manual approval'
+            };
+          }
+          return r;
+        });
+      }
+      
+      await updateDoc(userRef, updates);
+      console.log('✅ Admin linked player:', player.name, 'to user:', fanId);
+      
+      if (legacyData) {
+        try {
+          await updateDoc(doc(db, 'users', legacyId), {
+            migrated: true,
+            migratedTo: fanId,
+            migratedAt: serverTimestamp()
+          });
+          console.log('✅ Marked legacy profile as migrated');
+        } catch (e) {
+          console.warn('Could not mark legacy profile:', e);
+        }
+      }
+      
+      // Aggregate player stats for this newly linked player
+      console.log('📊 Aggregating player stats...');
+      try {
+        const aggregateResult = await aggregatePlayerStats(fanId, player.name, player.currentTeam);
+        if (aggregateResult.success) {
+          console.log(`✅ Aggregated ${aggregateResult.seasons} seasons for ${player.name}`);
+        } else {
+          console.warn('⚠️ Stats aggregation failed:', aggregateResult.error);
+        }
+      } catch (aggError) {
+        console.warn('⚠️ Stats aggregation error:', aggError);
+        // Don't fail the link - aggregation can be retried
+      }
+    }
+    
+    function setupEventListeners() {
+      document.getElementById('fanSearchBox').addEventListener('input', (e) => {
+        renderFans(getCurrentFilter(), e.target.value);
+      });
+      
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderFans(btn.dataset.filter, document.getElementById('fanSearchBox').value);
+        });
+      });
+    }
+    
+    function getCurrentFilter() {
+      const activeBtn = document.querySelector('.filter-btn.active');
+      return activeBtn ? activeBtn.dataset.filter : 'all';
+    }
+    
+    function hideLoading() {
+      pageReady();
+    }
+    
+    function showMainContent() {
+      document.getElementById('notAuthorized').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+    }
+    
+    function showNotAuthorized() {
+      document.getElementById('notAuthorized').style.display = 'block';
+      document.getElementById('mainContent').style.display = 'none';
+    }
+    
+    function showToast(message, isError = false) {
+      const existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+      
+      const toast = document.createElement('div');
+      toast.className = `toast ${isError ? 'error' : ''}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => toast.remove(), 4000);
+    }
+    
+    window.refreshData = async function() {
+      showToast('Refreshing...');
+      expandedFanId = null;
+      selectedPlayers = {};
+      await loadData();
+    };
+  </script>
+</body>
+</html>

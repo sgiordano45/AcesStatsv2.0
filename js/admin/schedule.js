@@ -22,13 +22,13 @@ const $ = (id) => document.getElementById(id);
 
 const STEPS = [
   { n: 1, title: 'Build', text: 'Pick the season type and teams, set the parameters, and generate a balanced schedule. Download it as a CSV to fine-tune, or send it straight to the site.',
-    tools: [['schedule-generator.html', 'Schedule generator', true], ['season-setup-wizard.html', 'Season setup wizard']] },
+    tools: [['admin/schedule-generator.html', 'Schedule generator', true], ['admin/season-setup.html', 'Season setup wizard']] },
   { n: 2, title: 'Tune', text: 'Import the CSV, swap games, balance days and time slots, group doubleheaders, and watch the fairness scores and opponent grid update as you go.',
-    tools: [['schedule-workshop.html', 'Schedule workshop', true]] },
+    tools: [['admin/schedule-workshop.html', 'Schedule workshop', true]] },
   { n: 3, title: 'Publish', text: 'Use Export to Firebase in the workshop (or the generator) to write the games to the season. The counts below show what is published.',
-    tools: [['schedule-workshop.html', 'Export from the workshop']] },
+    tools: [['admin/schedule-workshop.html', 'Export from the workshop']] },
   { n: 4, title: 'In season', text: 'Change one game (date, time, field, teams), or rework a stretch of the season after rainouts.',
-    tools: [['league-schedule-editor.html', 'Edit a game', true], ['schedule-rework.html', 'Rework after rainouts']] }
+    tools: [['admin/schedule-editor.html', 'Edit a game', true], ['admin/schedule-rework.html', 'Rework after rainouts']] }
 ];
 
 function renderSteps(published, played) {

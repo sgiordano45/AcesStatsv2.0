@@ -726,14 +726,11 @@
   </div>
   
   <script type="module">
-    import { 
-      onAuthChange, 
-      getUserProfile, 
-      getPendingPlayerLinkRequests,
-      approvePlayerLink,
-      denyPlayerLink,
-      USER_ROLES 
-    } from './firebase-auth.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Approve Player Links', requiresAuth: true });
+    import { onAuthChange, USER_ROLES } from './js/core/auth.js';
+import { getUserProfile } from './js/data/users.js';
+import { getPendingPlayerLinkRequests, approvePlayerLink, denyPlayerLink } from './js/data/player-links.js';
     
     let currentUser = null;
     let userProfile = null;
