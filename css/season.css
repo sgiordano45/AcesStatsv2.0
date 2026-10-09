@@ -1,0 +1,91 @@
+/* ==========================================================================
+   css/season.css - season.html (js/pages/season.js)
+   ========================================================================== */
+
+.season { padding-bottom: var(--space-12); }
+.season > div > section { display: grid; gap: var(--space-4); }
+.season > div > section[hidden] { display: none; }
+.season .aces-card-title .aces-icon { width: 18px; height: 18px; margin-right: 6px; color: var(--color-text-muted); }
+.sn-summary { margin: var(--space-4) 0; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 720px) { .sn-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .sn-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.sn-tabs { margin-bottom: var(--space-4); }
+.sn-tabs .aces-tab .aces-icon { width: 16px; height: 16px; }
+.sn-note { margin: 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.sn-note .aces-team-chip { vertical-align: middle; }
+
+/* Header: season picker */
+.sn-head { gap: var(--space-3); }
+.sn-picker { display: flex; align-items: center; gap: var(--space-1); }
+.sn-picker .aces-btn.is-icon { width: 40px; min-height: 40px; padding: 0; }
+.sn-pick-gap { width: 40px; }
+.sn-picker .aces-select-wrap { min-width: 150px; }
+
+.sn-banner { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); margin: var(--space-3) 0 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.sn-banner span { display: inline-flex; align-items: center; gap: 6px; }
+.sn-banner .aces-icon { width: 16px; height: 16px; }
+.sn-champ { padding: 4px 12px; border-radius: var(--radius-pill); background: var(--color-accent-soft); color: var(--color-text); }
+.sn-champ .aces-icon { color: var(--color-accent-ink); }
+
+.sn-two { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 960px) { .sn-two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
+.sn-card { min-width: 0; }
+
+/* Standings */
+.sn-standings td:first-child { width: 28px; color: var(--color-text-muted); font-weight: var(--fw-semibold); }
+.sn-standings .is-up { color: var(--color-win); }
+.sn-standings .is-down { color: var(--color-loss); }
+.sn-mini-champ .aces-icon { width: 14px; height: 14px; color: var(--color-accent-ink); vertical-align: -2px; }
+.season .aces-table thead th { position: static; }
+
+/* Leaders */
+.sn-leaders { display: grid; gap: var(--space-4) var(--space-5); grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); }
+.sn-leader h3 { display: flex; align-items: baseline; gap: 6px; margin: 0 0 var(--space-2); font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--color-text-muted); }
+.sn-leader h3 small { font-weight: var(--fw-regular); text-transform: none; letter-spacing: 0; }
+.sn-leader ol { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; counter-reset: lead; }
+.sn-leader li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); font-size: var(--fs-sm); counter-increment: lead; }
+.sn-leader li::before { content: counter(lead); width: 14px; color: var(--color-text-faint); font-size: var(--fs-xs); }
+.sn-leader li:first-child { font-weight: var(--fw-semibold); }
+.sn-leader-name { flex: 1; display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sn-leader-value { font-variant-numeric: tabular-nums; }
+
+/* Awards */
+.sn-awards { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
+.sn-award h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 var(--space-2); font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.sn-award h3 .aces-icon { width: 16px; height: 16px; color: var(--color-accent-ink); }
+.sn-award h3 span { color: var(--color-text-muted); font-weight: var(--fw-regular); }
+.sn-award ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: var(--fs-sm); }
+.sn-award li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.sn-award small { color: var(--color-text-muted); }
+
+/* Schedule */
+.sn-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.sn-toolbar .aces-select-wrap { min-width: 160px; }
+.sn-days { display: grid; gap: var(--space-4); }
+.sn-day h3 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-2); font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--color-text-muted); }
+.sn-day.is-today h3 { color: var(--color-text); }
+.sn-day ul { display: grid; margin: 0; padding: 0; list-style: none; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
+.sn-day li + li { border-top: 1px solid var(--color-border); }
+.sn-game {
+  display: grid; grid-template-columns: 64px minmax(0, 1fr) auto minmax(0, 1fr) auto auto 16px; align-items: center; gap: var(--space-2);
+  min-height: var(--tap-min); padding: 6px var(--space-3); color: var(--color-text); text-decoration: none; font-size: var(--fs-sm);
+}
+a.sn-game:hover { background: var(--color-surface-2); text-decoration: none; }
+.sn-game > .aces-icon { width: 16px; height: 16px; color: var(--color-text-faint); }
+.sn-when { color: var(--color-text-muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.sn-side { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.sn-side + .sn-at + .sn-side { justify-content: flex-start; }
+.sn-team { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sn-score { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
+.sn-side.is-win { font-weight: var(--fw-bold); }
+.sn-side.is-win .sn-score { color: var(--color-text); }
+.sn-at { color: var(--color-text-faint); font-size: var(--fs-xs); }
+@media (max-width: 560px) {
+  .sn-game { grid-template-columns: 48px minmax(0, 1fr) auto 16px; grid-template-areas: "when away tag go" "when home tag go"; row-gap: 2px; }
+  .sn-when { grid-area: when; }
+  .sn-at { display: none; }
+  .sn-side:nth-of-type(2) { grid-area: away; }
+  .sn-game > .sn-side:last-of-type { grid-area: home; }
+  .sn-game > .aces-badge { grid-area: tag; }
+  .sn-game > .aces-icon { grid-area: go; }
+}
