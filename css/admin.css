@@ -135,3 +135,6 @@
 .sch-teams { margin-top: var(--space-3); }
 #schStatus .stp-note { margin-top: var(--space-3); }
 #schStatus .stp-empty { border: 0; padding: 0; text-align: left; }
+
+.stp-enter { text-decoration: none; }
+.stp-enter:hover { text-decoration: underline; }

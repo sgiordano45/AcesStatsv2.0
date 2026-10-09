@@ -22,6 +22,7 @@ import { parseGameDateTime, formatGameDate } from '../domain/dates.js';
 import { seasonLabel } from '../domain/season-ids.js';
 import { escapeHtml as esc } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
+import { mountAdminShell } from './shell.js';
 
 const $ = (id) => document.getElementById(id);
 const GAME_LENGTH_MS = 2 * 60 * 60 * 1000;
@@ -206,6 +207,8 @@ function renderSteps(s) {
 const yes = (text = 'In') => `<span class="aces-badge is-win">${esc(text)}</span>`;
 const no = (text = 'Missing') => `<span class="aces-badge is-alert">${esc(text)}</span>`;
 const none = '<span class="stp-dim">-</span>';
+// A missing side links straight to Enter stats for that game and team.
+const enter = (x, side) => `<a class="aces-badge is-alert stp-enter" href="${esc(siteUrl(`admin/submit-stats.html?season=${encodeURIComponent(state.seasonId)}&game=${encodeURIComponent(x.id)}&side=${side}`))}" title="Enter these stats">Missing</a>`;
 
 function needsWork(x, s) {
   return !x.scored || !x.awayIn || !x.homeIn || x.trackedPending > 0 || (x.changedAt && x.changedAt > s.prod.at);
@@ -229,8 +232,8 @@ function renderGames(s) {
         <td class="stp-date">${esc(formatGameDate(r.date))}</td>
         <td>${esc(g.away)} at ${esc(g.home)}</td>
         <td class="stp-num-cell">${x.scored ? (g.hasScores ? `${g.awayScore}-${g.homeScore}` : 'Final') : no('No score')}</td>
-        <td>${!x.scored ? none : marked ? `<span class="aces-badge is-outline" title="${esc(x.noStatsNote)}">Marked</span>` : x.awayIn ? yes() : no()}</td>
-        <td>${!x.scored ? none : marked ? `<span class="aces-badge is-outline" title="${esc(x.noStatsNote)}">Marked</span>` : x.homeIn ? yes() : no()}</td>
+        <td>${!x.scored ? none : marked ? `<span class="aces-badge is-outline" title="${esc(x.noStatsNote)}">Marked</span>` : x.awayIn ? yes() : enter(x, 'away')}</td>
+        <td>${!x.scored ? none : marked ? `<span class="aces-badge is-outline" title="${esc(x.noStatsNote)}">Marked</span>` : x.homeIn ? yes() : enter(x, 'home')}</td>
         <td>${tracker}</td>
         <td>${agg}</td>
       </tr>`;
@@ -256,6 +259,8 @@ async function show(seasonId) {
 
 async function main() {
   const ctx = await initPage({ title: 'Stats pipeline', role: 'admin', deniedMessage: 'The stats pipeline is for admins.' });
+  if (!ctx?.user) return;
+  mountAdminShell(ctx.profile, 'admin/stats.html');
   const seasons = (await getAllSeasons()).sort((a, b) => b.id.localeCompare(a.id));
   const fromUrl = new URLSearchParams(location.search).get('season');
   const start = [fromUrl, ctx.config?.currentSeasonId, ctx.config?.previousSeasonId, seasons[0]?.id]
