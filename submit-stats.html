@@ -347,9 +347,7 @@ body {
   padding: 12px 8px;
   text-align: center;
   border-bottom: 2px solid var(--border-color);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  position: static; /* sticky top painted over the first roster row */
   white-space: nowrap;
 }
 
@@ -357,6 +355,7 @@ body {
   text-align: left;
   position: sticky;
   left: 0;
+  top: auto;
   z-index: 20;
   background: #f8fafc;
 }
