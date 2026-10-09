@@ -1,0 +1,60 @@
+/* ==========================================================================
+   css/teams.css - teams.html (js/pages/teams.js)
+   ========================================================================== */
+
+.teams { padding-bottom: var(--space-12); }
+.teams > div > section + section { margin-top: var(--space-8); }
+.tm-summary { margin: var(--space-4) 0 var(--space-6); grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 560px) { .tm-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tm-section-head { margin-bottom: var(--space-3); }
+.tm-section-head .aces-badge { vertical-align: middle; margin-left: 6px; }
+
+/* This season: one card per team */
+.tm-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.tm-card { display: grid; gap: var(--space-3); color: var(--color-text); text-decoration: none; min-width: 0; }
+.tm-card:hover { text-decoration: none; }
+.tm-card:hover h3 { color: var(--color-link); }
+.tm-card-head { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); }
+.tm-seed {
+  display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--color-surface-2); color: var(--color-text-muted); font: var(--fw-bold) var(--fs-sm) / 1 var(--font-sans);
+}
+.tm-logo { width: 40px; height: 40px; object-fit: contain; }
+.tm-card-name { min-width: 0; display: grid; gap: 2px; }
+.tm-card-name h3 { margin: 0; font: 400 var(--fs-xl) / 1 var(--font-display); letter-spacing: var(--tracking-display); }
+.tm-ribbon { display: inline-flex; align-items: center; gap: 4px; width: max-content; padding: 1px 8px; border-radius: var(--radius-pill); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+.tm-ribbon .aces-icon { width: 13px; height: 13px; }
+.tm-ribbon.is-gold { background: var(--color-accent-soft); color: var(--color-accent-ink); }
+.tm-ribbon.is-silver { background: var(--color-surface-2); color: var(--color-text-muted); }
+.tm-record { display: grid; justify-items: end; text-align: right; }
+.tm-record strong { font: 400 var(--fs-xl) / 1 var(--font-display); font-variant-numeric: tabular-nums; }
+.tm-record span { color: var(--color-text-muted); font-size: var(--fs-xs); }
+
+.tm-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); margin: 0; padding: var(--space-2) 0; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
+.tm-facts div { display: grid; gap: 2px; text-align: center; }
+.tm-facts dt { color: var(--color-text-muted); font-size: 10px; font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.tm-facts dd { margin: 0; font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; font-size: var(--fs-sm); }
+.tm-facts dd.is-up { color: var(--color-win); }
+.tm-facts dd.is-down { color: var(--color-loss); }
+
+.tm-form { display: inline-flex; gap: 2px; }
+.tm-form i {
+  display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 3px;
+  font: var(--fw-bold) 9px / 1 var(--font-sans); font-style: normal; color: var(--color-on-status);
+}
+.tm-form i.is-w { background: var(--color-win); }
+.tm-form i.is-l { background: var(--color-loss); }
+.tm-form i.is-t { background: var(--color-text-faint); }
+
+.tm-foot { display: grid; gap: 4px; margin: 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.tm-foot span { display: flex; align-items: center; gap: 6px; }
+.tm-foot .aces-icon { width: 14px; height: 14px; flex: none; }
+
+/* All-time table */
+.tm-table { padding: var(--space-3); }
+.tm-titles { display: inline-flex; align-items: center; gap: 3px; color: var(--color-accent-ink); font-weight: var(--fw-bold); }
+.tm-titles .aces-icon { width: 14px; height: 14px; }
+.teams .aces-table tbody tr.is-former > * { color: var(--color-text-muted); }
+.tm-note { margin: var(--space-2) 0 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+/* Sticky table headers can paint mid-table on first load; keep them in place. */
+.teams .aces-table thead th { position: static; }
