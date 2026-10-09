@@ -176,8 +176,8 @@ window.aggregate2025Splits = async function() {
     
     for (const [legacyId, playerData] of result.playerSplits) {
       try {
-        const docRef = window.doc(window.db, SPLITS_2025_COLLECTION, legacyId);
-        const existingDoc = await window.getDoc(docRef);
+        const docRef = doc(db, SPLITS_2025_COLLECTION, legacyId);
+        const existingDoc = await getDoc(docRef);
         const existingData = existingDoc.exists() ? existingDoc.data() : {};
         
         // Merge seasons
@@ -187,7 +187,7 @@ window.aggregate2025Splits = async function() {
         // Calculate career splits from all 2025 seasons in this collection
         const careerSplits = calculate2025CareerSplits(existingSeasons);
         
-        await window.setDoc(docRef, {
+        await setDoc(docRef, {
           name: playerData.playerName,
           seasons: existingSeasons,
           careerSplits: careerSplits,
@@ -226,8 +226,8 @@ async function gatherSplitsData(seasonId) {
   // Get all player legacy IDs from aggregatedPlayerStats
   log('Step 1: Getting player IDs from aggregatedPlayerStats...', 'splits');
   
-  const aggregatedRef = window.collection(window.db, 'aggregatedPlayerStats');
-  const aggregatedSnap = await window.getDocs(aggregatedRef);
+  const aggregatedRef = collection(db, 'aggregatedPlayerStats');
+  const aggregatedSnap = await getDocs(aggregatedRef);
   
   const playerLegacyIds = new Set();
   const legacyToName = new Map();
@@ -263,8 +263,8 @@ async function gatherSplitsData(seasonId) {
   
   for (const legacyId of playerLegacyIds) {
     try {
-      const gamesRef = window.collection(window.db, 'playerStats', legacyId, 'games');
-      const gamesSnap = await window.getDocs(gamesRef);
+      const gamesRef = collection(db, 'playerStats', legacyId, 'games');
+      const gamesSnap = await getDocs(gamesRef);
       
       const seasonGames = [];
       gamesSnap.forEach(gameDoc => {
@@ -513,8 +513,8 @@ window.previewGameBasedSeason = async function() {
     // STEP 1: Get all player legacy IDs from aggregatedPlayerStats
     log('Step 1: Getting player IDs from aggregatedPlayerStats...', 'game');
     
-    const aggregatedRef = window.collection(window.db, 'aggregatedPlayerStats');
-    const aggregatedSnap = await window.getDocs(aggregatedRef);
+    const aggregatedRef = collection(db, 'aggregatedPlayerStats');
+    const aggregatedSnap = await getDocs(aggregatedRef);
     
     const playerLegacyIds = new Set();
     
@@ -548,8 +548,8 @@ window.previewGameBasedSeason = async function() {
 
     for (const legacyId of playerIds) {
       try {
-        const gamesRef = window.collection(window.db, 'playerStats', legacyId, 'games');
-        const gamesSnap = await window.getDocs(gamesRef);
+        const gamesRef = collection(db, 'playerStats', legacyId, 'games');
+        const gamesSnap = await getDocs(gamesRef);
 
         let seasonGames = 0;
         gamesSnap.forEach(gameDoc => {
@@ -609,8 +609,8 @@ window.previewGameBasedSeason = async function() {
     // and acts as a fallback for any failed flag writes).
     const teamGamesPlayed = {}; // team (lowercase) -> { played: 0, submittedIds: Set }
     try {
-      const seasonGamesRef = window.collection(window.db, 'seasons', seasonId, 'games');
-      const seasonGamesSnap = await window.getDocs(seasonGamesRef);
+      const seasonGamesRef = collection(db, 'seasons', seasonId, 'games');
+      const seasonGamesSnap = await getDocs(seasonGamesRef);
       const now = Date.now();
 
       seasonGamesSnap.forEach(gameDoc => {
@@ -736,8 +736,8 @@ window.aggregateGameBasedSeason = async function() {
     // STEP 1: Get all player IDs and build legacyId \u2192 documentId mapping
     log('Step 1: Getting player IDs and building ID mapping...', 'game');
     
-    const aggregatedRef = window.collection(window.db, 'aggregatedPlayerStats');
-    const aggregatedSnap = await window.getDocs(aggregatedRef);
+    const aggregatedRef = collection(db, 'aggregatedPlayerStats');
+    const aggregatedSnap = await getDocs(aggregatedRef);
     
     const playerLegacyIds = new Set();
     const legacyToDocId = new Map();  // Maps legacyId -> actual document ID
@@ -783,8 +783,8 @@ window.aggregateGameBasedSeason = async function() {
     for (const legacyId of playerIds) {
       // Check batting stats
       try {
-        const gamesRef = window.collection(window.db, 'playerStats', legacyId, 'games');
-        const gamesSnap = await window.getDocs(gamesRef);
+        const gamesRef = collection(db, 'playerStats', legacyId, 'games');
+        const gamesSnap = await getDocs(gamesRef);
         
         gamesSnap.forEach(gameDoc => {
           const data = gameDoc.data();
@@ -805,8 +805,8 @@ window.aggregateGameBasedSeason = async function() {
       
       // Check pitching stats
       try {
-        const pitchingRef = window.collection(window.db, 'pitchingStats', legacyId, 'games');
-        const pitchingSnap = await window.getDocs(pitchingRef);
+        const pitchingRef = collection(db, 'pitchingStats', legacyId, 'games');
+        const pitchingSnap = await getDocs(pitchingRef);
         
         pitchingSnap.forEach(gameDoc => {
           const data = gameDoc.data();
@@ -1076,8 +1076,8 @@ window.aggregateGameBasedSeason = async function() {
         const playerInfo = docIdToPlayerInfo.get(docId) || {};
         
         // Get existing data (from test or production collection)
-        const aggregatedDocRef = window.doc(window.db, getAggregatedCollection(), docId);
-        const existingDoc = await window.getDoc(aggregatedDocRef);
+        const aggregatedDocRef = doc(db, getAggregatedCollection(), docId);
+        const existingDoc = await getDoc(aggregatedDocRef);
         const existingData = existingDoc.exists() ? existingDoc.data() : {};
         const existingSeasons = { ...(existingData.seasons || {}) };
 
@@ -1085,7 +1085,7 @@ window.aggregateGameBasedSeason = async function() {
 
         const career = recalculateCareer(existingSeasons);
 
-        await window.setDoc(aggregatedDocRef, {
+        await setDoc(aggregatedDocRef, {
           ...existingData,
           name: existingData.name || seasonTotals.playerName,
           seasons: existingSeasons,
@@ -1176,8 +1176,8 @@ window.aggregateGameBasedSeason = async function() {
     let subUpdatedCount = 0;
     for (const [subDocId, subLegacyId] of subTargets) {
       try {
-        const subRef = window.doc(window.db, getAggregatedCollection(), subDocId);
-        const subSnap = await window.getDoc(subRef); // fresh read: includes the regular season just written above
+        const subRef = doc(db, getAggregatedCollection(), subDocId);
+        const subSnap = await getDoc(subRef); // fresh read: includes the regular season just written above
         if (!subSnap.exists()) continue;
 
         const subData = subSnap.data();
@@ -1189,9 +1189,9 @@ window.aggregateGameBasedSeason = async function() {
         Object.assign(mergedSeasons, entries);
 
         const seasonUpdates = { ...entries };
-        staleKeys.forEach(k => { seasonUpdates[k] = window.deleteField(); });
+        staleKeys.forEach(k => { seasonUpdates[k] = deleteField(); });
 
-        await window.setDoc(subRef, {
+        await setDoc(subRef, {
           seasons: seasonUpdates,
           career: recalculateCareer(mergedSeasons),
           totalSeasons: Object.keys(mergedSeasons).length,
@@ -1247,8 +1247,8 @@ window.aggregateGameBasedSeason = async function() {
           ? (pitchingTotals.runsAllowed * 7) / pitchingTotals.inningsPitched : 0;
         
         const docId = legacyToDocId.get(legacyId) || legacyId;
-        const aggregatedDocRef = window.doc(window.db, getAggregatedCollection(), docId);
-        const existingDoc = await window.getDoc(aggregatedDocRef);
+        const aggregatedDocRef = doc(db, getAggregatedCollection(), docId);
+        const existingDoc = await getDoc(aggregatedDocRef);
         const existingData = existingDoc.exists() ? existingDoc.data() : {};
         const existingPitchingSeasons = { ...(existingData.pitchingSeasons || {}) };
         
@@ -1256,7 +1256,7 @@ window.aggregateGameBasedSeason = async function() {
         
         const pitchingCareer = recalculatePitchingCareer(existingPitchingSeasons);
         
-        await window.setDoc(aggregatedDocRef, {
+        await setDoc(aggregatedDocRef, {
           pitchingSeasons: existingPitchingSeasons,
           pitchingCareer: pitchingCareer,
           lastUpdated: new Date()
@@ -1317,8 +1317,8 @@ window.aggregateGameBasedSeason = async function() {
         let existingMaxRuns = 0;
         
         try {
-          const allGamesRef = window.collection(window.db, 'playerStats', legacyId, 'games');
-          const allGamesSnap = await window.getDocs(allGamesRef);
+          const allGamesRef = collection(db, 'playerStats', legacyId, 'games');
+          const allGamesSnap = await getDocs(allGamesRef);
           
           allGamesSnap.forEach(gameDoc => {
             const gameData = gameDoc.data();
@@ -1337,13 +1337,13 @@ window.aggregateGameBasedSeason = async function() {
           const careerHighDocId = `${docId}_hits_${maxHitsGame.gameId || seasonId}`;
           
           // Check if this career high already exists
-          const existingCareerHigh = await window.getDoc(
-            window.doc(window.db, 'careerHighs', careerHighDocId)
+          const existingCareerHigh = await getDoc(
+            doc(db, 'careerHighs', careerHighDocId)
           );
           
           if (!existingCareerHigh.exists()) {
-            await window.setDoc(
-              window.doc(window.db, 'careerHighs', careerHighDocId),
+            await setDoc(
+              doc(db, 'careerHighs', careerHighDocId),
               {
                 playerId: docId,
                 playerLegacyId: legacyId,
@@ -1369,13 +1369,13 @@ window.aggregateGameBasedSeason = async function() {
           const careerHighDocId = `${docId}_runs_${maxRunsGame.gameId || seasonId}`;
           
           // Check if this career high already exists
-          const existingCareerHigh = await window.getDoc(
-            window.doc(window.db, 'careerHighs', careerHighDocId)
+          const existingCareerHigh = await getDoc(
+            doc(db, 'careerHighs', careerHighDocId)
           );
           
           if (!existingCareerHigh.exists()) {
-            await window.setDoc(
-              window.doc(window.db, 'careerHighs', careerHighDocId),
+            await setDoc(
+              doc(db, 'careerHighs', careerHighDocId),
               {
                 playerId: docId,
                 playerLegacyId: legacyId,
@@ -1432,13 +1432,13 @@ window.aggregateGameBasedSeason = async function() {
           const hitStreakDocId = `${docId}_${seasonId}_${maxStreak}`;
           
           // Check if this exact streak already exists
-          const existingStreak = await window.getDoc(
-            window.doc(window.db, 'hitStreaks', hitStreakDocId)
+          const existingStreak = await getDoc(
+            doc(db, 'hitStreaks', hitStreakDocId)
           );
           
           if (!existingStreak.exists()) {
-            await window.setDoc(
-              window.doc(window.db, 'hitStreaks', hitStreakDocId),
+            await setDoc(
+              doc(db, 'hitStreaks', hitStreakDocId),
               {
                 playerId: docId,
                 playerLegacyId: legacyId,
@@ -1510,12 +1510,12 @@ window.runMergePlayer = async function(previewOnly = true) {
     // \u2500\u2500 Games \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     log('');
     log('Step 1: Scanning source games...', 'game');
-    const sourceGamesRef = window.collection(window.db, 'playerStats', sourceId, 'games');
-    const sourceGamesSnap = await window.getDocs(sourceGamesRef);
+    const sourceGamesRef = collection(db, 'playerStats', sourceId, 'games');
+    const sourceGamesSnap = await getDocs(sourceGamesRef);
     log(`  Found ${sourceGamesSnap.size} game documents under playerStats/${sourceId}/games`);
 
-    const targetGamesRef = window.collection(window.db, 'playerStats', targetId, 'games');
-    const targetGamesSnap = await window.getDocs(targetGamesRef);
+    const targetGamesRef = collection(db, 'playerStats', targetId, 'games');
+    const targetGamesSnap = await getDocs(targetGamesRef);
     const targetGameIds = new Set(targetGamesSnap.docs.map(d => d.id));
     log(`  Target already has ${targetGamesSnap.size} game documents`);
 
@@ -1527,8 +1527,8 @@ window.runMergePlayer = async function(previewOnly = true) {
         gamesSkipped++;
       } else {
         if (!previewOnly) {
-          await window.setDoc(
-            window.doc(window.db, 'playerStats', targetId, 'games', gameDoc.id),
+          await setDoc(
+            doc(db, 'playerStats', targetId, 'games', gameDoc.id),
             gameDoc.data()
           );
         } else {
@@ -1543,12 +1543,12 @@ window.runMergePlayer = async function(previewOnly = true) {
     // \u2500\u2500 Seasons \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     log('');
     log('Step 2: Scanning source seasons...', 'game');
-    const sourceSeasonsRef = window.collection(window.db, 'playerStats', sourceId, 'seasons');
-    const sourceSeasonsSnap = await window.getDocs(sourceSeasonsRef);
+    const sourceSeasonsRef = collection(db, 'playerStats', sourceId, 'seasons');
+    const sourceSeasonsSnap = await getDocs(sourceSeasonsRef);
     log(`  Found ${sourceSeasonsSnap.size} season documents under playerStats/${sourceId}/seasons`);
 
-    const targetSeasonsRef = window.collection(window.db, 'playerStats', targetId, 'seasons');
-    const targetSeasonsSnap = await window.getDocs(targetSeasonsRef);
+    const targetSeasonsRef = collection(db, 'playerStats', targetId, 'seasons');
+    const targetSeasonsSnap = await getDocs(targetSeasonsRef);
     const targetSeasonIds = new Set(targetSeasonsSnap.docs.map(d => d.id));
     log(`  Target already has ${targetSeasonsSnap.size} season documents`);
 
@@ -1560,8 +1560,8 @@ window.runMergePlayer = async function(previewOnly = true) {
         seasonsSkipped++;
       } else {
         if (!previewOnly) {
-          await window.setDoc(
-            window.doc(window.db, 'playerStats', targetId, 'seasons', seasonDoc.id),
+          await setDoc(
+            doc(db, 'playerStats', targetId, 'seasons', seasonDoc.id),
             seasonDoc.data()
           );
         } else {
@@ -1576,12 +1576,12 @@ window.runMergePlayer = async function(previewOnly = true) {
     // \u2500\u2500 Mark aggregatedPlayerStats source as migrated \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     log('');
     log('Step 3: aggregatedPlayerStats source doc...', 'game');
-    const aggSourceRef = window.doc(window.db, 'aggregatedPlayerStats', sourceId);
-    const aggSourceSnap = await window.getDoc(aggSourceRef);
+    const aggSourceRef = doc(db, 'aggregatedPlayerStats', sourceId);
+    const aggSourceSnap = await getDoc(aggSourceRef);
     if (aggSourceSnap.exists()) {
       log(`  Found aggregatedPlayerStats/${sourceId}`);
       if (!previewOnly) {
-        await window.setDoc(aggSourceRef, { migrated: true }, { merge: true });
+        await setDoc(aggSourceRef, { migrated: true }, { merge: true });
         log(`  Marked migrated: true`, 'success');
       } else {
         log(`  \u2192 Would set migrated: true on aggregatedPlayerStats/${sourceId}`);
@@ -1635,8 +1635,8 @@ window.runBoxScoreBuilder = async function(previewOnly = true) {
     // \u2500\u2500 Step 1: Roster (same legacy-ID sources game-recap.html used) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     log('Step 1: Loading player roster...', 'game');
     const [aggSnap, usersSnap] = await Promise.all([
-      window.getDocs(window.collection(window.db, 'aggregatedPlayerStats')),
-      window.getDocs(window.collection(window.db, 'users'))
+      getDocs(collection(db, 'aggregatedPlayerStats')),
+      getDocs(collection(db, 'users'))
     ]);
 
     const legacyIds = new Set();
@@ -1653,8 +1653,8 @@ window.runBoxScoreBuilder = async function(previewOnly = true) {
     log('Step 2: Reading per-player game docs...', 'game');
     const prefix = `${seasonId}_`;
     const rangeFilters = () => [
-      window.where(window.documentId(), '>=', prefix),
-      window.where(window.documentId(), '<=', prefix + '\uf8ff')
+      where(documentId(), '>=', prefix),
+      where(documentId(), '<=', prefix + '\uf8ff')
     ];
 
     const games = new Map(); // gameDocId -> { batting: [], pitching: [], legacyIds: Set }
@@ -1667,8 +1667,8 @@ window.runBoxScoreBuilder = async function(previewOnly = true) {
     for (let i = 0; i < ids.length; i += CHUNK) {
       await Promise.all(ids.slice(i, i + CHUNK).map(async legacyId => {
         const [bSnap, pSnap] = await Promise.all([
-          window.getDocs(window.query(window.collection(window.db, 'playerStats', legacyId, 'games'), ...rangeFilters())),
-          window.getDocs(window.query(window.collection(window.db, 'pitchingStats', legacyId, 'games'), ...rangeFilters()))
+          getDocs(query(collection(db, 'playerStats', legacyId, 'games'), ...rangeFilters())),
+          getDocs(query(collection(db, 'pitchingStats', legacyId, 'games'), ...rangeFilters()))
         ]);
         bSnap.forEach(s => {
           const g = bucket(s.id);
@@ -1708,7 +1708,7 @@ window.runBoxScoreBuilder = async function(previewOnly = true) {
       for (const [gid, g] of games) {
         const subsetMap = {};
         g.legacyIds.forEach(lid => { if (legacyToAuth[lid]) subsetMap[lid] = legacyToAuth[lid]; });
-        await window.setDoc(window.doc(window.db, 'gameBoxScores', gid), {
+        await setDoc(doc(db, 'gameBoxScores', gid), {
           seasonId,
           gameDocId: gid,
           batting: g.batting,
@@ -1767,7 +1767,7 @@ window.runBWARCalculator = async function(previewOnly = true) {
     // \u2500\u2500 Step 1: Load all season player stats \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     log('');
     log('Step 1: Loading player stats...', 'game');
-    const statsSnap = await window.getDocs(window.collection(window.db, 'aggregatedPlayerStats'));
+    const statsSnap = await getDocs(collection(db, 'aggregatedPlayerStats'));
     const players = [];
     statsSnap.forEach(docSnap => {
       const data = docSnap.data();
@@ -1808,8 +1808,8 @@ window.runBWARCalculator = async function(previewOnly = true) {
     // Helper: sum completed games from a single season subcollection
     async function sumSeasonGames(sid) {
       let r = 0, g = 0;
-      const snap = await window.getDocs(
-        window.query(window.collection(window.db, 'seasons', sid, 'games'), window.where('status', '==', 'completed'))
+      const snap = await getDocs(
+        query(collection(db, 'seasons', sid, 'games'), where('status', '==', 'completed'))
       );
       snap.forEach(doc => {
         const d = doc.data();
@@ -1819,7 +1819,7 @@ window.runBWARCalculator = async function(previewOnly = true) {
       });
       // Fallback: no status=completed docs \u2014 scan all and check winner
       if (g === 0) {
-        const all = await window.getDocs(window.collection(window.db, 'seasons', sid, 'games'));
+        const all = await getDocs(collection(db, 'seasons', sid, 'games'));
         all.forEach(doc => {
           const d = doc.data();
           const hs = Number(d.homeScore ?? d['home score'] ?? 0) || 0;
@@ -1832,7 +1832,7 @@ window.runBWARCalculator = async function(previewOnly = true) {
 
     if (useHistoricalRPW && seasonType) {
       log(`Step 2: Loading historical R/G across all ${seasonType} seasons...`, 'game');
-      const allSeasonsSnap = await window.getDocs(window.collection(window.db, 'seasons'));
+      const allSeasonsSnap = await getDocs(collection(db, 'seasons'));
       const matchingSeasons = allSeasonsSnap.docs
         .map(d => d.id)
         .filter(id => id.toLowerCase().includes(seasonType))
@@ -1917,8 +1917,8 @@ window.runBWARCalculator = async function(previewOnly = true) {
       let writtenCount = 0;
       for (const p of results) {
         try {
-          const docRef = window.doc(window.db, getAggregatedCollection(), p.docId);
-          await window.setDoc(docRef, {
+          const docRef = doc(db, getAggregatedCollection(), p.docId);
+          await setDoc(docRef, {
             seasons: { [p.seasonKey]: { bwarSimp: p.bwarSimp } }
           }, { merge: true });
           writtenCount++;
@@ -1973,8 +1973,8 @@ window.runStreakCalculator = async function(previewOnly = true) {
   try {
     // Build legacyId \u2192 docId mapping from aggregatedPlayerStats
     log('Loading player roster...', 'game');
-    const aggregatedRef = window.collection(window.db, 'aggregatedPlayerStats');
-    const aggregatedSnap = await window.getDocs(aggregatedRef);
+    const aggregatedRef = collection(db, 'aggregatedPlayerStats');
+    const aggregatedSnap = await getDocs(aggregatedRef);
 
     const legacyToDocId = new Map();
     const docIdToInfo = new Map();
@@ -2008,8 +2008,8 @@ window.runStreakCalculator = async function(previewOnly = true) {
         const playerName = playerInfo.name || legacyId;
 
         // Load ALL games across ALL seasons \u2014 no seasonId filter
-        const gamesRef = window.collection(window.db, 'playerStats', legacyId, 'games');
-        const gamesSnap = await window.getDocs(gamesRef);
+        const gamesRef = collection(db, 'playerStats', legacyId, 'games');
+        const gamesSnap = await getDocs(gamesRef);
 
         if (gamesSnap.empty) {
           playersChecked++;
@@ -2113,8 +2113,8 @@ window.runStreakCalculator = async function(previewOnly = true) {
             };
 
             // Always full-overwrite so every aggregation run stays fresh
-            await window.setDoc(
-              window.doc(window.db, 'hitStreaks', hitStreakDocId),
+            await setDoc(
+              doc(db, 'hitStreaks', hitStreakDocId),
               docData
             );
             writtenCount++;
@@ -2123,15 +2123,15 @@ window.runStreakCalculator = async function(previewOnly = true) {
             // Zero out any old versioned docs (e.g. ${docId}_allSeasons_8) so they no
             // longer appear as active streaks on the leaderboard.
             try {
-              const oldVersionedQuery = window.query(
-                window.collection(window.db, 'hitStreaks'),
-                window.where('playerId', '==', docId),
-                window.where('crossSeason', '==', true)
+              const oldVersionedQuery = query(
+                collection(db, 'hitStreaks'),
+                where('playerId', '==', docId),
+                where('crossSeason', '==', true)
               );
-              const oldVersionedSnap = await window.getDocs(oldVersionedQuery);
+              const oldVersionedSnap = await getDocs(oldVersionedQuery);
               for (const oldDoc of oldVersionedSnap.docs) {
                 if (oldDoc.id !== hitStreakDocId && (oldDoc.data().currentStreak || 0) > 0) {
-                  await window.updateDoc(oldDoc.ref, { currentStreak: 0 });
+                  await updateDoc(oldDoc.ref, { currentStreak: 0 });
                   log(`    Zeroed stale doc: ${oldDoc.id}`, 'skip');
                 }
               }
@@ -2336,8 +2336,8 @@ window.runFullAggregation = async function() {
   }
   
   try {
-    const statsRef = window.collection(window.db, getAggregatedCollection());
-    const snapshot = await window.getDocs(statsRef);
+    const statsRef = collection(db, getAggregatedCollection());
+    const snapshot = await getDocs(statsRef);
     
     log(`Found ${snapshot.size} documents to process`);
     
@@ -2359,8 +2359,8 @@ window.runFullAggregation = async function() {
         
         const career = recalculateCareer(playerData.seasons);
         
-        await window.setDoc(
-          window.doc(window.db, getAggregatedCollection(), docSnap.id),
+        await setDoc(
+          doc(db, getAggregatedCollection(), docSnap.id),
           { career, lastUpdated: new Date() },
           { merge: true }
         );
@@ -2418,8 +2418,8 @@ window.verifyAggregation = async function() {
   
   try {
     // Check main collection
-    const statsRef = window.collection(window.db, getAggregatedCollection());
-    const snapshot = await window.getDocs(statsRef);
+    const statsRef = collection(db, getAggregatedCollection());
+    const snapshot = await getDocs(statsRef);
     
     log(`\nMain Collection: ${getAggregatedCollection()}`, 'header');
     log(`Found ${snapshot.size} documents`, 'success');
@@ -2453,8 +2453,8 @@ window.verifyAggregation = async function() {
     log(`\n2025 Splits Collection: ${SPLITS_2025_COLLECTION}`, 'header');
     
     try {
-      const splits2025Ref = window.collection(window.db, SPLITS_2025_COLLECTION);
-      const splits2025Snap = await window.getDocs(splits2025Ref);
+      const splits2025Ref = collection(db, SPLITS_2025_COLLECTION);
+      const splits2025Snap = await getDocs(splits2025Ref);
       
       log(`Found ${splits2025Snap.size} documents`, 'success');
       
