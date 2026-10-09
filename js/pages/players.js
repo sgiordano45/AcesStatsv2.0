@@ -10,10 +10,14 @@
 //
 // "This season" is the current season, or in the offseason the latest one
 // (getDisplaySeasonId), so the page isn't empty between seasons.
-// Data: aggregatedPlayerStats (getAllPlayerStatsOptimized), one read.
+// Data: aggregatedPlayerStats (getAllPlayerStatsOptimized) for career lines,
+// and rosters/{seasonId}-{team} for who is on each team this season: the
+// roster decides the team, so players with no submitted stats yet (a team
+// that hasn't entered stats, or a new player) still show up.
 
 import { initPage, pageReady, showPageError } from '../core/app.js';
 import { getDisplaySeasonId } from '../core/config.js';
+import { db, collection, getDocs } from '../core/firebase.js';
 import { getAllPlayerStatsOptimized } from '../data/player-stats.js';
 import { buildBattingRows } from '../ui/batting-stats.js';
 import { mountStatTable } from '../ui/table.js';
@@ -21,7 +25,7 @@ import { teamChipHtml, TEAM_COLORS } from '../ui/stat-columns.js';
 import { escapeHtml as esc, fmtAvg } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 import { battingAverage, onBasePct } from '../domain/stats.js';
-import { seasonLabel } from '../domain/season-ids.js';
+import { seasonLabel, seasonSortKey } from '../domain/season-ids.js';
 
 const $ = (id) => document.getElementById(id);
 const EXCLUDED_TEAMS = new Set(['kings']);   // a guest team in old data, as the old page left out
@@ -63,6 +67,7 @@ function buildPlayers(docs) {
       subOnly: regular.length === 0,
       seasons: seasonIds.size,
       firstYear: years[0] || latest.seasonId.slice(0, 4),
+      firstKey: regular.length ? Math.min(...regular.map(r => r.seasonKey)) : 0,
       teamGames: regular.filter(r => r.teamKey === latest.teamKey).reduce((s, r) => s + r.games, 0),
       games: t.g, atBats: t.ab, hits: t.h, runs: t.r, walks: t.bb,
       avg: t.ab ? battingAverage(t.h, t.ab) : null,
@@ -72,8 +77,62 @@ function buildPlayers(docs) {
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/** rosters/{seasonId}-{team} docs for one season: [{ team, players: [...] }]. */
+async function loadRosters(seasonId) {
+  if (!seasonId) return [];
+  const snap = await getDocs(collection(db, 'rosters'));
+  return snap.docs
+    .filter(d => (d.data().seasonId || d.id.split('-').slice(0, 2).join('-')) === seasonId)
+    .map(d => {
+      const v = d.data();
+      const teamKey = String(v.teamName || d.id.split('-').slice(2).join('-')).toLowerCase();
+      return { team: teamKey.charAt(0).toUpperCase() + teamKey.slice(1), teamKey, players: Array.isArray(v.players) ? v.players : [] };
+    })
+    .filter(r => r.players.length && !EXCLUDED_TEAMS.has(r.teamKey));
+}
+
+/**
+ * Put this season's roster on top of the stats: a rostered player is current
+ * on the roster's team (stats or not); someone on a roster with no stats yet
+ * gets an entry of their own.
+ */
+function applyRosters(list, rosters) {
+  const byId = new Map(), byName = new Map();
+  list.forEach(p => {
+    [p.id, ...(p.ids || [])].forEach(id => id && byId.set(String(id), p));
+    byName.set(norm(p.name), p);
+  });
+  for (const r of rosters) {
+    for (const rp of r.players) {
+      const name = String(rp.name || '').trim();
+      if (!name && !rp.id) continue;
+      let p = byId.get(String(rp.id || '')) || byId.get(String(rp.authId || '')) || byName.get(norm(name));
+      if (!p) {
+        p = {
+          id: rp.authId || rp.id || '', ids: [rp.id, rp.authId].filter(Boolean), linkByName: !rp.authId,
+          name, lastSeasonId: currentSeason, lastKey: seasonSortKey(currentSeason), firstKey: 0, seasons: 0, firstYear: currentSeason.slice(0, 4),
+          teamGames: 0, games: 0, atBats: 0, hits: 0, runs: 0, walks: 0, avg: null, obp: null, noStats: true
+        };
+        list.push(p);
+        byName.set(norm(name), p);
+      }
+      Object.assign(p, {
+        team: r.team, teamKey: r.teamKey, current: true, currentSub: false, rostered: true,
+        number: rp.number ?? p.number ?? null, captain: !!rp.captain || !!p.captain
+      });
+      if (!(p.lastKey >= seasonSortKey(currentSeason))) { p.lastSeasonId = currentSeason; p.lastKey = seasonSortKey(currentSeason); }
+    }
+  }
+  return list.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** First season on a roster: this season, or rostered now with no regular season before. */
+const isNew = (p) => p.current && (!p.firstKey || p.firstKey === seasonSortKey(currentSeason));
+
+const playerHref = (p) => (p.linkByName ? `player.html?name=${encodeURIComponent(p.name)}` : `player.html?id=${encodeURIComponent(p.id)}`);
+
 const isMe = (p) => [p.id, ...(p.ids || [])].some(id => me.has(id));
-const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 function filtered() {
   const q = norm(state.q).trim();
@@ -98,7 +157,7 @@ function renderStats() {
     tile(String(players.length), 'Players all-time', first ? `since ${first}` : ''),
     tile(String(current.length), 'On a roster', currentSeason ? seasonLabel(currentSeason) : ''),
     tile(String(teamsNow.size), 'Teams', currentSeason ? seasonLabel(currentSeason) : ''),
-    tile(String(players.filter(p => p.current && p.seasons === 1).length), 'First season', currentSeason ? 'new this season' : '')
+    tile(String(players.filter(isNew).length), 'First season', currentSeason ? 'new this season' : '')
   ].join('');
 }
 
@@ -126,7 +185,9 @@ function renderToolbar() {
 }
 
 function playerLine(p) {
+  if (p.noStats) return `${p.number ? `#${p.number} · ` : ''}No games yet`;
   const bits = [`${p.games} G`, `${fmtAvg(p.avg, { empty: '-' })} AVG`];
+  if (p.current && p.number) bits.unshift(`#${p.number}`);
   bits.push(p.seasons ? `${p.seasons} season${p.seasons === 1 ? '' : 's'}` : 'Sub only');
   return bits.join(' · ');
 }
@@ -134,11 +195,12 @@ function playerLine(p) {
 function playerRow(p, { past = false } = {}) {
   const tags = [
     isMe(p) ? '<span class="aces-badge is-accent">You</span>' : '',
-    p.current && p.seasons === 1 ? '<span class="aces-badge is-brand">New</span>' : '',
+    p.captain && p.current ? '<span class="aces-badge is-outline">Captain</span>' : '',
+    isNew(p) ? '<span class="aces-badge is-brand">New</span>' : '',
     p.currentSub ? '<span class="aces-badge is-outline">Sub</span>' : ''
   ].join('');
   const initials = p.name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  return `<li><a class="ps-player${isMe(p) ? ' is-me' : ''}" href="player.html?id=${esc(encodeURIComponent(p.id))}">
+  return `<li><a class="ps-player${isMe(p) ? ' is-me' : ''}" href="${esc(playerHref(p))}">
     <span class="aces-avatar ps-avatar" aria-hidden="true">${esc(initials)}</span>
     <span class="ps-player-text"><strong>${esc(p.name)}${tags}</strong>
       <span>${esc(past ? `Last played ${seasonLabel(p.lastSeasonId)} · ${playerLine(p)}` : playerLine(p))}</span></span>
@@ -147,7 +209,7 @@ function playerRow(p, { past = false } = {}) {
 
 function teamCard(team, list, { former = false } = {}) {
   const key = list[0].teamKey;
-  const now = list.filter(p => p.current || p.currentSub).sort((a, b) => Number(b.current) - Number(a.current) || b.teamGames - a.teamGames || a.name.localeCompare(b.name));
+  const now = list.filter(p => p.current || p.currentSub).sort((a, b) => Number(b.current) - Number(a.current) || Number(!!b.captain) - Number(!!a.captain) || b.teamGames - a.teamGames || a.name.localeCompare(b.name));
   const past = list.filter(p => !p.current && !p.currentSub).sort((a, b) => b.lastKey - a.lastKey || a.name.localeCompare(b.name));
   const searching = !!state.q.trim();
   const color = TEAM_COLORS.has(key) ? ` data-team-color="${esc(key)}"` : '';
@@ -189,7 +251,7 @@ const tableConfig = {
   cardSub: 'team',
   columns: [
     { key: 'name', label: 'Player', type: 'text', value: r => r.name,
-      html: r => `<a href="player.html?id=${esc(encodeURIComponent(r.id))}">${esc(r.name)}</a>${isMe(r) ? ' <span class="aces-badge is-accent">You</span>' : ''}` },
+      html: r => `<a href="${esc(playerHref(r))}">${esc(r.name)}</a>${isMe(r) ? ' <span class="aces-badge is-accent">You</span>' : ''}` },
     { key: 'team', label: 'Team', type: 'text', value: r => r.team, html: r => teamChipHtml({ ...r, seasonCount: 1, seasonId: r.lastSeasonId }) },
     { key: 'last', label: 'Last', title: 'Last season played', type: 'text', defaultDir: 'desc', value: r => r.lastKey, format: (v, r) => seasonLabel(r.lastSeasonId), csv: r => seasonLabel(r.lastSeasonId) },
     { key: 'S', label: 'Seasons', title: 'Regular seasons played', type: 'count', shade: false, perGame: false, value: r => r.seasons },
@@ -286,7 +348,7 @@ function wire() {
   $('psToolbar').addEventListener('keydown', (e) => {
     if (e.target.id === 'psQuery' && e.key === 'Enter') {
       const list = filtered();
-      if (list.length === 1) location.href = `player.html?id=${encodeURIComponent(list[0].id)}`;
+      if (list.length === 1) location.href = playerHref(list[0]);
     }
   });
   document.addEventListener('error', (e) => { if (e.target.matches?.('[data-logo]')) e.target.remove(); }, true);
@@ -297,12 +359,16 @@ async function main() {
   const [docs, season] = await Promise.all([getAllPlayerStatsOptimized(), getDisplaySeasonId().catch(() => null)]);
   currentSeason = season || '';
   me = new Set([page.user?.uid, page.profile?.id, page.profile?.playerId, page.profile?.mergedFromProfile, page.profile?.linkedPlayerId].filter(Boolean));
-  players = buildPlayers(docs || []);
+  const load = async () => applyRosters(buildPlayers(docs || []), await loadRosters(currentSeason).catch((err) => {
+    console.warn('[players] rosters unavailable; teams come from stats', err);
+    return [];
+  }));
+  players = await load();
   if (!currentSeason || !players.some(p => p.current)) {
-    // No roster for the display season yet (a new season before stats): use the newest season with players.
-    const newest = players.reduce((m, p) => (p.lastKey > m.key ? { key: p.lastKey, id: p.lastSeasonId } : m), { key: 0, id: '' });
+    // Nothing for the display season yet (no rosters or stats): use the newest season with stats.
+    const newest = players.reduce((m, p) => (!p.noStats && p.lastKey > m.key ? { key: p.lastKey, id: p.lastSeasonId } : m), { key: 0, id: '' });
     currentSeason = newest.id;
-    players = buildPlayers(docs || []);
+    players = await load();
   }
   readUrl();
   if (!new URLSearchParams(location.search).get('scope')) state.scope = state.team || state.q ? 'all' : 'current';
