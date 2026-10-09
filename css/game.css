@@ -139,6 +139,8 @@
 .gr-ha { color: var(--color-text-faint); font-size: 10px; font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
 .gr-final { color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
 .gr-line { margin-top: var(--space-3); }
+.gr-line table { width: auto; min-width: min(100%, 420px); margin: 0 auto; }
+.gr-line th[scope="row"], .gr-line thead th:first-child { padding-right: var(--space-6); }
 .gr-line th[scope="row"] { white-space: nowrap; text-align: left; }
 .gr-line-team { display: inline-flex; align-items: center; gap: 6px; }
 .gr-line th.is-num, .gr-line td.is-num { width: 2.5em; text-align: center; }
