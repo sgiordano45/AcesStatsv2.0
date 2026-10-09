@@ -722,41 +722,17 @@ async function getTeamRecords(summerTeam, fallTeam) {
           return null;
         }
         
-        // Calculate record for this team
+        // Record for this team: every game with a result (playoffs included),
+        // read through the shared game normalizer (winner by name or ID, any case).
+        const { normalizeGames } = await import('./js/domain/standings.js');
+        const key = String(teamName).toLowerCase();
         let wins = 0;
         let losses = 0;
-        
-        games.forEach(game => {
-          // Use correct field names from your structure
-          const homeTeam = game.homeTeamName || game["home team"];
-          const awayTeam = game.awayTeamName || game["away team"];
-          const homeTeamId = game.homeTeamId;
-          const awayTeamId = game.awayTeamId;
-          const winner = game.winner; // This is lowercase team ID
-          
-          // Check if this team is playing (using team name)
-          const isPlaying = homeTeam === teamName || awayTeam === teamName;
-          
-          if (!isPlaying || !winner || game.status !== 'completed') {
-            return; // Skip this game
-          }
-          
-          // Determine if this team won
-          // winner is lowercase ID, so compare against homeTeamId/awayTeamId
-          let thisTeamWon = false;
-          if (homeTeam === teamName) {
-            thisTeamWon = (winner === homeTeamId);
-            console.log(`  Game: ${homeTeam} vs ${awayTeam} | Winner ID: ${winner} | Home ID: ${homeTeamId} | We won: ${thisTeamWon}`);
-          } else if (awayTeam === teamName) {
-            thisTeamWon = (winner === awayTeamId);
-            console.log(`  Game: ${homeTeam} vs ${awayTeam} | Winner ID: ${winner} | Away ID: ${awayTeamId} | We won: ${thisTeamWon}`);
-          }
-          
-          if (thisTeamWon) {
-            wins++;
-          } else {
-            losses++;
-          }
+        normalizeGames(games).forEach(g => {
+          if (!g.result || g.result === 'tie') return;
+          const side = g.home.toLowerCase() === key ? 'home' : g.away.toLowerCase() === key ? 'away' : '';
+          if (!side) return;
+          if (g.result === side) wins++; else losses++;
         });
         
         console.log(`✅ ${teamName} ${seasonId}: ${wins}-${losses}`);
@@ -2055,7 +2031,7 @@ function generateSummaryCard(stats, playerData, teamColor) {
 
       <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 2rem; border-radius: 20px; margin: 2rem 0; border: 2px solid ${teamColor.accent};">
         <h3 style="font-size: clamp(1.5rem, 4vw, 2.5rem); margin-bottom: 1rem; color: ${teamColor.accent};">
-          See you in 2026! 🏆
+          See you in ${WRAP_YEAR + 1}! 🏆
         </h3>
       </div>
 
