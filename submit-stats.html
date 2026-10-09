@@ -4,7 +4,7 @@
 <script type="module" src="js/core/preview-guard.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Submit Stats (Beta) - Mountainside Aces</title>
+<title>Submit Stats - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -935,7 +935,7 @@ body {
 </head>
 <body>
 
-<div id="loadingOverlay" class="loading-overlay">
+<div id="loadingOverlay" class="loading-overlay" data-page-loading>
   <div class="spinner">🧮</div>
   <div class="loading-text">Loading stats submission...</div>
 </div>
@@ -1332,20 +1332,19 @@ Jane Doe,2025-09-15,Blue,true,3,1,0,1,0,0,0,0,2,1</code>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script type="module">
-import { onAuthChange, getCurrentUser, getUserProfile } from './firebase-auth.js';
-import { getCurrentSeason, getAllTeams } from './firebase-data.js';
+import { initPage } from './js/core/app.js';
+import { getCurrentSeason, getAllTeams } from './js/data/index.js';
 import { getTeamRosterDoc } from './firebase-roster.js';
-import { db, collection, doc, getDoc, query, where } from './firebase-config.js';
-import { 
-  updateDoc, 
+import {
+  db, collection, doc, getDoc, query, where,
+  updateDoc,
   setDoc,
   increment,
   serverTimestamp,
   getDocs,
   deleteDoc,
   Timestamp
-} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import './nav-component.js';
+} from './js/core/firebase.js';
 
 let currentUser = null;
 let userProfile = null;
@@ -2823,23 +2822,20 @@ if (uploadArea) {
 // ============================================
 // INITIALIZATION
 // ============================================
-async function initializePage(user) {
-  if (!user) {
-    window.location.href = 'signin.html';
-    return;
-  }
+// user is the signed-in account (it stamps submittedBy); profile is the
+// effective one, so View As shows what that captain would see.
+async function initializePage(user, profile) {
 
   console.log('🚀 Initializing submit-stats page for:', user.displayName);
 
   try {
     currentUser = user;
 
-    const profileResult = await getUserProfile(user.uid);
-    if (!profileResult.success) {
+    if (!profile) {
       throw new Error('Could not load user profile');
     }
 
-    userProfile = profileResult.data;
+    userProfile = profile;
     console.log('👤 User profile loaded:', userProfile);
 
     const access = hasStatsSubmissionAccess(userProfile);
@@ -2971,13 +2967,9 @@ async function initializePage(user) {
   }
 }
 
-onAuthChange((user) => {
-  if (user) {
-    initializePage(user);
-  } else {
-    window.location.href = 'signin.html';
-  }
-});
+// Signed-out visitors go to sign in and come back (initPage). Runs once; the
+// old listener re-ran setup on every auth event.
+initPage({ title: 'Submit Stats', requiresAuth: true }).then(({ user, profile }) => initializePage(user, profile));
 
 // ============================================
 // PDF IMPORT
@@ -3582,6 +3574,5 @@ window.submitPdfStats = async function() {
 
 </div><!-- Close page-container -->
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>
