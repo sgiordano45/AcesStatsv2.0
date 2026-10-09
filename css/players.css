@@ -1,0 +1,75 @@
+/* ==========================================================================
+   css/players.css - players.html (js/pages/players.js)
+   ========================================================================== */
+
+.players { padding-bottom: var(--space-12); }
+.ps-summary { margin: var(--space-4) 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 560px) { .ps-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ps-skeleton { display: grid; gap: var(--space-4); }
+
+/* Toolbar: search, scope, team, view */
+.ps-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.ps-search { position: relative; flex: 1 1 240px; max-width: 360px; margin: 0; }
+.ps-search > .aces-icon { position: absolute; left: 12px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); color: var(--color-text-faint); pointer-events: none; }
+.ps-search .aces-input { padding-left: 38px; }
+.ps-toolbar .aces-select-wrap { min-width: 150px; }
+.ps-view { margin-left: auto; }
+.ps-view .aces-segment { display: inline-flex; align-items: center; gap: 6px; }
+.ps-view .aces-icon { width: 16px; height: 16px; }
+@media (max-width: 640px) {
+  .ps-search { max-width: none; flex-basis: 100%; }
+  .ps-view { margin-left: 0; }
+}
+
+/* By team */
+.ps-teams { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); align-items: start; }
+.ps-team { display: grid; gap: var(--space-3); min-width: 0; }
+.ps-team-head { display: flex; align-items: center; gap: var(--space-3); }
+.ps-logo { width: 44px; height: 44px; object-fit: contain; flex: none; }
+.ps-team-name { margin: 0; font: 400 var(--fs-xl) / 1 var(--font-display); letter-spacing: var(--tracking-display); }
+.ps-team-name a { color: var(--color-text); text-decoration: none; }
+.ps-team-name a:hover { color: var(--color-link); }
+.ps-team-meta { margin: 2px 0 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+
+.ps-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.ps-list li + li { border-top: 1px solid var(--color-border); }
+.ps-player {
+  display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: var(--space-3);
+  min-height: var(--tap-min); padding: 6px 0; color: var(--color-text); text-decoration: none;
+}
+.ps-player:hover { text-decoration: none; }
+.ps-player:hover strong { color: var(--color-link); }
+.ps-player > .aces-icon { width: 16px; height: 16px; color: var(--color-text-faint); }
+.ps-avatar { background: color-mix(in srgb, var(--team, var(--color-brand)) 16%, var(--color-surface)); color: var(--color-text); }
+.ps-player-text { display: grid; gap: 1px; min-width: 0; }
+.ps-player-text strong { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.ps-player-text > span { color: var(--color-text-muted); font-size: var(--fs-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-player-text .aces-badge { font-size: 10px; }
+.ps-player.is-me { margin: 0 calc(-1 * var(--space-2)); padding-left: var(--space-2); padding-right: var(--space-2); border-radius: var(--radius-sm); background: var(--color-accent-soft); }
+.ps-list.is-past .ps-avatar { background: var(--color-surface-2); color: var(--color-text-muted); }
+
+.ps-past { border-top: 1px solid var(--color-border); padding-top: var(--space-2); }
+.ps-past summary {
+  display: flex; align-items: center; gap: 6px; min-height: 36px; cursor: pointer; list-style: none;
+  color: var(--color-text-muted); font-size: var(--fs-sm); font-weight: var(--fw-semibold);
+}
+.ps-past summary::-webkit-details-marker { display: none; }
+.ps-past summary .aces-icon { width: 16px; height: 16px; transition: transform var(--dur-fast) var(--ease-out); }
+.ps-past[open] summary .aces-icon { transform: rotate(180deg); }
+.ps-past summary span { font-weight: var(--fw-regular); }
+
+.ps-section-title {
+  display: flex; align-items: center; gap: var(--space-2); margin: var(--space-8) 0 var(--space-3);
+  font: 400 var(--fs-xl) / 1 var(--font-display); letter-spacing: var(--tracking-display); color: var(--color-text);
+}
+.ps-section-title .aces-icon { width: 20px; height: 20px; color: var(--color-text-muted); }
+.ps-section-title span { color: var(--color-text-muted); }
+.ps-teams.is-former .ps-team { background: var(--color-surface); opacity: 0.95; }
+
+/* Table */
+.ps-table { padding: var(--space-3); }
+/* Sticky table headers can paint mid-table on first load; keep them in place. */
+.players .aces-table thead th { position: static; }
