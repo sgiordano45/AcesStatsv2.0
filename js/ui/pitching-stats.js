@@ -1,6 +1,6 @@
 // js/ui/pitching-stats.js
 // Pitching rows and the pitching stat-table config, shared by pitching.html,
-// team.html (and player/pitcher pages in Phase 3). Rows are one per
+// team.html and player.html's Pitching tab. Rows are one per
 // pitcher-season.
 //
 // Pitching is runs and innings: the league doesn't track W/L/SV, and K/BB/H
@@ -71,7 +71,7 @@ export function pitchingTableConfig({ id = '', omit = [], lead = [], sort = null
     id,
     cardSub: drop.has('team') || lead[0] === 'team' ? 'season' : 'team',
     columns: [
-      playerColumn({ page: 'pitcher.html' }),
+      playerColumn({ tab: 'pitching' }),
       teamColumn(),
       seasonColumn(),
       { key: 'G', label: 'G', title: 'Games pitched', type: 'count', value: r => r.games, perGame: false },

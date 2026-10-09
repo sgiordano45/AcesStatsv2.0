@@ -165,7 +165,7 @@ export const NAV_HUBS = [
       { id: 'teams', href: 'teams.html', label: 'Teams', icon: 'shield',
         also: ['team.html'] },
       { id: 'players', href: 'players.html', label: 'Players', icon: 'user',
-        also: ['player.html', 'pitcher.html', 'player-splits.html', 'player_new.html', 'card-export.html'] },
+        also: ['player.html', 'pitcher.html', 'player-splits.html', 'card-export.html'] },
       { id: 'roster-tracker', href: 'roster-tracker.html', label: 'Roster tracker', icon: 'clipboard' },
       { id: 'directory', href: 'aces-directory.html', label: 'Directory', icon: 'id-card', signedIn: true },
     ],

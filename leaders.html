@@ -969,16 +969,16 @@ function leaderTable(rows, cat, kind) {
   let rank = 0;
   list.forEach((x, i) => { if (i === 0 || x.v !== list[i - 1].v) rank = i + 1; x.rank = rank; });
 
-  const page = kind === 'pitching' ? 'pitcher.html' : 'player.html';
+  const tab = kind === 'pitching' ? '&tab=pitching' : '';   // pitchers open on player.html's Pitching tab
   const showSeason = state.scope === 'best';
   const showTeam = state.scope === 'season';
   const row = (x, extraClass = '') => {
     const r = x.r;
     const cls = [x.rank <= 3 ? `rank-${x.rank}` : '', isMe(r) ? 'is-me' : '', extraClass].filter(Boolean).join(' ');
-    const q = r.id ? `id=${encodeURIComponent(r.id)}` : `name=${encodeURIComponent(r.name)}`;
+    const q = (r.id ? `id=${encodeURIComponent(r.id)}` : `name=${encodeURIComponent(r.name)}`) + tab;
     return `<tr${cls ? ` class="${cls}"` : ''}>
       <td class="rank">${x.rank}</td>
-      <td><a href="${page}?${esc(q)}">${esc(r.name)}</a></td>
+      <td><a href="player.html?${esc(q)}">${esc(r.name)}</a></td>
       <td class="stat-value">${esc(fmt(x.v))}</td>
       ${cat.extra ? `<td class="stat-value">${esc(cat.extra.format(cat.extra.value(r)))}</td>` : ''}
       ${showSeason ? `<td class="stat-value season-cell">${esc(r.seasonLabel)}</td>` : ''}

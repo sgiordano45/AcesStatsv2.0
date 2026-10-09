@@ -5,7 +5,7 @@
 //
 //   import { playerColumn, teamColumn, seasonColumn } from './js/ui/stat-columns.js';
 //   columns: [playerColumn(), teamColumn(), seasonColumn(), ...]
-//   columns: [playerColumn({ page: 'pitcher.html' }), ...]
+//   columns: [playerColumn({ tab: 'pitching' }), ...]   // player.html?id=..&tab=pitching
 
 import { escapeHtml as esc } from './format.js';
 
@@ -21,11 +21,11 @@ export function teamChipHtml(row) {
   return `<a class="aces-team-chip"${color} href="team.html?${esc(q.toString())}"><span class="aces-team-dot"></span>${esc(row.team)}</a>`;
 }
 
-export function playerColumn({ page = 'player.html', label = 'Player' } = {}) {
+export function playerColumn({ page = 'player.html', label = 'Player', tab = '' } = {}) {
   return {
     key: 'name', label, type: 'text', value: r => r.name,
     html: r => {
-      const q = r.id ? `id=${encodeURIComponent(r.id)}` : `name=${encodeURIComponent(r.name)}`;
+      const q = (r.id ? `id=${encodeURIComponent(r.id)}` : `name=${encodeURIComponent(r.name)}`) + (tab ? `&tab=${encodeURIComponent(tab)}` : '');
       return `<a href="${page}?${esc(q)}">${esc(r.name)}</a>`;
     }
   };
