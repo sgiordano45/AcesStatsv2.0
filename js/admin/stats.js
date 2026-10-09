@@ -147,11 +147,9 @@ function renderSteps(s) {
     detail: s.missingScore || s.missingSides
       ? `${s.missingScore ? `${plural(s.missingScore, 'game')} with no score. ` : ''}${s.missingSides ? `${plural(s.missingSides, 'team stat sheet')} missing.` : ''}`
       : `All ${plural(s.games.length, 'finished game')} have a score and both teams' stats.`,
-    note: s.missingSides ? 'If a team will never send stats for a game, mark it so it stops showing here.' : '',
     actions: s.missingScore || s.missingSides ? [
       ...(s.missingScore ? [['submit-score.html', 'Submit scores', true]] : []),
-      ['admin/submit-stats.html', 'Enter stats', !s.missingScore],
-      ['admin/mark-stats-submitted.html', 'Mark no stats coming']
+      ['admin/submit-stats.html', 'Enter stats', !s.missingScore]
     ] : []
   }));
 
