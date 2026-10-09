@@ -616,6 +616,18 @@
 <script type="module">
   import { initPage, pageReady } from './js/core/app.js';
   const pageInit = initPage({ title: 'Aces Wrapped' });   // resolves once sign-in is known
+  import { getDisplaySeasonId } from './js/core/config.js';
+  // Wrapped covers one year's Summer + Fall: ?year=2025, else the latest
+  // finished year (this year in the offseason, last year during a season).
+  let WRAP_YEAR = 2025;
+  async function resolveWrapYear() {
+    const q = parseInt(new URLSearchParams(location.search).get('year'), 10);
+    if (q >= 2019 && q <= 2100) return q;
+    const [{ config }, id] = await Promise.all([pageInit, getDisplaySeasonId().catch(() => null)]);
+    const y = parseInt(String(id || ''), 10);
+    if (!y) return WRAP_YEAR;
+    return config?.phase === 'offseason' ? y : y - 1;
+  }
 import { db, collection, doc, getDoc, getDocs } from './js/core/firebase.js';
 import { getCurrentUser } from './js/core/auth.js';
 
@@ -764,7 +776,7 @@ async function getTeamRecords(summerTeam, fallTeam) {
     
     // Get summer team record
     if (summerTeam) {
-      const summerRecord = await getTeamRecordFromGames(summerTeam, '2025-summer');
+      const summerRecord = await getTeamRecordFromGames(summerTeam, `${WRAP_YEAR}-summer`);
       if (summerRecord) {
         combinedRecord.wins += summerRecord.wins;
         combinedRecord.losses += summerRecord.losses;
@@ -774,7 +786,7 @@ async function getTeamRecords(summerTeam, fallTeam) {
     
     // Get fall team record (only if different from summer)
     if (fallTeam && fallTeam !== summerTeam) {
-      const fallRecord = await getTeamRecordFromGames(fallTeam, '2025-fall');
+      const fallRecord = await getTeamRecordFromGames(fallTeam, `${WRAP_YEAR}-fall`);
       if (fallRecord) {
         combinedRecord.wins += fallRecord.wins;
         combinedRecord.losses += fallRecord.losses;
@@ -782,7 +794,7 @@ async function getTeamRecords(summerTeam, fallTeam) {
       }
     } else if (fallTeam && fallTeam === summerTeam) {
       // Same team both seasons, get fall record
-      const fallRecord = await getTeamRecordFromGames(fallTeam, '2025-fall');
+      const fallRecord = await getTeamRecordFromGames(fallTeam, `${WRAP_YEAR}-fall`);
       if (fallRecord) {
         combinedRecord.wins += fallRecord.wins;
         combinedRecord.losses += fallRecord.losses;
@@ -928,7 +940,7 @@ async function getChampionshipInfo(summerTeam, fallTeam) {
     // Check summer
     if (summerTeam) {
       console.log(`🌞 Checking Summer championship for ${summerTeam}...`);
-      const summerChamp = await checkChampionship(summerTeam, '2025-summer');
+      const summerChamp = await checkChampionship(summerTeam, `${WRAP_YEAR}-summer`);
       if (summerChamp) {
         console.log(`✅ ${summerTeam} won Summer championship!`, summerChamp);
         championships.push(summerChamp);
@@ -940,7 +952,7 @@ async function getChampionshipInfo(summerTeam, fallTeam) {
     // Check fall - ALWAYS check even if same team as summer
     if (fallTeam) {
       console.log(`🍂 Checking Fall championship for ${fallTeam}...`);
-      const fallChamp = await checkChampionship(fallTeam, '2025-fall');
+      const fallChamp = await checkChampionship(fallTeam, `${WRAP_YEAR}-fall`);
       if (fallChamp) {
         console.log(`✅ ${fallTeam} won Fall championship!`, fallChamp);
         championships.push(fallChamp);
@@ -959,7 +971,7 @@ async function getChampionshipInfo(summerTeam, fallTeam) {
 }
 
 // Get 2025 combined league leaders (Summer + Fall)
-async function get2025LeagueLeaders() {
+async function getYearLeagueLeaders() {
   console.log('📊 Calculating 2025 combined league leaders...');
   
   try {
@@ -984,7 +996,7 @@ async function get2025LeagueLeaders() {
       // Combine 2025 Summer and Fall stats
       if (data.seasons) {
         Object.keys(data.seasons).forEach(seasonKey => {
-          if (seasonKey.startsWith('2025-summer') || seasonKey.startsWith('2025-fall')) {
+          if (seasonKey.startsWith(`${WRAP_YEAR}-summer`) || seasonKey.startsWith(`${WRAP_YEAR}-fall`)) {
             const season = data.seasons[seasonKey];
             combinedStats.hits += season.hits || 0;
             combinedStats.walks += season.walks || 0;
@@ -1132,7 +1144,7 @@ async function getLeagueStats() {
       // Look for 2025 season data
       if (data.seasons) {
         Object.keys(data.seasons).forEach(seasonKey => {
-          if (seasonKey.startsWith('2025-summer') || seasonKey.startsWith('2025-fall')) {
+          if (seasonKey.startsWith(`${WRAP_YEAR}-summer`) || seasonKey.startsWith(`${WRAP_YEAR}-fall`)) {
             const season = data.seasons[seasonKey];
             const hits = season.hits || 0;
             const atBats = season.atBats || 0;
@@ -1250,33 +1262,36 @@ async function generateCards(playerData) {
   const leagueStats = await getLeagueStats();
   
   // Get 2025 combined league leaders
-  const leagueLeaders = await get2025LeagueLeaders();
+  const leagueLeaders = await getYearLeagueLeaders();
   
   // Check if player is in top 10 for any category
   const top10Achievements = checkTop10Status(playerData.id, leagueLeaders);
   
   // Get 2025 season data (Summer + Fall combined)
-  const season2025Data = getCombined2025Stats(playerData);
+  const seasonData = getCombinedYearStats(playerData);
+  if (!seasonData.games && !seasonData.atBats) {
+    throw new Error(`No ${WRAP_YEAR} Summer or Fall season on record for ${playerData.name || 'this player'}.`);
+  }
   
   // Get game-level stats if available
-  const gameStats = await getGameLevelStats(playerData.id);
+  const gameStats = await getGameLevelStats(playerData.id, playerData.name || playerData.playerName);
   
   // Get team records
-  const teamRecords = await getTeamRecords(season2025Data.summerTeam, season2025Data.fallTeam);
+  const teamRecords = await getTeamRecords(seasonData.summerTeam, seasonData.fallTeam);
   
   // Get championship info
-  const championships = await getChampionshipInfo(season2025Data.summerTeam, season2025Data.fallTeam);
+  const championships = await getChampionshipInfo(seasonData.summerTeam, seasonData.fallTeam);
   
   // Determine team color (use fall team if changed, otherwise summer team or current team)
-  const finalTeam = season2025Data.fallTeam || season2025Data.summerTeam || playerData.currentTeam || 'Green';
+  const finalTeam = seasonData.fallTeam || seasonData.summerTeam || playerData.currentTeam || 'Green';
   const teamColor = getPlayerTeamColor(finalTeam);
   
   // Generate card data
   const cardData = [
     generateWelcomeCard(playerData, teamColor),
-    generateGamesCard(season2025Data, teamColor),
-    generateBattingCard(season2025Data, playerData, teamColor, leagueStats),
-    generateStatsCard(season2025Data, teamColor)
+    generateGamesCard(seasonData, teamColor),
+    generateBattingCard(seasonData, playerData, teamColor, leagueStats),
+    generateStatsCard(seasonData, teamColor)
   ];
   
   // Add championship card(s) if player won any titles
@@ -1292,8 +1307,8 @@ async function generateCards(playerData) {
   }
   
   // Add team change card if player changed teams
-  if (season2025Data.teamChanged) {
-    cardData.push(generateTeamChangeCard(season2025Data, teamColors));
+  if (seasonData.teamChanged) {
+    cardData.push(generateTeamChangeCard(seasonData, teamColors));
   }
   
   // Add game highlights if available
@@ -1311,10 +1326,10 @@ async function generateCards(playerData) {
   cardData.push(...milestoneCards);
   
   // Add team card (using final team)
-  cardData.push(generateTeamCard(season2025Data, playerData, teamColor, finalTeam, teamRecords));
+  cardData.push(generateTeamCard(seasonData, playerData, teamColor, finalTeam, teamRecords));
   
   // Add summary
-  cardData.push(generateSummaryCard(season2025Data, playerData, teamColor));
+  cardData.push(generateSummaryCard(seasonData, playerData, teamColor));
 
   cards = cardData;
 
@@ -1335,7 +1350,7 @@ async function generateCards(playerData) {
   });
 }
 
-function getCombined2025Stats(playerData) {
+function getCombinedYearStats(playerData) {
   const stats = {
     games: 0,
     hits: 0,
@@ -1353,7 +1368,7 @@ function getCombined2025Stats(playerData) {
 
   // Combine summer and fall 2025
   Object.keys(playerData.seasons).forEach(seasonKey => {
-    if (seasonKey.startsWith('2025-summer')) {
+    if (seasonKey.startsWith(`${WRAP_YEAR}-summer`)) {
       const season = playerData.seasons[seasonKey];
       stats.games += season.games || 0;
       stats.hits += season.hits || 0;
@@ -1364,7 +1379,7 @@ function getCombined2025Stats(playerData) {
       if (season.team) {
         stats.summerTeam = season.team;
       }
-    } else if (seasonKey.startsWith('2025-fall')) {
+    } else if (seasonKey.startsWith(`${WRAP_YEAR}-fall`)) {
       const season = playerData.seasons[seasonKey];
       stats.games += season.games || 0;
       stats.hits += season.hits || 0;
@@ -1387,21 +1402,26 @@ function getCombined2025Stats(playerData) {
 }
 
 // Get game-level stats from splits collection
-async function getGameLevelStats(playerId) {
+async function getGameLevelStats(playerId, playerName) {
   try {
-    const splitsRef = doc(db, 'aggregatedPlayerStats2025Splits', playerId);
-    const splitsSnap = await getDoc(splitsRef);
-    
-    if (!splitsSnap.exists()) {
-      return null;
-    }
-    
-    const splitsData = splitsSnap.data();
     let allGames = [];
+    if (WRAP_YEAR >= 2026) {
+      // 2026 on: one doc per game under playerStats/{nameId}/games
+      const nameId = String(playerName || '').toLowerCase().replace(/\./g, '').replace(/'/g, '').replace(/\s+/g, '_');
+      const ids = [...new Set([nameId, playerId].filter(Boolean))];
+      for (const id of ids) {
+        const snap = await getDocs(collection(db, 'playerStats', id, 'games'));
+        allGames = snap.docs.map(d => ({ id: d.id, ...d.data(), season: d.data().seasonId }))
+          .filter(g => String(g.seasonId || '').startsWith(`${WRAP_YEAR}-`));
+        if (allGames.length) break;
+      }
+    }
+    const splitsSnap = WRAP_YEAR === 2025 ? await getDoc(doc(db, 'aggregatedPlayerStats2025Splits', playerId)) : null;
+    const splitsData = splitsSnap && splitsSnap.exists() ? splitsSnap.data() : {};
     
     // Collect games from both seasons
     if (splitsData.seasons) {
-      ['2025-summer', '2025-fall'].forEach(seasonId => {
+      [`${WRAP_YEAR}-summer`, `${WRAP_YEAR}-fall`].forEach(seasonId => {
         if (splitsData.seasons[seasonId] && splitsData.seasons[seasonId].games) {
           const seasonGames = splitsData.seasons[seasonId].games.map(g => ({
             ...g,
@@ -1480,11 +1500,11 @@ function generateWelcomeCard(playerData, teamColor) {
       <div style="max-width: 800px;">
         <h1>Mountainside Aces</h1>
         <h2 style="font-size: clamp(3rem, 10vw, 6rem); color: ${teamColor.accent}; margin: 2rem 0;">
-          Wrapped 2025
+          Wrapped ${WRAP_YEAR}
         </h2>
         <h3>${playerData.name || playerData.displayName}'s Season in Review</h3>
         <p style="margin-top: 2rem; opacity: 0.8;">
-          ⚾ Summer & Fall 2025
+          ⚾ Summer & Fall ${WRAP_YEAR}
         </p>
       </div>
     `
@@ -1549,7 +1569,7 @@ function generateStatsCard(stats, teamColor) {
   return {
     background: teamColor.gradient,
     html: `
-      <h2>Your 2025 Numbers</h2>
+      <h2>Your ${WRAP_YEAR} Numbers</h2>
       <div class="stats-grid">
         <div class="stat-item">
           <div class="stat-value">${stats.hits}</div>
@@ -1637,7 +1657,7 @@ function generateLeagueLeadersCard(achievements, teamColor) {
           League Leader${achievements.length > 1 ? 's' : ''}
         </h2>
         <p class="stat-label" style="margin-bottom: 2rem;">
-          Top 10 in 2025 (Summer + Fall Combined)
+          Top 10 in ${WRAP_YEAR} (Summer + Fall Combined)
         </p>
         
         <div style="display: grid; gap: 1.5rem; margin: 2rem 0;">
@@ -1652,7 +1672,7 @@ function generateLeagueLeadersCard(achievements, teamColor) {
                     ${achievement.category}
                   </div>
                   <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">
-                    2025 Combined Stats
+                    ${WRAP_YEAR} Combined Stats
                   </div>
                 </div>
                 <div style="text-align: right;">
@@ -1717,7 +1737,7 @@ function generateChampionshipCard(championships, teamColors) {
                   ${summerChamp.team}
                 </div>
                 <div style="font-size: 1rem; color: rgba(45,80,22,0.8); margin-bottom: 1rem;">
-                  Summer 2025 Champions
+                  Summer ${WRAP_YEAR} Champions
                 </div>
                 <div style="font-size: 0.9rem; color: rgba(45,80,22,0.7);">
                   def. ${summerChamp.opponent}
@@ -1735,7 +1755,7 @@ function generateChampionshipCard(championships, teamColors) {
                   ${fallChamp.team}
                 </div>
                 <div style="font-size: 1rem; color: rgba(45,80,22,0.8); margin-bottom: 1rem;">
-                  Fall 2025 Champions
+                  Fall ${WRAP_YEAR} Champions
                 </div>
                 <div style="font-size: 0.9rem; color: rgba(45,80,22,0.7);">
                   def. ${fallChamp.opponent}
@@ -1769,7 +1789,7 @@ function generateChampionshipCard(championships, teamColors) {
           CHAMPION!
         </h2>
         <p style="font-size: clamp(1.2rem, 3vw, 1.8rem); margin: 1.5rem 0; color: rgba(45,80,22,0.9);">
-          ${champ.season} 2025
+          ${champ.season} ${WRAP_YEAR}
         </p>
         
         <div style="background: rgba(255,255,255,0.3); backdrop-filter: blur(10px); padding: 2rem; border-radius: 20px; margin: 2rem 0; border: 4px solid ${teamColor.accent};">
@@ -1938,7 +1958,7 @@ function generateTeamCard(stats, playerData, teamColor, teamName, teamRecords) {
     return {
       background: teamColor.gradient,
       html: `
-        <h2 style="color: ${teamColor.accent};">Your Teams' 2025 Records</h2>
+        <h2 style="color: ${teamColor.accent};">Your Teams' ${WRAP_YEAR} Records</h2>
         <p class="stat-label" style="margin-bottom: 2rem;">Combined record from both teams</p>
         
         <div class="team-record" style="margin-bottom: 2rem;">
@@ -1960,7 +1980,7 @@ function generateTeamCard(stats, playerData, teamColor, teamName, teamRecords) {
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                   <div style="font-size: 1.2rem; font-weight: 700; color: ${tColor.accent};">${t.team}</div>
-                  <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7); text-transform: capitalize;">${t.season} 2025</div>
+                  <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7); text-transform: capitalize;">${t.season} ${WRAP_YEAR}</div>
                 </div>
                 <div style="text-align: right;">
                   <div style="font-size: 1.5rem; font-weight: 700;">${t.wins}-${t.losses}</div>
@@ -1983,7 +2003,7 @@ function generateTeamCard(stats, playerData, teamColor, teamName, teamRecords) {
     background: teamColor.gradient,
     html: `
       <h2 style="color: ${teamColor.accent};">${team}</h2>
-      <p class="stat-label" style="margin-bottom: 2rem;">${hasRecords ? 'had a season to remember' : '2025 Season'}</p>
+      <p class="stat-label" style="margin-bottom: 2rem;">${hasRecords ? 'had a season to remember' : `${WRAP_YEAR} Season`}</p>
       
       ${hasRecords ? `
         <div class="team-record">
@@ -2131,7 +2151,7 @@ function setupSharing(playerData) {
   
   // Generate shareable URL
   const shareUrl = `${window.location.origin}/aces-wrapped.html?id=${encodeURIComponent(playerId)}`;
-  const shareText = `Check out ${playerName}'s Mountainside Aces Wrapped 2025! 🏆⚾`;
+  const shareText = `Check out ${playerName}'s Mountainside Aces Wrapped ${WRAP_YEAR}! 🏆⚾`;
   
   // Set share link
   document.getElementById('shareLink').value = shareUrl;
@@ -2197,7 +2217,10 @@ document.getElementById('shareModal').onclick = function(e) {
 };
 
 // Initialize
-loadPlayerData();
+resolveWrapYear()
+  .then((y) => { WRAP_YEAR = y; document.title = `Aces Wrapped ${y} - Mountainside Aces`; })
+  .catch(() => {})
+  .finally(loadPlayerData);
 </script>
 
 
