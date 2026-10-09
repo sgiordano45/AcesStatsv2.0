@@ -694,13 +694,16 @@ body {
 </div>
 
 <script type="module">
-import { onAuthChange, getUserProfile } from './firebase-auth.js';
-import { getCurrentSeason } from './firebase-data.js';
-import { db } from './firebase-config.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Side Bets' });
+import { onAuthChange } from './js/core/auth.js';
+import { getUserProfile } from './js/data/users.js';
+import { getCurrentSeason } from './js/data/index.js';
+import { db } from './js/core/firebase.js';
 import {
   collection, doc, getDoc, getDocs, addDoc, deleteDoc,
   query, where, serverTimestamp
-} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+} from './js/core/firebase.js';
 
 // ============================================================
 // STAT DEFINITIONS
@@ -1511,9 +1514,6 @@ document.getElementById('deleteModal').addEventListener('click', (e) => {
 });
 </script>
 
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-</script>
 <script src="mobile-enhancements.js"></script>
 </body>
 </html>

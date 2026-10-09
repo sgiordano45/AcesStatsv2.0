@@ -1301,7 +1301,7 @@ body {
 <body>
 
 <!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="softball-spinner"></div>
   <p style="margin-top: 1rem; color: var(--text-light);">Loading pool...</p>
 </div>
@@ -1664,8 +1664,11 @@ body {
 
 <!-- Firebase Scripts -->
 <script type="module">
-  import { auth, getUserProfile, USER_ROLES } from './firebase-auth.js';
-  import { db } from './firebase-config.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Boxes Pool' });
+  import { auth, USER_ROLES } from './js/core/auth.js';
+import { getUserProfile } from './js/data/users.js';
+  import { db } from './js/core/firebase.js';
   import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
   import { 
     collection, 
@@ -1680,7 +1683,7 @@ body {
     where, 
     orderBy,
     serverTimestamp 
-  } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  } from './js/core/firebase.js';
 
   // State
   let currentUser = null;
@@ -1702,13 +1705,13 @@ body {
       await loadUserProfile();
       await loadPoolsList();
       
-      document.getElementById('loadingOverlay').classList.add('hidden');
+      pageReady();
       document.getElementById('mainContent').style.display = 'block';
       
       setupAdminTabs();
       
     } else {
-      document.getElementById('loadingOverlay').classList.add('hidden');
+      pageReady();
       document.getElementById('authGate').style.display = 'block';
     }
   });
@@ -3157,7 +3160,6 @@ body {
   }
 </script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 
 </body>
 </html>

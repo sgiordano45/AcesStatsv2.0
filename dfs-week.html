@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Week Standings - Aces DFS - Mountainside Aces</title>
+<title>DFS Week Standings - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -133,7 +133,7 @@ body {
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" data-page-loading>
   <div class="spinner"></div>
   <p style="margin-top:1rem;color:var(--text-light);">Loading Week Standings...</p>
 </div>
@@ -182,10 +182,11 @@ body {
 </div>
 
 <script type="module">
-  import { onAuthChange } from './firebase-auth.js';
-  import { getCurrentSeason } from './firebase-data.js';
-  import { db, collection, doc, getDoc, getDocs, query, where } from './firebase-config.js';
-  import { NavigationComponent } from './nav-component.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'DFS Week Standings' });
+  import { onAuthChange } from './js/core/auth.js';
+  import { getCurrentSeason } from './js/data/index.js';
+  import { db, collection, doc, getDoc, getDocs, query, where } from './js/core/firebase.js';
   import { scoreBattingGame, scorePitchingGame, lineupTotalPoints } from './dfs-scoring.js';
 
   // ============================================================
@@ -207,13 +208,13 @@ body {
   onAuthChange(async (user) => {
     if (!user) {
       el('authGate').style.display = 'block';
-      loadingOverlay.classList.add('hidden');
+      pageReady();
       return;
     }
     currentUser = user;
     el('mainContent').style.display = 'block';
     await init();
-    loadingOverlay.classList.add('hidden');
+    pageReady();
   });
 
   async function init() {

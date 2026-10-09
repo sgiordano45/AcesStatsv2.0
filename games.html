@@ -1039,15 +1039,13 @@
 </div>
 
 <!-- Navigation Component Script -->
-<script src="nav-config.js"></script>
-<script src="nav-component.js"></script>
 
 <!-- Firebase -->
-<script src="firebase-config.js"></script>
-<script src="firebase-auth.js"></script>
 
 <!-- Page Visibility Control -->
 <script type="module">
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Games' });
   import { loadPageVisibility, isPageVisible } from './nav-config.js';
   
   // Map of page IDs to their href values for cards we want to control
@@ -1101,7 +1099,7 @@
 
 <!-- Leaderboard Script -->
 <script type="module">
-  import { db, collection, getDocs, query, orderBy, limit } from './firebase-config.js';
+  import { db, collection, getDocs, query, orderBy, limit } from './js/core/firebase.js';
 
   const LEADERBOARD_CONFIGS = [
     {
@@ -1228,8 +1226,8 @@
 
 <!-- Check game completion status -->
 <script type="module">
-  import { db, doc, getDoc } from './firebase-config.js';
-  import { onAuthChange } from './firebase-auth.js';
+  import { db, doc, getDoc } from './js/core/firebase.js';
+  import { onAuthChange } from './js/core/auth.js';
   
   // Calculate today's day number (same logic as the games use)
   function getDayNumber() {
@@ -1347,10 +1345,6 @@
     }
   });
 </script>
-<script type="module">
-  import { NavigationComponent } from './nav-component.js';
-</script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 </body>
 </html>

@@ -32,7 +32,7 @@ const $ = (id) => document.getElementById(id);
 const cap = (s) => (s ? String(s).charAt(0).toUpperCase() + String(s).slice(1).toLowerCase() : '');
 const PYTH = 1.83;
 const PRIOR_GAMES = 4;   // early-season shrink toward .500 (as if each team started 2-2)
-const CHUNK = 500;       // simulations per animation frame
+const CHUNK = 500;       // simulations per timer tick (keeps the page responsive)
 
 const P = { seasonId: '', games: [], standings: [], left: [], teams: [], method: 'winPct', sims: 10000, home: 0.06, result: null };
 
@@ -113,7 +113,7 @@ function run() {
         for (let i = 0; i < n; i++) { winSum[i] += r.w[i]; lossSum[i] += r.l[i]; }
       }
       btn.textContent = `Running ${Math.round((done / P.sims) * 100)}%`;
-      if (done < P.sims) { requestAnimationFrame(step); return; }
+      if (done < P.sims) { setTimeout(step, 0); return; }
       btn.disabled = false;
       btn.innerHTML = `${icon('refresh')}Run again`;
       const rows = models.map((m, i) => {
@@ -123,7 +123,7 @@ function run() {
       }).sort((a, b) => a.avgSeed - b.avgSeed);
       resolve({ rows, n, gamesLeft: games.length });
     };
-    requestAnimationFrame(step);
+    setTimeout(step, 0);
   });
 }
 
@@ -209,7 +209,7 @@ function renderBracket(res) {
 function renderRaces(res) {
   const b = byes(res.n);
   const notes = [];
-  const top = res.rows.filter(r => r.odds[0] >= 5).sort((a, c) => c.odds[0] - a.odds[0]);
+  const top = res.rows.filter(r => r.odds[0] >= 10).sort((a, c) => c.odds[0] - a.odds[0]);
   if (top.length) notes.push(`<li>${icon('crown')}<span><strong>Race for the 1 seed:</strong> ${top.map(r => `${esc(cap(r.team))} ${pct(r.odds[0])}%`).join(', ')}.</span></li>`);
   if (b && b < res.n) {
     const byeOdds = (r) => r.odds.slice(0, b).reduce((s, v) => s + v, 0);
