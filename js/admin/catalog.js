@@ -16,13 +16,11 @@ export const ADMIN_GROUPS = [
     ['playoffs.html', 'Playoff bracket', 'Set, lock and publish the bracket', 'league-staff']
   ] },
   { id: 'schedule', label: 'Schedule', icon: 'calendar', items: [
+    ['admin/schedule.html', 'Schedule hub', 'Build, tune, publish, and fix the schedule', 'league-staff'],
     ['schedule-generator.html', 'Schedule generator', 'Build a balanced season schedule', 'league-staff'],
-    ['schedule-balancer.html', 'Schedule balancer', 'Adjust dates, times and home/away', 'league-staff'],
-    ['schedule-workshop.html', 'Schedule workshop', 'Try schedule changes', 'league-staff'],
-    ['offseason-schedule.html', 'Schedule analyzer', 'Breakdowns by team of an uploaded schedule', 'league-staff'],
-    ['league-schedule-editor.html', 'Schedule editor', 'Edit published games', 'league-staff'],
-    ['schedule-rework.html', 'Schedule rework', 'Rework part of a season', 'league-staff'],
-    ['schedule-2027-proposal.html', '2027 schedule proposal', 'Draft format for 2027', 'league-staff']
+    ['schedule-workshop.html', 'Schedule workshop', 'Balance, analyze and publish a schedule', 'league-staff'],
+    ['league-schedule-editor.html', 'Schedule editor', 'Edit one published game', 'league-staff'],
+    ['schedule-rework.html', 'Schedule rework', 'Rework a stretch after rainouts', 'league-staff']
   ] },
   { id: 'stats', label: 'Stats pipeline', icon: 'calculator', items: [
     ['admin/stats.html', 'Stats pipeline', 'Step by step: stats in, review, aggregate, badges', 'admin'],

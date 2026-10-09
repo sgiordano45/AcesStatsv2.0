@@ -23,8 +23,7 @@ export const TOOL_GROUPS = [
     ['league-staff-admin.html', 'League staff admin', 'Seasons, games and settings', 'sliders'],
     ['offseason.html', 'Offseason hub', 'Rosters, schedule and the draft', 'leaf'],
     ['offseason-roster.html', 'Offseason rosters', 'Team assignments for next season', 'users'],
-    ['schedule-generator.html', 'Schedule generator', 'Build the season schedule', 'calendar-days'],
-    ['schedule-workshop.html', 'Schedule workshop', 'Try schedule changes', 'calendar']
+    ['admin/schedule.html', 'Schedule', 'Build, tune, publish and fix it', 'calendar-days']
   ] },
   { role: 'admin', title: 'Admin', icon: 'shield-check', tools: [
     ['approve-links.html', 'Approve player links', 'Pending account-to-player requests', 'user-check'],

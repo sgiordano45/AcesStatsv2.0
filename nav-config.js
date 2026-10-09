@@ -137,7 +137,7 @@ export const NAV_HUBS = [
       // siteConfig/navigation/pages says (the old nav still reads those docs).
       { key: 'offseason', label: 'Offseason', icon: 'snowflake', pages: [
         { id: 'offseason-hub', href: 'offseason.html', label: 'Offseason hub', icon: 'snowflake', role: 'league-staff', ignoreSiteConfig: true },
-        { id: 'offseason-schedule', href: 'offseason-schedule.html', label: 'Schedule', icon: 'calendar-days', role: 'league-staff', ignoreSiteConfig: true },
+        { id: 'offseason-schedule', href: 'admin/schedule.html', also: ['offseason-schedule.html'], label: 'Schedule', icon: 'calendar-days', role: 'league-staff', ignoreSiteConfig: true },
         { id: 'offseason-roster', href: 'offseason-roster.html', label: 'Rosters', icon: 'users', role: 'league-staff', ignoreSiteConfig: true },
         { id: 'draft', href: 'draft.html', label: 'Draft', icon: 'shuffle', role: 'league-staff', ignoreSiteConfig: true },
         { id: 'countdown', href: 'countdown.html', label: 'Countdown', icon: 'timer', role: 'league-staff', ignoreSiteConfig: true },
@@ -282,7 +282,7 @@ export const NAV_UNLISTED = {
   hidden: ['boxes-pool.html', 'link-player.html', 'player-questionnaire.html'],
   adminTools: ['aggregate-stats.html', 'approve-links.html', 'captain-questionnaire-review.html',
     'games-admin.html', 'league-schedule-editor.html', 'player-import.html', 'playoff-eligibility-tracker.html',
-    'schedule-2027-proposal.html', 'schedule-balancer.html', 'schedule-generator.html', 'schedule-rework.html',
+    'schedule-balancer.html', 'schedule-generator.html', 'schedule-rework.html',
     'schedule-workshop.html', 'season-setup-wizard.html', 'signup-card-export.html', 'wordle-admin.html',
     'aggregate-stats-legacy.html', 'gc-data-cleaner.html', 'submit-stats-legacy.html', 'bwar-explorer.html'],
   toDelete: [],

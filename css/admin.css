@@ -122,6 +122,7 @@
 .stp-count { color: var(--color-text-muted); font: var(--fw-semibold) var(--fs-xs) / 1 var(--font-sans); letter-spacing: 0; text-transform: none; }
 #stpGames { margin-top: var(--space-3); }
 .stp-table td, .stp-table th { white-space: nowrap; }
+.stp-table thead th { position: static; }   /* sticky header painted mid-table on first load */
 .stp-date, .stp-num-cell { font-variant-numeric: tabular-nums; }
 .stp-dim { color: var(--color-text-faint); }
 .stp-empty { margin: 0; padding: var(--space-4); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); color: var(--color-text-muted); text-align: center; }
@@ -129,3 +130,8 @@
 @media (max-width: 600px) {
   .stp-actions { padding-left: 0; }
 }
+
+/* Schedule hub (admin/schedule.html, js/admin/schedule.js) */
+.sch-teams { margin-top: var(--space-3); }
+#schStatus .stp-note { margin-top: var(--space-3); }
+#schStatus .stp-empty { border: 0; padding: 0; text-align: left; }
