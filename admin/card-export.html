@@ -882,7 +882,8 @@
   import { initPage, pageReady } from './js/core/app.js';
   initPage({ title: 'Card Export', requiresAuth: true });
   import { getDisplaySeasonId } from './js/core/config.js'; // season to show when none is active
-  import { getAllPlayerStatsOptimized, getCurrentSeason, seasonsObjectToArray, getAllPlayers, getAllAwards, doc, getDoc } from './js/data/index.js';
+  import { getAllPlayerStatsOptimized, getCurrentSeason, seasonsObjectToArray, getAllPlayers, getAllAwards } from './js/data/index.js';
+  import { doc, getDoc } from './js/core/firebase.js';
 import { db } from './js/core/firebase.js';
   import { collection, getDocs } from './js/core/firebase.js';
 

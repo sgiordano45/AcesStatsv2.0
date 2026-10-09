@@ -290,7 +290,8 @@ body {
 <script type="module">
   import { initPage, pageReady } from './js/core/app.js';
   initPage({ title: 'Playoff Eligibility', requiresAuth: true });
-import { doc, getDoc, getCurrentSeason, getSeasonGames } from './js/data/index.js';
+import { getCurrentSeason, getSeasonGames } from './js/data/index.js';
+import { doc, getDoc } from './js/core/firebase.js';
 import { db } from './js/core/firebase.js';
 import {
   collection,
