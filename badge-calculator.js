@@ -1318,7 +1318,7 @@ export class BadgeCalculator {
         // Read existing doc to preserve earnedAt for badges that were already awarded
         let existingEarned = {};
         try {
-          const existing = await this.getDoc ? this.getDoc(playerRef) : null;
+          const existing = this.getDoc ? await this.getDoc(playerRef) : null;   // (was awaiting the function, so nothing was ever preserved)
           if (existing && existing.exists && existing.exists()) {
             existingEarned = existing.data()?.earned || {};
           }

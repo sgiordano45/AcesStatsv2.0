@@ -226,3 +226,25 @@
 .agg-line.is-success { color: var(--color-win); }
 .agg-line.is-error { color: var(--color-loss); font-weight: 600; }
 .agg-line.is-skip { color: var(--color-text-muted); }
+
+/* ==========================================================================
+   Badge calculator: admin/badges.html (js/admin/badges.js)
+   ========================================================================== */
+
+.bdg-progress { display: grid; gap: 6px; }
+.bdg-track { height: 8px; overflow: hidden; border-radius: 999px; background: var(--color-surface-2); }
+.bdg-bar { width: 0; height: 100%; border-radius: inherit; background: var(--color-brand); transition: width 300ms ease; }
+.bdg-cols { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: start; }
+.bdg-cols .tr-sub { margin: 0 0 var(--space-2); }
+.bdg-top { margin: 0; padding: 0; list-style: none; counter-reset: bdg; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.bdg-top li { display: flex; align-items: center; gap: var(--space-2); padding: 6px var(--space-3); counter-increment: bdg; font-size: var(--fs-sm); }
+.bdg-top li + li { border-top: 1px solid var(--color-border); }
+.bdg-top li::before { content: counter(bdg); min-width: 1.5em; color: var(--color-text-faint); font-variant-numeric: tabular-nums; }
+.bdg-name { flex: 1; font-weight: var(--fw-semibold); }
+.bdg-tiers { display: flex; gap: var(--space-2); }
+.bdg-tier { display: inline-flex; align-items: center; gap: 2px; font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.bdg-tier .aces-icon { width: 14px; height: 14px; }
+.bdg-tier.is-gold { color: #b7860b; }
+.bdg-tier.is-silver { color: #7c8591; }
+.bdg-tier.is-bronze { color: #a0612b; }
+.bdg-table thead th { position: static; }
