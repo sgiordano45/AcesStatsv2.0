@@ -39,8 +39,7 @@ export const ADMIN_GROUPS = [
     ['admin/gc-data-cleaner.html', 'GameChanger cleaner', 'Tidy imported GameChanger data', 'admin']
   ] },
   { id: 'rosters', label: 'Rosters', icon: 'users', items: [
-    ['admin/rosters.html', 'Roster assignment', 'Bulk-assign players to teams from a CSV', 'league-staff'],
-    ['admin/roster-sync.html', 'Roster sync', 'Fix roster IDs and links', 'admin'],
+    ['admin/rosters.html', 'Rosters', 'Edit season rosters, import a CSV, copy from the offseason board, fix links', 'league-staff'],
     ['admin/captain-roster-edit.html', 'Edit any roster', 'Roster info for any team', 'admin'],
     ['admin/player-import.html', 'Player import', 'Add players in bulk', 'admin'],
     ['admin/move-player-docs.html', 'Move player docs', 'Merge or move a player’s records', 'admin'],

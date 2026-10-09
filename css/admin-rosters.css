@@ -1,0 +1,61 @@
+/* ==========================================================================
+   css/admin-rosters.css - admin/rosters.html (js/admin/rosters*.js)
+   Uses the shared admin pieces in css/admin.css and css/admin-stats.css.
+   ========================================================================== */
+
+.ros-panel { margin-top: var(--space-4); padding-bottom: 96px; }
+.ros-layout { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: var(--space-4); align-items: start; }
+.ros-teams { display: grid; gap: 4px; }
+.ros-team {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  min-height: 40px; padding: 0 var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-surface); color: var(--color-text); font: var(--fw-semibold) var(--fs-sm) / 1 var(--font-sans);
+  text-align: left; cursor: pointer;
+}
+.ros-team:hover { border-color: var(--color-brand); }
+.ros-team.is-on { border-color: var(--color-brand); background: var(--color-brand-soft); box-shadow: inset 3px 0 0 var(--color-brand); }
+.ros-count { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.ros-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-alert); }
+
+.ros-card > * + * { margin-top: var(--space-4); }
+.ros-table thead th, .ros-plan thead th, .chk-table thead th { position: static; }
+.ros-table th[scope="row"] { min-width: 170px; text-align: left; }
+.ros-name { display: block; font-weight: var(--fw-semibold); }
+.ros-id { display: block; color: var(--color-text-faint); font: 11px/1.4 var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); }
+td.ros-id { display: table-cell; }
+.ros-table td { vertical-align: middle; }
+.ros-num { width: 3.2em; }
+.ros-pos { width: 4em; text-transform: uppercase; }
+.ros-hand { min-height: 34px; width: 4.2em; padding-right: 1.4em; }
+.ros-move { min-height: 34px; min-width: 110px; }
+.ros-center { text-align: center; }
+.ros-center input { width: 18px; height: 18px; accent-color: var(--color-brand); }
+.ros-table .aces-btn .aces-icon { width: 14px; height: 14px; }
+
+.ros-plan td, .ros-plan th { vertical-align: top; }
+.ros-plan td:nth-child(3), .ros-plan td:nth-child(4) { white-space: normal; min-width: 160px; }
+
+.chk-table td, .chk-table th { vertical-align: top; }
+.chk-text { display: block; margin-top: 2px; font-size: var(--fs-sm); }
+.chk-counts { display: block; font-size: var(--fs-xs); }
+.chk-table tr.is-done { opacity: 0.6; }
+.chk-done { display: inline-flex; align-items: center; gap: 4px; color: var(--color-win); font-weight: var(--fw-semibold); font-size: var(--fs-sm); }
+.chk-done .aces-icon { width: 14px; height: 14px; }
+
+/* Save bar: sticks to the bottom while there are unsaved changes */
+.ros-bar {
+  position: sticky; bottom: var(--space-3); z-index: 5;
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3);
+  margin-top: var(--space-4); padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-alert); border-radius: var(--radius-md);
+  background: var(--color-surface); box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.18));
+}
+.ros-bar > span { flex: 1 1 220px; font-weight: var(--fw-semibold); font-size: var(--fs-sm); }
+.ros-keep { flex: 0 1 auto; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .ros-layout { grid-template-columns: minmax(0, 1fr); }
+  .ros-teams { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}
