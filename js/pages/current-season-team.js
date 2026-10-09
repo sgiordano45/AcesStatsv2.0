@@ -36,7 +36,7 @@ import { parseStatSeasonId, seasonLabel } from '../domain/season-ids.js';
 
 const $ = (id) => document.getElementById(id);
 const cap = (s) => (s ? String(s).charAt(0).toUpperCase() + String(s).slice(1).toLowerCase() : '');
-const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 const TABS = [
@@ -191,7 +191,7 @@ function nextGameHtml() {
       <span class="ct-next-label">${icon(days === 0 ? 'flame' : 'calendar')}Next game</span>
       <span class="ct-next-when">${esc(when)}</span>
       <span class="ct-next-match">${next.home === S.team ? 'vs' : 'at'} ${dot(opp)}<strong>${esc(cap(opp) || 'TBD')}</strong></span>
-      <span class="ct-next-meta">${esc([next.dateKey ? formatGameDate(next.dateKey, 'medium') : '', next.time ? formatTime(next.time) : '', next.type === 'playoff' ? (next.round ? cap(next.round) : 'Playoff') : ''].filter(Boolean).join(' · '))}</span>
+      <span class="ct-next-meta">${esc([next.dateKey ? formatGameDate(next.dateKey, 'short') : '', next.time ? formatTime(next.time) : '', next.type === 'playoff' ? (next.round ? cap(next.round) : 'Playoff') : ''].filter(Boolean).join(' \u00b7 '))}</span>
       <span class="ct-next-go">Preview${icon('chevron-right')}</span>
     </a>`;
   }
@@ -201,7 +201,7 @@ function nextGameHtml() {
   return `<div class="ct-next is-final">
     <span class="ct-next-label">${icon(champ ? 'trophy' : 'flag')}Season complete</span>
     <span class="ct-next-when">${champ ? 'Champions' : runner ? 'Runner-up' : 'Final'}</span>
-    <span class="ct-next-meta">${esc(plural(played, 'game'))} played${S.champion && !champ ? ` · ${esc(cap(S.champion))} won the title` : ''}</span>
+    <span class="ct-next-meta">${esc(plural(played, 'game'))} played${S.champion && !champ ? ` \u00b7 ${esc(cap(S.champion))} won the title` : ''}</span>
   </div>`;
 }
 
@@ -217,7 +217,7 @@ function renderHero() {
     <div class="ct-hero-main">
       <div class="ct-record">
         <strong>${has ? esc(record(r)) : '0-0'}</strong>
-        <span>${has ? `${esc(ordinal(r.rank))} of ${S.standings.length}` : 'No games yet'}${has ? ` · ${fmtAvg(r.winPct)}` : ''}</span>
+        <span>${has ? `${esc(ordinal(r.rank))} of ${S.standings.length}` : 'No games yet'}${has ? ` \u00b7 ${fmtAvg(r.winPct)}` : ''}</span>
         ${ribbon}
       </div>
       <dl class="ct-facts">
@@ -290,7 +290,7 @@ function renderBatting() {
   $('ctBatting').innerHTML = '<section class="aces-card ct-table"><div id="ctBatTable"></div></section>';
   mountStatTable($('ctBatTable'), battingTableConfig({ id: 'bat', omit: ['team', 'season'] }), {
     rows: S.bat, emptyMessage: 'No batting stats for this team yet.',
-    exportName: `aces-${S.key}-batting-${S.seasonId}`, exportTitle: `${S.team} batting · ${seasonLabel(S.seasonId)}`
+    exportName: `aces-${S.key}-batting-${S.seasonId}`, exportTitle: `${S.team} batting \u00b7 ${seasonLabel(S.seasonId)}`
   });
 }
 
@@ -298,7 +298,7 @@ function renderPitching() {
   $('ctPitching').innerHTML = '<section class="aces-card ct-table"><div id="ctPitTable"></div></section>';
   mountStatTable($('ctPitTable'), pitchingTableConfig({ id: 'pit', omit: ['team', 'season'] }), {
     rows: S.pit, emptyMessage: 'No pitching stats for this team yet.',
-    exportName: `aces-${S.key}-pitching-${S.seasonId}`, exportTitle: `${S.team} pitching · ${seasonLabel(S.seasonId)}`
+    exportName: `aces-${S.key}-pitching-${S.seasonId}`, exportTitle: `${S.team} pitching \u00b7 ${seasonLabel(S.seasonId)}`
   });
 }
 

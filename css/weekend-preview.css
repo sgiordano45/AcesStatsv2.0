@@ -1,0 +1,67 @@
+/* ==========================================================================
+   css/weekend-preview.css - weekend-preview.html (js/pages/weekend-preview.js)
+   ========================================================================== */
+
+.wp { padding-bottom: var(--space-12); }
+.wp-head { gap: var(--space-3); }
+.wp-meta { margin: var(--space-1) 0 0; color: var(--color-text-muted); }
+.wp-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.wp .aces-btn .aces-icon { width: 16px; height: 16px; margin-right: 6px; }
+.wp .aces-btn.is-primary .aces-icon { margin: 0 0 0 4px; }
+.wp .aces-card-title .aces-icon { width: 18px; height: 18px; margin-right: 6px; color: var(--color-text-muted); }
+.wp .aces-badge .aces-icon { width: 12px; height: 12px; margin-right: 3px; vertical-align: -1px; }
+.wp-note { margin: 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+
+/* Weather */
+.wp-weather { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); margin: var(--space-4) 0 var(--space-6); }
+@media (min-width: 720px) { .wp-weather { grid-template-columns: 200px minmax(0, 1fr); align-items: center; } }
+.wp-bear { width: 100%; max-width: 220px; justify-self: center; border-radius: var(--radius-md); object-fit: cover; aspect-ratio: 1; }
+.wp-weather-body { display: grid; gap: var(--space-3); min-width: 0; }
+.wp-weather-body .aces-card-head { margin: 0; }
+.wp-now { display: flex; align-items: center; gap: var(--space-3); margin: 0; text-transform: capitalize; }
+.wp-now small { color: var(--color-text-muted); text-transform: none; }
+.wp-now-temp { font: 400 3rem / 1 var(--font-display); font-variant-numeric: tabular-nums; }
+.wp-days { display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); margin: 0; padding: 0; list-style: none; }
+.wp-days li { display: grid; gap: 2px; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--color-surface-2); font-size: var(--fs-sm); text-transform: capitalize; }
+.wp-days strong { text-transform: none; }
+.wp-days .aces-badge { width: max-content; text-transform: none; }
+.wp-temp { font: 400 var(--fs-xl) / 1 var(--font-display); }
+
+/* Days and games */
+.wp-day + .wp-day { margin-top: var(--space-6); }
+.wp-day h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-3); font: 400 var(--fs-xl) / 1.1 var(--font-display); letter-spacing: var(--tracking-display); }
+.wp-day-count { margin-left: auto; color: var(--color-text-muted); font: var(--fw-regular) var(--fs-sm) / 1 var(--font-sans); letter-spacing: 0; }
+.wp-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+
+.wp-game { display: grid; gap: var(--space-3); align-content: start; background: color-mix(in srgb, var(--team, var(--color-brand)) 5%, var(--color-surface)); }
+.wp-game.is-playoff { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-accent) 60%, transparent); }
+.wp-game.is-finals { box-shadow: inset 0 0 0 2px var(--color-accent); background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface)); }
+.wp-game-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: var(--fs-sm); }
+.wp-time { font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.wp-where { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.wp-where .aces-icon { width: 13px; height: 13px; }
+
+.wp-sides { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--space-2); }
+.wp-side { display: grid; justify-items: center; gap: 2px; padding: var(--space-2) var(--space-1); border-radius: var(--radius-md); color: var(--color-text); text-align: center; text-decoration: none; min-width: 0; }
+.wp-side:hover { background: var(--color-surface-2); text-decoration: none; }
+.wp-side .gm-logo { width: 48px; height: 48px; object-fit: contain; }
+.wp-logo-gap { display: block; width: 48px; height: 48px; }
+.wp-team { font: 400 var(--fs-xl) / 1 var(--font-display); letter-spacing: var(--tracking-display); }
+.wp-rec { color: var(--color-text-muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.wp-line { margin-top: 2px; padding: 0 8px; border-radius: var(--radius-pill); background: var(--color-surface-2); font-size: var(--fs-xs); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.wp-line.is-fav { background: var(--color-brand-soft); color: var(--color-brand); }
+.wp-at { color: var(--color-text-faint); font: 400 var(--fs-xl) / 1 var(--font-display); }
+
+.wp-odds { display: grid; gap: 4px; }
+.wp-odds span { position: relative; height: 6px; border-radius: var(--radius-pill); background: var(--color-surface-2); overflow: hidden; }
+.wp-odds span::before { content: ''; position: absolute; inset: 0 auto 0 0; width: var(--w); background: var(--color-text-faint); }
+.wp-odds small { color: var(--color-text-muted); font-size: var(--fs-xs); text-align: center; }
+
+.wp-watch { padding-top: var(--space-2); border-top: 1px solid var(--color-border); }
+.wp-watch-head { margin: 0 0 var(--space-2); color: var(--color-text-muted); font-size: 10px; font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.wp-watch-head small { font-weight: var(--fw-regular); letter-spacing: 0; text-transform: none; }
+.wp-watch-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.wp-watch h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.wp-watch ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; font-size: var(--fs-sm); }
+.wp-watch li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wp-game-foot { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: space-between; }

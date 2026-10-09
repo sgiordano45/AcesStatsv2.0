@@ -3,9 +3,10 @@
 // weekend-preview.html (and current-season-team / schedule links).
 //
 //   import { gameHref, teamDot, teamLogo, moneyLine, previewParagraphs,
-//            loadAllSeasonGames, seriesRecord } from '../ui/game-shared.js';
+//            loadAllSeasonGames, seriesRecord, createWatchList } from '../ui/game-shared.js';
 
 import { getSeasons } from '../core/config.js';
+import { db, doc, getDoc } from '../core/firebase.js';
 import { getSeasonGames } from '../data/games.js';
 import { escapeHtml as esc } from './format.js';
 import { TEAM_COLORS } from './stat-columns.js';
@@ -117,3 +118,76 @@ export function seriesRecord(list, a) {
 }
 
 export const recordText = (r) => `${r.wins}-${r.losses}${r.ties ? `-${r.ties}` : ''}`;
+
+// ---------------------------------------------------------------------------
+// Players to watch (game-preview, weekend-preview)
+// ---------------------------------------------------------------------------
+
+const SPLITS_2025 = 'aggregatedPlayerStats2025Splits';
+const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+const baseId = (key) => String(key || '').split('-').slice(0, 2).join('-');
+
+/**
+ * Picks three players per team for a matchup:
+ *   1. best OBP against this opponent (2+ games; 2025 splits doc plus 2026-on season splits)
+ *   2. else this season's AcesBPI (at least 2 AB per team game played)
+ *   3. else career AcesBPI (20+ AB)
+ * ctx: { seasonId, players (aggregatedPlayerStats docs), bat (buildBattingRows rows for the
+ * season), games (normalized season games) }. Rosters and splits docs are read once per page.
+ *   const watch = createWatchList(ctx);
+ *   const { why, players } = await watch('Teal', 'Army');
+ *   players: [{ name, number, href, season, career: { bpi, atBats }, vs: { games, atBats, hits, walks, runs } }]
+ */
+export function createWatchList({ seasonId, players = [], bat = [], games = [] }) {
+  const rosters = new Map(), splits = new Map();
+  const roster = (team) => {
+    const k = teamKey(team);
+    if (!rosters.has(k)) {
+      rosters.set(k, getDoc(doc(db, 'rosters', `${seasonId}-${k}`))
+        .then(s => (s.exists() ? (s.data().players || []).filter(p => p && p.name) : []))
+        .catch(() => []));
+    }
+    return rosters.get(k);
+  };
+  const splitsDoc = (id) => {
+    if (!id) return Promise.resolve(null);
+    if (!splits.has(id)) splits.set(id, getDoc(doc(db, SPLITS_2025, id)).then(s => (s.exists() ? s.data() : null)).catch(() => null));
+    return splits.get(id);
+  };
+  const playerDoc = (rp) => players.find(p => [p.id, p.userId, p.playerId].some(id => id && (id === rp.authId || id === rp.id)))
+    || players.find(p => norm(p.name) === norm(rp.name)) || null;
+
+  async function vsOpponent(rp, pdoc, opponent) {
+    const total = { games: 0, atBats: 0, hits: 0, walks: 0, runs: 0 };
+    const add = (s) => { if (s) ['games', 'atBats', 'hits', 'walks', 'runs'].forEach(k => { total[k] += Number(s[k]) || 0; }); };
+    const pick = (vs) => Object.entries(vs || {}).find(([k]) => teamKey(k) === teamKey(opponent))?.[1];
+    const covered = new Set();
+    const s25 = await splitsDoc(rp.id);
+    Object.entries(s25?.seasons || {}).forEach(([key, s]) => { covered.add(baseId(key)); add(pick(s?.vsOpponent)); });
+    Object.entries(pdoc?.seasons || {}).forEach(([key, s]) => { if (!covered.has(baseId(key))) add(pick(s?.vsOpponent)); });
+    return total.games ? total : null;
+  }
+
+  return async function watch(team, opponent) {
+    const list = await roster(team);
+    const teamGames = games.filter(g => isDecided(g) && (teamKey(g.home) === teamKey(team) || teamKey(g.away) === teamKey(team))).length;
+    const rows = await Promise.all(list.map(async (rp) => {
+      const pdoc = playerDoc(rp);
+      const season = bat.find(r => !r.sub && teamKey(r.team) === teamKey(team)
+        && (r.ids.includes(rp.authId) || r.ids.includes(rp.id) || norm(r.name) === norm(rp.name))) || null;
+      const career = pdoc?.career && typeof pdoc.career.acesBPI === 'number' ? { bpi: pdoc.career.acesBPI, atBats: Number(pdoc.career.atBats) || 0 } : null;
+      const href = rp.authId ? `player.html?id=${encodeURIComponent(rp.authId)}`
+        : pdoc ? `player.html?id=${encodeURIComponent(pdoc.id)}` : `player.html?name=${encodeURIComponent(rp.name)}`;
+      return { name: rp.name, number: rp.number || '', href, season, career, vs: await vsOpponent(rp, pdoc, opponent) };
+    }));
+    const obp = (s) => (s.atBats + s.walks ? (s.hits + s.walks) / (s.atBats + s.walks) : 0);
+    const vs = rows.filter(p => p.vs && p.vs.games >= 2).sort((a, b) => obp(b.vs) - obp(a.vs)).slice(0, 3);
+    if (vs.length) return { why: `Best on-base against ${cap(opponent)}`, players: vs };
+    const minAB = teamGames * 2;
+    const season = rows.filter(p => p.season && typeof p.season.acesBPI === 'number' && p.season.atBats > 0 && p.season.atBats >= minAB)
+      .sort((a, b) => b.season.acesBPI - a.season.acesBPI).slice(0, 3);
+    if (season.length) return { why: 'Top AcesBPI this season', players: season };
+    const career = rows.filter(p => p.career && p.career.atBats >= 20).sort((a, b) => b.career.bpi - a.career.bpi).slice(0, 3);
+    return { why: career.length ? 'Top career AcesBPI' : '', players: career };
+  };
+}

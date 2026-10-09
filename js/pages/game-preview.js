@@ -18,7 +18,6 @@
 
 import { initPage, pageReady, showPageState, showPageError, siteUrl } from '../core/app.js';
 import { getDisplaySeasonId } from '../core/config.js';
-import { db, doc, getDoc } from '../core/firebase.js';
 import { getAllPlayerStatsOptimized } from '../data/player-stats.js';
 import { buildBattingRows } from '../ui/batting-stats.js';
 import { buildPitchingRows } from '../ui/pitching-stats.js';
@@ -26,7 +25,7 @@ import { escapeHtml as esc, fmtAvg, fmtRate, ordinal } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 import {
   cap, teamDot, teamLogo, teamHref, gameHref, moneyLine, fmtLine, previewParagraphs,
-  loadAllSeasonGames, meetings, seriesRecord, recordText
+  loadAllSeasonGames, meetings, seriesRecord, recordText, createWatchList
 } from '../ui/game-shared.js';
 import { computeStandings, isDecided } from '../domain/standings.js';
 import { formatGameDate, formatTime, todayKey, toDateKey, daysBetween } from '../domain/dates.js';
@@ -34,10 +33,8 @@ import { era } from '../domain/stats.js';
 import { parseStatSeasonId, seasonLabel, seasonSortKey } from '../domain/season-ids.js';
 
 const $ = (id) => document.getElementById(id);
-const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
 const lower = (s) => String(s || '').toLowerCase();
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
-const SPLITS_2025 = 'aggregatedPlayerStats2025Splits';
 const HISTORY_SHOWN = 8;
 
 const G = { game: null, seasonId: '', home: '', away: '', dateKey: '', all: [], season: [], standings: [], players: [], bat: [], pit: [] };
@@ -61,58 +58,7 @@ function findGame(q, displayId) {
 // Players to watch
 // ---------------------------------------------------------------------------
 
-async function loadRoster(team) {
-  try {
-    const snap = await getDoc(doc(db, 'rosters', `${G.seasonId}-${lower(team)}`));
-    return snap.exists() ? (snap.data().players || []).filter(p => p && p.name) : [];
-  } catch { return []; }
-}
-
-const playerDoc = (rp) => G.players.find(p => [p.id, p.userId, p.playerId].some(id => id && (id === rp.authId || id === rp.id)))
-  || G.players.find(p => norm(p.name) === norm(rp.name)) || null;
-
-/** Batting against an opponent across seasons: 2025 splits doc plus 2026-on season splits. */
-async function vsOpponent(rp, pdoc, opponent) {
-  const total = { games: 0, atBats: 0, hits: 0, walks: 0, runs: 0 };
-  const add = (s) => { if (!s) return; ['games', 'atBats', 'hits', 'walks', 'runs'].forEach(k => { total[k] += Number(s[k]) || 0; }); };
-  const pick = (vs) => Object.entries(vs || {}).find(([k]) => lower(k) === lower(opponent))?.[1];
-  const covered = new Set();
-  if (rp.id) {
-    try {
-      const snap = await getDoc(doc(db, SPLITS_2025, rp.id));
-      Object.entries(snap.exists() ? snap.data().seasons || {} : {}).forEach(([key, s]) => {
-        covered.add(String(key).split('-').slice(0, 2).join('-'));
-        add(pick(s?.vsOpponent));
-      });
-    } catch { /* optional */ }
-  }
-  Object.entries(pdoc?.seasons || {}).forEach(([key, s]) => {
-    if (covered.has(String(key).split('-').slice(0, 2).join('-'))) return;
-    add(pick(s?.vsOpponent));
-  });
-  return total.games ? total : null;
-}
-
-async function playersToWatch(team, opponent) {
-  const roster = await loadRoster(team);
-  const teamGames = G.season.filter(g => isDecided(g) && (lower(g.home) === lower(team) || lower(g.away) === lower(team))).length;
-  const list = await Promise.all(roster.map(async (rp) => {
-    const pdoc = playerDoc(rp);
-    const season = G.bat.find(r => !r.sub && lower(r.team) === lower(team) && (r.ids.includes(rp.authId) || r.ids.includes(rp.id) || norm(r.name) === norm(rp.name))) || null;
-    const career = pdoc?.career && typeof pdoc.career.acesBPI === 'number' ? { bpi: pdoc.career.acesBPI, atBats: Number(pdoc.career.atBats) || 0 } : null;
-    return { name: rp.name, number: rp.number || '', href: rp.authId ? `player.html?id=${encodeURIComponent(rp.authId)}` : pdoc ? `player.html?id=${encodeURIComponent(pdoc.id)}` : `player.html?name=${encodeURIComponent(rp.name)}`,
-      season, career, vs: await vsOpponent(rp, pdoc, opponent) };
-  }));
-  const obp = (s) => (s.atBats + s.walks ? (s.hits + s.walks) / (s.atBats + s.walks) : 0);
-  const vs = list.filter(p => p.vs && p.vs.games >= 2).sort((a, b) => obp(b.vs) - obp(a.vs)).slice(0, 3);
-  if (vs.length) return { why: `Best on-base against ${cap(opponent)}`, players: vs };
-  const minAB = teamGames * 2;
-  const season = list.filter(p => p.season && typeof p.season.acesBPI === 'number' && p.season.atBats >= minAB && p.season.atBats > 0)
-    .sort((a, b) => b.season.acesBPI - a.season.acesBPI).slice(0, 3);
-  if (season.length) return { why: 'Top AcesBPI this season', players: season };
-  const career = list.filter(p => p.career && p.career.atBats >= 20).sort((a, b) => b.career.bpi - a.career.bpi).slice(0, 3);
-  return { why: career.length ? 'Top career AcesBPI' : '', players: career };
-}
+let watch = null;   // createWatchList, set in main()
 
 // ---------------------------------------------------------------------------
 // Rendering
@@ -128,13 +74,13 @@ function renderHead() {
     g?.time ? formatTime(g.time) : '',
     g?.type === 'playoff' ? (g.round ? `Playoffs, ${cap(g.round)}` : 'Playoffs') : 'Regular season'
   ].filter(Boolean);
-  $('gpMeta').textContent = bits.join(' · ');
+  $('gpMeta').textContent = bits.join(' \u00b7 ');
   document.title = `${cap(G.away)} at ${cap(G.home)} - Game Preview - Mountainside Aces`;
 }
 
 function sideHtml(team, which, line) {
   const r = teamRow(team);
-  const rec = r && r.games ? `${recordText(r)} · ${ordinal(r.rank)}` : 'No games yet';
+  const rec = r && r.games ? `${recordText(r)} \u00b7 ${ordinal(r.rank)}` : 'No games yet';
   const odds = line ? `<span class="gp-line${line.favorite === which ? ' is-fav' : ''}">${esc(fmtLine(line[which]))}</span>` : '';
   return `<a class="gp-side is-${which}" href="${esc(teamHref(team))}">
     ${teamLogo(team) || teamDot(team, { lg: true })}
@@ -281,7 +227,7 @@ function playerCard(p, opponent) {
 }
 
 async function renderPlayers() {
-  const [away, home] = await Promise.all([playersToWatch(G.away, G.home), playersToWatch(G.home, G.away)]);
+  const [away, home] = await Promise.all([watch(G.away, G.home), watch(G.home, G.away)]);
   const col = (team, opp, res) => `<div class="gp-pcol">
     <h3>${teamDot(team)}${esc(cap(team))}</h3>${res.why ? `<p class="gp-why">${esc(res.why)}</p>` : ''}
     ${res.players.length ? `<ul>${res.players.map(p => playerCard(p, opp)).join('')}</ul>` : '<p class="gp-dim">No roster or stats yet.</p>'}
@@ -323,6 +269,7 @@ async function main() {
   G.standings = computeStandings(G.season, { includeScheduled: true });
   G.bat = buildBattingRows(G.players).filter(r => r.seasonId === G.seasonId);
   G.pit = buildPitchingRows(G.players).filter(r => r.seasonId === G.seasonId);
+  watch = createWatchList({ seasonId: G.seasonId, players: G.players, bat: G.bat, games: G.season });
 
   renderHead();
   renderMatchup();

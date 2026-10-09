@@ -111,8 +111,8 @@ function renderHead() {
     ? `${cap(g.away)} ${g.awayScore}, ${cap(g.home)} ${g.homeScore}`
     : `${cap(g.away)} at ${cap(g.home)}`;
   $('grTitle').textContent = title;
-  $('grKicker').textContent = g.type === 'playoff' ? `Final · Playoffs${g.round ? `, ${cap(g.round)}` : ''}` : 'Final';
-  $('grMeta').textContent = [g.dateKey ? formatGameDate(g.dateKey, 'long') : '', g.time ? formatTime(g.time) : '', seasonLabel(R.seasonId)].filter(Boolean).join(' · ');
+  $('grKicker').textContent = g.type === 'playoff' ? `Final \u00b7 Playoffs${g.round ? `, ${cap(g.round)}` : ''}` : 'Final';
+  $('grMeta').textContent = [g.dateKey ? formatGameDate(g.dateKey, 'long') : '', g.time ? formatTime(g.time) : '', seasonLabel(R.seasonId)].filter(Boolean).join(' \u00b7 ');
   document.title = `${title} - Game Recap - Mountainside Aces`;
 }
 
