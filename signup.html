@@ -529,7 +529,9 @@
   </div>
   
   <script type="module">
-    import { registerUser, loginWithGoogle } from './firebase-auth.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Sign Up', nav: false });
+    import { registerUser, loginWithGoogle } from './js/core/account.js';
     
     const form = document.getElementById('signupForm');
     const displayNameInput = document.getElementById('displayName');
@@ -785,6 +787,5 @@
     });
   </script>
   <script src="mobile-enhancements.js"></script>
-  <script src="theme-toggle.js"></script>
 </body>
 </html>

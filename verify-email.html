@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="mobile-enhancements.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verify Your Email - Mountainside Aces</title>
+  <title>Verify Email - Mountainside Aces</title>
   <meta name="theme-color" content="#2d5016">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -399,7 +399,10 @@
   </div>
   
   <script type="module">
-    import { getCurrentUser, onAuthChange, logoutUser } from './firebase-auth.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Verify Email', nav: false });
+    import { logoutUser } from './js/core/account.js';
+import { getCurrentUser, onAuthChange } from './js/core/auth.js';
     
     let currentUser = null;
     let lastResendTime = 0;
@@ -479,7 +482,7 @@
           console.log('✅ Email verified!');
           
 		       
-			const { updateUserProfile } = await import('./firebase-auth.js');
+			const { updateUserProfile } = await import('./js/data/users.js');
 			await updateUserProfile(user.uid, {
 				emailVerified: true
 				});
@@ -518,7 +521,7 @@
         if (user.emailVerified) {
           console.log('✅ Auto-detected verification!');
 		  
-		        const { updateUserProfile } = await import('./firebase-auth.js');
+		        const { updateUserProfile } = await import('./js/data/users.js');
 			await updateUserProfile(user.uid, {
 				emailVerified: true
 			});
@@ -603,6 +606,5 @@
     });
   </script>
   <script src="mobile-enhancements.js"></script>
-  <script src="theme-toggle.js"></script>
 </body>
 </html>

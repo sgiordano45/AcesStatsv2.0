@@ -393,8 +393,11 @@
   </div>
 
   <script type="module">
-    import { onAuthChange, getCurrentUser, getUserProfile, updateUserProfile } from './firebase-auth.js';
-    import { getAllPlayers } from './firebase-data.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Manage Team' });
+    import { onAuthChange, getCurrentUser } from './js/core/auth.js';
+import { getUserProfile, updateUserProfile } from './js/data/users.js';
+    import { getAllPlayers } from './js/data/index.js';
 
     let currentUser = null;
     let userProfile = null;
@@ -698,6 +701,5 @@
     window.assignTeamStaff = assignTeamStaff;
     window.removeTeamStaff = removeTeamStaff;
   </script>
-  <script src="theme-toggle.js"></script>
 </body>
 </html>

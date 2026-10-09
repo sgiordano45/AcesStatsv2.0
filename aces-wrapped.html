@@ -5,7 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aces Wrapped 2025</title>
+<title>Aces Wrapped - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -550,7 +550,7 @@
 <body>
 
 <!-- Loading Overlay -->
-<div id="loadingOverlay" class="loading-overlay">
+<div id="loadingOverlay" class="loading-overlay" data-page-loading>
   <div class="softball-spinner"></div>
 </div>
 
@@ -614,8 +614,10 @@
 </div>
 
 <script type="module">
-import { db, collection, doc, getDoc, getDocs } from './firebase-config.js';
-import { getCurrentUser } from './firebase-auth.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Aces Wrapped' });
+import { db, collection, doc, getDoc, getDocs } from './js/core/firebase.js';
+import { getCurrentUser } from './js/core/auth.js';
 
 // Team colors mapping - using accents instead of full backgrounds for readability
 const teamColors = {
@@ -700,7 +702,7 @@ async function getTeamRecords(summerTeam, fallTeam) {
         console.log(`📊 Calculating ${teamName} record for ${seasonId}...`);
         
         // Get games for this season
-        const { getSeasonGames } = await import('./firebase-data.js');
+        const { getSeasonGames } = await import('./js/data/index.js');
         const games = await getSeasonGames(seasonId);
         
         if (!games || games.length === 0) {
@@ -810,7 +812,7 @@ async function getChampionshipInfo(summerTeam, fallTeam) {
       
       try {
         console.log(`🔍 Checking ${teamName} for ${seasonId} championship...`);
-        const { getSeasonGames } = await import('./firebase-data.js');
+        const { getSeasonGames } = await import('./js/data/index.js');
         const games = await getSeasonGames(seasonId);
         
         if (!games || games.length === 0) {
@@ -1216,7 +1218,7 @@ async function loadPlayerData() {
     await generateCards(playerData);
     
     // Show wrapped container
-    document.getElementById('loadingOverlay').classList.add('hidden');
+    pageReady();
     document.getElementById('wrappedContainer').style.display = 'block';
     document.getElementById('navDots').style.display = 'flex';
     document.getElementById('instructions').style.display = 'block';
@@ -2198,10 +2200,9 @@ document.getElementById('shareModal').onclick = function(e) {
 loadPlayerData();
 </script>
 
-<script src="nav-component.js" type="module"></script>
+
 <script src="team-colors.js"></script>
 <script src="mobile-enhancements.js"></script>
-<script src="theme-toggle.js"></script>
 
 </body>
 </html>

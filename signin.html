@@ -454,7 +454,11 @@
   </div>
   
   <script type="module">
-    import { loginUser, loginWithGoogle, onAuthChange, getUserProfile, needsEmailVerification } from './firebase-auth.js';
+  import { initPage, pageReady } from './js/core/app.js';
+  initPage({ title: 'Sign In', nav: false });
+    import { loginUser, loginWithGoogle, needsEmailVerification } from './js/core/account.js';
+import { onAuthChange } from './js/core/auth.js';
+import { getUserProfile } from './js/data/users.js';
     
     const form = document.getElementById('signinForm');
     const emailInput = document.getElementById('email');
@@ -694,6 +698,5 @@
     });
   </script>
   <script src="mobile-enhancements.js"></script>
-  <script src="theme-toggle.js"></script>
 </body>
 </html>
