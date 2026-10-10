@@ -1,0 +1,97 @@
+/* ==========================================================================
+   css/current-season.css - current-season.html (js/pages/current-season.js)
+   ========================================================================== */
+
+.cs { padding-bottom: var(--space-12); }
+.cs-head { gap: var(--space-3); }
+.cs-status { display: flex; align-items: center; gap: 6px; margin: var(--space-1) 0 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.cs-status .aces-icon { width: 16px; height: 16px; color: var(--color-brand); }
+:root[data-theme="dark"] .cs-status .aces-icon { color: var(--color-link); }
+.cs-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.cs-actions .aces-icon { width: 16px; height: 16px; margin-right: 6px; }
+
+.cs-numbers { margin: var(--space-4) 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 640px) { .cs-numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.cs-card { margin-top: var(--space-4); }
+.cs-card .aces-card-title .aces-icon { width: 18px; height: 18px; margin-right: 6px; color: var(--color-text-muted); }
+.cs-head-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.cs-head-actions .aces-icon, .cs-card .aces-card-head .aces-btn .aces-icon { width: 14px; height: 14px; margin-right: 4px; }
+.cs-grid { display: grid; gap: 0 var(--space-4); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .cs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+.cs-note { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: var(--space-3) 0 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.cs-note .aces-icon { width: 12px; height: 12px; }
+.cs-dim { color: var(--color-text-faint); }
+
+/* Standings */
+.cs-standings thead th { position: static; }   /* sticky header painted mid-table on first load */
+.cs-standings th[scope="row"] { white-space: nowrap; text-align: left; }
+.cs-team { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text); font-weight: var(--fw-semibold); text-decoration: none; }
+.cs-team:hover { color: var(--color-link); text-decoration: underline; }
+.cs-rank { white-space: nowrap; }
+.cs-lock { display: inline-flex; margin-left: 3px; color: var(--color-win); vertical-align: -1px; }
+.cs-lock .aces-icon { width: 12px; height: 12px; }
+.cs-standings .is-up { color: var(--color-win); }
+.cs-standings .is-down { color: var(--color-loss); }
+.cs-form { display: inline-flex; gap: 2px; vertical-align: middle; }
+.cs-form i { width: 9px; height: 9px; border-radius: 2px; background: var(--color-text-faint); }
+.cs-form i.is-w { background: var(--color-win); }
+.cs-form i.is-l { background: var(--color-loss); }
+.cs-sos.is-easy { color: var(--color-win); }
+.cs-sos.is-hard { color: var(--color-loss); }
+@media (max-width: 720px) { .cs-standings .is-opt { display: none; } }
+
+/* Games */
+.cs-day + .cs-day { margin-top: var(--space-3); }
+.cs-day h3, .cs-round h3 {
+  display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-1);
+  color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase;
+}
+.cs-day ul, .cs-round ul { margin: 0; padding: 0; list-style: none; }
+.cs-game { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--space-3); padding: 6px 0; border-top: 1px solid var(--color-border); font-size: var(--fs-sm); }
+.cs-time { min-width: 64px; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.cs-match { display: inline-flex; flex: 1; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; }
+.cs-match .is-win .cs-team { font-weight: var(--fw-bold); }
+.cs-match > span:not(.is-win) .cs-team { font-weight: var(--fw-medium, 500); }
+.cs-at { color: var(--color-text-faint); font-size: var(--fs-xs); }
+.cs-score { font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.cs-score small { color: var(--color-text-muted); font-weight: var(--fw-semibold); }
+.cs-go { font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+.cs-rounds { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+
+/* Leaders */
+.cs-leaders { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+.cs-leader { padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.cs-leader h3 { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); margin: 0 0 var(--space-2); font-size: var(--fs-sm); }
+.cs-leader h3 small { color: var(--color-text-faint); font-size: 10px; font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.cs-leader ol, .cs-badge-top { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; }
+.cs-leader li, .cs-badge-top li { display: flex; align-items: center; gap: var(--space-2); font-size: var(--fs-sm); }
+.cs-lrank { min-width: 1.3em; color: var(--color-text-faint); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.cs-leader li:first-child .cs-lrank { color: var(--color-accent-ink, var(--color-text)); font-weight: var(--fw-bold); }
+.cs-lname { display: inline-flex; flex: 1; align-items: center; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cs-lname a { overflow: hidden; text-overflow: ellipsis; }
+.cs-lval { font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cs-oop { display: inline-flex; align-items: center; margin-left: 2px; color: var(--color-accent-ink, var(--color-alert)); font-size: 10px; }
+.cs-oop .aces-icon, .cs-note .aces-icon { width: 12px; height: 12px; }
+
+/* Badges */
+.cs-badge-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: var(--space-3); }
+.cs-gold { color: #b7860b; }
+.cs-silver { color: #7c8591; }
+.cs-bronze { color: #a0612b; }
+.cs-tiers { display: inline-flex; gap: var(--space-2); }
+.cs-tiers > span { display: inline-flex; align-items: center; gap: 2px; font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.cs-tiers .aces-icon { width: 14px; height: 14px; }
+.cs-badge-top li { padding: 4px 0; border-top: 1px solid var(--color-border); }
+
+/* More */
+.cs-more { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.cs-more li { display: grid; gap: 1px; padding: var(--space-2) 0; border-top: 1px solid var(--color-border); }
+.cs-more li:first-child { border-top: 0; }
+.cs-more a { font-weight: var(--fw-semibold); }
+.cs-more span { color: var(--color-text-muted); font-size: var(--fs-xs); }
+
+/* Share and calendar dialogs */
+.cs-share { display: grid; gap: var(--space-2); margin-top: var(--space-2); }
+.cs-share .aces-btn { justify-content: flex-start; }
+.cs-share .aces-icon { width: 16px; height: 16px; margin-right: 8px; }
