@@ -31,7 +31,7 @@ import { gameHref, teamHref } from '../ui/game-shared.js';
 import { getCalendarUrl } from '../../calendar-subscription.js';
 import { normalizeGames, computeStandings, isDecided } from '../domain/standings.js';
 import { formatGameDate, todayKey, timeSortValue } from '../domain/dates.js';
-import { battingAverage, onBasePct, era, QUALIFIERS } from '../domain/stats.js';
+import { battingAverage, onBasePct, sluggingPct, era, QUALIFIERS } from '../domain/stats.js';
 import { seasonLabel } from '../domain/season-ids.js';
 
 const $ = (id) => document.getElementById(id);
@@ -275,6 +275,8 @@ function renderLeaders() {
   }
   const qb = bat.filter(r => r.teamGames > 0 && r.atBats + r.walks >= QUALIFIERS.PA_PER_TEAM_GAME * r.teamGames);
   const qp = S.pit.filter(r => r.teamGames > 0 && r.ip >= QUALIFIERS.IP_PER_TEAM_GAME * r.teamGames);
+  // Slugging: total bases (1B + 2x2B + 3x3B + 4xHR) per at bat
+  const slg = (r) => (r.atBats ? sluggingPct(r) : null);
   const oop = (r) => { const n = S.oop[String(r.name || '').trim().toLowerCase()] || 0; return n ? ` <span class="cs-oop" title="${n} out of the park">${icon('zap')}${n > 1 ? n : ''}</span>` : ''; };
   const team = new Map(bat.map(r => [r.name.toLowerCase(), r.team]));
   const streaks = S.streaks.length ? `<div class="cs-leader"><h3>Hit streaks<small>active</small></h3><ol>${S.streaks.map((s, i) => `<li>
@@ -282,6 +284,8 @@ function renderLeaders() {
   const html = `<div class="cs-leaders">
     ${leaderBox('Batting average', qb, r => (r.atBats ? battingAverage(r.hits, r.atBats) : null), fmtAvg, { note: 'qualified' })}
     ${leaderBox('On-base %', qb, r => (r.atBats + r.walks ? onBasePct(r.hits, r.walks, r.atBats) : null), fmtAvg, { note: 'qualified' })}
+    ${leaderBox('Slugging %', qb, slg, fmtAvg, { note: 'qualified' })}
+    ${leaderBox('OPS', qb, r => { const s = slg(r); return s === null ? null : onBasePct(r.hits, r.walks, r.atBats) + s; }, fmtAvg, { note: 'qualified' })}
     ${leaderBox('Hits', bat, r => r.hits, String)}
     ${leaderBox('Runs', bat, r => r.runs, String)}
     ${leaderBox('Home runs', bat, r => r.homeRuns, String, { extra: oop })}
@@ -291,7 +295,7 @@ function renderLeaders() {
     ${leaderBox('ERA', qp, r => era(r.runsAllowed, r.ip), v => fmtRate(v), { lower: true, note: 'qualified' })}
     ${streaks}
   </div>
-  <p class="cs-note">Qualified: at least ${QUALIFIERS.PA_PER_TEAM_GAME} plate appearances (or innings) per team game. ${icon('zap')} marks home runs hit out of the park.</p>`;
+  <p class="cs-note">Qualified: at least ${QUALIFIERS.PA_PER_TEAM_GAME} plate appearances (or innings) per team game. OPS is on-base plus slugging. ${icon('zap')} marks home runs hit out of the park.</p>`;
   $('csLeaders').innerHTML = card('Leaders', html, {
     iconName: 'star', cls: 'cs-wide',
     extra: `<a class="aces-btn is-sm is-ghost" href="season.html?seasonId=${esc(encodeURIComponent(S.id))}&tab=batting">All stats</a>`
