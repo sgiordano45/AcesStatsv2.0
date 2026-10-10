@@ -1,0 +1,3764 @@
+// js/features/game-tracker/app.js
+// The Game Tracker React app for game-tracker-v2.html. Same code as the inline
+// Babel script in game-tracker.html, with JSX rewritten as htm tagged
+// templates (html`...`) so the browser runs it directly: no Babel, no compile
+// step. Components are written <${Name} ...>...<//>; attributes and children
+// take ${expression}. Loaded as a classic deferred script after bridge.js.
+
+const html = htm.bind(React.createElement);
+
+const { useState, useEffect, useRef } = React;
+
+// Lucide React icons as inline SVG components
+const Undo2 = ({ size = 24 }) => (
+    html`<svg width=${size} height=${size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11" />
+    </svg>`
+);
+
+const Save = ({ size = 24 }) => (
+    html`<svg width=${size} height=${size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+      <polyline points="17 21 17 13 7 13 7 21" />
+      <polyline points="7 3 7 8 15 8" />
+    </svg>`
+);
+
+const PlayCircle = ({ size = 24 }) => (
+    html`<svg width=${size} height=${size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polygon points="10 8 16 12 10 16 10 8" />
+    </svg>`
+);
+
+const AlertCircle = ({ size = 24 }) => (
+    html`<svg width=${size} height=${size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>`
+);
+
+const ChevronLeft = ({ size = 24 }) => (
+    html`<svg width=${size} height=${size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m15 18-6-6 6-6" />
+    </svg>`
+);
+
+const PLAY_TYPES = [
+    { label: '1B', value: 'single', bases: 1, isHit: true },
+    { label: '2B', value: 'double', bases: 2, isHit: true },
+    { label: '3B', value: 'triple', bases: 3, isHit: true },
+    { label: 'HR', value: 'homerun', bases: 4, isHit: true },
+    { label: 'BB', value: 'walk', bases: 1, isHit: false },
+    { label: 'K', value: 'strikeout', bases: 0, isOut: true, noAdjust: true },
+    { label: 'GO', value: 'groundout', bases: 0, isOut: true },
+    { label: 'FO', value: 'flyout', bases: 0, isOut: true },
+    { label: 'PU', value: 'popup', bases: 0, isOut: true },
+    { label: 'SF', value: 'sacfly', bases: 0, isOut: true },
+    { label: 'FC', value: 'fielders_choice', bases: 0, isOut: false },
+    { label: 'DP', value: 'doubleplay', bases: 0, outs: 2 },
+];
+
+function GameTracker() {
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [currentSeason, setCurrentSeason] = useState(null);
+    const [allTeams, setAllTeams] = useState([]);
+    const [games, setGames] = useState([]);
+    const [players, setPlayers] = useState([]);
+    
+    const [setupMode, setSetupMode] = useState(true);
+    const [selectedTeam, setSelectedTeam] = useState('');
+    const [selectedGame, setSelectedGame] = useState(null);
+    const [isHome, setIsHome] = useState(false);
+    const [lineupExists, setLineupExists] = useState(false);
+    
+    const [gameState, setGameState] = useState({
+        inning: 1,
+        outs: 0,
+        bases: { first: null, second: null, third: null },
+        score: { yourTeam: 0, opponent: 0 },
+        currentBatter: 0,
+        playHistory: [],
+        gameActive: false,  // Start as false until game is initialized
+        isYourTeamBatting: false  // Will be set correctly when game starts based on home/away
+    });
+
+    const [battingOrder, setBattingOrder] = useState([]);
+    const [pendingPlay, setPendingPlay] = useState(null);
+    const [tempBases, setTempBases] = useState(null);
+    const [tempScore, setTempScore] = useState(0);
+    const [tempOuts, setTempOuts] = useState(0);
+    const [draggedRunner, setDraggedRunner] = useState(null);
+    const [runnersScored, setRunnersScored] = useState([]);  // Track WHO scored on this play
+    const [playLocation, setPlayLocation] = useState(null);  // Where the ball was hit/fielded
+    const [removedPlayers, setRemovedPlayers] = useState([]);  // Track players who left the game mid-game
+
+
+			const [opponentTeamId, setOpponentTeamId] = useState(null);
+			const [opponentTeamName, setOpponentTeamName] = useState('');
+			const [opponentGameState, setOpponentGameState] = useState(null);
+			const [gameMetadata, setGameMetadata] = useState(null);
+			const [userCanTrack, setUserCanTrack] = useState(false);
+			const [presenceUsers, setPresenceUsers] = useState([]);
+			const [editingLineup, setEditingLineup] = useState(false);
+			const [liveGames, setLiveGames] = useState({});  // Track which games have active trackers
+			const [spectatorMode, setSpectatorMode] = useState(false);  // Allow admins to view without editing
+			const [hasTrackPermission, setHasTrackPermission] = useState(false);  // Track if user CAN track (before spectator toggle)
+			const [canBootUsers, setCanBootUsers] = useState(false);  // Track if user can remove others from presence
+			
+			// Pitcher tracking state
+			const [opponentPlayers, setOpponentPlayers] = useState([]);  // Opponent roster for pitcher selection
+			const [yourPitcher, setYourPitcher] = useState(null);  // { id, name }
+			const [opponentPitcher, setOpponentPitcher] = useState(null);  // { id, name }
+			const [showPitcherModal, setShowPitcherModal] = useState(false);  // Show pitcher selection on game start
+			const [pendingPitcherChange, setPendingPitcherChange] = useState(null);  // For confirmation dialog
+			const [showRunRemovalModal, setShowRunRemovalModal] = useState(false);  // For selecting which player's run to remove
+			
+			// Track how many state updates came from Firebase to prevent save loops
+			// Counter instead of boolean: each Firebase-triggered setState increments,
+			// each auto-save useEffect trigger decrements. Saves only when counter is 0.
+			const firebaseUpdateSkipCount = useRef(0);
+    
+    // Track whether we just resumed from saved state - forces full metadata sync on first callback
+    const justResumed = useRef(false);
+
+    // Handler to boot/remove a user from presence
+    const handleBootUser = async (userId) => {
+        if (!selectedGame?.seasonId || !selectedGame?.id) {
+            console.error('Cannot boot user - missing game info');
+            return;
+        }
+        try {
+            await window.FirebaseGameTracker.removePresence(
+                selectedGame.seasonId,
+                selectedGame.id,
+                userId
+            );
+            console.log('\ud83d\udc62 Booted user:', userId);
+        } catch (error) {
+            console.error('Error booting user:', error);
+        }
+    };
+
+    // Wait for Firebase to be ready, then load data
+    useEffect(() => {
+        const initializeApp = async () => {
+            if (window.firebaseReady) {
+                await loadInitialData();
+            } else {
+                window.addEventListener('firebaseready', loadInitialData);
+                return () => window.removeEventListener('firebaseready', loadInitialData);
+            }
+        };
+        initializeApp();
+    }, []);
+
+    // Load team-specific data when team changes
+    useEffect(() => {
+        if (selectedTeam && currentSeason) {
+            loadTeamData();
+        }
+    }, [selectedTeam, currentSeason]);
+
+// Check for live games (games with active trackers) when game list changes
+useEffect(() => {
+    if (!games.length || !currentSeason) return;
+
+    const unsubscribers = [];
+
+    // Staleness threshold - 10 minutes
+    const STALE_THRESHOLD_MS = 10 * 60 * 1000;
+
+    games.forEach(game => {
+if (!game.seasonId) return;
+
+// Subscribe to presence for each game
+const unsubscribe = window.FirebaseGameTracker.subscribeToPresence(
+    game.seasonId,
+    game.id,
+    (trackers) => {
+        // Filter out stale trackers (lastSeen older than threshold)
+        const now = Date.now();
+        const activeTrackers = trackers.filter(t => {
+            if (!t.lastSeen) return false;
+            const lastSeenMs = t.lastSeen.toMillis ? t.lastSeen.toMillis() : t.lastSeen;
+            return (now - lastSeenMs) < STALE_THRESHOLD_MS;
+        });
+        
+        setLiveGames(prev => ({
+            ...prev,
+            [game.id]: activeTrackers.length > 0 ? activeTrackers : null
+        }));
+    }
+);
+unsubscribers.push(unsubscribe);
+    });
+
+    return () => {
+unsubscribers.forEach(unsub => unsub && unsub());
+    };
+}, [games, currentSeason]);
+
+// Warn before leaving page with active game in progress
+useEffect(() => {
+    const handleBeforeUnload = (e) => {
+// Only warn if game is active and has plays recorded
+if (gameState.gameActive && gameState.playHistory.length > 0 && !setupMode) {
+    e.preventDefault();
+    // Modern browsers require returnValue to be set
+    e.returnValue = '';
+    return '';
+}
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+}, [gameState.gameActive, gameState.playHistory.length, setupMode]);
+
+// Auto-save game state whenever it changes
+useEffect(() => {
+    // Don't auto-save if this update came from Firebase (skip counter > 0)
+    if (firebaseUpdateSkipCount.current > 0) {
+firebaseUpdateSkipCount.current--;
+return;
+    }
+
+    if (!setupMode && selectedGame && selectedTeam && gameState.gameActive && currentUser) {
+const saveTimer = setTimeout(() => {
+    window.FirebaseGameTracker.saveGameState(
+        selectedGame.id,
+        selectedTeam,
+        selectedTeam, // team name
+        gameState,
+        battingOrder,
+        {
+            userId: currentUser.uid,
+            userName: currentUser.displayName || currentUser.email
+        },
+        selectedGame.seasonId, // Pass the correct seasonId from the game object
+        selectedGame // Pass the game object for home/away determination
+    );
+}, 1000);
+
+return () => clearTimeout(saveTimer);
+    }
+}, [gameState, setupMode, selectedGame, selectedTeam, battingOrder, currentUser]);
+
+// Load opponent team's roster for pitcher selection
+const loadOpponentRoster = async (opponentTeam) => {
+    if (!currentSeason || !opponentTeam) return [];
+
+    try {
+console.log('\ud83d\udcc4 Loading opponent roster for:', opponentTeam);
+
+const formattedOppPlayers = await window.FirebaseGameTracker.getTeamRosterForTracker(
+    opponentTeam,
+    currentSeason.id
+);
+
+setOpponentPlayers(formattedOppPlayers);
+console.log('\u2705 Opponent roster loaded:', formattedOppPlayers.length, 'players');
+return formattedOppPlayers;
+
+    } catch (error) {
+console.error('\u274c Error loading opponent roster:', error);
+return [];
+    }
+};
+
+useEffect(() => {
+    let unsubscribeYourTeam = null;
+    let unsubscribeOpponent = null;
+    let unsubscribeMetadata = null;
+    let unsubscribePresence = null;
+
+    async function initializeGameSync() {
+// Only set up sync when game is selected and not in setup mode
+if (!selectedGame || setupMode || !selectedTeam || !currentUser) {
+    return;
+}
+
+console.log('\ud83d\udd04 Initializing real-time game sync');
+
+try {
+    // Get user profile to check permissions
+    const profileResult = await window.FirebaseGameTracker.getUserProfile(currentUser.uid);
+    const userProfile = profileResult.success ? profileResult.data : null;
+    
+    // Check if user can track this team (base permission)
+    const canTrack = window.FirebaseGameTracker.canUserTrackTeam(userProfile, selectedTeam);
+    setHasTrackPermission(canTrack);
+    // Only enable tracking if user has permission AND is not in spectator mode
+    setUserCanTrack(canTrack && !spectatorMode);
+    
+    // Check if user can boot others (admins, league staff, scorekeepers)
+    const canBoot = userProfile && (
+        userProfile.isAdmin || 
+        userProfile.userType === 'league-staff' ||
+        userProfile.userRole === 'admin' ||
+        userProfile.userRole === 'staff' ||
+        userProfile.specialRoles?.scorekeeper === true
+    );
+    setCanBootUsers(canBoot);
+    console.log('\ud83d\udd10 User can track:', canTrack, '| Can boot:', canBoot, '| Spectator mode:', spectatorMode);
+    
+    // Determine opponent team
+    const isHomeTeam = isHome;
+    const myTeamId = selectedTeam;
+    const opponentId = isHomeTeam ? selectedGame.awayTeamId : selectedGame.homeTeamId;
+    const opponentName = isHomeTeam ? selectedGame.awayTeam : selectedGame.homeTeam;
+    
+    setOpponentTeamId(opponentId);
+    setOpponentTeamName(opponentName);
+    console.log('\ud83c\udfdf\ufe0f My team:', myTeamId, 'vs Opponent:', opponentId);
+    
+    // Load opponent roster for pitcher selection (do this early so it's ready)
+    loadOpponentRoster(opponentName);
+    
+    // Get seasonId for all subsequent calls
+    const seasonId = selectedGame.seasonId;
+    
+    if (!seasonId) {
+        console.error('\u274c Game missing seasonId - cannot sync');
+        return;
+    }
+    
+    // Update presence with role
+    const role = spectatorMode ? 'viewer' : 'tracker';
+    await window.FirebaseGameTracker.updatePresence(
+        seasonId,
+        selectedGame.id,
+        currentUser.uid,
+        myTeamId,
+        currentUser.displayName || 'Unknown',
+        role
+    );
+    
+    // Subscribe to YOUR team's game state
+    unsubscribeYourTeam = window.FirebaseGameTracker.subscribeToGameState(
+        seasonId,
+        selectedGame.id,
+        myTeamId,
+        (data) => {
+            if (!data) return; // Guard against null data
+            
+            // Log if game appears to be in cleared state (for debugging)
+            if (data.cleared === true && (!data.plays || data.plays.length === 0)) {
+                console.log('\u2139\ufe0f Game state shows cleared flag (will be overwritten on next save)');
+            }
+            
+            // IMPORTANT: Only apply updates if there's REAL data from another user
+            // Don't overwrite our state with empty defaults when our team hasn't recorded plays yet
+            const hasRealData = data.plays && data.plays.length > 0;
+            const isFromAnotherUser = data.metadata?.lastUpdatedBy && data.metadata.lastUpdatedBy !== currentUser.uid;
+            
+            if (hasRealData && isFromAnotherUser) {
+                console.log('\ud83d\udce5 Your team updated by', data.metadata?.lastUpdatedByName);
+                
+                // Determine if batting order will also update (2 state changes vs 1)
+                let willUpdateBattingOrder = false;
+                if (data.battingOrder && battingOrder.length > 0) {
+                    const reconstructed = data.battingOrder.map(id => 
+                        battingOrder.find(p => p.id === id)
+                    ).filter(p => p !== undefined);
+                    if (reconstructed.length > 0) {
+                        willUpdateBattingOrder = true;
+                    }
+                }
+                
+                // Set skip counter BEFORE state updates to prevent auto-save echo
+                // Each setState/setBattingOrder triggers the auto-save useEffect once
+                firebaseUpdateSkipCount.current = willUpdateBattingOrder ? 2 : 1;
+                
+                // The data IS the game state (not data.gameState)
+                // Map the Firebase structure to our component's gameState structure
+                // Use functional update to preserve opponent score from local state (for single-person tracking)
+                // Only use opponent's score if they're actually tracking (have plays)
+                const opponentIsTracking = opponentGameState?.isTracking === true;
+                
+                // IMPORTANT: Do NOT override isYourTeamBatting from gameState
+                // That should ONLY come from metadata subscription
+                setGameState(prev => ({
+                    inning: data.inning || prev.inning,
+                    outs: data.outs ?? prev.outs,
+                    bases: data.bases || prev.bases,
+                    score: { 
+                        yourTeam: data.score ?? prev.score.yourTeam, 
+                        // Use opponent's real-time score only if they're tracking, else preserve local
+                        opponent: opponentIsTracking ? opponentGameState.score : prev.score.opponent 
+                    },
+                    currentBatter: data.currentBatter ?? prev.currentBatter,
+                    playHistory: data.plays || prev.playHistory,
+                    gameActive: data.gameActive !== false,
+                    // PRESERVE isYourTeamBatting from previous state - metadata controls this
+                    isYourTeamBatting: prev.isYourTeamBatting
+                }));
+                
+                // Reconstruct batting order from IDs
+                if (willUpdateBattingOrder) {
+                    const reconstructed = data.battingOrder.map(id => 
+                        battingOrder.find(p => p.id === id)
+                    ).filter(p => p !== undefined);
+                    setBattingOrder(reconstructed);
+                }
+                
+                console.log(`\ud83d\udce5 Your team updated by ${data.metadata?.lastUpdatedByName || 'Teammate'}`);
+            } else if (!hasRealData) {
+                console.log('\u2139\ufe0f No plays recorded yet for your team - preserving local state');
+            }
+        }
+    );
+    
+    // Subscribe to OPPONENT's game state
+    if (opponentId) {
+        unsubscribeOpponent = window.FirebaseGameTracker.subscribeToGameState(
+            seasonId,
+            selectedGame.id,
+            opponentId,
+            (data) => {
+                if (!data) return; // Guard against null data
+                
+                console.log('\ud83d\udce5 Opponent game state updated');
+                
+                // The data IS the game state (not data.gameState)
+                // Only include score if opponent is actually tracking (has plays)
+                // This prevents overriding our manual score tracking with a default 0
+                const isOpponentTracking = data.plays && data.plays.length > 0;
+                const mappedOpponentState = {
+                    score: isOpponentTracking ? (data.score || 0) : undefined,
+                    inning: data.inning || 1,
+                    outs: data.outs || 0,
+                    bases: data.bases || { first: null, second: null, third: null },
+                    currentBatter: data.currentBatter || 0,
+                    playHistory: data.plays || [],
+                    isTracking: isOpponentTracking
+                };
+                
+                setOpponentGameState(mappedOpponentState);
+            }
+        );
+    }
+    
+    // Subscribe to game metadata
+    unsubscribeMetadata = window.FirebaseGameTracker.subscribeToGameMetadata(seasonId, selectedGame.id, (data) => {
+        setGameMetadata(data);
+        
+        // Update local state based on shared metadata
+        if (data) {
+            // Update opponent score from metadata
+            // If we're home, opponent is away; if we're away, opponent is home
+            const opponentScoreFromMetadata = isHomeTeam ? data.awayScore : data.homeScore;
+            
+            // Determine batting state from metadata (authoritative source)
+            const shouldWeBeBatting = data.currentBattingTeam ? (data.currentBattingTeam === myTeamId) : null;
+            
+            // Update state with metadata values
+            // Use functional update to get current state and avoid stale closure
+            setGameState(prev => {
+                let newState = { ...prev };
+                let changed = false;
+                
+                // Update opponent score if changed
+                if (opponentScoreFromMetadata !== undefined && 
+                    opponentScoreFromMetadata !== null && 
+                    prev.score.opponent !== opponentScoreFromMetadata) {
+                    newState.score = {
+                        ...prev.score,
+                        opponent: opponentScoreFromMetadata
+                    };
+                    changed = true;
+                }
+                
+                // Sync inning from metadata (authoritative source)
+                if (data.inning !== undefined && data.inning !== null && prev.inning !== data.inning) {
+                    console.log(`\ud83d\udd04 Inning synced from metadata: ${data.inning}`);
+                    newState.inning = data.inning;
+                    changed = true;
+                }
+                
+                // Sync outs from metadata ONLY when opponent is batting
+                // When WE are batting, our local outs is authoritative (we're tracking them)
+                // This prevents race conditions where metadata overwrites our just-recorded outs
+                // EXCEPTION: On resume, always force-sync outs to avoid stale outs from saved state
+                const weAreBatting = shouldWeBeBatting === true || (shouldWeBeBatting === null && prev.isYourTeamBatting);
+                const forceSync = justResumed.current === true;
+                if ((!weAreBatting || forceSync) && data.outs !== undefined && data.outs !== null && prev.outs !== data.outs) {
+                    console.log(`\ud83d\udd04 Outs synced from metadata${forceSync ? ' (resume force-sync)' : ' (opponent batting)'}: ${data.outs}`);
+                    newState.outs = data.outs;
+                    changed = true;
+                }
+                
+                // Clear the justResumed flag after first metadata sync
+                if (justResumed.current) {
+                    justResumed.current = false;
+                    console.log('\ud83d\udd04 Resume sync complete - returning to normal sync mode');
+                }
+                
+                // Update batting state from metadata (AUTHORITATIVE)
+                // When batting changes, also sync outs since it's a new half-inning
+                if (shouldWeBeBatting !== null && prev.isYourTeamBatting !== shouldWeBeBatting) {
+                    console.log(`\ud83d\udd04 Batting changed: ${shouldWeBeBatting ? 'Your team' : 'Opponent'} now batting`);
+                    newState.isYourTeamBatting = shouldWeBeBatting;
+                    // Sync outs on half-inning change (usually 0 for fresh half)
+                    if (data.outs !== undefined && data.outs !== null) {
+                        newState.outs = data.outs;
+                    }
+                    changed = true;
+                }
+                
+                return changed ? newState : prev;
+            });
+            
+            // Always sync pitcher selections from metadata if they exist
+            const myPitcherFromMetadata = isHomeTeam ? data.homePitcher : data.awayPitcher;
+            const theirPitcherFromMetadata = isHomeTeam ? data.awayPitcher : data.homePitcher;
+            
+            if (myPitcherFromMetadata && myPitcherFromMetadata.id) {
+                setYourPitcher(prev => {
+                    if (prev?.id !== myPitcherFromMetadata.id) {
+                        console.log(`\u26be Your pitcher synced: ${myPitcherFromMetadata.name}`);
+                        return myPitcherFromMetadata;
+                    }
+                    return prev;
+                });
+            }
+            
+            if (theirPitcherFromMetadata && theirPitcherFromMetadata.id) {
+                setOpponentPitcher(prev => {
+                    if (prev?.id !== theirPitcherFromMetadata.id) {
+                        console.log(`\u26be Opponent pitcher synced: ${theirPitcherFromMetadata.name}`);
+                        return theirPitcherFromMetadata;
+                    }
+                    return prev;
+                });
+            }
+        }
+    });
+    
+    // Subscribe to presence
+    unsubscribePresence = window.FirebaseGameTracker.subscribeToPresence(seasonId, selectedGame.id, (users) => {
+        // Filter out stale users (older than 10 minutes)
+        const STALE_THRESHOLD_MS = 10 * 60 * 1000;
+        const now = Date.now();
+        const activeUsers = users.filter(u => {
+            if (!u.lastSeen) return false;
+            const lastSeenMs = u.lastSeen.toMillis ? u.lastSeen.toMillis() : u.lastSeen;
+            return (now - lastSeenMs) < STALE_THRESHOLD_MS;
+        });
+        setPresenceUsers(activeUsers);
+    });
+    
+    console.log('\u2705 Real-time sync initialized');
+    
+} catch (error) {
+    console.error('\u274c Error initializing game sync:', error);
+}
+    }
+
+    initializeGameSync();
+
+    // Cleanup function
+    return () => {
+if (unsubscribeYourTeam) unsubscribeYourTeam();
+if (unsubscribeOpponent) unsubscribeOpponent();
+if (unsubscribeMetadata) unsubscribeMetadata();
+if (unsubscribePresence) unsubscribePresence();
+
+// Remove presence on unmount
+if (selectedGame && selectedGame.seasonId && currentUser) {
+    window.FirebaseGameTracker.removePresence(selectedGame.seasonId, selectedGame.id, currentUser.uid);
+}
+    };
+}, [selectedGame, setupMode, selectedTeam, currentUser, isHome]);
+
+// Update userCanTrack when spectator mode is toggled
+useEffect(() => {
+    setUserCanTrack(hasTrackPermission && !spectatorMode);
+
+    // Update presence when spectator mode changes
+    if (selectedGame && selectedTeam && currentUser && selectedGame.seasonId && !setupMode) {
+const role = spectatorMode ? 'viewer' : 'tracker';
+window.FirebaseGameTracker.updatePresence(
+    selectedGame.seasonId,
+    selectedGame.id,
+    currentUser.uid,
+    selectedTeam,
+    currentUser.displayName || 'Unknown',
+    role
+).catch(err => console.warn('Could not update presence role:', err));
+    }
+}, [hasTrackPermission, spectatorMode, selectedGame, selectedTeam, currentUser, setupMode]);
+
+// Presence heartbeat - update every 2 minutes to stay "fresh"
+useEffect(() => {
+    if (!selectedGame || !selectedTeam || !currentUser || !selectedGame.seasonId || setupMode) {
+return;
+    }
+
+    const HEARTBEAT_INTERVAL = 2 * 60 * 1000; // 2 minutes
+
+    const updatePresenceNow = () => {
+const role = spectatorMode ? 'viewer' : 'tracker';
+window.FirebaseGameTracker.updatePresence(
+    selectedGame.seasonId,
+    selectedGame.id,
+    currentUser.uid,
+    selectedTeam,
+    currentUser.displayName || 'Unknown',
+    role
+).catch(err => console.warn('Presence update failed:', err));
+    };
+
+    // Regular heartbeat interval
+    const heartbeat = setInterval(updatePresenceNow, HEARTBEAT_INTERVAL);
+
+    // Also update presence when page becomes visible (phone wakes up, tab refocused)
+    const handleVisibilityChange = () => {
+if (document.visibilityState === 'visible') {
+    console.log('\ud83d\udcf1 Page visible - refreshing presence');
+    updatePresenceNow();
+}
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+clearInterval(heartbeat);
+document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+}, [selectedGame, selectedTeam, currentUser, setupMode, spectatorMode]);
+
+    const loadInitialData = async () => {
+        try {
+            console.log('\ud83d\udcc4 Loading initial data from Firebase...');
+            
+            const user = window.getCurrentFirebaseUser ? window.getCurrentFirebaseUser() : null;
+            setCurrentUser(user);
+            
+            if (user) {
+                console.log('\u2705 Signed in as:', user.displayName || user.email);
+                
+                try {
+                    const profileResult = await window.FirebaseGameTracker.getUserProfile(user.uid);
+                    if (profileResult.success && profileResult.data?.linkedTeam) {
+                        console.log('\u2705 Auto-selecting team:', profileResult.data.linkedTeam);
+                        setSelectedTeam(profileResult.data.linkedTeam);
+                    }
+                } catch (profileError) {
+                    console.warn('Could not load user profile:', profileError);
+                }
+            } else {
+                console.log('\u2139\ufe0f Not signed in');
+            }
+            
+            const seasonData = await window.FirebaseGameTracker.getCurrentSeason();
+            setCurrentSeason(seasonData);
+            console.log('\u2705 Current season:', seasonData);
+            
+            const teams = await window.FirebaseGameTracker.getAllTeams();
+            const teamNames = teams
+                .map(t => t.name || t.id)
+                .filter(name => name.toLowerCase() !== 'kings') // Remove inactive team
+                .sort();
+            setAllTeams(teamNames);
+            console.log('\u2705 Teams loaded:', teamNames.length);
+            
+            setLoading(false);
+        } catch (err) {
+            console.error('\u274c Error loading initial data:', err);
+            setError(err.message);
+            setLoading(false);
+        }
+    };
+
+    const loadTeamData = async () => {
+        try {
+            console.log('\ud83d\udcc4 Loading team data for:', selectedTeam);
+            
+            const formattedPlayers = await window.FirebaseGameTracker.getTeamRosterForTracker(
+                selectedTeam,
+                currentSeason.id
+            );
+            
+            console.log('\ud83d\udcca Team players from roster:', formattedPlayers.length);
+            setPlayers(formattedPlayers);
+            
+            const upcomingGames = await window.FirebaseGameTracker.getUpcomingTeamGames(
+                selectedTeam,
+                currentSeason.id
+            );
+            
+            const capitalizeTeamName = (name) => {
+                if (!name) return '';
+                return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+            };
+            
+            const formattedGames = upcomingGames.map(game => {
+                const gameDate = game.date?.seconds
+                    ? new Date(game.date.seconds * 1000).toLocaleDateString()
+                    : game.date;
+                
+                const teamLower = selectedTeam.toLowerCase();
+                const homeTeamLower = (game.homeTeam || game.homeTeamId || '').toLowerCase();
+                const isHome = homeTeamLower === teamLower;
+                
+                const homeTeamCapitalized = capitalizeTeamName(game.homeTeam || game.homeTeamId);
+                const awayTeamCapitalized = capitalizeTeamName(game.awayTeam || game.awayTeamId);
+                const opponent = isHome ? awayTeamCapitalized : homeTeamCapitalized;
+                
+                return {
+                    id: game.id,
+                    date: gameDate,
+                    time: game.time || null,
+                    homeTeam: homeTeamCapitalized,
+                    awayTeam: awayTeamCapitalized,
+                    homeTeamId: game.homeTeamId,
+                    awayTeamId: game.awayTeamId,
+                    opponent,
+                    isHome,
+                    seasonId: currentSeason.id // Add seasonId from current season
+                };
+            });
+            
+            setGames(formattedGames);
+            console.log('\u2705 Team data loaded:', formattedPlayers.length, 'players,', formattedGames.length, 'games');
+            
+        } catch (error) {
+            console.error('\u274c Error loading team data:', error);
+        }
+    };
+
+    const handleTeamSelect = (team) => {
+        setSelectedTeam(team);
+        setSelectedGame(null);
+        setLineupExists(false);
+    };
+
+    const handleGameSelect = async (game) => {
+        setSelectedGame(game);
+        const teamIsHome = game.homeTeam?.toLowerCase() === selectedTeam.toLowerCase();
+        setIsHome(teamIsHome);
+        
+        try {
+            const battingOrderIds = await window.FirebaseGameTracker.getBattingOrder(
+                game.id,
+                selectedTeam
+            );
+            setLineupExists(battingOrderIds && battingOrderIds.length > 0);
+            
+            const savedState = await window.FirebaseGameTracker.loadGameState(
+                game.id,
+                selectedTeam,
+                game.seasonId
+            );
+            
+            // Check for saved game (data is flat, not nested)
+            if (savedState && !savedState.cleared && (savedState.plays?.length > 0 || savedState.inning > 1)) {
+                console.log('\ud83d\udcc2 Found game in progress');
+            }
+        } catch (error) {
+            console.error('Error checking lineup:', error);
+            setLineupExists(false);
+        }
+    };
+
+    const startGame = async () => {
+        if (!selectedTeam || !selectedGame) return;
+        
+        // Validate seasonId exists
+        if (!selectedGame.seasonId) {
+            console.error('\u274c Game missing seasonId - cannot start tracking');
+            alert('Error: Game is missing season information. Please refresh and try again.');
+            return;
+        }
+        
+        const savedState = await window.FirebaseGameTracker.loadGameState(
+            selectedGame.id,
+            selectedTeam,
+            selectedGame.seasonId
+        );
+        
+        // Also check metadata for stale data
+        const existingMeta = await window.FirebaseGameTracker.loadGameMetadataSync(
+            selectedGame.seasonId,
+            selectedGame.id
+        );
+        
+        // Check if there's a saved game with real progress (not cleared)
+        const hasRealSavedGame = savedState && !savedState.cleared && (savedState.plays?.length > 0 || savedState.inning > 1);
+        
+        // Check if metadata has stale data (scores > 0 but our game was cleared)
+        // This happens when game was cleared but metadata wasn't properly reset
+        const hasStaleMetadata = savedState?.cleared && existingMeta && 
+            (existingMeta.homeScore > 0 || existingMeta.awayScore > 0 || existingMeta.inning > 1);
+        
+        if (hasRealSavedGame) {
+            // Game in progress - offer to resume
+            const resume = window.confirm(
+                '\ud83d\udcc2 A game in progress was found.\n\n' +
+                `Inning: ${savedState.inning || 1}\n` +
+                `Outs: ${savedState.outs || 0}\n` +
+                `Score: ${savedState.score || 0}\n` +
+                `Plays recorded: ${savedState.plays?.length || 0}\n\n` +
+                '\u2022 OK = Resume where you left off\n' +
+                '\u2022 Cancel = Start fresh (resets game for ALL trackers)'
+            );
+            
+            if (resume) {
+                // Restore batting order from saved player IDs
+                const savedBattingOrderIds = savedState.battingOrder || [];
+                const orderedPlayers = savedBattingOrderIds
+                    .map(playerId => players.find(p => p.id === playerId || p.authId === playerId))
+                    .filter(p => p !== null && p !== undefined);
+                
+                if (orderedPlayers.length > 0) {
+                    setBattingOrder(orderedPlayers);
+                } else {
+                    setBattingOrder(players);
+                }
+                
+                // Map flat Firebase structure to component's gameState structure
+                const restoredGameState = {
+                    inning: savedState.inning || 1,
+                    outs: savedState.outs || 0,
+                    bases: savedState.bases || { first: null, second: null, third: null },
+                    score: { 
+                        yourTeam: savedState.score || 0, 
+                        opponent: 0  // Will be updated from metadata subscription
+                    },
+                    currentBatter: savedState.currentBatter || 0,
+                    playHistory: savedState.plays || [],
+                    gameActive: savedState.gameActive !== false,
+                    isYourTeamBatting: savedState.isYourTeamBatting !== false
+                };
+                
+                setGameState(restoredGameState);
+                justResumed.current = true;  // Force full metadata sync on first subscription callback
+                setSetupMode(false);
+                console.log('\u2705 Resumed game from saved state:', restoredGameState);
+                return;
+            } else {
+                // User wants to start fresh - clear BOTH teams' game state AND metadata
+                console.log('\ud83d\udd04 User chose fresh start - clearing all data for both teams...');
+                
+                // Get opponent team ID
+                const opponentId = isHome ? selectedGame.awayTeamId : selectedGame.homeTeamId;
+                
+                try {
+                    await window.FirebaseGameTracker.fullGameReset(
+                        selectedGame.seasonId,
+                        selectedGame.id,
+                        selectedGame.homeTeamId || selectedGame.homeTeam,
+                        selectedGame.awayTeamId || selectedGame.awayTeam
+                    );
+                    console.log('\u2705 Full game reset complete - both teams cleared');
+                    // Clear local opponent state immediately so UI updates
+                    setOpponentGameState(null);
+                } catch (resetError) {
+                    console.error('\u274c Error in full game reset, falling back to partial clear:', resetError);
+                    // Fallback to just clearing our team
+                    await window.FirebaseGameTracker.clearGameState(
+                        selectedGame.id,
+                        selectedTeam,
+                        selectedGame.seasonId
+                    );
+                    await window.FirebaseGameTracker.resetGameMetadata(
+                        selectedGame.seasonId,
+                        selectedGame.id
+                    );
+                }
+            }
+        } else if (hasStaleMetadata) {
+            // Game state was cleared but metadata still has old data - clean it up
+            console.log('\ud83e\uddf9 Found stale metadata (gameState cleared but metadata has old scores) - cleaning up...');
+            try {
+                await window.FirebaseGameTracker.resetGameMetadata(
+                    selectedGame.seasonId,
+                    selectedGame.id
+                );
+                console.log('\u2705 Stale metadata reset');
+            } catch (metaError) {
+                console.error('\u274c Error resetting stale metadata:', metaError);
+            }
+        }
+        
+        // Flag to track if we should skip joining (we just cleared data)
+        const shouldStartFresh = hasStaleMetadata || (savedState && savedState.cleared);
+        if (shouldStartFresh) {
+            console.log('\ud83c\udd95 Starting fresh game (previous data was cleared)');
+        }
+        
+        try {
+            const battingOrderIds = await window.FirebaseGameTracker.getBattingOrder(
+                selectedGame.id,
+                selectedTeam
+            );
+            
+            if (battingOrderIds && battingOrderIds.length > 0) {
+                const orderedPlayers = battingOrderIds
+                    .map(playerId => players.find(p => p.id === playerId || p.authId === playerId))
+                    .filter(p => p !== null && p !== undefined);
+                
+                if (orderedPlayers.length > 0) {
+                    console.log('\u2705 Loaded batting order from roster management:', orderedPlayers.length, 'players');
+                    setBattingOrder(orderedPlayers);
+                } else {
+                    console.log('\u26a0\ufe0f Could not map player IDs to players, using full roster');
+                    setBattingOrder(players);
+                }
+            } else {
+                console.log('\u2139\ufe0f No pre-set lineup found, using full roster');
+                setBattingOrder(players);
+            }
+        } catch (error) {
+            console.error('Error loading batting order:', error);
+            console.log('Using full roster as fallback');
+            setBattingOrder(players);
+        }
+        
+        // Check if game metadata already exists (another tracker may have started)
+        try {
+            const existingMetadata = await window.FirebaseGameTracker.loadGameMetadataSync(
+                selectedGame.seasonId,
+                selectedGame.id
+            );
+            
+            // Check if metadata exists with real progress
+            // Skip if: we just cleared data, OR it's fresh state (inning 1, no scores)
+            const hasRealGameData = !shouldStartFresh && 
+                existingMetadata && 
+                existingMetadata.inning !== undefined && 
+                (existingMetadata.inning > 1 || existingMetadata.homeScore > 0 || existingMetadata.awayScore > 0);
+            
+            if (hasRealGameData) {
+                // Metadata exists with real progress - join the existing game
+                console.log(`\u2705 Joining existing game: inning ${existingMetadata.inning}, ${existingMetadata.currentBattingTeam} batting`);
+                
+                // Determine if our team should be batting based on existing metadata
+                const shouldWeBeBatting = existingMetadata.currentBattingTeam === selectedTeam;
+                
+                setGameState({
+                    inning: existingMetadata.inning || 1,
+                    outs: existingMetadata.outs || 0,
+                    bases: { first: null, second: null, third: null },
+                    score: { 
+                        yourTeam: isHome ? (existingMetadata.homeScore || 0) : (existingMetadata.awayScore || 0),
+                        opponent: isHome ? (existingMetadata.awayScore || 0) : (existingMetadata.homeScore || 0)
+                    },
+                    currentBatter: 0,
+                    playHistory: [],
+                    gameActive: true,
+                    isYourTeamBatting: shouldWeBeBatting
+                });
+            } else {
+                // No existing metadata - initialize fresh game
+                setGameState({
+                    inning: 1,
+                    outs: 0,
+                    bases: { first: null, second: null, third: null },
+                    score: { yourTeam: 0, opponent: 0 },
+                    currentBatter: 0,
+                    playHistory: [],
+                    gameActive: true,
+                    isYourTeamBatting: !isHome
+                });
+                
+                // Initialize shared game metadata
+                // Away team ALWAYS bats first (top of 1st)
+                const firstBattingTeam = selectedGame.awayTeam || selectedGame.awayTeamId;
+                await window.FirebaseGameTracker.updateGameMetadata(selectedGame.seasonId, selectedGame.id, {
+                    inning: 1,
+                    outs: 0,
+                    homeScore: 0,
+                    awayScore: 0,
+                    currentBattingTeam: firstBattingTeam
+                });
+                console.log(`\u2705 Game metadata initialized: ${firstBattingTeam} batting first (top of 1st)`);
+            }
+        } catch (error) {
+            console.error('Error checking/initializing game metadata:', error);
+            // Fallback to default state
+            setGameState({
+                inning: 1,
+                outs: 0,
+                bases: { first: null, second: null, third: null },
+                score: { yourTeam: 0, opponent: 0 },
+                currentBatter: 0,
+                playHistory: [],
+                gameActive: true,
+                isYourTeamBatting: !isHome
+            });
+        }
+        
+        // Load opponent roster for pitcher selection
+        const opponentTeam = isHome ? selectedGame.awayTeam : selectedGame.homeTeam;
+        await loadOpponentRoster(opponentTeam);
+        
+        // Check if pitchers are already set in metadata
+        try {
+            const existingMetadata = await window.FirebaseGameTracker.loadGameMetadataSync(
+                selectedGame.seasonId,
+                selectedGame.id
+            );
+            
+            if (existingMetadata) {
+                // Load existing pitcher selections
+                const myPitcher = isHome ? existingMetadata.homePitcher : existingMetadata.awayPitcher;
+                const theirPitcher = isHome ? existingMetadata.awayPitcher : existingMetadata.homePitcher;
+                
+                if (myPitcher) setYourPitcher(myPitcher);
+                if (theirPitcher) setOpponentPitcher(theirPitcher);
+                
+                // Show pitcher modal if no pitchers are set yet
+                // Small delay ensures opponent roster state has propagated
+                if (!myPitcher && !theirPitcher) {
+                    setTimeout(() => setShowPitcherModal(true), 100);
+                }
+            } else {
+                // No metadata - show pitcher modal
+                setTimeout(() => setShowPitcherModal(true), 100);
+            }
+        } catch (error) {
+            console.warn('Could not load pitcher info:', error);
+            setTimeout(() => setShowPitcherModal(true), 100);
+        }
+        
+        setSetupMode(false);
+    };
+
+    const currentBatter = battingOrder[gameState.currentBatter];
+    const opponentName = selectedGame ? (isHome ? selectedGame.awayTeam : selectedGame.homeTeam) : 'Opponent';
+
+    const initiatePlay = (playType) => {
+        const play = PLAY_TYPES.find(p => p.value === playType);
+        if (!play) return;
+        
+        // Use metadata inning as authoritative source for play tagging
+        const currentInning = gameMetadata?.inning || gameState.inning;
+
+        if (play.noAdjust) {
+            const newState = { ...gameState };
+            newState.outs += 1;
+
+            const playRecord = {
+                inning: currentInning,
+                isYourTeam: gameState.isYourTeamBatting,
+                batter: currentBatter.name,
+                playType: play.value,
+                playLabel: play.label,
+                outsBefore: gameState.outs,
+                outsAfter: newState.outs,
+                basesBefore: { ...gameState.bases },
+                basesAfter: { ...gameState.bases },
+                runsScored: 0,
+                inningBefore: gameState.inning,
+                isYourTeamBattingBefore: gameState.isYourTeamBatting,
+                opposingPitcher: opponentPitcher ? { id: opponentPitcher.id, name: opponentPitcher.name } : null,
+                timestamp: Date.now()
+            };
+
+            newState.currentBatter = (newState.currentBatter + 1) % battingOrder.length;
+            newState.playHistory = [...gameState.playHistory, playRecord];
+            setGameState(newState);
+            return;
+        }
+
+        const newBases = { ...gameState.bases };
+        let autoScore = 0;
+        let autoOuts = 0;
+        let scoredRunners = [];  // Track who scored
+
+        if (play.bases === 4) {
+            // Home run - everyone scores
+            if (newBases.third) { autoScore++; scoredRunners.push(newBases.third); }
+            if (newBases.second) { autoScore++; scoredRunners.push(newBases.second); }
+            if (newBases.first) { autoScore++; scoredRunners.push(newBases.first); }
+            autoScore++;  // Batter scores
+            scoredRunners.push(currentBatter.name);
+            newBases.first = null;
+            newBases.second = null;
+            newBases.third = null;
+        } else if (play.bases === 3) {
+            // Triple - runners from all bases score
+            if (newBases.third) { autoScore++; scoredRunners.push(newBases.third); }
+            if (newBases.second) { autoScore++; scoredRunners.push(newBases.second); }
+            if (newBases.first) { autoScore++; scoredRunners.push(newBases.first); }
+            newBases.third = currentBatter.name;
+            newBases.second = null;
+            newBases.first = null;
+        } else if (play.bases === 2) {
+            // Double - runners from 2nd and 3rd score
+            if (newBases.third) { autoScore++; scoredRunners.push(newBases.third); }
+            if (newBases.second) { autoScore++; scoredRunners.push(newBases.second); }
+            newBases.third = newBases.first;
+            newBases.second = currentBatter.name;
+            newBases.first = null;
+        } else if (play.bases === 1) {
+            const isWalk = play.value === 'walk';
+            
+            if (isWalk) {
+                if (newBases.first) {
+                    if (newBases.second) {
+                        if (newBases.third) {
+                            // Bases loaded walk - runner from 3rd scores
+                            autoScore++;
+                            scoredRunners.push(newBases.third);
+                            newBases.third = newBases.second;
+                            newBases.second = newBases.first;
+                            newBases.first = currentBatter.name;
+                        } else {
+                            newBases.third = newBases.second;
+                            newBases.second = newBases.first;
+                            newBases.first = currentBatter.name;
+                        }
+                    } else {
+                        const runnerOn3rd = newBases.third;
+                        newBases.second = newBases.first;
+                        newBases.first = currentBatter.name;
+                        newBases.third = runnerOn3rd;
+                    }
+                } else {
+                    newBases.first = currentBatter.name;
+                }
+            } else {
+                // Single - runner from 3rd scores
+                const runnersToMove = [];
+                if (newBases.third) runnersToMove.push({ runner: newBases.third, from: 'third' });
+                if (newBases.second) runnersToMove.push({ runner: newBases.second, from: 'second' });
+                if (newBases.first) runnersToMove.push({ runner: newBases.first, from: 'first' });
+
+                newBases.first = currentBatter.name;
+                newBases.second = null;
+                newBases.third = null;
+
+                runnersToMove.forEach(({runner, from}) => {
+                    if (from === 'third') {
+                        autoScore++;
+                        scoredRunners.push(runner);
+                    } else if (from === 'second') {
+                        newBases.third = runner;
+                    } else if (from === 'first') {
+                        newBases.second = runner;
+                    }
+                });
+            }
+        } else if (play.isOut) {
+            autoOuts = 1;
+        } else if (play.outs) {
+            autoOuts = play.outs;
+        } else if (play.value === 'fielders_choice') {
+            // FC: batter reaches first, runners advance like a single
+            // No auto-outs \u2014 tracker \u274c's each runner thrown out (each adds 1 out)
+            // Covers standard FC (1 out) and FC double play (2 outs)
+            autoOuts = 0;
+            const runnersToMove = [];
+            if (newBases.third) runnersToMove.push({ runner: newBases.third, from: 'third' });
+            if (newBases.second) runnersToMove.push({ runner: newBases.second, from: 'second' });
+            if (newBases.first) runnersToMove.push({ runner: newBases.first, from: 'first' });
+
+            newBases.first = currentBatter.name;
+            newBases.second = null;
+            newBases.third = null;
+
+            runnersToMove.forEach(({runner, from}) => {
+                if (from === 'third') {
+                    autoScore++;
+                    scoredRunners.push(runner);
+                } else if (from === 'second') {
+                    newBases.third = runner;
+                } else if (from === 'first') {
+                    newBases.second = runner;
+                }
+            });
+        }
+
+        setTempBases(newBases);
+        setTempScore(autoScore);
+        setTempOuts(autoOuts);
+        setRunnersScored(scoredRunners);  // Initialize with auto-scored runners
+        setPendingPlay({ play, type: playType });
+    };
+
+    const adjustRunner = (base, direction) => {
+        const newBases = { ...tempBases };
+        const runner = newBases[base];
+        
+        if (!runner) return;
+
+        newBases[base] = null;
+
+        if (direction === 'advance') {
+            if (base === 'first') {
+                newBases.second = runner;
+            } else if (base === 'second') {
+                newBases.third = runner;
+            } else if (base === 'third') {
+                // Runner scores - track them
+                setTempScore(tempScore + 1);
+                setRunnersScored(prev => [...prev, runner]);
+            }
+        } else if (direction === 'back') {
+            if (base === 'second') {
+                newBases.first = runner;
+            } else if (base === 'third') {
+                newBases.second = runner;
+            }
+        }
+
+        setTempBases(newBases);
+    };
+
+    const handleDragStart = (base) => {
+        setDraggedRunner({ base, runner: tempBases[base] });
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+    };
+
+    const handleDrop = (targetBase) => {
+        if (!draggedRunner) return;
+
+        const newBases = { ...tempBases };
+        newBases[draggedRunner.base] = null;
+
+        if (targetBase === 'home') {
+            // Runner scores - track them
+            setTempScore(tempScore + 1);
+            setRunnersScored(prev => [...prev, draggedRunner.runner]);
+        } else {
+            newBases[targetBase] = draggedRunner.runner;
+        }
+
+        setTempBases(newBases);
+        setDraggedRunner(null);
+    };
+
+    const removeRunner = (base) => {
+        const newBases = { ...tempBases };
+        newBases[base] = null;
+        setTempBases(newBases);
+        // Each runner removed = one out
+        // For DP, outs are pre-counted so removal just identifies who
+        if (pendingPlay?.play?.value !== 'doubleplay') {
+            setTempOuts(tempOuts + 1);
+        }
+    };
+
+    // Un-score a runner (put them back on base \u2014 used for non-FC corrections)
+    const unscoreRunner = (runnerName) => {
+        // Remove from scored runners
+        setRunnersScored(prev => prev.filter(r => r !== runnerName));
+        // Decrement score
+        setTempScore(prev => Math.max(0, prev - 1));
+
+        // Put runner back on 3rd (if 3rd is empty, otherwise try 2nd, then 1st)
+        setTempBases(prev => {
+            if (prev.third) {
+                // 3rd is occupied - try 2nd
+                if (prev.second) {
+                    // 2nd is occupied - try 1st
+                    if (prev.first) {
+                        alert(`Cannot un-score ${runnerName}: all bases occupied`);
+                        return prev;
+                    }
+                    return { ...prev, first: runnerName };
+                }
+                return { ...prev, second: runnerName };
+            }
+            return { ...prev, third: runnerName };
+        });
+    };
+
+    // Mark a scored runner as out at home (FC only)
+    // Unlike unscoreRunner, this adds an out and does NOT put the runner back on base
+    const markScoredRunnerOut = (runnerName) => {
+        setRunnersScored(prev => prev.filter(r => r !== runnerName));
+        setTempScore(prev => Math.max(0, prev - 1));
+        setTempOuts(prev => prev + 1);
+    };
+
+    const confirmPlay = () => {
+        if (!pendingPlay) return;
+
+        const newState = { ...gameState };
+        const play = pendingPlay.play;
+        
+        // Use metadata inning as authoritative source for play tagging
+        const currentInning = gameMetadata?.inning || gameState.inning;
+
+        newState.outs += tempOuts;
+
+        const playRecord = {
+            inning: currentInning,
+            isYourTeam: gameState.isYourTeamBatting,
+            batter: currentBatter.name,
+            playType: play.value,
+            playLabel: play.label,
+            location: playLocation || null,
+            outsBefore: gameState.outs,
+            outsAfter: newState.outs,
+            basesBefore: { ...gameState.bases },
+            basesAfter: { ...tempBases },
+            runsScored: tempScore,
+            runnersScored: [...runnersScored],  // Track WHO scored
+            inningBefore: gameState.inning,
+            isYourTeamBattingBefore: gameState.isYourTeamBatting,
+            opposingPitcher: opponentPitcher ? { id: opponentPitcher.id, name: opponentPitcher.name } : null,
+            timestamp: Date.now()
+        };
+
+        newState.bases = tempBases;
+        newState.score.yourTeam += tempScore;
+        newState.currentBatter = (newState.currentBatter + 1) % battingOrder.length;
+        newState.playHistory = [...gameState.playHistory, playRecord];
+
+        setGameState(newState);
+        setPendingPlay(null);
+        setTempBases(null);
+        setTempScore(0);
+        setTempOuts(0);
+        setRunnersScored([]);
+        setPlayLocation(null);
+    };
+
+    const cancelPlay = () => {
+        setPendingPlay(null);
+        setTempBases(null);
+        setTempScore(0);
+        setTempOuts(0);
+        setRunnersScored([]);
+        setPlayLocation(null);
+    };
+
+    // Handle pitcher change with confirmation
+    const handlePitcherChange = async (isYourTeam, newPitcher) => {
+        const oldPitcher = isYourTeam ? yourPitcher : opponentPitcher;
+        const teamName = isYourTeam ? selectedTeam : opponentTeamName;
+        
+        // If same pitcher selected, just close
+        if (oldPitcher?.id === newPitcher.id) {
+            setPendingPitcherChange(null);
+            return;
+        }
+        
+        // Set pending change for confirmation
+        setPendingPitcherChange({
+            isYourTeam,
+            oldPitcher,
+            newPitcher,
+            teamName
+        });
+    };
+
+    // Confirm pitcher change
+    const confirmPitcherChange = async () => {
+        if (!pendingPitcherChange) return;
+        
+        const { isYourTeam, oldPitcher, newPitcher, teamName } = pendingPitcherChange;
+        
+        // Update local state
+        if (isYourTeam) {
+            setYourPitcher(newPitcher);
+        } else {
+            setOpponentPitcher(newPitcher);
+        }
+        
+        // Log pitching change to play history
+        const pitchingChangeRecord = {
+            type: 'pitching-change',
+            team: teamName,
+            teamId: isYourTeam ? selectedTeam : opponentTeamId,
+            inning: gameMetadata?.inning || gameState.inning,
+            halfInning: gameState.isYourTeamBatting ? 'bottom' : 'top',
+            oldPitcher: oldPitcher ? { id: oldPitcher.id, name: oldPitcher.name } : null,
+            newPitcher: { id: newPitcher.id, name: newPitcher.name },
+            timestamp: Date.now()
+        };
+        
+        // Add to local play history
+        setGameState(prev => ({
+            ...prev,
+            playHistory: [...prev.playHistory, pitchingChangeRecord]
+        }));
+        
+        // Update Firebase metadata - save pitcher for BOTH your team and opponent
+        // Both trackers can write both fields; merge:true prevents overwrites
+        try {
+            let pitcherKey;
+            if (isYourTeam) {
+                pitcherKey = isHome ? 'homePitcher' : 'awayPitcher';
+            } else {
+                pitcherKey = isHome ? 'awayPitcher' : 'homePitcher';
+            }
+            
+            await window.FirebaseGameTracker.updateGameMetadata(
+                selectedGame.seasonId,
+                selectedGame.id,
+                { [pitcherKey]: { id: newPitcher.id, name: newPitcher.name } }
+            );
+            console.log(`\u2705 Pitcher updated in metadata: ${newPitcher.name} now pitching for ${teamName}`);
+        } catch (error) {
+            console.error('Error updating pitcher:', error);
+        }
+        
+        setPendingPitcherChange(null);
+    };
+
+    // Cancel pitcher change
+    const cancelPitcherChange = () => {
+        setPendingPitcherChange(null);
+    };
+
+    // Save initial pitcher selections from modal
+    const savePitcherSelections = async (yourPitcherSelection, opponentPitcherSelection) => {
+        // Update local state (both pitchers for local tracking/display)
+        if (yourPitcherSelection) setYourPitcher(yourPitcherSelection);
+        if (opponentPitcherSelection) setOpponentPitcher(opponentPitcherSelection);
+        
+        // Update Firebase metadata - save BOTH pitchers so either tracker can restore them
+        // merge:true ensures we don't overwrite other metadata fields
+        try {
+            const updateData = {};
+            if (yourPitcherSelection) {
+                updateData[isHome ? 'homePitcher' : 'awayPitcher'] = {
+                    id: yourPitcherSelection.id,
+                    name: yourPitcherSelection.name
+                };
+            }
+            if (opponentPitcherSelection) {
+                updateData[isHome ? 'awayPitcher' : 'homePitcher'] = {
+                    id: opponentPitcherSelection.id,
+                    name: opponentPitcherSelection.name
+                };
+            }
+            if (Object.keys(updateData).length > 0) {
+                await window.FirebaseGameTracker.updateGameMetadata(
+                    selectedGame.seasonId,
+                    selectedGame.id,
+                    updateData
+                );
+                console.log('\u2705 Pitcher selections saved to metadata:', Object.keys(updateData).join(', '));
+            }
+        } catch (error) {
+            console.error('Error saving pitcher selection:', error);
+        }
+        
+        setShowPitcherModal(false);
+    };
+
+    // Update opponent score manually (for when opponent team isn't tracking)
+    const updateOpponentScore = async (delta) => {
+        const newOpponentScore = Math.max(0, gameState.score.opponent + delta);
+        const currentInning = gameMetadata?.inning || gameState.inning;
+
+        // Build an audit record so the linescore derivation can track opponent runs by inning
+        const adjustmentRecord = delta !== 0 ? {
+            type: 'manual-run-adjustment',
+            inning: currentInning,
+            isYourTeam: false,
+            adjustment: delta,
+            previousScore: gameState.score.opponent,
+            newScore: newOpponentScore,
+            reason: delta > 0 ? 'Opponent run added' : 'Opponent run removed',
+            timestamp: Date.now()
+        } : null;
+
+        // Update local state
+        setGameState(prev => ({
+            ...prev,
+            score: {
+                ...prev.score,
+                opponent: newOpponentScore
+            },
+            playHistory: adjustmentRecord
+                ? [...prev.playHistory, adjustmentRecord]
+                : prev.playHistory
+        }));
+        
+        // Update Firebase metadata
+        try {
+            const updateData = {
+                // If we're home, opponent is away; if we're away, opponent is home
+                [isHome ? 'awayScore' : 'homeScore']: newOpponentScore
+            };
+            await window.FirebaseGameTracker.updateGameMetadata(
+                selectedGame.seasonId, 
+                selectedGame.id, 
+                updateData
+            );
+            console.log(`\u2705 Opponent score updated: ${newOpponentScore}`);
+        } catch (error) {
+            console.error('Error updating opponent score:', error);
+        }
+    };
+
+    // Get list of players who have scored runs this game (for run removal selection)
+    const getPlayersWhoScored = () => {
+        const scorers = {};
+        gameState.playHistory.forEach(play => {
+            if (play.runnersScored && Array.isArray(play.runnersScored)) {
+                play.runnersScored.forEach(runnerName => {
+                    scorers[runnerName] = (scorers[runnerName] || 0) + 1;
+                });
+            }
+        });
+        // Also check for manual additions
+        gameState.playHistory.forEach(play => {
+            if (play.type === 'manual-run-adjustment' && play.adjustment > 0 && play.runnerName) {
+                scorers[play.runnerName] = (scorers[play.runnerName] || 0) + 1;
+            }
+            // Subtract manual removals
+            if (play.type === 'manual-run-adjustment' && play.adjustment < 0 && play.runnerName) {
+                scorers[play.runnerName] = (scorers[play.runnerName] || 0) - 1;
+            }
+        });
+        // Filter to only players with positive run counts
+        return Object.entries(scorers)
+            .filter(([name, count]) => count > 0)
+            .map(([name, count]) => ({ name, runs: count }));
+    };
+
+    // Manual adjustment for your team's score
+    const updateYourTeamScore = async (delta) => {
+        if (delta < 0) {
+            // Removing a run - show modal to select which player
+            setShowRunRemovalModal(true);
+        } else {
+            // Adding a run - add directly with audit trail
+            const newYourScore = gameState.score.yourTeam + 1;
+            const currentInning = gameMetadata?.inning || gameState.inning;
+            
+            const adjustmentRecord = {
+                type: 'manual-run-adjustment',
+                inning: currentInning,
+                isYourTeam: true,
+                adjustment: 1,
+                previousScore: gameState.score.yourTeam,
+                newScore: newYourScore,
+                reason: 'Manual run added',
+                timestamp: Date.now()
+            };
+            
+            setGameState(prev => ({
+                ...prev,
+                score: { ...prev.score, yourTeam: newYourScore },
+                playHistory: [...prev.playHistory, adjustmentRecord]
+            }));
+            
+            // Update Firebase
+            try {
+                await window.FirebaseGameTracker.updateGameMetadata(
+                    selectedGame.seasonId,
+                    selectedGame.id,
+                    { [isHome ? 'homeScore' : 'awayScore']: newYourScore }
+                );
+                console.log(`\u2705 Run added manually: ${gameState.score.yourTeam} \u2192 ${newYourScore}`);
+            } catch (error) {
+                console.error('Error updating score:', error);
+            }
+        }
+    };
+
+    // Confirm run removal with specific player
+    const confirmRunRemoval = async (playerName) => {
+        setShowRunRemovalModal(false);
+        
+        const newYourScore = Math.max(0, gameState.score.yourTeam - 1);
+        const currentInning = gameMetadata?.inning || gameState.inning;
+        
+        const adjustmentRecord = {
+            type: 'manual-run-adjustment',
+            inning: currentInning,
+            isYourTeam: true,
+            adjustment: -1,
+            runnerName: playerName,  // Track which player's run was removed
+            previousScore: gameState.score.yourTeam,
+            newScore: newYourScore,
+            reason: `Run removed from ${playerName} (timing play/correction)`,
+            timestamp: Date.now()
+        };
+        
+        setGameState(prev => ({
+            ...prev,
+            score: { ...prev.score, yourTeam: newYourScore },
+            playHistory: [...prev.playHistory, adjustmentRecord]
+        }));
+        
+        // Update Firebase
+        try {
+            await window.FirebaseGameTracker.updateGameMetadata(
+                selectedGame.seasonId,
+                selectedGame.id,
+                { [isHome ? 'homeScore' : 'awayScore']: newYourScore }
+            );
+            console.log(`\u2705 Run removed from ${playerName}: ${gameState.score.yourTeam} \u2192 ${newYourScore}`);
+        } catch (error) {
+            console.error('Error updating score:', error);
+        }
+    };
+
+    const adjustInning = async (delta) => {
+        const currentInning = gameMetadata?.inning || gameState.inning;
+        const newInning = Math.max(1, currentInning + delta);
+        if (newInning === currentInning) return;
+        setGameState(prev => ({ ...prev, inning: newInning }));
+        try {
+            await window.FirebaseGameTracker.updateGameMetadata(selectedGame.seasonId, selectedGame.id, {
+                inning: newInning
+            });
+            console.log(`\u2705 Inning adjusted to ${newInning}`);
+        } catch (error) {
+            console.error('Error adjusting inning:', error);
+        }
+    };
+
+    const advanceToNextHalfInning = async () => {
+        const newState = { ...gameState };
+        newState.outs = 0;
+        newState.bases = { first: null, second: null, third: null };
+        
+        // Capture pre-advance state for end-game checks
+        const currentInning = gameMetadata?.inning || gameState.inning;
+        const homeScore = isHome ? gameState.score.yourTeam : gameState.score.opponent;
+        const awayScore = isHome ? gameState.score.opponent : gameState.score.yourTeam;
+        const runDiff = Math.abs(homeScore - awayScore);
+        
+        // Did top half or bottom half just end?
+        const topHalfJustEnded = (isHome && !gameState.isYourTeamBatting) || (!isHome && gameState.isYourTeamBatting);
+        const bottomHalfJustEnded = !topHalfJustEnded;
+        
+        // Check end-game conditions
+        let endGameReason = null;
+        
+        // After top of inning: home team leads (they don't need to bat)
+        if (topHalfJustEnded && homeScore > awayScore) {
+            if (currentInning >= 7) {
+                endGameReason = `End of regulation \u2014 ${currentInning} innings complete.\nHome team leads ${homeScore}-${awayScore}.`;
+            } else if (currentInning >= 5 && runDiff >= 12) {
+                endGameReason = `Mercy rule \u2014 12-run lead after ${currentInning} innings.\nScore: ${homeScore}-${awayScore} (${runDiff}-run lead).`;
+            } else if (currentInning >= 4 && runDiff >= 15) {
+                endGameReason = `Mercy rule \u2014 15-run lead after ${currentInning} innings.\nScore: ${homeScore}-${awayScore} (${runDiff}-run lead).`;
+            }
+        }
+        
+        // After bottom of inning: check regulation end or mercy
+        if (bottomHalfJustEnded) {
+            if (currentInning >= 7 && homeScore !== awayScore) {
+                const leader = homeScore > awayScore ? 'Home' : 'Away';
+                const winScore = Math.max(homeScore, awayScore);
+                const loseScore = Math.min(homeScore, awayScore);
+                endGameReason = `End of regulation \u2014 ${currentInning} innings complete.\n${leader} team wins ${winScore}-${loseScore}.`;
+            } else if (currentInning >= 7 && awayScore === homeScore) {
+                // Tied after 7 \u2014 just inform, don't prompt to end
+                console.log(`\u26be Tied ${homeScore}-${awayScore} after ${currentInning} \u2014 extra innings`);
+            } else if (runDiff > 0) {
+                // Mercy checks (either team leading)
+                if (currentInning >= 5 && runDiff >= 12) {
+                    endGameReason = `Mercy rule \u2014 12-run lead after ${currentInning} innings.\nScore: ${homeScore}-${awayScore} (${runDiff}-run lead).`;
+                } else if (currentInning >= 4 && runDiff >= 15) {
+                    endGameReason = `Mercy rule \u2014 15-run lead after ${currentInning} innings.\nScore: ${homeScore}-${awayScore} (${runDiff}-run lead).`;
+                }
+            }
+        }
+        
+        // If end-game condition met, prompt the tracker
+        if (endGameReason) {
+            const shouldEnd = window.confirm(
+                `\u26be Game Over?\n\n${endGameReason}\n\n` +
+                `${selectedTeam}: ${gameState.score.yourTeam}  |  ${opponentName}: ${gameState.score.opponent}\n\n` +
+                'End game and save stats?\n(Click Cancel to continue tracking)'
+            );
+            
+            if (shouldEnd) {
+                endGame();
+                return;  // Don't advance to next half-inning
+            }
+        }
+        
+        // Determine which team should bat next based on current state
+        let nextBattingTeam;
+        let nextInning = currentInning;
+        
+        if (newState.isYourTeamBatting) {
+            // Your team just finished batting, opponent bats next
+            newState.isYourTeamBatting = false;
+            nextBattingTeam = opponentTeamName;
+            // Increment inning after home team finishes batting (end of full inning)
+            if (isHome) {
+                nextInning += 1;
+            }
+        } else {
+            // Opponent just finished batting, your team bats next
+            newState.isYourTeamBatting = true;
+            nextBattingTeam = selectedTeam;
+            // Increment inning after home team finishes batting (end of full inning)
+            if (!isHome) {
+                nextInning += 1;
+            }
+        }
+        
+        // Update local state
+        newState.inning = nextInning;
+        setGameState(newState);
+        
+        // Update shared game metadata so both teams know who's batting
+        // Only write YOUR team's score - let opponent own theirs (merge:true preserves their field)
+        try {
+            await window.FirebaseGameTracker.updateGameMetadata(selectedGame.seasonId, selectedGame.id, {
+                inning: nextInning,
+                outs: 0,
+                currentBattingTeam: nextBattingTeam,
+                [isHome ? 'homeScore' : 'awayScore']: gameState.score.yourTeam
+            });
+            console.log(`\u2705 Half-inning advanced: ${nextBattingTeam} now batting in inning ${nextInning}`);
+        } catch (error) {
+            console.error('Error updating game metadata:', error);
+        }
+    };
+
+    const undoLastPlay = async () => {
+        if (gameState.playHistory.length === 0) return;
+
+        const newHistory = [...gameState.playHistory];
+        const lastPlay = newHistory.pop();
+
+        // --- Handle pitching-change records ---
+        if (lastPlay.type === 'pitching-change') {
+            // Restore the previous pitcher
+            const isOurTeam = lastPlay.teamId === selectedTeam;
+            if (isOurTeam) {
+                setYourPitcher(lastPlay.oldPitcher); // null if there was no previous pitcher
+                // Also update Firebase metadata
+                try {
+                    const pitcherKey = isHome ? 'homePitcher' : 'awayPitcher';
+                    await window.FirebaseGameTracker.updateGameMetadata(
+                        selectedGame.seasonId,
+                        selectedGame.id,
+                        { [pitcherKey]: lastPlay.oldPitcher || null }
+                    );
+                } catch (error) {
+                    console.error('Error reverting pitcher in metadata:', error);
+                }
+            } else {
+                setOpponentPitcher(lastPlay.oldPitcher);
+            }
+            // Only remove the record \u2014 no bases/outs/batter changes
+            setGameState(prev => ({ ...prev, playHistory: newHistory }));
+            console.log('\u21a9\ufe0f Undo: pitching change reverted');
+            return;
+        }
+
+        // --- Handle manual-run-adjustment records ---
+        if (lastPlay.type === 'manual-run-adjustment') {
+            const reversedScore = gameState.score.yourTeam - (lastPlay.adjustment || 0);
+            const newScore = Math.max(0, reversedScore);
+            
+            setGameState(prev => ({
+                ...prev,
+                score: { ...prev.score, yourTeam: newScore },
+                playHistory: newHistory
+            }));
+            // Update Firebase metadata with reversed score
+            try {
+                await window.FirebaseGameTracker.updateGameMetadata(
+                    selectedGame.seasonId,
+                    selectedGame.id,
+                    { [isHome ? 'homeScore' : 'awayScore']: newScore }
+                );
+            } catch (error) {
+                console.error('Error reverting manual score in metadata:', error);
+            }
+            console.log(`\u21a9\ufe0f Undo: manual run adjustment (${lastPlay.adjustment > 0 ? '+' : ''}${lastPlay.adjustment}) reverted`);
+            return;
+        }
+
+        // --- Handle regular at-bat play records ---
+        const newState = {
+            ...gameState,
+            bases: { ...lastPlay.basesBefore },
+            outs: lastPlay.outsBefore,
+            score: {
+                ...gameState.score,
+                yourTeam: gameState.score.yourTeam - (lastPlay.runsScored || 0)
+            },
+            playHistory: newHistory
+        };
+
+        newState.currentBatter = (newState.currentBatter - 1 + battingOrder.length) % battingOrder.length;
+
+        // Restore inning / half-inning state from stored values (reliable even if
+        // multiple plays were made after an inning change before undo was pressed).
+        if (lastPlay.inningBefore !== undefined) {
+            newState.inning = lastPlay.inningBefore;
+            newState.isYourTeamBatting = lastPlay.isYourTeamBattingBefore;
+        } else {
+            // Fallback for old play records that don't have these fields
+            if (lastPlay.outsBefore >= 3 && gameState.outs === 0) {
+                if (gameState.isYourTeamBatting && gameState.inning > 1) {
+                    newState.inning -= 1;
+                    newState.isYourTeamBatting = false;
+                } else if (!gameState.isYourTeamBatting) {
+                    newState.isYourTeamBatting = true;
+                }
+                newState.outs = lastPlay.outsBefore;
+            }
+        }
+
+        setGameState(newState);
+        console.log(`\u21a9\ufe0f Undo: ${lastPlay.playLabel || lastPlay.playType} by ${lastPlay.batter}`);
+    };
+
+    const clearProgress = async () => {
+        // Check for other users
+        const otherUsers = presenceUsers.filter(u => u.userId !== currentUser?.uid);
+        const otherUserWarning = otherUsers.length > 0 
+            ? `\n\u26a0\ufe0f WARNING: ${otherUsers.length} other user(s) are connected:\n${otherUsers.map(u => `  \u2022 ${u.userName}`).join('\n')}\n`
+            : '';
+        
+        const confirmed = window.confirm(
+            '\u26a0\ufe0f Clear Game Progress?\n\n' +
+            'This will:\n' +
+            '- Delete all saved progress for BOTH TEAMS\n' +
+            '- Reset scores and inning to default\n' +
+            '- NOT save any batting stats\n' +
+            otherUserWarning + '\n' +
+            `Current Progress:\n` +
+            `- Inning: ${gameMetadata?.inning || gameState.inning}\n` +
+            `- Score: ${gameState.score.yourTeam}-${gameState.score.opponent}\n` +
+            `- Plays: ${gameState.playHistory.length}\n\n` +
+            'Are you sure you want to clear all progress?'
+        );
+        
+        if (confirmed) {
+            try {
+                if (selectedGame && selectedTeam && selectedGame.seasonId) {
+                    // Full game reset - clears both teams and metadata
+                    await window.FirebaseGameTracker.fullGameReset(
+                        selectedGame.seasonId,
+                        selectedGame.id,
+                        selectedGame.homeTeamId || selectedGame.homeTeam,
+                        selectedGame.awayTeamId || selectedGame.awayTeam
+                    );
+                }
+                
+                setSetupMode(true);
+                setGameState({
+                    inning: 1,
+                    outs: 0,
+                    bases: { first: null, second: null, third: null },
+                    score: { yourTeam: 0, opponent: 0 },
+                    currentBatter: 0,
+                    playHistory: [],
+                    gameActive: true,
+                    isYourTeamBatting: true
+                });
+                // Also clear opponent game state locally
+                setOpponentGameState(null);
+                setPendingPlay(null);
+                setTempBases(null);
+                setTempScore(0);
+                setTempOuts(0);
+                setYourPitcher(null);
+                setOpponentPitcher(null);
+                
+                alert('\u2705 Game progress cleared. You can start fresh or choose a different game.');
+            } catch (error) {
+                console.error('Error clearing game:', error);
+                alert('\u274c Error clearing game. Please try again.');
+            }
+        }
+    };
+
+    const endGame = async () => {
+        const totalPlayers = battingOrder.length + removedPlayers.length;
+        const confirmed = window.confirm(
+            'Are you sure you want to end the game?\n\n' +
+            `Final Score: ${selectedTeam} ${gameState.score.yourTeam} - ${opponentName} ${gameState.score.opponent}\n` +
+            `Plays Recorded: ${gameState.playHistory.length}\n` +
+            `Players: ${totalPlayers}${removedPlayers.length > 0 ? ` (${removedPlayers.length} left early)` : ''}\n\n` +
+            'This will save batting stats and end tracking for your team.'
+        );
+        
+        if (!confirmed) return;
+        
+        let saveSuccess = false;
+        
+        // Step 1: Save game results
+        try {
+            if (selectedGame && selectedTeam && currentSeason) {
+                const result = await window.FirebaseGameTracker.saveGameResults(
+                    selectedGame.id,
+                    selectedTeam,
+                    currentSeason.id,
+                    gameState,
+                    battingOrder,
+                    isHome,
+                    opponentName,
+                    removedPlayers
+                );
+                
+                if (result.success) {
+                    saveSuccess = true;
+                    alert(
+                        '\u2705 Game Complete!\n\n' +
+                        'Batting stats have been saved:\n' +
+                        `- ${result.battingStats.length} players tracked\n` +
+                        `- ${gameState.playHistory.length} plays recorded\n` +
+                        `- Final Score: ${gameState.score.yourTeam}-${gameState.score.opponent}`
+                    );
+                }
+            }
+        } catch (error) {
+            console.error('Error saving game results:', error);
+        }
+        
+        // Guard: if save failed, don't wipe game state
+        if (!saveSuccess) {
+            const proceedAnyway = window.confirm(
+                '\u26a0\ufe0f Stats failed to save!\n\n' +
+                'Your play-by-play data is still preserved in Firebase.\n\n' +
+                'Do you still want to end the game?\n' +
+                '\u2022 OK = End game (stats NOT saved)\n' +
+                '\u2022 Cancel = Go back and try again'
+            );
+            if (!proceedAnyway) return;
+        }
+        
+        // Step 1.5: Derive inning-by-inning linescore from play history and save to game doc.
+    // Handles both regular plays (runsScored) and manual run adjustments (adjustment).
+    // Undo-safe: undo removes plays from the array, so the derived totals are always current.
+    if (saveSuccess && selectedGame?.seasonId && selectedGame?.id) {
+      try {
+const yourRuns = {}; // inning (1-based) \u2192 net runs for your team
+const oppRuns  = {}; // inning (1-based) \u2192 net runs for opponent
+
+for (const play of gameState.playHistory) {
+  const inning = play.inning;
+  if (!inning) continue;
+
+  let runs = 0;
+  if (play.type === 'manual-run-adjustment') {
+    runs = typeof play.adjustment === 'number' ? play.adjustment : 0;
+  } else {
+    runs = play.runsScored || 0;
+  }
+  if (runs === 0) continue;
+
+  if (play.isYourTeam !== false) {
+    yourRuns[inning] = (yourRuns[inning] || 0) + runs;
+  } else {
+    oppRuns[inning] = (oppRuns[inning] || 0) + runs;
+  }
+}
+
+const maxInning = Math.max(
+  gameState.inning,
+  ...Object.keys(yourRuns).map(Number),
+  ...Object.keys(oppRuns).map(Number),
+  1
+);
+
+const yourArr = Array.from({ length: maxInning }, (_, i) => yourRuns[i + 1] || 0);
+const oppArr  = Array.from({ length: maxInning }, (_, i) => oppRuns[i + 1]  || 0);
+
+const lineScore = {
+  home:    isHome ? yourArr : oppArr,
+  away:    isHome ? oppArr  : yourArr,
+  innings: maxInning
+};
+
+const gameRef = doc(db, 'seasons', selectedGame.seasonId, 'games', selectedGame.id);
+await updateDoc(gameRef, { lineScore });
+console.log('\u2705 Linescore saved:', lineScore);
+      } catch (err) {
+console.warn('\u26a0\ufe0f Linescore save failed (non-critical):', err);
+      }
+    }
+
+    // Step 2: Mark YOUR team's game state as completed (preserve data)
+        try {
+            if (selectedGame && selectedTeam && selectedGame.seasonId) {
+                await window.FirebaseGameTracker.clearGameState(
+                    selectedGame.id,
+                    selectedTeam,
+                    selectedGame.seasonId
+                );
+                console.log('\u2705 Team game state marked complete');
+            }
+        } catch (error) {
+            console.error('Error clearing game state:', error);
+        }
+        
+        // Step 3: Mark shared metadata as completed (preserve final scores)
+        // Only do this - don't reset scores/inning
+        try {
+            if (selectedGame?.seasonId) {
+                await window.FirebaseGameTracker.clearGameMetadata(
+                    selectedGame.seasonId,
+                    selectedGame.id
+                );
+                console.log('\u2705 Game metadata marked complete');
+            }
+        } catch (error) {
+            console.error('Error updating metadata:', error);
+        }
+        
+        // Step 4: Remove presence
+        try {
+            if (selectedGame?.seasonId && currentUser?.uid) {
+                await window.FirebaseGameTracker.removePresence(
+                    selectedGame.seasonId,
+                    selectedGame.id,
+                    currentUser.uid
+                );
+                console.log('\u2705 Presence removed');
+            }
+        } catch (error) {
+            console.error('Error removing presence:', error);
+        }
+        
+        // Step 5: Always reset local state (even if Firebase ops failed)
+        setGameState({ ...gameState, gameActive: false });
+        setYourPitcher(null);
+        setOpponentPitcher(null);
+        setSetupMode(true);
+    };
+
+    // Go back to setup screen (with confirmation if game in progress)
+    const backToSetup = () => {
+        if (gameState.playHistory.length > 0) {
+            const confirmed = window.confirm(
+                '\u26a0\ufe0f Leave Game Tracker?\n\n' +
+                'Your progress is auto-saved and you can resume later.\n\n' +
+                `Current Progress:\n` +
+                `- Inning: ${gameMetadata?.inning || gameState.inning}\n` +
+                `- Score: ${selectedTeam} ${gameState.score.yourTeam} - ${opponentName} ${gameState.score.opponent}\n` +
+                `- Plays: ${gameState.playHistory.length}\n\n` +
+                'Go back to game selection?'
+            );
+            
+            if (!confirmed) return;
+        }
+        
+        setSetupMode(true);
+        setSelectedGame(null);
+    };
+
+    // Lineup editing functions
+    const movePlayerUp = (index) => {
+        if (index === 0) return;
+        const newOrder = [...battingOrder];
+        [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+        
+        // Adjust currentBatter if affected
+        let newCurrentBatter = gameState.currentBatter;
+        if (gameState.currentBatter === index) {
+            newCurrentBatter = index - 1;
+        } else if (gameState.currentBatter === index - 1) {
+            newCurrentBatter = index;
+        }
+        
+        setBattingOrder(newOrder);
+        if (newCurrentBatter !== gameState.currentBatter) {
+            setGameState(prev => ({ ...prev, currentBatter: newCurrentBatter }));
+        }
+    };
+
+    const movePlayerDown = (index) => {
+        if (index === battingOrder.length - 1) return;
+        const newOrder = [...battingOrder];
+        [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+        
+        // Adjust currentBatter if affected
+        let newCurrentBatter = gameState.currentBatter;
+        if (gameState.currentBatter === index) {
+            newCurrentBatter = index + 1;
+        } else if (gameState.currentBatter === index + 1) {
+            newCurrentBatter = index;
+        }
+        
+        setBattingOrder(newOrder);
+        if (newCurrentBatter !== gameState.currentBatter) {
+            setGameState(prev => ({ ...prev, currentBatter: newCurrentBatter }));
+        }
+    };
+
+    const removeFromLineup = (index) => {
+        if (battingOrder.length <= 1) {
+            alert('Cannot remove the last player from the lineup.');
+            return;
+        }
+        
+        const player = battingOrder[index];
+        const playerName = player.name;
+        const confirmed = window.confirm(
+            `Remove ${playerName} from the batting order?\n\n` +
+            `Their stats from this game will be preserved.`
+        );
+        if (!confirmed) return;
+        
+        // Add to removed players list (to preserve their stats)
+        setRemovedPlayers(prev => [...prev, player]);
+        
+        const newOrder = battingOrder.filter((_, i) => i !== index);
+        
+        // Adjust currentBatter if needed
+        let newCurrentBatter = gameState.currentBatter;
+        if (index < gameState.currentBatter) {
+            newCurrentBatter = gameState.currentBatter - 1;
+        } else if (index === gameState.currentBatter) {
+            newCurrentBatter = gameState.currentBatter % newOrder.length;
+        }
+        
+        setBattingOrder(newOrder);
+        setGameState(prev => ({ ...prev, currentBatter: newCurrentBatter }));
+    };
+
+    const addToLineup = (player) => {
+        if (battingOrder.find(p => p.id === player.id)) {
+            alert(`${player.name} is already in the lineup.`);
+            return;
+        }
+        setBattingOrder([...battingOrder, player]);
+    };
+
+    const skipBatter = () => {
+        const skippedName = battingOrder[gameState.currentBatter]?.name || 'Player';
+        setGameState(prev => ({
+            ...prev,
+            currentBatter: (prev.currentBatter + 1) % battingOrder.length
+        }));
+        console.log(`Skipped ${skippedName} \u2014 no at-bat recorded`);
+    };
+
+    // Get players not currently in lineup (for adding)
+    const availablePlayers = players.filter(p => !battingOrder.find(b => b.id === p.id));
+
+    const displayBases = pendingPlay ? tempBases : gameState.bases;
+    const displayScore = pendingPlay ? tempScore : 0;
+    const inningOver = gameState.outs >= 3;
+
+    if (loading) {
+        return (
+            html`<div className="min-h-screen flex items-center justify-center" style=${{ background: 'linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%)' }}>
+              <div className="text-center">
+                <div className="text-6xl mb-4 animate-bounce">\u26be</div>
+                <h1 className="text-2xl font-bold mb-2" style=${{ color: '#2d5016' }}>Loading Game Tracker...</h1>
+                <p className="text-gray-600">Connecting to Firebase...</p>
+              </div>
+            </div>`
+        );
+    }
+
+    if (error) {
+        return (
+            html`<div className="min-h-screen flex items-center justify-center" style=${{ background: 'linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%)' }}>
+              <div className="text-center bg-white p-8 rounded-2xl shadow-lg max-w-md mx-4">
+                <div className="text-5xl mb-4">\u274c</div>
+                <h1 className="text-2xl font-bold text-red-600 mb-3">Error Loading Data</h1>
+                <p className="text-gray-600 mb-4">
+                  ${error}
+                </p>
+                <p className="text-sm text-gray-500">Please check your Firebase connection.</p>
+              </div>
+            </div>`
+        );
+    }
+
+    if (setupMode) {
+        return (
+            html`<div className="min-h-screen" style=${{ background: 'linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%)' }}>
+              <div className="relative overflow-hidden" style=${{ background: 'linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%)', padding: '3rem 2rem' }}>
+                <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10" style=${{ background: 'radial-gradient(circle, white 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
+                <div className="absolute bottom-0 left-0 text-9xl opacity-5 select-none" style=${{ transform: 'translate(-20%, 20%)' }}>\u26be</div>
+                <a href="index.html" className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg text-white/90 hover:text-white hover:bg-white/10 transition-all z-20">
+                  <${ChevronLeft} size=${20} />
+                  <span className="text-sm font-medium">Home</span>
+                </a>
+                <a href="game-tracker-guide.html" className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 rounded-lg text-white/90 hover:text-white hover:bg-white/10 transition-all z-20">
+                  <span className="text-sm font-medium">\ud83d\udcd6 Guide</span>
+                </a>
+                <div className="max-w-4xl mx-auto text-center relative z-10">
+                  <h1 className="text-4xl font-bold text-white mb-2">\u26be Game Tracker</h1>
+                  <p className="text-xl text-white/90">
+                    ${currentSeason ? `${currentSeason.year} ${currentSeason.season.charAt(0).toUpperCase() + currentSeason.season.slice(1)} Season` : 'Loading...'}
+                  </p>
+                  ${!currentUser && (
+                            html`<p className="text-sm mt-3 px-4 py-2 rounded-full inline-block" style=${{ background: 'rgba(255,215,0,0.2)', color: '#ffd700' }}>\u2139\ufe0f Sign in to save tracking to your account</p>`
+                        )}
+                </div>
+              </div>
+              <div className="max-w-4xl mx-auto p-6 -mt-6">
+                <div className="bg-white rounded-2xl p-6 mb-6 relative overflow-hidden" style=${{ boxShadow: '0 4px 16px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0' }}>
+                  <div className="absolute top-0 left-0 right-0 h-1" style=${{ background: 'linear-gradient(90deg, #2d5016 0%, #1a6b4a 100%)' }} />
+                  <h2 className="text-xl font-bold mb-4 flex items-center gap-3" style=${{ color: '#2d3748' }}><span className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style=${{ background: 'linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%)' }}>1</span>Select Your Team</h2>
+                  <select value=${selectedTeam} onChange=${(e) => handleTeamSelect(e.target.value)} className="w-full p-4 text-lg rounded-xl transition-all focus:outline-none" style=${{ 
+                                border: '2px solid #e2e8f0',
+                                background: selectedTeam ? '#f0fdf4' : 'white'
+                            }} onFocus=${(e) => e.target.style.borderColor = '#2d5016'} onBlur=${(e) => e.target.style.borderColor = '#e2e8f0'}>
+                    <option value="">Choose a team...</option>
+                    ${allTeams.map(team => (
+                                html`<option key=${team} value=${team}>
+                                  ${team}
+                                </option>`
+                            ))}
+                  </select>
+                </div>
+                ${selectedTeam && games.length > 0 && (
+                        html`<div className="bg-white rounded-2xl p-6 mb-6 relative overflow-hidden" style=${{ boxShadow: '0 4px 16px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0' }}>
+                          <div className="absolute top-0 left-0 right-0 h-1" style=${{ background: 'linear-gradient(90deg, #2d5016 0%, #1a6b4a 100%)' }} />
+                          <h2 className="text-xl font-bold mb-4 flex items-center gap-3" style=${{ color: '#2d3748' }}><span className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style=${{ background: 'linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%)' }}>2</span>Select Game to Track</h2>
+                          <div className="space-y-3">
+                            ${games.map((game, idx) => {
+                                    const isLive = liveGames[game.id] && liveGames[game.id].length > 0;
+                                    const trackerCount = isLive ? liveGames[game.id].length : 0;
+                                    
+                                    return (
+                                    html`<button key=${idx} onClick=${() => handleGameSelect(game)} className="w-full p-4 text-left rounded-xl transition-all" style=${{
+                                            border: isLive ? '2px solid #ef4444' : selectedGame === game ? '2px solid #2d5016' : '2px solid #e2e8f0',
+                                            background: isLive 
+                                                ? 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)' 
+                                                : selectedGame === game 
+                                                    ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' 
+                                                    : 'white',
+                                            transform: selectedGame === game ? 'scale(1.02)' : 'scale(1)',
+                                            boxShadow: isLive 
+                                                ? '0 4px 12px rgba(239,68,68,0.2)' 
+                                                : selectedGame === game 
+                                                    ? '0 4px 12px rgba(45,80,22,0.15)' 
+                                                    : 'none'
+                                        }}>
+                                      <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                          ${isLive && (
+                                                    html`<span className="text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1" style=${{ 
+                                                            background: '#ef4444', 
+                                                            color: 'white',
+                                                            animation: 'pulse 2s infinite'
+                                                        }}><span className="w-2 h-2 rounded-full bg-white animate-ping" style=${{ animationDuration: '1s' }} />LIVE</span>`
+                                                )}
+                                          <span className="font-bold text-lg" style=${{ color: '#2d3748' }}>
+                                            ${game.awayTeam}
+                                          </span>
+                                          <span className="text-gray-400 text-sm">@</span>
+                                          <span className="font-bold text-lg" style=${{ color: '#2d3748' }}>
+                                            ${game.homeTeam}
+                                          </span>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="text-sm font-medium" style=${{ color: '#718096' }}>
+                                            ${game.date}
+                                          </div>
+                                          ${game.time && (
+                                                    html`<div className="text-xs font-semibold mt-0.5" style=${{ color: '#4a5568' }}>${game.time} ET</div>`
+                                                )}
+                                          ${isLive && (
+                                                    html`<div className="text-xs" style=${{ color: '#dc2626' }}>${trackerCount} tracking</div>`
+                                                )}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-2">
+                                        <span className="text-xs px-2 py-1 rounded-full font-medium" style=${{ 
+                                                background: game.isHome ? '#dcfce7' : '#e0f2fe',
+                                                color: game.isHome ? '#166534' : '#0369a1'
+                                            }}>
+                                          ${game.isHome ? '\ud83c\udfe0 Home' : '\u2708\ufe0f Away'}
+                                        </span>
+                                        ${selectedGame === game && (
+                                                html`<span className="text-xs px-2 py-1 rounded-full font-medium" style=${{ background: '#fef3c7', color: '#92400e' }}>\u2713 Selected</span>`
+                                            )}
+                                      </div>
+                                    </button>`
+                                )})}
+                          </div>
+                        </div>`
+                    )}
+                ${selectedTeam && games.length === 0 && (
+                        html`<div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-6 mb-6">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">\ud83d\udcc5</span>
+                            <p className="text-amber-900 font-medium">No upcoming games found for ${selectedTeam}</p>
+                          </div>
+                        </div>`
+                    )}
+                ${selectedTeam && selectedGame && (
+                        html`<div className="bg-white rounded-2xl p-6 relative overflow-hidden" style=${{ boxShadow: '0 4px 16px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0' }}>
+                          <div className="absolute top-0 left-0 right-0 h-1" style=${{ background: 'linear-gradient(90deg, #2d5016 0%, #1a6b4a 100%)' }} />
+                          ${lineupExists && (
+                                html`<div className="mb-6 p-4 rounded-xl flex items-center gap-3" style=${{ background: '#f0fdf4', border: '1px solid #86efac' }}>
+                                  <span className="text-xl">\u2705</span>
+                                  <p className="font-medium" style=${{ color: '#166534' }}>Batting order set by captain - will be loaded automatically</p>
+                                </div>`
+                            )}
+                          <div className="text-center">
+                            <h2 className="text-xl font-bold mb-4 flex items-center justify-center gap-3" style=${{ color: '#2d3748' }}><span className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style=${{ background: 'linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%)' }}>3</span>Ready to Track</h2>
+                            <div className="mb-6 p-4 rounded-xl" style=${{ background: '#f7fafc' }}>
+                              <p className="text-lg font-bold" style=${{ color: '#2d3748' }}>${selectedTeam} vs ${opponentName}</p>
+                              <p className="text-sm mt-1" style=${{ color: '#718096' }}>${selectedGame?.date} \u2022 ${isHome ? 'Home Game \ud83c\udfe0' : 'Away Game \u2708\ufe0f'}</p>
+                            </div>
+                            <button onClick=${startGame} className="px-10 py-4 text-xl font-bold text-white rounded-xl transition-all hover:scale-105" style=${{ 
+                                        background: 'linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%)',
+                                        boxShadow: '0 4px 16px rgba(45,80,22,0.3)'
+                                    }}>\u26be Start Game Tracker</button>
+                          </div>
+                        </div>`
+                    )}
+              </div>
+            </div>`
+        );
+    }
+
+    // Calculate live batting stats from current game
+    const liveBattingStats = battingOrder.map(player => {
+        const playerPlays = gameState.playHistory.filter(play => play.batter === player.name);
+        
+        let atBats = 0;
+        let hits = 0;
+        let runs = 0;
+        let walks = 0;
+        
+        playerPlays.forEach(play => {
+            if (play.playType !== 'walk' && play.playType !== 'sacfly') {
+                atBats++;
+            }
+            if (['single', 'double', 'triple', 'homerun'].includes(play.playType)) {
+                hits++;
+            }
+            if (play.playType === 'walk') {
+                walks++;
+            }
+        });
+        
+        // Count runs scored by this player using the explicit runnersScored array
+        gameState.playHistory.forEach(play => {
+            // Use runnersScored array if available (new format)
+            if (play.runnersScored && Array.isArray(play.runnersScored)) {
+                if (play.runnersScored.includes(player.name)) {
+                    runs++;
+                }
+            } else {
+                // Fallback for old plays without runnersScored array
+                // Home runs count as a run for the batter
+                if (play.batter === player.name && play.playType === 'homerun') {
+                    runs++;
+                }
+                // Try to infer from base changes (legacy logic)
+                if (play.runsScored > 0) {
+                    if (play.basesBefore.third === player.name && !play.basesAfter.third) runs++;
+                    else if (play.basesBefore.second === player.name && !play.basesAfter.second && !play.basesAfter.third) runs++;
+                    else if (play.basesBefore.first === player.name && !play.basesAfter.first && !play.basesAfter.second && !play.basesAfter.third) runs++;
+                }
+            }
+        });
+        
+        return {
+            name: player.name,
+            number: player.number,
+            atBats,
+            hits,
+            runs,
+            walks,
+            avg: atBats > 0 ? (hits / atBats).toFixed(3) : '.000'
+        };
+    });
+
+    // Calculate stats for players who left the game
+    const removedPlayerStats = removedPlayers.map(player => {
+        const playerPlays = gameState.playHistory.filter(play => play.batter === player.name);
+        
+        let atBats = 0;
+        let hits = 0;
+        let runs = 0;
+        let walks = 0;
+        
+        playerPlays.forEach(play => {
+            if (play.playType !== 'walk' && play.playType !== 'sacfly') {
+                atBats++;
+            }
+            if (['single', 'double', 'triple', 'homerun'].includes(play.playType)) {
+                hits++;
+            }
+            if (play.playType === 'walk') {
+                walks++;
+            }
+        });
+        
+        // Count runs scored by this player
+        gameState.playHistory.forEach(play => {
+            if (play.runnersScored && Array.isArray(play.runnersScored)) {
+                if (play.runnersScored.includes(player.name)) {
+                    runs++;
+                }
+            } else {
+                if (play.batter === player.name && play.playType === 'homerun') {
+                    runs++;
+                }
+                if (play.runsScored > 0) {
+                    if (play.basesBefore.third === player.name && !play.basesAfter.third) runs++;
+                    else if (play.basesBefore.second === player.name && !play.basesAfter.second && !play.basesAfter.third) runs++;
+                    else if (play.basesBefore.first === player.name && !play.basesAfter.first && !play.basesAfter.second && !play.basesAfter.third) runs++;
+                }
+            }
+        });
+        
+        return {
+            name: player.name,
+            number: player.number,
+            atBats,
+            hits,
+            runs,
+            walks,
+            avg: atBats > 0 ? (hits / atBats).toFixed(3) : '.000',
+            leftGame: true  // Flag to indicate player left the game
+        };
+    });
+
+    // Calculate opponent pitcher stats from YOUR play history
+    // Each play your batters made has opposingPitcher tagged
+    const opponentPitcherStats = (() => {
+        const pitcherMap = {};
+        
+        const yourTeamPlays = gameState.playHistory.filter(play => 
+            play.isYourTeam && play.opposingPitcher && play.playType
+        );
+        
+        // Also find pitching change records to get appearance order
+        const pitchingChanges = gameState.playHistory.filter(play => 
+            play.type === 'pitching-change'
+        );
+        
+        yourTeamPlays.forEach(play => {
+            const pitcherId = play.opposingPitcher.id;
+            if (!pitcherMap[pitcherId]) {
+                pitcherMap[pitcherId] = {
+                    id: pitcherId,
+                    name: play.opposingPitcher.name,
+                    bf: 0,       // Batters faced
+                    hits: 0,
+                    walks: 0,
+                    strikeouts: 0,
+                    outs: 0,     // Raw outs for IP calc
+                    runs: 0,
+                    homeRuns: 0,
+                    firstPlayIndex: yourTeamPlays.indexOf(play)
+                };
+            }
+            
+            const stats = pitcherMap[pitcherId];
+            stats.bf++;
+            
+            // Hits
+            if (['single', 'double', 'triple', 'homerun'].includes(play.playType)) {
+                stats.hits++;
+                if (play.playType === 'homerun') stats.homeRuns++;
+            }
+            
+            // Walks
+            if (play.playType === 'walk') stats.walks++;
+            
+            // Strikeouts
+            if (play.playType === 'strikeout') stats.strikeouts++;
+            
+            // Outs recorded - use outsAfter vs outsBefore for accuracy
+            const outsOnPlay = (play.outsAfter || 0) - (play.outsBefore || 0);
+            if (outsOnPlay > 0) stats.outs += outsOnPlay;
+            
+            // Runs allowed
+            if (play.runsScored > 0) {
+                stats.runs += play.runsScored;
+            }
+        });
+        
+        // Convert to array sorted by appearance order, calculate IP
+        return Object.values(pitcherMap)
+            .sort((a, b) => a.firstPlayIndex - b.firstPlayIndex)
+            .map(stats => ({
+                ...stats,
+                ip: `${Math.floor(stats.outs / 3)}.${stats.outs % 3}`
+            }));
+    })();
+
+// Live Score Header Component
+const LiveScoreHeader = ({ gameMetadata, yourTeamName, opponentTeamName, isHome }) => {
+    if (!gameMetadata) return null;
+
+    // gameMetadata only has: { inning, outs, homeScore, awayScore }
+    const yourScore = isHome ? gameMetadata.homeScore : gameMetadata.awayScore;
+    const opponentScore = isHome ? gameMetadata.awayScore : gameMetadata.homeScore;
+
+    return (
+html`<div className="text-white p-6 rounded-xl mb-6" style=${{ background: 'linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%)' }}>
+  <div className="flex items-center justify-between">
+    <div className="flex-1 text-center">
+      <div className="text-2xl font-bold">
+        ${yourTeamName}
+      </div>
+      <div className="text-6xl font-black mt-2">
+        ${yourScore || 0}
+      </div>
+    </div>
+    <div className="text-3xl font-bold px-6">VS</div>
+    <div className="flex-1 text-center">
+      <div className="text-2xl font-bold">
+        ${opponentTeamName}
+      </div>
+      <div className="text-6xl font-black mt-2">
+        ${opponentScore || 0}
+      </div>
+    </div>
+  </div>
+  <div className="text-center mt-4 text-xl font-semibold">Inning ${gameMetadata.inning || 1} \u2022 ${gameMetadata.outs || 0} Outs</div>
+  <div className="flex items-center justify-center gap-2 mt-3">
+    <div className="w-2 h-2 rounded-full animate-pulse" style=${{ background: '#ffd700' }} />
+    <span className="text-sm">LIVE</span>
+  </div>
+</div>`
+    );
+};
+
+// Presence Indicator Component
+const PresenceIndicator = ({ presenceUsers, myUserId, canBoot, onBootUser }) => {
+    if (!presenceUsers || presenceUsers.length === 0) return null;
+
+    // Filter out current user and separate by role
+    const otherUsers = presenceUsers.filter(u => u.userId !== myUserId);
+    const trackers = otherUsers.filter(u => u.role === 'tracker' || !u.role); // Default to tracker if no role
+    const viewers = otherUsers.filter(u => u.role === 'viewer');
+
+    // Also show if user is a tracker
+    const currentUserPresence = presenceUsers.find(u => u.userId === myUserId);
+
+    if (otherUsers.length === 0 && !currentUserPresence) return null;
+
+    const renderUserWithBoot = (user, emoji) => (
+html`<span key=${user.userId} className="inline-flex items-center gap-1">
+  ${user.userName || 'Unknown'}
+  ${canBoot && (
+        html`<button onClick=${() => {
+                if (confirm(`Remove ${user.userName || 'this user'} from the game tracker?`)) {
+                    onBootUser(user.userId);
+                }
+            }} className="ml-1 text-xs text-red-500 hover:text-red-700 hover:bg-red-100 rounded px-1" title=${`Remove ${user.userName || 'user'}`}>\u2715</button>`
+    )}
+</span>`
+    );
+
+    return (
+html`<div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+  <div className="flex items-center gap-3">
+    <span className="text-xl">\ud83d\udc65</span>
+    <div className="flex-1 text-sm">
+      ${trackers.length > 0 && (
+                html`<div className="font-semibold text-blue-900">\ud83c\udfaf Also Tracking: ${trackers.map((t, i) => (
+                        html`<${React.Fragment} key=${t.userId}>
+                          ${i > 0 && ', '}
+                          ${renderUserWithBoot(t, '\ud83c\udfaf')}
+                        <//>`
+                    ))}</div>`
+            )}
+      ${viewers.length > 0 && (
+                html`<div className="text-blue-700">\ud83d\udc41\ufe0f Watching: ${viewers.map((v, i) => (
+                        html`<${React.Fragment} key=${v.userId}>
+                          ${i > 0 && ', '}
+                          ${renderUserWithBoot(v, '\ud83d\udc41\ufe0f')}
+                        <//>`
+                    ))}</div>`
+            )}
+      ${otherUsers.length === 0 && currentUserPresence && (
+                html`<div className="text-blue-700">You're the only one here</div>`
+            )}
+      <div className="text-xs text-blue-500 mt-1">${presenceUsers.length} ${presenceUsers.length === 1 ? 'person' : 'people'} connected</div>
+    </div>
+  </div>
+</div>`
+    );
+};
+
+// Pitcher Selection Modal Component
+const PitcherSelectionModal = ({ 
+    isOpen, 
+    onClose, 
+    onSave, 
+    yourTeamName, 
+    opponentTeamName, 
+    yourTeamPlayers, 
+    opponentTeamPlayers 
+}) => {
+    const [yourPitcherSelection, setYourPitcherSelection] = useState('');
+    const [opponentPitcherSelection, setOpponentPitcherSelection] = useState('');
+
+    if (!isOpen) return null;
+
+    const handleSave = () => {
+const yourPitcher = yourPitcherSelection 
+    ? yourTeamPlayers.find(p => p.id === yourPitcherSelection)
+    : null;
+const opponentPitcher = opponentPitcherSelection 
+    ? opponentTeamPlayers.find(p => p.id === opponentPitcherSelection)
+    : null;
+onSave(yourPitcher, opponentPitcher);
+    };
+
+    return (
+html`<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+    <h2 className="text-xl font-bold mb-2 text-center">\u26be Set Starting Pitchers</h2>
+    <p className="text-gray-600 text-sm text-center mb-6">Optional - helps track pitching stats</p>
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">${yourTeamName} Pitcher (Your Team)</label>
+        <select value=${yourPitcherSelection} onChange=${(e) => setYourPitcherSelection(e.target.value)} className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none">
+          <option value="">Select pitcher...</option>
+          ${yourTeamPlayers.map(player => (
+                        html`<option key=${player.id} value=${player.id}>#${player.number} ${player.name}</option>`
+                    ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">${opponentTeamName} Pitcher (Opponent)</label>
+        <select value=${opponentPitcherSelection} onChange=${(e) => setOpponentPitcherSelection(e.target.value)} className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none">
+          <option value="">Select pitcher...</option>
+          ${opponentTeamPlayers.map(player => (
+                        html`<option key=${player.id} value=${player.id}>#${player.number} ${player.name}</option>`
+                    ))}
+        </select>
+      </div>
+    </div>
+    <div className="flex gap-3 mt-6">
+      <button onClick=${onClose} className="flex-1 py-3 px-4 rounded-xl font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Skip</button>
+      <button onClick=${handleSave} className="flex-1 py-3 px-4 rounded-xl font-semibold text-white transition-colors" style=${{ background: 'linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%)' }}>Start Tracking</button>
+    </div>
+  </div>
+</div>`
+    );
+};
+
+// Run Removal Modal Component (for selecting which player's run to remove)
+const RunRemovalModal = ({ 
+    isOpen, 
+    onClose, 
+    onConfirm, 
+    playersWhoScored,
+    teamName 
+}) => {
+    if (!isOpen) return null;
+
+    return (
+html`<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+    <h2 className="text-xl font-bold mb-2 text-center">\u2796 Remove Run</h2>
+    <p className="text-gray-600 text-sm text-center mb-4">Select which player's run to remove<br /><span className="text-xs text-gray-500">(e.g., timing play on 3rd out)</span></p>
+    ${playersWhoScored.length === 0 ? (
+            html`<div className="text-center py-6 text-gray-500">
+              <div className="text-4xl mb-2">\ud83e\udd14</div>
+              <p>No runs recorded yet to remove</p>
+            </div>`
+        ) : (
+            html`<div className="space-y-2 max-h-64 overflow-y-auto">
+              ${playersWhoScored.map(player => (
+                    html`<button key=${player.name} onClick=${() => onConfirm(player.name)} className="w-full text-left p-4 rounded-xl bg-red-50 hover:bg-red-100 active:bg-red-200 transition-colors border-2 border-red-200 hover:border-red-400">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-gray-800">
+                          ${player.name}
+                        </span>
+                        <span className="text-sm text-red-600 font-medium">${player.runs} run${player.runs > 1 ? 's' : ''} scored</span>
+                      </div>
+                    </button>`
+                ))}
+            </div>`
+        )}
+    <div className="flex gap-3 mt-6">
+      <button onClick=${onClose} className="flex-1 py-3 px-4 rounded-xl font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Cancel</button>
+    </div>
+  </div>
+</div>`
+    );
+};
+
+// Opponent Pitcher Box Score Component
+const PitcherBoxScore = ({ pitcherStats, opponentTeamName }) => {
+    if (!pitcherStats || pitcherStats.length === 0) return null;
+
+    // Calculate totals
+    const totals = pitcherStats.reduce((acc, p) => ({
+ip: acc.outs + p.outs,
+bf: acc.bf + p.bf,
+hits: acc.hits + p.hits,
+runs: acc.runs + p.runs,
+walks: acc.walks + p.walks,
+strikeouts: acc.strikeouts + p.strikeouts,
+homeRuns: acc.homeRuns + p.homeRuns,
+outs: acc.outs + p.outs
+    }), { ip: 0, bf: 0, hits: 0, runs: 0, walks: 0, strikeouts: 0, homeRuns: 0, outs: 0 });
+
+    const totalIP = `${Math.floor(totals.outs / 3)}.${totals.outs % 3}`;
+
+    return (
+html`<div className="bg-white border border-purple-200 rounded-xl p-4 mt-4">
+  <div className="flex items-center gap-2 mb-3">
+    <span className="text-base">\u26be</span>
+    <h3 className="text-sm font-bold text-purple-900">${opponentTeamName} Pitching</h3>
+  </div>
+  <div className="grid gap-1 text-center text-xs mb-1" style=${{ gridTemplateColumns: 'minmax(60px, 1fr) repeat(6, 28px)' }}>
+    <div className="text-left text-gray-500 font-semibold">Pitcher</div>
+    <div className="text-gray-500 font-semibold">IP</div>
+    <div className="text-gray-500 font-semibold">H</div>
+    <div className="text-gray-500 font-semibold">R</div>
+    <div className="text-gray-500 font-semibold">BB</div>
+    <div className="text-gray-500 font-semibold">K</div>
+    <div className="text-gray-500 font-semibold">HR</div>
+  </div>
+  <div className="space-y-1">
+    ${pitcherStats.map((pitcher, idx) => (
+            html`<div key=${pitcher.id} className="grid gap-1 text-center text-xs p-1.5 rounded" style=${{ 
+                    gridTemplateColumns: 'minmax(60px, 1fr) repeat(6, 28px)',
+                    background: idx === pitcherStats.length - 1 ? '#faf5ff' : '#f9fafb',
+                    border: idx === pitcherStats.length - 1 ? '1px solid #e9d5ff' : '1px solid transparent'
+                }}>
+              <div className="text-left font-semibold text-gray-900 truncate" title=${pitcher.name}>
+                ${pitcher.name.split(' ').pop()}
+                ${idx === pitcherStats.length - 1 && (
+                        html`<span className="ml-1 text-purple-500 text-xs">\u25cf</span>`
+                    )}
+              </div>
+              <div className="font-bold">
+                ${pitcher.ip}
+              </div>
+              <div className="font-bold">
+                ${pitcher.hits}
+              </div>
+              <div className="font-bold" style=${pitcher.runs > 0 ? { color: '#dc2626' } : {}}>
+                ${pitcher.runs}
+              </div>
+              <div className="font-bold">
+                ${pitcher.walks}
+              </div>
+              <div className="font-bold">
+                ${pitcher.strikeouts}
+              </div>
+              <div className="font-bold" style=${pitcher.homeRuns > 0 ? { color: '#dc2626' } : {}}>
+                ${pitcher.homeRuns}
+              </div>
+            </div>`
+        ))}
+    ${pitcherStats.length > 1 && (
+            html`<div className="grid gap-1 text-center text-xs p-1.5 rounded border-t border-gray-300 mt-1 pt-2" style=${{ gridTemplateColumns: 'minmax(60px, 1fr) repeat(6, 28px)' }}>
+              <div className="text-left font-bold text-gray-700">Total</div>
+              <div className="font-bold text-gray-700">
+                ${totalIP}
+              </div>
+              <div className="font-bold text-gray-700">
+                ${totals.hits}
+              </div>
+              <div className="font-bold text-gray-700" style=${totals.runs > 0 ? { color: '#dc2626' } : {}}>
+                ${totals.runs}
+              </div>
+              <div className="font-bold text-gray-700">
+                ${totals.walks}
+              </div>
+              <div className="font-bold text-gray-700">
+                ${totals.strikeouts}
+              </div>
+              <div className="font-bold text-gray-700" style=${totals.homeRuns > 0 ? { color: '#dc2626' } : {}}>
+                ${totals.homeRuns}
+              </div>
+            </div>`
+        )}
+  </div>
+</div>`
+    );
+};
+
+// Pitcher Bar Component (shows during game)
+const PitcherBar = ({ 
+    yourTeamName, 
+    opponentTeamName, 
+    yourPitcher, 
+    opponentPitcher, 
+    yourTeamPlayers, 
+    opponentTeamPlayers,
+    onPitcherChange,
+    userCanTrack
+}) => {
+    return (
+html`<div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 mb-4">
+  <div className="flex items-center gap-2 mb-3">
+    <span className="text-lg">\u26be</span>
+    <span className="font-bold text-purple-900">Pitchers</span>
+  </div>
+  <div className="grid grid-cols-2 gap-4">
+    <div>
+      <div className="text-xs font-semibold text-purple-700 mb-1">
+        ${yourTeamName}
+      </div>
+      ${userCanTrack ? (
+                html`<select value=${yourPitcher?.id || ''} onChange=${(e) => {
+                        const player = yourTeamPlayers.find(p => p.id === e.target.value);
+                        if (player) onPitcherChange(true, player);
+                    }} className="w-full p-2 text-sm border border-purple-200 rounded-lg bg-white focus:border-purple-400 focus:outline-none">
+                  <option value="">No pitcher set</option>
+                  ${yourTeamPlayers.map(player => (
+                        html`<option key=${player.id} value=${player.id}>
+                          ${player.name}
+                        </option>`
+                    ))}
+                </select>`
+            ) : (
+                html`<div className="p-2 text-sm bg-white rounded-lg border border-purple-200">
+                  ${yourPitcher?.name || 'Not set'}
+                </div>`
+            )}
+    </div>
+    <div>
+      <div className="text-xs font-semibold text-purple-700 mb-1">
+        ${opponentTeamName}
+      </div>
+      ${userCanTrack ? (
+                html`<select value=${opponentPitcher?.id || ''} onChange=${(e) => {
+                        const player = opponentTeamPlayers.find(p => p.id === e.target.value);
+                        if (player) onPitcherChange(false, player);
+                    }} className="w-full p-2 text-sm border border-purple-200 rounded-lg bg-white focus:border-purple-400 focus:outline-none">
+                  <option value="">No pitcher set</option>
+                  ${opponentTeamPlayers.map(player => (
+                        html`<option key=${player.id} value=${player.id}>
+                          ${player.name}
+                        </option>`
+                    ))}
+                </select>`
+            ) : (
+                html`<div className="p-2 text-sm bg-white rounded-lg border border-purple-200">
+                  ${opponentPitcher?.name || 'Not set'}
+                </div>`
+            )}
+    </div>
+  </div>
+</div>`
+    );
+};
+
+// Pitcher Change Confirmation Dialog
+const PitcherChangeConfirmation = ({ pending, onConfirm, onCancel }) => {
+    if (!pending) return null;
+
+    const { teamName, oldPitcher, newPitcher } = pending;
+
+    return (
+html`<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+    <h3 className="text-lg font-bold mb-4 text-center">\ud83d\udd04 Confirm Pitching Change</h3>
+    <div className="text-center mb-6">
+      <div className="text-gray-600 mb-2">
+        ${teamName}
+      </div>
+      ${oldPitcher ? (
+                html`<div className="text-lg">
+                  <span className="text-red-600 line-through">
+                    ${oldPitcher.name}
+                  </span>
+                  <span className="mx-2">\u2192</span>
+                  <span className="text-green-600 font-bold">
+                    ${newPitcher.name}
+                  </span>
+                </div>`
+            ) : (
+                html`<div className="text-lg">
+                  <span className="text-green-600 font-bold">
+                    ${newPitcher.name}
+                  </span>
+                  <span className="text-gray-500 ml-2">starting</span>
+                </div>`
+            )}
+    </div>
+    <div className="flex gap-3">
+      <button onClick=${onCancel} className="flex-1 py-3 px-4 rounded-xl font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Cancel</button>
+      <button onClick=${onConfirm} className="flex-1 py-3 px-4 rounded-xl font-semibold text-white transition-colors" style=${{ background: 'linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%)' }}>Confirm</button>
+    </div>
+  </div>
+</div>`
+    );
+};
+
+// Merged Play-by-Play Component
+const MergedPlayByPlay = ({ yourPlays, opponentPlays, yourTeamName, opponentName, isHome }) => {
+    // Helper to format inning display
+    const formatInning = (play) => {
+const inningNum = play.inning || 1;
+const suffix = inningNum === 1 ? 'st' : inningNum === 2 ? 'nd' : inningNum === 3 ? 'rd' : 'th';
+
+// Determine half based on isYourTeam and whether you're home
+// Home team bats in bottom, Away team bats in top
+let half;
+if (play.isYourTeam) {
+    half = isHome ? 'Bot' : 'Top';
+} else {
+    half = isHome ? 'Top' : 'Bot';
+}
+
+return `${half} ${inningNum}${suffix}`;
+    };
+
+    // Helper to determine if batter advanced beyond expected base
+    const getAdvancementNote = (play) => {
+if (!play.basesAfter || !play.batter) return null;
+
+// Expected base positions for each play type
+const expectedBase = {
+    'single': 'first',
+    'double': 'second',
+    'triple': 'third',
+    'walk': 'first',
+    'fielders_choice': 'first'
+};
+
+const expected = expectedBase[play.playType];
+if (!expected) return null; // HR, outs, etc. don't apply
+
+// Find where the batter actually ended up
+const bases = play.basesAfter;
+let actualBase = null;
+if (bases.third === play.batter) actualBase = 'third';
+else if (bases.second === play.batter) actualBase = 'second';
+else if (bases.first === play.batter) actualBase = 'first';
+
+// If they're not on any base but runs scored, they might have scored
+if (!actualBase && play.runsScored > 0) {
+    // Check if the batter scored (not on any base after a hit)
+    const baseOrder = ['first', 'second', 'third', 'home'];
+    const expectedIdx = baseOrder.indexOf(expected);
+    // Batter scored from a single/double/triple due to overthrow
+    if (expectedIdx < 3) return 'scored';
+}
+
+if (!actualBase) return null;
+
+// Compare expected vs actual
+const baseOrder = ['first', 'second', 'third'];
+const expectedIdx = baseOrder.indexOf(expected);
+const actualIdx = baseOrder.indexOf(actualBase);
+
+if (actualIdx > expectedIdx) {
+    const baseLabels = { 'second': '2nd', 'third': '3rd' };
+    return baseLabels[actualBase];
+}
+
+return null;
+    };
+
+    // Combine and sort by timestamp
+    const allPlays = React.useMemo(() => {
+const combined = [
+    ...(yourPlays || []).map(p => ({ 
+        ...p, 
+        team: yourTeamName, 
+        isYourTeam: true 
+    })),
+    ...(opponentPlays || []).map(p => ({ 
+        ...p, 
+        team: opponentName, 
+        isYourTeam: false 
+    }))
+];
+
+return combined.sort((a, b) => b.timestamp - a.timestamp);
+    }, [yourPlays, opponentPlays, yourTeamName, opponentName]);
+
+    // Get team color for display
+    const getTeamColor = (teamName) => {
+const colors = {
+    'White': { bg: 'bg-gray-100', border: 'border-gray-400', text: 'text-gray-800', emoji: '\u26aa' },
+    'Black': { bg: 'bg-gray-800', border: 'border-gray-900', text: 'text-white', emoji: '\u26ab' },
+    'Blue': { bg: 'bg-blue-100', border: 'border-blue-500', text: 'text-blue-800', emoji: '\ud83d\udd35' },
+    'Red': { bg: 'bg-red-100', border: 'border-red-500', text: 'text-red-800', emoji: '\ud83d\udd34' },
+    'Green': { bg: 'bg-green-100', border: 'border-green-500', text: 'text-green-800', emoji: '\ud83d\udfe2' },
+    'Orange': { bg: 'bg-orange-100', border: 'border-orange-500', text: 'text-orange-800', emoji: '\ud83d\udfe0' },
+    'Purple': { bg: 'bg-purple-100', border: 'border-purple-500', text: 'text-purple-800', emoji: '\ud83d\udfe3' },
+    'Gold': { bg: 'bg-yellow-100', border: 'border-yellow-500', text: 'text-yellow-800', emoji: '\ud83d\udfe1' },
+    'Silver': { bg: 'bg-slate-200', border: 'border-slate-400', text: 'text-slate-700', emoji: '\ud83e\ude99' },
+    'Carolina': { bg: 'bg-cyan-100', border: 'border-cyan-500', text: 'text-cyan-800', emoji: '\ud83e\ude75' }
+};
+return colors[teamName] || { bg: 'bg-gray-100', border: 'border-gray-400', text: 'text-gray-700', emoji: '\u26be' };
+    };
+
+    return (
+html`<div className="bg-white border border-gray-200 rounded-xl p-5">
+  <h2 className="text-xl font-bold mb-4">\ud83d\udcdc Play-by-Play ${opponentPlays && opponentPlays.length > 0 ? '(Both Teams)' : `(${yourTeamName} Only)`}</h2>
+  <div className="max-h-80 overflow-y-auto">
+    ${allPlays.length === 0 ? (
+            html`<div className="text-center text-gray-400 py-5">No plays recorded yet</div>`
+        ) : (
+            allPlays.map((play, idx) => {
+                const teamColor = getTeamColor(play.team);
+                
+                // Handle pitching change records
+                if (play.type === 'pitching-change') {
+                    return (
+                        html`<div key=${`pitching-${play.timestamp}-${idx}`} className="p-3 border-b border-gray-100 bg-purple-50">
+                          <span className="font-bold text-purple-700">
+                            ${formatInning(play)}
+                          </span>
+                          ${' \u2022 '}
+                          <span className=${`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${teamColor.bg} ${teamColor.text}`}>${teamColor.emoji} ${play.team}</span>
+                          ${' \u2022 '}
+                          <span className="text-purple-700">\ud83d\udd04 Pitching Change</span>
+                          ${' \u2192 '}
+                          <span className="font-bold text-purple-900">
+                            ${play.newPitcher?.name}
+                          </span>
+                          ${play.oldPitcher && (
+                                html`<span className="text-gray-500 ml-1 text-sm">(was ${play.oldPitcher.name})</span>`
+                            )}
+                        </div>`
+                    );
+                }
+                
+                // Handle manual run adjustments
+                if (play.type === 'manual-run-adjustment') {
+                    const isAddition = play.adjustment > 0;
+                    return (
+                        html`<div key=${`adjustment-${play.timestamp}-${idx}`} className=${`p-3 border-b border-l-4 ${
+                                isAddition 
+                                    ? 'bg-amber-50 border-l-amber-500' 
+                                    : 'bg-red-50 border-l-red-400'
+                            }`}>
+                          <span className="font-bold" style=${{ color: '#2d5016' }}>
+                            ${formatInning(play)}
+                          </span>
+                          ${' \u2022 '}
+                          <span className=${`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${teamColor.bg} ${teamColor.text}`}>${teamColor.emoji} ${play.team}</span>
+                          ${' \u2022 '}
+                          <span className=${`px-2 py-1 rounded text-sm font-bold ${
+                                isAddition ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                            ${isAddition ? '\u2795 Run Added' : '\u2796 Run Removed'}
+                          </span>
+                          ${play.runnerName && (
+                                html`<span className="ml-2 font-semibold text-gray-700">
+                                  ${play.runnerName}
+                                </span>`
+                            )}
+                          <span className="ml-2 text-gray-500 text-sm">(${play.previousScore} \u2192 ${play.newScore})</span>
+                        </div>`
+                    );
+                }
+                
+                // Regular batting plays
+                const advancementNote = getAdvancementNote(play);
+                return (
+                    html`<div key=${`${play.team}-${play.timestamp}-${idx}`} className=${`p-3 border-b border-l-4 ${
+                            play.isYourTeam 
+                                ? 'bg-green-50 border-l-green-500' 
+                                : 'bg-gray-50 border-l-gray-400'
+                        }`}>
+                      <span className="font-bold" style=${{ color: '#2d5016' }}>
+                        ${formatInning(play)}
+                      </span>
+                      ${' \u2022 '}
+                      <span className=${`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${teamColor.bg} ${teamColor.text}`}>${teamColor.emoji} ${play.team}</span>
+                      ${' \u2022 '}
+                      <span className="font-bold">
+                        ${play.batter}
+                      </span>
+                      ${' - '}
+                      <span className=${`px-2 py-1 rounded text-sm font-bold ${
+                            PLAY_TYPES.find(p => p.value === play.playType)?.isHit ? 'bg-green-100 text-green-800' : 
+                            PLAY_TYPES.find(p => p.value === play.playType)?.isOut ? 'bg-red-100 text-red-800' : 
+                            'bg-blue-100 text-blue-800'
+                        }`}>
+                        ${play.playLabel}
+                      </span>
+                      ${advancementNote && (
+                            html`<span className="ml-2 text-orange-600 text-sm italic">(advanced to ${advancementNote})</span>`
+                        )}
+                      ${play.runsScored > 0 && (
+                            html`<span className="ml-2 text-green-600 font-bold">+${play.runsScored} run${play.runsScored > 1 ? 's' : ''}</span>`
+                        )}
+                    </div>`
+                );
+            })
+        )}
+  </div>
+</div>`
+    );
+};
+
+// Read-Only Diamond Component for viewing opponent's base runners
+const ReadOnlyDiamond = ({ bases, teamName, outs = 0, noTrackingMessage = null }) => {
+    // bases should be { first: "Player Name" or null, second: ..., third: ... }
+    const hasRunners = bases && (bases.first || bases.second || bases.third);
+    const effectiveBases = bases || { first: null, second: null, third: null };
+
+    return (
+html`<div className="w-full max-w-sm mx-auto bg-green-800 rounded-xl p-6">
+  <div className="text-center text-white font-bold mb-2 text-lg">${teamName} Base Runners</div>
+  <svg viewBox="0 0 400 400" className="w-full h-auto">
+    <polygon points="200,80 320,200 200,320 80,200" fill="#8b4513" stroke="#fff" strokeWidth="3" />
+    <circle cx="200" cy="320" r="25" fill="#fff" />
+    <text x="200" y="365" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="bold">HOME</text>
+    ${['first', 'second', 'third'].map((base) => {
+            const positions = {
+                first: { cx: 320, cy: 200, labelY: 165 },
+                second: { cx: 200, cy: 80, labelY: 45 },
+                third: { cx: 80, cy: 200, labelY: 165 }
+            };
+            const pos = positions[base];
+            const baseLabel = base === 'first' ? '1B' : base === 'second' ? '2B' : '3B';
+            const runner = effectiveBases[base];
+
+            return (
+                html`<g key=${base}>
+                  <circle cx=${pos.cx} cy=${pos.cy} r="32" fill=${runner ? '#fbbf24' : '#fff'} stroke="#000" strokeWidth="2" />
+                  <text x=${pos.cx} y=${pos.labelY} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold">
+                    ${baseLabel}
+                  </text>
+                  ${runner && (
+                        html`<text x=${pos.cx} y=${pos.cy + 5} textAnchor="middle" fill="#000" fontSize="11" fontWeight="bold">
+                          ${runner.split(' ').pop()}
+                        </text>`
+                    )}
+                </g>`
+            );
+        })}
+  </svg>
+  <div className="flex justify-center gap-2 mt-2">
+    <span className="text-white text-sm font-medium">Outs:</span>
+    ${[0, 1, 2].map(i => (
+            html`<div key=${i} className=${`w-5 h-5 rounded-full border-2 border-white ${i < outs ? 'bg-red-500' : 'bg-transparent'}`} />`
+        ))}
+  </div>
+  ${noTrackingMessage ? (
+        html`<div className="text-center text-yellow-200 text-sm mt-2 italic">
+          ${noTrackingMessage}
+        </div>`
+    ) : !hasRunners && (
+        html`<div className="text-center text-green-200 text-sm mt-2 italic">Bases empty</div>`
+    )}
+</div>`
+    );
+};
+
+// Viewer-Only Message Component
+const ViewerOnlyMessage = () => {
+    return (
+html`<div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+  <div className="flex items-center">
+    <${AlertCircle} size=${20} className="text-yellow-600 mr-3" />
+    <p className="text-yellow-800 font-medium">\ud83d\udcfa You're viewing this game. Only team captains and staff can track plays.</p>
+  </div>
+</div>`
+    );
+};
+    return (
+        html`<${React.Fragment}>
+          <${PitcherSelectionModal} isOpen=${showPitcherModal} onClose=${() => setShowPitcherModal(false)} onSave=${savePitcherSelections} yourTeamName=${selectedTeam} opponentTeamName=${opponentTeamName} yourTeamPlayers=${players} opponentTeamPlayers=${opponentPlayers} />
+          <${PitcherChangeConfirmation} pending=${pendingPitcherChange} onConfirm=${confirmPitcherChange} onCancel=${cancelPitcherChange} />
+          <${RunRemovalModal} isOpen=${showRunRemovalModal} onClose=${() => setShowRunRemovalModal(false)} onConfirm=${confirmRunRemoval} playersWhoScored=${getPlayersWhoScored()} teamName=${selectedTeam} />
+          <div className="max-w-7xl mx-auto p-5 font-sans">
+            <div className="mb-6">
+              <button onClick=${backToSetup} className="mb-4 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors inline-flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>Back to Game Selection</button>
+              <div className="text-center">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Live Game Tracker</h1>
+                <div className="text-lg text-gray-600">${selectedTeam} vs ${opponentName}</div>
+                <div className="text-sm text-gray-500">${selectedGame?.date} \u2022 ${isHome ? 'Home' : 'Away'} Game</div>
+              </div>
+            </div>
+            ${gameMetadata && (
+                html`<${LiveScoreHeader} gameMetadata=${gameMetadata} yourTeamName=${selectedTeam} opponentTeamName=${opponentTeamName} isHome=${isHome} />`
+            )}
+            ${presenceUsers.length > 0 && (
+                html`<${PresenceIndicator} presenceUsers=${presenceUsers} myUserId=${currentUser?.uid} canBoot=${canBootUsers} onBootUser=${handleBootUser} />`
+            )}
+            <${PitcherBar} yourTeamName=${selectedTeam} opponentTeamName=${opponentTeamName} yourPitcher=${yourPitcher} opponentPitcher=${opponentPitcher} yourTeamPlayers=${players} opponentTeamPlayers=${opponentPlayers} onPitcherChange=${handlePitcherChange} userCanTrack=${userCanTrack} />
+            ${hasTrackPermission && (
+                html`<div className="mb-4 flex justify-center">
+                  <button onClick=${() => setSpectatorMode(!spectatorMode)} className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all" style=${{
+                            background: spectatorMode ? '#fef3c7' : '#e0f2fe',
+                            color: spectatorMode ? '#92400e' : '#0369a1',
+                            border: spectatorMode ? '2px solid #fcd34d' : '2px solid #7dd3fc'
+                        }}>
+                    ${spectatorMode ? (
+                            html`<${React.Fragment}>
+                              <span>\ud83d\udc41\ufe0f</span>
+                              <span>Spectator Mode ON</span>
+                              <span className="text-xs opacity-75">(click to edit)</span>
+                            <//>`
+                        ) : (
+                            html`<${React.Fragment}>
+                              <span>\u270f\ufe0f</span>
+                              <span>Editor Mode</span>
+                              <span className="text-xs opacity-75">(click to spectate)</span>
+                            <//>`
+                        )}
+                  </button>
+                </div>`
+            )}
+            ${!userCanTrack && (
+                html`<${ViewerOnlyMessage} />`
+            )}
+            <div className="text-white p-5 rounded-xl mb-5 grid grid-cols-4 gap-4 text-center" style=${{ background: 'linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%)' }}>
+              <div>
+                <div className="text-sm opacity-90">Inning</div>
+                <div className="text-2xl font-bold flex items-center justify-center gap-1">${userCanTrack && (
+                            html`<button onClick=${() => adjustInning(-1)} disabled=${(gameMetadata?.inning || gameState.inning) <= 1} className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed text-base font-bold" title="Decrease inning">\u2212</button>`
+                        )}${(isHome && !gameState.isYourTeamBatting) || (!isHome && gameState.isYourTeamBatting) ? '\u25b2' : '\u25bc'} ${gameMetadata?.inning || gameState.inning}${userCanTrack && (
+                            html`<button onClick=${() => adjustInning(1)} className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 text-base font-bold" title="Increase inning">+</button>`
+                        )}</div>
+                <div className="text-xs opacity-75 mt-1">
+                  ${gameState.isYourTeamBatting ? `${selectedTeam} Batting` : `${opponentName} Batting`}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm opacity-90">Outs</div>
+                <div className="text-2xl font-bold">
+                  ${gameState.outs}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm opacity-90">
+                  ${selectedTeam}
+                </div>
+                <div className="text-2xl font-bold flex items-center justify-center gap-2">
+                  ${userCanTrack && (
+                            html`<button onClick=${() => updateYourTeamScore(-1)} disabled=${gameState.score.yourTeam <= 0} className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed text-lg font-bold" title="Remove run (timing play)">\u2212</button>`
+                        )}
+                  <span>
+                    ${gameState.score.yourTeam}
+                  </span>
+                  ${userCanTrack && (
+                            html`<button onClick=${() => updateYourTeamScore(1)} className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-lg font-bold" title="Add run manually">+</button>`
+                        )}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm opacity-90">
+                  ${opponentName}
+                </div>
+                <div className="text-2xl font-bold flex items-center justify-center gap-2">
+                  ${userCanTrack && (
+                            html`<button onClick=${() => updateOpponentScore(-1)} disabled=${gameState.score.opponent <= 0} className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed text-lg font-bold">\u2212</button>`
+                        )}
+                  <span>
+                    ${gameState.score.opponent}
+                  </span>
+                  ${userCanTrack && (
+                            html`<button onClick=${() => updateOpponentScore(1)} className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-lg font-bold">+</button>`
+                        )}
+                </div>
+              </div>
+            </div>
+            ${inningOver && gameState.gameActive && !pendingPlay && (
+                html`<div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white p-6 rounded-xl mb-5 text-center">
+                  <div className="text-2xl font-bold mb-2">3 Outs - Side Retired</div>
+                  ${gameState.isYourTeamBatting ? (
+                        html`<${React.Fragment}>
+                          <div className="text-base mb-2 opacity-95">${selectedTeam}'s half inning is complete</div>
+                          ${userCanTrack ? (
+                                html`<${React.Fragment}>
+                                  <div className="text-sm mb-5 opacity-90 italic">Advance to let the other team bat</div>
+                                  <button onClick=${advanceToNextHalfInning} className="px-8 py-5 sm:px-10 sm:py-4 text-lg font-bold border-none rounded-xl cursor-pointer bg-white text-amber-600 shadow-lg hover:shadow-xl active:shadow-md active:scale-95 transition-all">
+                                    ${isHome ? `Top ${(gameMetadata?.inning || gameState.inning) + 1} - ${opponentName} Batting` : `Bottom ${gameMetadata?.inning || gameState.inning} - ${opponentName} Batting`}
+                                  </button>
+                                <//>`
+                            ) : (
+                                html`<div className="text-sm opacity-90 italic">Waiting for tracker to advance to next half inning...</div>`
+                            )}
+                        <//>`
+                    ) : (
+                        html`<${React.Fragment}>
+                          <div className="text-base mb-2 opacity-95">${opponentName}'s half inning is complete</div>
+                          ${userCanTrack ? (
+                                html`<${React.Fragment}>
+                                  <div className="text-sm mb-5 opacity-90 italic">Click below to start tracking ${selectedTeam}'s at-bats</div>
+                                  <button onClick=${advanceToNextHalfInning} className="px-8 py-5 sm:px-10 sm:py-4 text-lg font-bold border-none rounded-xl cursor-pointer bg-white text-amber-600 shadow-lg hover:shadow-xl active:shadow-md active:scale-95 transition-all">
+                                    ${isHome ? `Bottom ${gameMetadata?.inning || gameState.inning} - ${selectedTeam} Batting` : `Top ${(gameMetadata?.inning || gameState.inning) + 1} - ${selectedTeam} Batting`}
+                                  </button>
+                                <//>`
+                            ) : (
+                                html`<div className="text-sm opacity-90 italic">Waiting for tracker to advance to next half inning...</div>`
+                            )}
+                        <//>`
+                    )}
+                </div>`
+            )}
+            ${!gameState.isYourTeamBatting && !inningOver && (
+                html`<div className="rounded-xl p-6 mb-5" style=${{ background: '#f0fdf4', border: '2px solid #86efac' }}>
+                  <div className="text-xl font-bold mb-2 text-center" style=${{ color: '#166534' }}>${opponentName} is Batting</div>
+                  <div className="mb-4">
+                    <${ReadOnlyDiamond} bases=${opponentGameState?.playHistory?.length > 0 ? opponentGameState.bases : null} teamName=${opponentName} outs=${opponentGameState?.playHistory?.length > 0 ? (opponentGameState.outs || 0) : 0} noTrackingMessage=${opponentGameState?.playHistory?.length > 0 ? null : "No tracking data from opponent"} />
+                  </div>
+                  ${userCanTrack && !(opponentGameState?.playHistory?.length > 0) && (
+                        html`<div className="text-base mb-4 text-center" style=${{ color: '#15803d' }}>Track their runs below, then click "Back at Bat" after 3 outs</div>`
+                    )}
+                  ${userCanTrack && (
+                        html`<div className="bg-white rounded-xl p-4 mb-4 mx-auto" style=${{ maxWidth: '280px' }}>
+                          <div className="text-sm text-gray-600 mb-2 text-center">${opponentName} Runs</div>
+                          <div className="flex items-center justify-center gap-4">
+                            <button onClick=${() => updateOpponentScore(-1)} disabled=${gameState.score.opponent <= 0} className="w-14 h-14 rounded-full bg-red-100 hover:bg-red-200 active:bg-red-300 disabled:opacity-30 disabled:cursor-not-allowed text-2xl font-bold text-red-600 border-2 border-red-300">\u2212</button>
+                            <span className="text-5xl font-bold min-w-16 text-center" style=${{ color: '#166534' }}>
+                              ${gameState.score.opponent}
+                            </span>
+                            <button onClick=${() => updateOpponentScore(1)} className="w-14 h-14 rounded-full bg-green-100 hover:bg-green-200 active:bg-green-300 text-2xl font-bold text-green-600 border-2 border-green-300">+</button>
+                          </div>
+                        </div>`
+                    )}
+                  ${!userCanTrack && (
+                        html`<div className="bg-white rounded-xl p-4 mb-4 mx-auto" style=${{ maxWidth: '200px' }}>
+                          <div className="text-sm text-gray-600 mb-2 text-center">${opponentName} Score</div>
+                          <div className="text-5xl font-bold text-center" style=${{ color: '#166534' }}>
+                            ${gameState.score.opponent}
+                          </div>
+                        </div>`
+                    )}
+                  ${userCanTrack && (
+                        html`<div className="text-center">
+                          <button onClick=${advanceToNextHalfInning} className="px-6 py-4 sm:px-8 sm:py-3 text-lg font-bold border-none rounded-xl cursor-pointer text-white transition-all shadow-lg inline-flex items-center gap-2 hover:scale-105 active:scale-95" style=${{ background: 'linear-gradient(135deg, #2d5016 0%, #1a6b4a 100%)' }}><${PlayCircle} size=${24} /> Back at Bat</button>
+                        </div>`
+                    )}
+                </div>`
+            )}
+            ${pendingPlay && (
+                html`<div className="bg-amber-50 border-2 border-amber-400 rounded-lg p-4 mb-5 text-center">
+                  <div className="font-bold mb-1 text-amber-900">Adjust Base Runners</div>
+                  <div className="text-sm text-amber-800">Use arrows \u2022 Drag runners to bases or home \u2022 Click X to mark runner out</div>
+                  ${pendingPlay.play.value === 'fielders_choice' && (
+                        html`<div className="mt-3 p-3 bg-red-100 border border-red-300 rounded-lg">
+                          <div className="font-bold text-red-800">\u26a0\ufe0f Fielder's Choice \u2014 tap \u2715 on the runner who was out</div>
+                        </div>`
+                    )}
+                </div>`
+            )}
+            ${gameState.isYourTeamBatting && (
+                html`<${React.Fragment}>
+                  <div className=${`bg-gray-100 p-5 rounded-xl mb-5 text-center ${inningOver ? 'opacity-40' : 'opacity-100'}`}>
+                    <div className="text-sm text-gray-600 mb-1">Now Batting</div>
+                    <div className="text-2xl font-bold text-gray-900">#${currentBatter?.number} ${currentBatter?.name}</div>
+                    <div className="text-base text-gray-600">
+                      ${currentBatter?.position}
+                    </div>
+                  </div>
+                  ${userCanTrack && gameState.gameActive && !pendingPlay && (
+                        html`<div className=${`grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 mb-5 ${inningOver ? 'opacity-30 pointer-events-none' : ''}`}>
+                          ${PLAY_TYPES.map(play => {
+                                const isDisabledAt2Outs = gameState.outs >= 2 &&
+                                    (play.value === 'doubleplay' || play.value === 'sacfly');
+                                return (
+                                html`<button key=${play.value} onClick=${() => initiatePlay(play.value)} disabled=${inningOver || isDisabledAt2Outs} title=${isDisabledAt2Outs ? (play.value === 'doubleplay' ? 'Cannot record DP with 2 outs' : 'Sac fly not possible with 2 outs (use FO)') : ''} className=${`py-5 px-3 sm:p-4 text-lg sm:text-base font-bold border-none rounded-xl cursor-pointer text-white transition-transform hover:scale-105 active:scale-95 ${
+                                        isDisabledAt2Outs ? 'bg-gray-300 cursor-not-allowed opacity-40' :
+                                        play.isHit ? 'bg-green-600 hover:bg-green-700' :
+                                        play.isOut ? 'bg-red-500 hover:bg-red-600' :
+                                        'bg-blue-500 hover:bg-blue-600'
+                                    }`}>
+                                  ${play.label}
+                                </button>`
+                                );
+                            })}
+                          ${!inningOver && (
+                                html`<button onClick=${skipBatter} className="py-5 px-3 sm:p-4 text-lg sm:text-base font-bold border-2 border-dashed border-gray-400 rounded-xl cursor-pointer bg-white text-gray-500 hover:bg-gray-50 hover:border-gray-500 active:bg-gray-100 transition-colors col-span-3 sm:col-span-4" title="Skip this batter \u2014 no at-bat recorded">Skip Batter</button>`
+                            )}
+                        </div>`
+                    )}
+                  ${pendingPlay && pendingPlay.play.value !== 'walk' && (
+                        html`<div className="bg-white border-2 border-gray-200 rounded-lg p-3 mb-4">
+                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 text-center">\ud83d\udccd Hit Location <span className="font-normal normal-case text-gray-400">(optional)</span></div>
+                          <div className="flex gap-1.5 justify-center mb-2">
+                            ${['LF','LCF','CF','RCF','RF'].map(zone => (
+                                    html`<button key=${zone} onClick=${() => setPlayLocation(playLocation === zone ? null : zone)} className=${`flex-1 py-2 text-sm font-bold rounded-lg border-2 transition-colors ${
+                                            playLocation === zone
+                                                ? 'bg-blue-600 border-blue-600 text-white'
+                                                : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-600'
+                                        }`}>
+                                      ${zone}
+                                    </button>`
+                                ))}
+                          </div>
+                          <div className="flex gap-1.5 justify-center">
+                            ${['3B','SS','2B','1B','P','C'].map(zone => (
+                                    html`<button key=${zone} onClick=${() => setPlayLocation(playLocation === zone ? null : zone)} className=${`flex-1 py-2 text-sm font-bold rounded-lg border-2 transition-colors ${
+                                            playLocation === zone
+                                                ? 'bg-blue-600 border-blue-600 text-white'
+                                                : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-600'
+                                        }`}>
+                                      ${zone}
+                                    </button>`
+                                ))}
+                          </div>
+                        </div>`
+                    )}
+                  ${pendingPlay && (
+                        html`<div className="flex gap-3 mb-5 justify-center flex-wrap">
+                          <button onClick=${confirmPlay} className="px-6 py-5 sm:px-8 sm:py-4 text-lg font-bold border-none rounded-xl cursor-pointer bg-green-600 text-white hover:bg-green-700 active:bg-green-800 transition-colors inline-flex items-center gap-2"><${PlayCircle} size=${24} /> Confirm Play</button>
+                          <button onClick=${cancelPlay} className="px-6 py-5 sm:px-8 sm:py-4 text-lg font-bold border-2 border-red-500 rounded-xl cursor-pointer bg-white text-red-500 hover:bg-red-50 active:bg-red-100 transition-colors">Cancel</button>
+                        </div>`
+                    )}
+                  <div className="flex flex-col lg:flex-row gap-6 mb-8">
+                    <div className=${`relative w-full lg:max-w-lg bg-green-800 rounded-xl p-8 ${pendingPlay ? 'border-4 border-amber-400' : ''} ${inningOver && !pendingPlay ? 'opacity-50' : 'opacity-100'}`}>
+                      <svg viewBox="0 0 400 400" className="w-full h-auto">
+                        <polygon points="200,80 320,200 200,320 80,200" fill="#8b4513" stroke="#fff" strokeWidth="3" />
+                        <circle cx="200" cy="320" r="25" fill=${draggedRunner ? '#10b981' : '#fff'} onDragOver=${handleDragOver} onDrop=${() => handleDrop('home')} style=${{ cursor: draggedRunner ? 'pointer' : 'default' }} />
+                        <text x="200" y="365" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="bold">HOME</text>
+                        ${['first', 'second', 'third'].map((base, idx) => {
+                                const positions = {
+                                    first: { cx: 320, cy: 200, labelY: 165, arrowY: 245, arrow1X: 285, arrow2X: 355, removeY: 225, 
+                                            advanceArrow: '\u25b2', backArrow: '\u25bc' },
+                                    second: { cx: 200, cy: 80, labelY: 45, arrowY: 125, arrow1X: 160, arrow2X: 240, removeY: 105,
+                                             advanceArrow: '\u25c0', backArrow: '\u25b6' },
+                                    third: { cx: 80, cy: 200, labelY: 165, arrowY: 245, arrow1X: 45, arrow2X: 115, removeY: 225,
+                                            advanceArrow: '\u25bc', backArrow: '\u25b2' }
+                                };
+                                const pos = positions[base];
+                                const baseLabel = base === 'first' ? '1B' : base === 'second' ? '2B' : '3B';
+
+                                return (
+                                    html`<g key=${base}>
+                                      <circle cx=${pos.cx} cy=${pos.cy} r="32" fill=${displayBases[base] ? '#fbbf24' : '#fff'} stroke="#000" strokeWidth="2" onDragOver=${handleDragOver} onDrop=${() => handleDrop(base)} style=${{ cursor: draggedRunner ? 'pointer' : 'default' }} />
+                                      <text x=${pos.cx} y=${pos.labelY} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold">
+                                        ${baseLabel}
+                                      </text>
+                                      ${displayBases[base] && (
+                                            html`<g>
+                                              <text x=${pos.cx} y=${pos.cy + 5} textAnchor="middle" fill="#000" fontSize="11" fontWeight="bold" style=${{ cursor: pendingPlay ? 'move' : 'default' }} draggable=${pendingPlay} onDragStart=${() => handleDragStart(base)}>
+                                                ${displayBases[base].split(' ').pop()}
+                                              </text>
+                                              ${pendingPlay && (
+                                                    html`<${React.Fragment}>
+                                                      <circle cx=${pos.arrow1X} cy=${pos.arrowY - 8} r="20" fill="rgba(0,0,0,0.3)" style=${{ cursor: 'pointer' }} onClick=${() => adjustRunner(base, 'back')} />
+                                                      <text x=${pos.arrow1X} y=${pos.arrowY} textAnchor="middle" fill="#fff" fontSize="28" fontWeight="bold" style=${{ cursor: 'pointer', pointerEvents: 'none' }}>
+                                                        ${pos.backArrow}
+                                                      </text>
+                                                      <circle cx=${pos.arrow2X} cy=${pos.arrowY - 8} r="20" fill="rgba(0,0,0,0.3)" style=${{ cursor: 'pointer' }} onClick=${() => adjustRunner(base, 'advance')} />
+                                                      <text x=${pos.arrow2X} y=${pos.arrowY} textAnchor="middle" fill="#fff" fontSize="28" fontWeight="bold" style=${{ cursor: 'pointer', pointerEvents: 'none' }}>
+                                                        ${pos.advanceArrow}
+                                                      </text>
+                                                      <circle cx=${pos.cx} cy=${pos.removeY} r="12" fill="#ef4444" style=${{ cursor: 'pointer' }} onClick=${() => removeRunner(base)} />
+                                                      <text x=${pos.cx} y=${pos.removeY + 5} textAnchor="middle" fill="white" fontSize="14" fontWeight="bold" style=${{ pointerEvents: 'none' }}>X</text>
+                                                    <//>`
+                                                )}
+                                            </g>`
+                                        )}
+                                    </g>`
+                                );
+                            })}
+                      </svg>
+                      ${pendingPlay && (displayScore > 0 || tempOuts > 0) && (
+                            html`<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex flex-col gap-2 items-center">
+                              <div className="flex gap-3 items-center">
+                                ${displayScore > 0 && (
+                                        html`<div className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">+${displayScore} Run${displayScore > 1 ? 's' : ''}</div>`
+                                    )}
+                                ${tempOuts > 0 && (
+                                        html`<div className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold">+${tempOuts} Out${tempOuts > 1 ? 's' : ''}</div>`
+                                    )}
+                              </div>
+                              ${runnersScored.length > 0 && (
+                                    html`<div className="flex flex-wrap gap-1 justify-center">
+                                      ${runnersScored.map((runner, idx) => {
+                                            const isFC = pendingPlay?.play?.value === 'fielders_choice';
+                                            return (
+                                                html`<button key=${idx} onClick=${() => isFC ? markScoredRunnerOut(runner) : unscoreRunner(runner)} className=${`text-white text-xs px-2 py-1 rounded flex items-center gap-1 transition-colors ${
+                                                        isFC
+                                                            ? 'bg-red-600 hover:bg-red-700 border-2 border-red-400'
+                                                            : 'bg-green-700 hover:bg-amber-600'
+                                                    }`} title=${isFC
+                                                        ? `${runner.split(' ').pop()} out at home \u2014 click to mark out`
+                                                        : `Click to put ${runner.split(' ').pop()} back on base`}>
+                                                  <span>
+                                                    ${isFC ? '\u2715' : '\u2b05'}
+                                                  </span>
+                                                  <span>
+                                                    ${runner.split(' ').pop()}
+                                                  </span>
+                                                </button>`
+                                            );
+                                        })}
+                                    </div>`
+                                )}
+                            </div>`
+                        )}
+                    </div>
+                    <div className="bg-white border border-gray-200 rounded-xl p-4 flex-shrink-0" style=${{ width: '300px' }}>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-bold text-gray-800">
+                          ${editingLineup ? 'Edit Lineup' : 'Live Batting Stats'}
+                        </h3>
+                        ${userCanTrack && (
+                                html`<button onClick=${() => setEditingLineup(!editingLineup)} className="text-xs px-3 py-1 rounded-full font-medium transition-all" style=${editingLineup ? {
+                                        background: '#dcfce7',
+                                        color: '#166534'
+                                    } : {
+                                        background: '#f3f4f6',
+                                        color: '#6b7280'
+                                    }}>
+                                  ${editingLineup ? '\u2713 Done' : '\u270f\ufe0f Edit'}
+                                </button>`
+                            )}
+                      </div>
+                      <div className="space-y-1 max-h-80 overflow-y-auto">
+                        ${liveBattingStats.map((stat, idx) => {
+                                const isCurrentBatter = idx === gameState.currentBatter;
+                                return (
+                                    html`<div key=${stat.name} className="text-xs p-2 rounded" style=${isCurrentBatter ? { 
+                                            background: '#f0fdf4', 
+                                            border: '2px solid #22c55e',
+                                            fontWeight: 'bold'
+                                        } : { background: '#f9fafb' }}>
+                                      ${editingLineup ? (
+                                            /* Edit Mode */
+                                            html`<div className="flex items-center gap-2">
+                                              <div className="flex flex-col gap-1">
+                                                <button onClick=${() => movePlayerUp(idx)} disabled=${idx === 0} className="w-7 h-6 flex items-center justify-center rounded bg-gray-200 hover:bg-gray-300 active:bg-gray-400 disabled:opacity-30 disabled:cursor-not-allowed text-xs">\u25b2</button>
+                                                <button onClick=${() => movePlayerDown(idx)} disabled=${idx === battingOrder.length - 1} className="w-7 h-6 flex items-center justify-center rounded bg-gray-200 hover:bg-gray-300 active:bg-gray-400 disabled:opacity-30 disabled:cursor-not-allowed text-xs">\u25bc</button>
+                                              </div>
+                                              <div className="flex-1">
+                                                <span className="text-gray-500 mr-1">${idx + 1}.</span>
+                                                <span className="font-semibold text-gray-900">
+                                                  ${stat.name.split(' ').pop()}
+                                                </span>
+                                                ${isCurrentBatter && (
+                                                        html`<span className="ml-1 text-green-600">\u2190 Up</span>`
+                                                    )}
+                                              </div>
+                                              <button onClick=${() => removeFromLineup(idx)} className="w-8 h-8 flex items-center justify-center rounded bg-red-100 hover:bg-red-200 active:bg-red-300 text-red-600 text-sm" title="Remove from lineup">\u2715</button>
+                                            </div>`
+                                        ) : (
+                                            /* Stats Mode */
+                                            html`<${React.Fragment}>
+                                              <div className="flex items-center gap-1 mb-1">
+                                                <span className="text-gray-500">#${stat.number}</span>
+                                                <span className="font-semibold text-gray-900 truncate">
+                                                  ${stat.name.split(' ').pop()}
+                                                </span>
+                                              </div>
+                                              <div className="grid grid-cols-4 gap-1 text-center">
+                                                <div>
+                                                  <div className="text-gray-500">AB</div>
+                                                  <div className="font-bold">
+                                                    ${stat.atBats}
+                                                  </div>
+                                                </div>
+                                                <div>
+                                                  <div className="text-gray-500">H</div>
+                                                  <div className="font-bold">
+                                                    ${stat.hits}
+                                                  </div>
+                                                </div>
+                                                <div>
+                                                  <div className="text-gray-500">R</div>
+                                                  <div className="font-bold">
+                                                    ${stat.runs}
+                                                  </div>
+                                                </div>
+                                                <div>
+                                                  <div className="text-gray-500">BB</div>
+                                                  <div className="font-bold">
+                                                    ${stat.walks}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            <//>`
+                                        )}
+                                    </div>`
+                                );
+                            })}
+                      </div>
+                      ${editingLineup && availablePlayers.length > 0 && (
+                            html`<div className="mt-3 pt-3 border-t border-gray-200">
+                              <div className="text-xs font-semibold text-gray-600 mb-2">Add Player</div>
+                              <div className="space-y-1 max-h-32 overflow-y-auto">
+                                ${availablePlayers.map(player => (
+                                        html`<button key=${player.id} onClick=${() => addToLineup(player)} className="w-full text-left text-xs p-2 rounded bg-blue-50 hover:bg-blue-100 transition-colors flex items-center justify-between">
+                                          <span>
+                                            <span className="text-gray-500">#${player.number || '?'}</span>
+                                            <span className="ml-1 font-medium text-gray-800">
+                                              ${player.name}
+                                            </span>
+                                          </span>
+                                          <span className="text-blue-600 font-bold">+</span>
+                                        </button>`
+                                    ))}
+                              </div>
+                            </div>`
+                        )}
+                      ${editingLineup && availablePlayers.length === 0 && (
+                            html`<div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500 text-center">All rostered players are in lineup</div>`
+                        )}
+                      ${removedPlayerStats.length > 0 && (
+                            html`<div className="mt-3 pt-3 border-t border-gray-200">
+                              <div className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1"><span>\ud83d\ude91</span> Left Game (${removedPlayerStats.length})</div>
+                              <div className="space-y-2 max-h-40 overflow-y-auto">
+                                ${removedPlayerStats.map((stat, idx) => (
+                                        html`<div key=${stat.name} className="p-2 rounded-lg text-xs" style=${{ background: '#fef3c7', border: '1px solid #fcd34d' }}>
+                                          <div className="flex items-center gap-1 mb-1">
+                                            <span className="text-gray-500">#${stat.number}</span>
+                                            <span className="font-semibold text-gray-700 truncate">
+                                              ${stat.name.split(' ').pop()}
+                                            </span>
+                                          </div>
+                                          <div className="grid grid-cols-4 gap-1 text-center">
+                                            <div>
+                                              <div className="text-gray-500">AB</div>
+                                              <div className="font-bold text-gray-700">
+                                                ${stat.atBats}
+                                              </div>
+                                            </div>
+                                            <div>
+                                              <div className="text-gray-500">H</div>
+                                              <div className="font-bold text-gray-700">
+                                                ${stat.hits}
+                                              </div>
+                                            </div>
+                                            <div>
+                                              <div className="text-gray-500">R</div>
+                                              <div className="font-bold text-gray-700">
+                                                ${stat.runs}
+                                              </div>
+                                            </div>
+                                            <div>
+                                              <div className="text-gray-500">BB</div>
+                                              <div className="font-bold text-gray-700">
+                                                ${stat.walks}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>`
+                                    ))}
+                              </div>
+                            </div>`
+                        )}
+                      ${!editingLineup && (
+                            html`<${PitcherBoxScore} pitcherStats=${opponentPitcherStats} opponentTeamName=${opponentName || 'Opponent'} />`
+                        )}
+                    </div>
+                  </div>
+                <//>`
+            )}
+            ${userCanTrack && !pendingPlay && (
+                html`<div className="flex gap-3 mb-8 justify-center flex-wrap">
+                  <button onClick=${undoLastPlay} disabled=${gameState.playHistory.length === 0} className=${`px-5 py-4 sm:px-6 sm:py-3 border-none rounded-xl inline-flex items-center gap-2 text-base sm:text-sm ${
+                            gameState.playHistory.length === 0 
+                                ? 'bg-gray-300 cursor-not-allowed opacity-50' 
+                                : 'bg-gray-600 cursor-pointer hover:bg-gray-700 active:bg-gray-800'
+                        } text-white transition-colors`}><${Undo2} size=${20} /> Undo</button>
+                  ${gameState.gameActive && (
+                        html`<${React.Fragment}>
+                          <button onClick=${endGame} className="px-5 py-4 sm:px-6 sm:py-3 border-none rounded-xl cursor-pointer bg-red-600 text-white hover:bg-red-700 active:bg-red-800 transition-colors inline-flex items-center gap-2 text-base sm:text-sm"><${Save} size=${20} /> End Game</button>
+                          <button onClick=${clearProgress} className="px-5 py-4 sm:px-6 sm:py-3 border-none rounded-xl cursor-pointer bg-orange-600 text-white hover:bg-orange-700 active:bg-orange-800 transition-colors inline-flex items-center gap-2 text-base sm:text-sm"><${AlertCircle} size=${20} /> Clear</button>
+                        <//>`
+                    )}
+                </div>`
+            )}
+            ${userCanTrack && (
+                html`<div className="bg-white border border-gray-200 rounded-xl p-4 mb-6">
+                  <div className="flex items-center justify-between cursor-pointer" onClick=${() => setEditingLineup(!editingLineup)}>
+                    <h3 className="text-lg font-bold text-gray-800">\ud83d\udccb Lineup (${battingOrder.length} players)</h3>
+                    <button className="text-sm px-3 py-1 rounded-full font-medium transition-all" style=${editingLineup ? {
+                                background: '#dcfce7',
+                                color: '#166534'
+                            } : {
+                                background: '#f3f4f6',
+                                color: '#6b7280'
+                            }}>
+                      ${editingLineup ? '\u25bc Close' : '\u25b6 Edit Lineup'}
+                    </button>
+                  </div>
+                  ${editingLineup && (
+                        html`<div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <div className="text-sm font-semibold text-gray-600 mb-2">Batting Order</div>
+                              <div className="space-y-1 max-h-64 overflow-y-auto">
+                                ${battingOrder.map((player, idx) => {
+                                            const isCurrentBatter = idx === gameState.currentBatter;
+                                            return (
+                                                html`<div key=${player.id} className="text-sm p-2 rounded flex items-center gap-2" style=${isCurrentBatter ? { 
+                                                        background: '#f0fdf4', 
+                                                        border: '2px solid #22c55e'
+                                                    } : { background: '#f9fafb' }}>
+                                                  <div className="flex flex-col gap-1">
+                                                    <button onClick=${() => movePlayerUp(idx)} disabled=${idx === 0} className="w-8 h-7 flex items-center justify-center rounded bg-gray-200 hover:bg-gray-300 active:bg-gray-400 disabled:opacity-30 disabled:cursor-not-allowed text-sm">\u25b2</button>
+                                                    <button onClick=${() => movePlayerDown(idx)} disabled=${idx === battingOrder.length - 1} className="w-8 h-7 flex items-center justify-center rounded bg-gray-200 hover:bg-gray-300 active:bg-gray-400 disabled:opacity-30 disabled:cursor-not-allowed text-sm">\u25bc</button>
+                                                  </div>
+                                                  <div className="flex-1">
+                                                    <span className="font-bold text-gray-500 mr-2">${idx + 1}.</span>
+                                                    <span className="font-semibold text-gray-900">
+                                                      ${player.name}
+                                                    </span>
+                                                    ${isCurrentBatter && (
+                                                            html`<span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">Up Now</span>`
+                                                        )}
+                                                  </div>
+                                                  <button onClick=${() => removeFromLineup(idx)} className="w-9 h-9 flex items-center justify-center rounded bg-red-100 hover:bg-red-200 active:bg-red-300 text-red-600 text-base" title="Remove from lineup">\u2715</button>
+                                                </div>`
+                                            );
+                                        })}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-sm font-semibold text-gray-600 mb-2">Add Player ${availablePlayers.length > 0 && `(${availablePlayers.length} available)`}</div>
+                              ${availablePlayers.length > 0 ? (
+                                        html`<div className="space-y-2 max-h-64 overflow-y-auto">
+                                          ${availablePlayers.map(player => (
+                                                html`<button key=${player.id} onClick=${() => addToLineup(player)} className="w-full text-left text-sm p-3 rounded-lg bg-blue-50 hover:bg-blue-100 active:bg-blue-200 transition-colors flex items-center justify-between">
+                                                  <span>
+                                                    <span className="text-gray-500">#${player.number || '?'}</span>
+                                                    <span className="ml-2 font-medium text-gray-800">
+                                                      ${player.name}
+                                                    </span>
+                                                  </span>
+                                                  <span className="text-blue-600 font-bold text-xl">+</span>
+                                                </button>`
+                                            ))}
+                                        </div>`
+                                    ) : (
+                                        html`<div className="text-sm text-gray-500 text-center py-4 bg-gray-50 rounded">All rostered players are in lineup</div>`
+                                    )}
+                            </div>
+                          </div>
+                        </div>`
+                    )}
+                </div>`
+            )}
+            <${MergedPlayByPlay} yourPlays=${gameState.playHistory} opponentPlays=${opponentGameState?.playHistory || []} yourTeamName=${selectedTeam} opponentName=${opponentTeamName} isHome=${isHome} />
+          </div>
+        <//>`
+    );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(html`<${GameTracker} />`);
+		
+		
+function updateConnectionStatus() {
+  const status = document.getElementById('connectionStatus');
+  if (!status) return;
+
+  const icon = status.querySelector('.status-icon');
+  const text = status.querySelector('.status-text');
+
+  if (navigator.onLine) {
+    // Show "Back online" message
+    status.classList.remove('hidden');  // SHOW IT FIRST
+    status.classList.add('online');
+    icon.textContent = '\u2705';
+    text.textContent = 'Back online';
+
+    // Hide after 3 seconds
+    setTimeout(() => {
+      status.classList.add('hidden');
+    }, 3000);
+  } else {
+    // Show "You're offline" message
+    status.classList.remove('hidden', 'online');
+    icon.textContent = '\ud83d\udce1';
+    text.textContent = "You're offline";
+  }
+}
+
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+if (!navigator.onLine) updateConnectionStatus();

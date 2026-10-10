@@ -1,0 +1,91 @@
+/* css/game-tracker.css - game-tracker-v2.html. Moved unchanged from the
+   <style> block in game-tracker.html. */
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.drag-cursor {
+    cursor: move;
+}
+.pointer-cursor {
+    cursor: pointer;
+}
+svg text {
+    user-select: none;
+}
+/* Connection Status Indicator */
+.connection-status {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #ffc107;
+  color: #856404;
+  padding: 10px 16px;
+  border-radius: 25px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 9999;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.connection-status.hidden {
+  display: none;
+}
+
+.connection-status.online {
+  background: #28a745;
+  color: white;
+}
+
+.connection-status .status-icon {
+  font-size: 1rem;
+}
+
+/* Notification slide-in animation */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+/* LIVE game indicator pulse animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes live-ping {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  75%, 100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.live-badge {
+  animation: pulse 2s ease-in-out infinite;
+}
