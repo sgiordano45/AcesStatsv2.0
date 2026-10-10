@@ -16,8 +16,12 @@
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../mobile-enhancements.css">
 <link rel="stylesheet" href="../css/admin.css">
+<link rel="stylesheet" href="../css/admin-stats.css">
+<link rel="stylesheet" href="../css/admin-schedule.css">
 </head>
 <body class="aces-v2 adm">
+
+<!-- admin/schedule.html: the season schedule as tabs - overview, edit a game, rework, build (js/admin/schedule.js). -->
 
 <div class="adm-shell aces-container" data-page-content>
   <aside class="adm-side" id="adminSide" aria-label="Admin tools">
@@ -39,15 +43,122 @@
       </div>
     </header>
 
-    <p class="stp-intro">From an empty season to rainout fixes. Each step opens the tool that does it.</p>
-    <ol class="stp-steps" id="schSteps"></ol>
+    <div class="aces-tabs sch-tabs" role="tablist" aria-label="Schedule tools">
+      <button class="aces-tab" type="button" role="tab" data-tab="overview" aria-selected="true">Overview</button>
+      <button class="aces-tab" type="button" role="tab" data-tab="edit" aria-selected="false">Edit a game</button>
+      <button class="aces-tab" type="button" role="tab" data-tab="rework" aria-selected="false">Rework</button>
+      <button class="aces-tab" type="button" role="tab" data-tab="build" aria-selected="false">Build</button>
+    </div>
 
-    <h2 class="adm-heading">Published schedule</h2>
-    <section class="aces-card" id="schStatus"></section>
-    <div class="sch-teams" id="schTeams"></div>
+    <!-- Overview -->
+    <div data-panel="overview" class="sch-panel">
+      <ul class="tr-checks sch-todo" id="schTodo" hidden></ul>
+      <h2 class="adm-heading">Published schedule</h2>
+      <section class="aces-card" id="schStatus"></section>
+      <div class="sch-teams" id="schTeams"></div>
+    </div>
+
+    <!-- Edit a game -->
+    <div data-panel="edit" class="sch-panel" hidden>
+  <p class="stp-intro">Change one game: date, time, field, teams or status. Saves go live right away. To move several games after a rainout, use the <a href="?tab=rework" data-goto="rework">Rework</a> tab.</p>
+
+      <div class="stp-games-head">
+        <h2 class="adm-heading">Games <span class="stp-count" id="sedCount"></span></h2>
+        <div class="tr-filters">
+          <span class="aces-select-wrap"><select class="aces-select" id="sedTeam" aria-label="Team"></select></span>
+          <div class="aces-segmented" role="group" aria-label="Which games">
+            <button class="aces-segment" type="button" data-show="upcoming" aria-pressed="true">Upcoming</button>
+            <button class="aces-segment" type="button" data-show="postponed" aria-pressed="false">Postponed</button>
+            <button class="aces-segment" type="button" data-show="all" aria-pressed="false">All</button>
+          </div>
+        </div>
+      </div>
+      <div id="sedList" class="sed-list"></div>
+
+      <section class="aces-card sse-entry" id="sedEditor" hidden>
+        <div class="sse-entry-head">
+          <div>
+            <h2 class="aces-card-title" id="sedTitle"></h2>
+            <p class="sse-sub" id="sedNow"></p>
+          </div>
+          <button class="aces-btn is-sm is-ghost" id="sedClose" type="button">Close</button>
+        </div>
+        <div class="sed-form">
+          <div class="aces-field"><label class="aces-label" for="sedDate">Date</label><input class="aces-input" id="sedDate" type="date"></div>
+          <div class="aces-field"><label class="aces-label" for="sedTime">Time</label><input class="aces-input" id="sedTime" type="time" step="300"></div>
+          <div class="aces-field sed-wide"><label class="aces-label" for="sedWhere">Field</label><input class="aces-input" id="sedWhere" type="text" list="sedPlaces" autocomplete="off"></div>
+          <div class="aces-field"><label class="aces-label" for="sedAway">Away</label><span class="aces-select-wrap"><select class="aces-select" id="sedAway"></select></span></div>
+          <div class="sed-swap-cell"><button class="aces-btn is-sm is-ghost" id="sedSwap" type="button" title="Swap home and away">Swap</button></div>
+          <div class="aces-field"><label class="aces-label" for="sedHome">Home</label><span class="aces-select-wrap"><select class="aces-select" id="sedHome"></select></span></div>
+          <div class="aces-field"><label class="aces-label" for="sedStatus">Status</label><span class="aces-select-wrap"><select class="aces-select" id="sedStatus">
+            <option value="scheduled">Scheduled</option><option value="postponed">Postponed</option><option value="cancelled">Cancelled</option><option value="completed">Completed</option>
+          </select></span></div>
+          <div class="aces-field sed-wide"><label class="aces-label" for="sedNote">Reason <span class="sse-dim">(optional, shown in the update)</span></label><input class="aces-input" id="sedNote" type="text" placeholder="Rain, field conflict..."></div>
+        </div>
+        <datalist id="sedPlaces"></datalist>
+        <label class="agg-check"><input type="checkbox" id="sedLock" checked> <span><strong>Mark as edited by hand</strong> so schedule imports don't overwrite it.</span></label>
+        <ul class="tr-checks" id="sedChecks"></ul>
+        <div class="sse-actions"><button class="aces-btn is-primary" id="sedSave" type="button">Save changes</button></div>
+
+        <div class="sed-share" id="sedShare" hidden>
+          <h3 class="tr-sub">Share the update</h3>
+          <textarea class="aces-input sed-msg" id="sedMsg" rows="6"></textarea>
+          <div class="sse-actions">
+            <a class="aces-btn is-primary" id="sedWa" href="#" target="_blank" rel="noopener">Send in WhatsApp</a>
+            <button class="aces-btn" id="sedCopy" type="button">Copy</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Rework -->
+    <div data-panel="rework" class="sch-panel" hidden>
+  <p class="stp-intro">Drag games onto new days and set their times. Moves are a shared draft that other staff see too; nothing changes for players until you publish. Postpone a game first on the <a href="?tab=edit" data-goto="edit">Edit a game</a> tab to send it to the tray.</p>
+
+      <div class="srw-layout">
+        <section class="aces-card srw-cal">
+          <div class="srw-cal-head">
+            <button class="aces-btn is-sm is-ghost" id="srwPrev" type="button" aria-label="Previous month">Prev</button>
+            <h2 class="aces-card-title" id="srwMonth"></h2>
+            <button class="aces-btn is-sm is-ghost" id="srwNext" type="button" aria-label="Next month">Next</button>
+          </div>
+          <div class="srw-grid" id="srwGrid"></div>
+        </section>
+
+        <aside class="srw-side">
+          <section class="aces-card">
+            <h2 class="tr-h">Needs a new date <span class="sse-dim">(<span id="srwTrayCount">0</span>)</span></h2>
+            <div class="srw-tray" id="srwTray" data-date="TRAY"></div>
+          </section>
+          <section class="aces-card">
+            <div class="srw-changes-head">
+              <h2 class="tr-h">Pending moves <span class="sse-dim">(<span id="srwCount">0</span>)</span></h2>
+              <button class="aces-btn is-sm is-ghost" id="srwDiscard" type="button" disabled>Discard all</button>
+            </div>
+            <div id="srwChanges" class="srw-changes"></div>
+            <button class="aces-btn is-primary is-block" id="srwPublish" type="button" disabled>Publish to the live schedule</button>
+          </section>
+          <section class="aces-card srw-done" id="srwDone" hidden>
+            <h2 class="tr-h">Published. Send the update</h2>
+            <textarea class="aces-input sed-msg" id="srwMsg" rows="8"></textarea>
+            <div class="sse-actions">
+              <a class="aces-btn is-primary" id="srwWa" href="#" target="_blank" rel="noopener">Send in WhatsApp</a>
+              <button class="aces-btn" id="srwCopy" type="button">Copy</button>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Build -->
+    <div data-panel="build" class="sch-panel" hidden>
+      <p class="stp-intro">From an empty season to a published schedule. These tools open on their own pages.</p>
+      <ol class="stp-steps" id="schSteps"></ol>
+    </div>
   </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script type="module" src="../js/admin/schedule.js"></script>
 </body>
 </html>

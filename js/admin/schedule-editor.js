@@ -1,20 +1,16 @@
 // js/admin/schedule-editor.js
-// admin/schedule-editor.html: change one game's date, time, place, teams or
-// status, then share the update. Saves straight to the live game doc (all
+// The Edit a game tab of admin/schedule.html: change one game's date, time,
+// place, teams or status, then share the update. Saves straight to the live game doc (all
 // date/time and team fields together, see schedule-shared.js).
-// For moving many games at once after rainouts use admin/schedule-rework.html.
-// ?season=&game= opens a game.
+// For moving many games at once there is the Rework tab.
+// ?tab=edit&game= opens a game.
 
-import { initPage, pageReady } from '../core/app.js';
 import { db, doc, updateDoc } from '../core/firebase.js';
-import { getAllSeasons } from '../data/seasons.js';
-import { seasonLabel } from '../domain/season-ids.js';
 import { todayKey } from '../domain/dates.js';
 import { escapeHtml as esc } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 import { confirmModal } from '../ui/modal.js';
-import { mountAdminShell } from './shell.js';
 import { loadGames, teamsOf, locationsOf, gameFields, clashes, niceDate, to24, from24, updateMessage, whatsappUrl } from './schedule-shared.js';
 
 const $ = (id) => document.getElementById(id);
@@ -120,6 +116,7 @@ async function save() {
     if (note) fields.rescheduleReason = note;
     await updateDoc(doc(db, 'seasons', seasonId, 'games', sel.id), fields);
     showToast('Game saved', 'success');
+    window.dispatchEvent(new CustomEvent('aces:schedule-changed', { detail: { from: 'edit' } }));
     const now = `${niceDate(v.dateKey, 'long')}, ${v.time || 'TBD'}${v.location ? `, ${v.location}` : ''}`;
     lastMessage = updateMessage([{ away: v.away, home: v.home, from: was, to: now, reason: note, status: v.status }]);
     $('sedMsg').value = lastMessage;
@@ -155,19 +152,12 @@ async function openSeason(id, game = '') {
   }
 }
 
-async function main() {
-  ctx = await initPage({ title: 'Schedule editor', role: 'league-staff', deniedMessage: 'The schedule editor is for admins and league staff.' });
-  if (!ctx?.user) return;
-  mountAdminShell(ctx.profile, 'admin/schedule-editor.html');
-  const seasons = (await getAllSeasons()).sort((a, b) => b.id.localeCompare(a.id));
-  const params = new URLSearchParams(location.search);
-  const start = [params.get('season'), ctx.config?.currentSeasonId, seasons.find(s => s.isActive)?.id, seasons[0]?.id].find(id => id && seasons.some(s => s.id === id));
-  $('sedSeason').innerHTML = seasons.map(s => `<option value="${esc(s.id)}">${esc(seasonLabel(s.id))}</option>`).join('');
-  if (start) $('sedSeason').value = start;
-  $('sedSeason').addEventListener('change', () => {
-    history.replaceState(null, '', `?season=${encodeURIComponent($('sedSeason').value)}`);
-    openSeason($('sedSeason').value);
-  });
+/**
+ * Sets up the Edit a game tab of admin/schedule.html.
+ * @param {object} c  the initPage context
+ */
+export function mountEditor(c) {
+  ctx = c;
   document.querySelectorAll('[data-show]').forEach(b => b.addEventListener('click', () => {
     show = b.dataset.show;
     document.querySelectorAll('[data-show]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
@@ -178,17 +168,22 @@ async function main() {
   ['sedDate', 'sedTime', 'sedHome', 'sedAway', 'sedWhere', 'sedStatus', 'sedNote'].forEach(id => $(id).addEventListener('input', renderChecks));
   $('sedSwap').addEventListener('click', () => { const a = $('sedAway').value; $('sedAway').value = $('sedHome').value; $('sedHome').value = a; renderChecks(); });
   $('sedSave').addEventListener('click', save);
-  $('sedClose').addEventListener('click', () => { sel = null; $('sedEditor').hidden = true; renderList(); });
+  $('sedClose').addEventListener('click', () => {
+    sel = null;
+    $('sedEditor').hidden = true;
+    const p = new URLSearchParams(location.search);
+    p.delete('game');
+    history.replaceState(null, '', `?${p}`);
+    renderList();
+  });
   $('sedMsg').addEventListener('input', () => { $('sedWa').href = whatsappUrl($('sedMsg').value); });
   $('sedCopy').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText($('sedMsg').value); showToast('Copied', 'success'); } catch { showToast('Select the text and copy it', 'info'); }
   });
-  pageReady();
-  if (start) await openSeason(start, params.get('game') || '');
 }
 
-main().catch(err => {
-  console.error('[schedule-editor] start failed', err);
-  pageReady();
-  showToast(`Could not start: ${err.message || err}`, 'error');
-});
+/** Loads a season into the editor (and opens a game when given). */
+export async function editorSeason(id, game = '', force = false) {
+  if (seasonId === id && !game && !force) return;
+  await openSeason(id, game);
+}

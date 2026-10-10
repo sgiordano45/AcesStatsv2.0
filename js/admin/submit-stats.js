@@ -24,7 +24,7 @@ import { getSeasonPlayerStatsOptimized } from '../data/player-stats.js';
 import { getTeamRosterDoc } from '../../firebase-roster.js';
 import { normalizeGame } from '../domain/standings.js';
 import { parseGameDateTime, formatGameDate, toDateKey } from '../domain/dates.js';
-import { seasonLabel } from '../domain/season-ids.js';
+import { seasonLabel, seasonSortKey } from '../domain/season-ids.js';
 import { escapeHtml as esc } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
@@ -556,7 +556,7 @@ async function main() {
     getDocs(collection(db, 'teams'))
   ]);
   teams = teamSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
-  seasons.sort((a, b) => b.id.localeCompare(a.id));
+  seasons.sort((a, b) => seasonSortKey(b.id) - seasonSortKey(a.id));
 
   const params = new URLSearchParams(location.search);
   const start = [params.get('season'), ctx.config?.currentSeasonId, ctx.config?.previousSeasonId, seasons[0]?.id]

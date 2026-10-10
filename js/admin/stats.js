@@ -19,7 +19,7 @@ import { getSeasonGames } from '../data/games.js';
 import { getAllSeasons } from '../data/seasons.js';
 import { normalizeGame } from '../domain/standings.js';
 import { parseGameDateTime, formatGameDate } from '../domain/dates.js';
-import { seasonLabel } from '../domain/season-ids.js';
+import { seasonLabel, seasonSortKey } from '../domain/season-ids.js';
 import { escapeHtml as esc } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 import { mountAdminShell } from './shell.js';
@@ -259,7 +259,7 @@ async function main() {
   const ctx = await initPage({ title: 'Stats pipeline', role: 'admin', deniedMessage: 'The stats pipeline is for admins.' });
   if (!ctx?.user) return;
   mountAdminShell(ctx.profile, 'admin/stats.html');
-  const seasons = (await getAllSeasons()).sort((a, b) => b.id.localeCompare(a.id));
+  const seasons = (await getAllSeasons()).sort((a, b) => seasonSortKey(b.id) - seasonSortKey(a.id));
   const fromUrl = new URLSearchParams(location.search).get('season');
   const start = [fromUrl, ctx.config?.currentSeasonId, ctx.config?.previousSeasonId, seasons[0]?.id]
     .find(id => id && seasons.some(s => s.id === id));

@@ -1,21 +1,17 @@
 // js/admin/schedule-rework.js
-// admin/schedule-rework.html: move many games after rainouts.
+// The Rework tab of admin/schedule.html: move many games after rainouts.
 // Drag a game onto a new day (postponed games wait in the tray), set its time
 // and a reason. Moves are a shared draft at seasons/{id}/scheduleDraft/current,
 // so other staff see the same plan live; nothing touches the schedule until
 // Publish, which writes every moved game (see schedule-shared.js) and gives
 // you the update to send. Games already played can't be moved here.
 
-import { initPage, pageReady } from '../core/app.js';
 import { db, doc, onSnapshot, setDoc, updateDoc, deleteDoc, deleteField, writeBatch, serverTimestamp } from '../core/firebase.js';
-import { getAllSeasons } from '../data/seasons.js';
-import { seasonLabel } from '../domain/season-ids.js';
 import { todayKey } from '../domain/dates.js';
 import { escapeHtml as esc } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 import { confirmModal } from '../ui/modal.js';
-import { mountAdminShell } from './shell.js';
 import { loadGames, gameFields, clashes, niceDate, keyOf, dateOfKey, to24, from24, minutes, updateMessage, whatsappUrl } from './schedule-shared.js';
 
 const $ = (id) => document.getElementById(id);
@@ -126,6 +122,7 @@ function renderTray() {
 
 function renderChanges() {
   const ids = Object.keys(draft).filter(byId);
+  window.dispatchEvent(new CustomEvent('aces:rework-draft', { detail: { count: ids.length } }));
   $('srwCount').textContent = ids.length;
   $('srwPublish').disabled = !ids.length;
   $('srwDiscard').disabled = !ids.length;
@@ -213,6 +210,7 @@ async function publish() {
     $('srwDone').hidden = false;
     $('srwDone').scrollIntoView({ behavior: 'smooth', block: 'center' });
     showToast('Schedule published', 'success');
+    window.dispatchEvent(new CustomEvent('aces:schedule-changed', { detail: { from: 'rework' } }));
     games = await loadGames(seasonId);
     renderAll();
   } catch (err) {
@@ -249,19 +247,12 @@ async function openSeason(id) {
   renderAll();
 }
 
-async function main() {
-  ctx = await initPage({ title: 'Schedule rework', role: 'league-staff', deniedMessage: 'Schedule rework is for admins and league staff.' });
-  if (!ctx?.user) return;
-  mountAdminShell(ctx.profile, 'admin/schedule-rework.html');
-  const seasons = (await getAllSeasons()).sort((a, b) => b.id.localeCompare(a.id));
-  const params = new URLSearchParams(location.search);
-  const start = [params.get('season'), ctx.config?.currentSeasonId, seasons.find(s => s.isActive)?.id, seasons[0]?.id].find(id => id && seasons.some(s => s.id === id));
-  $('srwSeason').innerHTML = seasons.map(s => `<option value="${esc(s.id)}">${esc(seasonLabel(s.id))}</option>`).join('');
-  if (start) $('srwSeason').value = start;
-  $('srwSeason').addEventListener('change', () => {
-    history.replaceState(null, '', `?season=${encodeURIComponent($('srwSeason').value)}`);
-    openSeason($('srwSeason').value);
-  });
+/**
+ * Sets up the Rework tab of admin/schedule.html.
+ * @param {object} c  the initPage context
+ */
+export function mountRework(c) {
+  ctx = c;
   $('srwPrev').addEventListener('click', () => { month = new Date(month.getFullYear(), month.getMonth() - 1, 1); renderCalendar(); bindDrag(); });
   $('srwNext').addEventListener('click', () => { month = new Date(month.getFullYear(), month.getMonth() + 1, 1); renderCalendar(); bindDrag(); });
   $('srwGrid').addEventListener('click', (e) => {
@@ -289,12 +280,10 @@ async function main() {
   $('srwCopy').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText($('srwMsg').value); showToast('Copied', 'success'); } catch { showToast('Select the text and copy it', 'info'); }
   });
-  pageReady();
-  if (start) await openSeason(start);
 }
 
-main().catch(err => {
-  console.error('[rework] start failed', err);
-  pageReady();
-  showToast(`Could not start: ${err.message || err}`, 'error');
-});
+/** Loads a season into the calendar and listens to its shared draft. */
+export async function reworkSeason(id, force = false) {
+  if (seasonId === id && !force) return;
+  await openSeason(id);
+}

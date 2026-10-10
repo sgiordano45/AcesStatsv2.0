@@ -17,7 +17,7 @@ import {
   deleteField, query, where, documentId
 } from '../core/firebase.js';
 import { getAllSeasons } from '../data/seasons.js';
-import { seasonLabel } from '../domain/season-ids.js';
+import { seasonLabel, seasonSortKey } from '../domain/season-ids.js';
 import { escapeHtml as esc } from '../ui/format.js';
 import { showToast } from '../ui/toast.js';
 import { confirmModal } from '../ui/modal.js';
@@ -2519,7 +2519,7 @@ async function main() {
   if (!ctx?.user) return;
   mountAdminShell(ctx.profile, 'admin/aggregate-stats.html');
 
-  const seasons = (await getAllSeasons()).map(s => s.id).filter(isGameSeason).sort().reverse();
+  const seasons = (await getAllSeasons()).map(s => s.id).filter(isGameSeason).sort((a, b) => seasonSortKey(b) - seasonSortKey(a));
   GAME_BASED_SEASONS = [...new Set([...GAME_BASED_SEASONS, ...seasons])];
   const params = new URLSearchParams(location.search);
   const start = [params.get('season'), ctx.config?.currentSeasonId, ctx.config?.previousSeasonId, seasons[0]]

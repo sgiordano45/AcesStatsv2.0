@@ -21,7 +21,7 @@ import { getAllSeasons } from '../data/seasons.js';
 import { getTeamRosterDoc } from '../../firebase-roster.js';
 import { normalizeGame } from '../domain/standings.js';
 import { formatGameDate, toDateKey } from '../domain/dates.js';
-import { seasonLabel } from '../domain/season-ids.js';
+import { seasonLabel, seasonSortKey } from '../domain/season-ids.js';
 import { escapeHtml as esc } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
@@ -638,7 +638,7 @@ async function main() {
   user = ctx.user;
   mountAdminShell(ctx.profile, 'admin/game-tracker-review.html');
 
-  const seasons = (await getAllSeasons()).sort((a, b) => b.id.localeCompare(a.id));
+  const seasons = (await getAllSeasons()).sort((a, b) => seasonSortKey(b.id) - seasonSortKey(a.id));
   const params = new URLSearchParams(location.search);
   const start = [params.get('season'), ctx.config?.currentSeasonId, ctx.config?.previousSeasonId, seasons[0]?.id]
     .find(id => id && seasons.some(s => s.id === id));

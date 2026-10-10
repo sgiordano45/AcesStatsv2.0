@@ -11,7 +11,7 @@
 import { initPage, pageReady } from '../core/app.js';
 import { db, collection, doc, getDocs, getDoc, setDoc, deleteDoc, serverTimestamp } from '../core/firebase.js';
 import { getAllSeasons } from '../data/seasons.js';
-import { seasonLabel } from '../domain/season-ids.js';
+import { seasonLabel, seasonSortKey } from '../domain/season-ids.js';
 import { escapeHtml as esc } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
@@ -181,7 +181,7 @@ async function main() {
   if (!ctx?.user) return;
   mountAdminShell(ctx.profile, 'admin/badges.html');
 
-  seasons = (await getAllSeasons()).sort((a, b) => b.id.localeCompare(a.id));
+  seasons = (await getAllSeasons()).sort((a, b) => seasonSortKey(b.id) - seasonSortKey(a.id));
   const params = new URLSearchParams(location.search);
   const start = [params.get('season'), ctx.config?.currentSeasonId, seasons.find(s => s.isActive)?.id, seasons[0]?.id]
     .find(id => id && seasons.some(s => s.id === id));

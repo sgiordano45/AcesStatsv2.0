@@ -78,3 +78,9 @@
   .srw-day { min-height: 64px; }
   .srw-chip-teams { white-space: normal; }
 }
+
+/* Schedule page tabs (admin/schedule.html) */
+.sch-tabs { margin-bottom: var(--space-2); }
+.sch-panel { padding-bottom: var(--space-8); }
+.sch-todo { margin: var(--space-4) 0 0; padding: var(--space-3); border: 1px solid var(--color-alert); border-radius: var(--radius-md); background: var(--color-alert-soft); }
+.sch-todo .aces-btn { margin-left: var(--space-2); }

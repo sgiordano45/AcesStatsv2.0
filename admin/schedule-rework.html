@@ -1,87 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script type="module" src="../js/core/preview-guard.js"></script>
-<link rel="manifest" href="../manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#2d5016">
 <meta name="robots" content="noindex">
-<title>Schedule rework - Admin - Mountainside Aces</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="../css/tokens.css">
-<link rel="stylesheet" href="../css/base.css">
-<link rel="stylesheet" href="../css/components.css">
-<link rel="stylesheet" href="../mobile-enhancements.css">
-<link rel="stylesheet" href="../css/admin.css">
-<link rel="stylesheet" href="../css/admin-stats.css">
-<link rel="stylesheet" href="../css/admin-schedule.css">
+<title>Schedule Rework - Mountainside Aces</title>
+<!-- Retired in v2.0: Schedule Rework is now the Rework tab of admin/schedule.html. Kept so old links still work. -->
+<meta http-equiv="refresh" content="0; url=schedule.html?tab=rework">
+<script>{ const p = new URLSearchParams(location.search); p.set('tab', 'rework'); location.replace('schedule.html?' + p); }</script>
 </head>
-<body class="aces-v2 adm">
-
-<!-- admin/schedule-rework.html: move many games after rainouts, publish together (js/admin/schedule-rework.js). -->
-
-<div class="adm-shell aces-container" data-page-content>
-  <aside class="adm-side" id="adminSide" aria-label="Admin tools">
-    <div class="adm-filter">
-      <input class="aces-input" id="adminFilter" type="search" placeholder="Find a tool..." aria-label="Find a tool" autocomplete="off">
-    </div>
-    <nav id="adminNav"></nav>
-  </aside>
-
-  <main class="adm-main" id="main">
-    <header class="aces-page-head">
-      <div>
-        <span class="aces-page-kicker" id="adminWho">Admin</span>
-        <h1 class="aces-page-title">Schedule rework</h1>
-      </div>
-      <div class="stp-controls">
-        <span class="aces-select-wrap"><select class="aces-select" id="srwSeason" aria-label="Season"></select></span>
-        <button class="aces-btn adm-menu-btn" id="adminMenuBtn" type="button" aria-controls="adminSide">All tools</button>
-      </div>
-    </header>
-
-    <p class="stp-intro">Drag games onto new days and set their times. Moves are a shared draft that other staff see too; nothing changes for players until you publish. Postpone a game first in the <a href="schedule-editor.html">schedule editor</a> to send it to the tray.</p>
-
-    <div class="srw-layout">
-      <section class="aces-card srw-cal">
-        <div class="srw-cal-head">
-          <button class="aces-btn is-sm is-ghost" id="srwPrev" type="button" aria-label="Previous month">Prev</button>
-          <h2 class="aces-card-title" id="srwMonth"></h2>
-          <button class="aces-btn is-sm is-ghost" id="srwNext" type="button" aria-label="Next month">Next</button>
-        </div>
-        <div class="srw-grid" id="srwGrid"></div>
-      </section>
-
-      <aside class="srw-side">
-        <section class="aces-card">
-          <h2 class="tr-h">Needs a new date <span class="sse-dim">(<span id="srwTrayCount">0</span>)</span></h2>
-          <div class="srw-tray" id="srwTray" data-date="TRAY"></div>
-        </section>
-        <section class="aces-card">
-          <div class="srw-changes-head">
-            <h2 class="tr-h">Pending moves <span class="sse-dim">(<span id="srwCount">0</span>)</span></h2>
-            <button class="aces-btn is-sm is-ghost" id="srwDiscard" type="button" disabled>Discard all</button>
-          </div>
-          <div id="srwChanges" class="srw-changes"></div>
-          <button class="aces-btn is-primary is-block" id="srwPublish" type="button" disabled>Publish to the live schedule</button>
-        </section>
-        <section class="aces-card srw-done" id="srwDone" hidden>
-          <h2 class="tr-h">Published. Send the update</h2>
-          <textarea class="aces-input sed-msg" id="srwMsg" rows="8"></textarea>
-          <div class="sse-actions">
-            <a class="aces-btn is-primary" id="srwWa" href="#" target="_blank" rel="noopener">Send in WhatsApp</a>
-            <button class="aces-btn" id="srwCopy" type="button">Copy</button>
-          </div>
-        </section>
-      </aside>
-    </div>
-  </main>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-<script type="module" src="../js/admin/schedule-rework.js"></script>
+<body>
+<p>Schedule Rework is now part of the Schedule page. <a href="schedule.html?tab=rework">Go to Schedule</a>.</p>
 </body>
 </html>
