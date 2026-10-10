@@ -184,8 +184,7 @@ export const NAV_HUBS = [
       { id: 'playoff-history', href: 'playoff-history.html', label: 'Playoff history', icon: 'flag' },
       { id: 'trophy-case', href: 'trophy-case.html', label: 'Trophy case', icon: 'medal',
         also: ['badge-weekly.html'] },
-      { id: 'history', href: 'league-history.html', label: 'League history', icon: 'scroll',
-        also: ['aces-23-0.html'] },
+      { id: 'history', href: 'league-history.html', label: 'League history', icon: 'scroll' },
       { id: 'media', href: 'media.html', label: 'Media', icon: 'images',
         also: ['pictures.html', 'stream.html', 'photo-upload.html'] },
     ],
@@ -195,7 +194,7 @@ export const NAV_HUBS = [
     tabs: [
       { id: 'games', href: 'games.html', label: 'Daily games', icon: 'puzzle',
         also: ['aces-wordle.html', 'immaculate-grid.html', 'higher-lower.html', 'who-am-i.html',
-               'aces-connections.html', 'roster-recall.html'] },
+               'aces-connections.html', 'roster-recall.html', 'aces-23-0.html'] },
       { id: 'pickem', href: 'pickem.html', label: "Pick'em", icon: 'check-circle', signedIn: true },
       { id: 'aces-dfs', href: 'dfs.html', label: 'DFS', icon: 'dice', signedIn: true,
         also: ['dfs-week.html'] },
