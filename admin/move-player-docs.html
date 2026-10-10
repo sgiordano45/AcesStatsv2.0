@@ -34,11 +34,12 @@
 <script type="module">
   import { initPage, pageReady } from './js/core/app.js';
   initPage({ title: 'Move Player Docs', requiresAuth: true });
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
   import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
   import { getFirestore, collection, doc, getDocs, getDoc, setDoc } from './js/core/firebase.js';
 
-  const app = initializeApp({
+  // The site's own setup (js/core/firebase.js) has already started the default app; reuse it.
+const app = getApps().length ? getApp() : initializeApp({
     apiKey: "AIzaSyCAEWkrTcprzJ2KPPJu-vFJPvYOVU4ky20",
     authDomain: "acessoftballreference-84791.firebaseapp.com",
     projectId: "acessoftballreference-84791",

@@ -11,7 +11,7 @@
     <script type="module">
   import { initPage, pageReady } from './js/core/app.js';
   initPage({ title: 'GameChanger Cleaner', requiresAuth: true });
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getFirestore, doc, getDoc, setDoc } from './js/core/firebase.js';
         import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         
@@ -24,7 +24,8 @@
             appId: "1:777699560175:web:4092b422e7d7116352e91a"
         };
         
-        const app = initializeApp(firebaseConfig);
+        // The site's own setup (js/core/firebase.js) has already started the default app; reuse it.
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const googleProvider = new GoogleAuthProvider();
