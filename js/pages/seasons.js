@@ -22,7 +22,8 @@ import { seasonLabel, seasonSortKey, parseStatSeasonId } from '../domain/season-
 import { todayKey } from '../domain/dates.js';
 
 const $ = (id) => document.getElementById(id);
-const cap = (s) => (s ? String(s).charAt(0).toUpperCase() + String(s).slice(1).toLowerCase() : '');
+// Keep a stored name's own capitals ("Sofa Kings"); title-case all-lowercase ones.
+const cap = (s) => { const t = String(s || '').trim(); return /[A-Z]/.test(t) ? t : t.replace(/(^|\s)[a-z]/g, (c) => c.toUpperCase()); };
 const recordText = (r) => `${r.wins}-${r.losses}${r.ties ? `-${r.ties}` : ''}`;
 const n = (v) => Number(v || 0).toLocaleString('en-US');
 

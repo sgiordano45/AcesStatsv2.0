@@ -1,0 +1,91 @@
+/* ==========================================================================
+   css/playoffs.css - playoffs.html (js/pages/playoffs.js)
+   ========================================================================== */
+
+.po { padding-bottom: var(--space-12); }
+.po-head { gap: var(--space-3); }
+.po-id { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.po-logo img { display: block; width: 64px; height: 64px; object-fit: contain; }
+.po-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.po-actions .aces-icon { width: 16px; height: 16px; margin-right: 6px; }
+.po-status { margin: var(--space-4) 0 var(--space-3); }
+.po-status .aces-icon { width: 18px; height: 18px; }
+
+/* Staff bar */
+.po-staff { display: grid; gap: var(--space-2); margin-bottom: var(--space-4); border-left: 3px solid var(--color-brand); }
+.po-staff-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); }
+.po-staff-head strong { display: inline-flex; align-items: center; gap: 6px; }
+.po-staff-head .aces-icon { width: 16px; height: 16px; }
+.po-staff-btns { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.po-staff-btns .aces-icon { width: 14px; height: 14px; margin-right: 4px; }
+
+/* Champion */
+.po-champ { display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface)); }
+.po-champ-icon .aces-icon { width: 48px; height: 48px; color: var(--color-accent-ink, var(--color-accent)); }
+.po-champ-name { display: flex; align-items: center; gap: 8px; margin: 2px 0; font: 400 clamp(2rem, 6vw, 2.75rem) / 1 var(--font-display); letter-spacing: var(--tracking-display); }
+.po-champ-name a { color: var(--color-text); text-decoration: none; }
+.po-champ p { margin: 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+
+/* Bracket */
+.po-bracket { display: grid; grid-template-columns: repeat(var(--po-cols, 4), minmax(230px, 1fr)); gap: var(--space-4); overflow-x: auto; padding-bottom: var(--space-2); }
+.po-round { display: flex; flex-direction: column; min-width: 0; }
+.po-round-title { display: flex; align-items: center; gap: 6px; margin: 0 0 var(--space-2); color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.po-round-title .aces-icon { width: 14px; height: 14px; color: var(--color-accent-ink, var(--color-accent)); }
+.po-round-list { display: flex; flex: 1; flex-direction: column; justify-content: space-around; gap: var(--space-3); }
+
+.po-series { padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.po-series.is-final { border-color: var(--color-accent); box-shadow: 0 0 0 1px var(--color-accent); }
+.po-series.is-edit { cursor: pointer; }
+.po-series.is-edit:hover, .po-series.is-edit:focus-visible { border-color: var(--color-brand); outline: none; box-shadow: 0 0 0 2px var(--color-brand-soft); }
+.po-series header { display: flex; justify-content: space-between; gap: var(--space-2); margin-bottom: 4px; color: var(--color-text-faint); font-size: 11px; }
+.po-sid { font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); }
+
+.po-series .po-sstate { color: var(--color-text-muted); text-align: right; }
+.po-team { display: flex; align-items: center; gap: var(--space-2); min-height: 32px; border-top: 1px solid var(--color-border); font-size: var(--fs-sm); }
+.po-team.is-win { font-weight: var(--fw-bold); }
+.po-team.is-win .po-wins { color: var(--color-win); }
+.po-team.is-out { color: var(--color-text-muted); }
+.po-team.is-out a { color: var(--color-text-muted); }
+.po-seed { flex: none; width: 1.5em; color: var(--color-text-faint); font-size: var(--fs-xs); font-weight: var(--fw-bold); text-align: right; }
+.po-name { display: flex; flex: 1; flex-wrap: wrap; align-items: center; gap: 0 6px; min-width: 0; }
+.po-name a { color: inherit; font-weight: inherit; text-decoration: none; }
+.po-name a:hover { color: var(--color-link); text-decoration: underline; }
+.po-name small { color: var(--color-text-faint); font-size: var(--fs-xs); font-weight: var(--fw-regular, 400); }
+.po-tbd { color: var(--color-text-muted); font-style: italic; }
+.po-wins { flex: none; min-width: 1.2em; font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; text-align: right; }
+
+.po-games { display: flex; flex-wrap: wrap; gap: 4px; margin: var(--space-2) 0 0; padding: 0; list-style: none; }
+.po-games li { display: inline-flex; align-items: baseline; gap: 4px; padding: 2px 6px; border-radius: var(--radius-sm); background: var(--color-surface-2); color: var(--color-text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.po-games li b { color: var(--color-text); }
+.po-games li.is-played { background: var(--color-brand-soft); color: var(--color-text); font-weight: var(--fw-semibold); }
+.po-games li.is-maybe { border: 1px dashed var(--color-border-strong); background: transparent; }
+.po-games small { color: var(--color-text-faint); font-size: 10px; }
+
+.po-seeds { margin-top: var(--space-6); max-width: 640px; }
+.po-seeds .aces-card-title { display: inline-flex; align-items: center; gap: 6px; }
+.po-seeds .aces-card-title .aces-icon { width: 18px; height: 18px; color: var(--color-text-muted); }
+.po .aces-table thead th { position: static; }   /* sticky header painted mid-table on first load */
+.po-seeds th[scope="row"] { display: flex; align-items: center; gap: 6px; text-align: left; }
+
+/* Dialogs (outside .po) */
+.po-format { display: grid; gap: var(--space-3); }
+.po-format-top { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); }
+.po-field { display: grid; gap: 4px; }
+.po-field .aces-input { width: 90px; }
+.po-hint { margin: 0; color: var(--color-text-muted, #64748b); font-size: 13px; }
+.po-format-games { display: grid; gap: var(--space-3, 12px); max-height: 55vh; overflow-y: auto; }
+
+fieldset.po-fround { margin: 0; padding: var(--space-2, 8px) var(--space-3, 12px); border: 1px solid var(--color-border, #e2e8f0); border-radius: 8px; }
+fieldset.po-fround legend { padding: 0 4px; font-weight: 700; }
+.po-series-name { margin: var(--space-2, 8px) 0 4px; font-size: 14px; }
+.po-game { display: grid; grid-template-columns: 56px minmax(130px, 1fr) minmax(100px, 0.7fr) minmax(150px, 1fr); gap: 6px; align-items: center; margin-bottom: 4px; }
+.po-gnum { display: grid; font-weight: 700; font-size: 13px; }
+.po-gnum small { color: var(--color-text-muted, #64748b); font-size: 10px; font-weight: 600; }
+@media (max-width: 560px) { .po-game { grid-template-columns: 48px 1fr 1fr; } .po-game .aces-select-wrap { grid-column: 2 / -1; } }
+.po-score-form { display: grid; gap: var(--space-3, 12px); }
+.po-score-game { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; padding: 8px 12px 12px; border: 1px solid var(--color-border, #e2e8f0); border-radius: 8px; }
+.po-score-game legend { padding: 0 4px; font-weight: 700; }
+.po-score-game legend small { color: var(--color-text-muted, #64748b); font-weight: 500; }
+.po-score-game label { display: grid; gap: 4px; font-size: 13px; }
+.po-share-img { display: block; width: 100%; height: auto; border-radius: 8px; }
+.po-share-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
