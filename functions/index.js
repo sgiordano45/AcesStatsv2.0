@@ -687,8 +687,16 @@ exports.checkPlayerMilestone = functions.firestore
     // Check for milestone thresholds
     const milestones = [];
     
+    // Thresholds are open-ended: every `every` up to the new total, plus any
+    // early steps (25 and 75 for runs and games). Hits: every 50 (50 ... 400, 450 ...).
+    const stepsUpTo = (total, early, every) => {
+      const out = new Set(early);
+      for (let v = every; v <= (total || 0); v += every) out.add(v);
+      return [...out].sort((a, b) => a - b);
+    };
+
     // Hits milestones
-    const hitsMilestones = [50, 100, 150, 200, 250, 300];
+    const hitsMilestones = stepsUpTo(after.career?.hits, [], 50);
     for (const milestone of hitsMilestones) {
       if ((before.career?.hits || 0) < milestone && (after.career?.hits || 0) >= milestone) {
         milestones.push({
@@ -700,7 +708,7 @@ exports.checkPlayerMilestone = functions.firestore
     }
     
     // Runs milestones
-    const runsMilestones = [25, 50, 75, 100, 150, 200];
+    const runsMilestones = stepsUpTo(after.career?.runs, [25, 75], 50);
     for (const milestone of runsMilestones) {
       if ((before.career?.runs || 0) < milestone && (after.career?.runs || 0) >= milestone) {
         milestones.push({
@@ -712,7 +720,7 @@ exports.checkPlayerMilestone = functions.firestore
     }
     
     // Games milestones
-    const gamesMilestones = [25, 50, 75, 100, 150];
+    const gamesMilestones = stepsUpTo(after.career?.games, [25, 75], 50);
     for (const milestone of gamesMilestones) {
       if ((before.career?.games || 0) < milestone && (after.career?.games || 0) >= milestone) {
         milestones.push({
