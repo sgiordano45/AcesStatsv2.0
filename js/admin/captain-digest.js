@@ -35,6 +35,14 @@ async function load(box) {
   render(box);
 }
 
+/** A team's captains: names, and which email each one gets. */
+function who(t) {
+  const list = t.captains || [];
+  if (!list.length) return '<span class="cdg-warn">No captain with an email</span>';
+  return list.map((c) => `<span class="cdg-who" title="${esc(c.to)}">${esc(c.name || c.to)}${c.via === 'staff' ? ' <span class="cdg-dim">(staff email)</span>' : ''}</span>`).join('<br>')
+    + (t.quiet ? '<br><span class="cdg-dim">Not sent this week</span>' : '');
+}
+
 function render(box) {
   const p = preview;
   if (!p?.seasonId) { box.querySelector('[data-cdg-body]').innerHTML = '<p class="cdg-note">No season in progress, so nothing would go out.</p>'; return; }
@@ -42,19 +50,19 @@ function render(box) {
   p.recipients.forEach((r) => { if (!byTeam.has(r.team)) byTeam.set(r.team, []); byTeam.get(r.team).push(r.to); });
   box.querySelector('[data-cdg-body]').innerHTML = `
     <div class="aces-table-wrap"><table class="aces-table is-compact cdg-table">
-      <thead><tr><th scope="col">Email</th><th scope="col">Subject</th><th scope="col">Goes to</th><th scope="col"></th></tr></thead>
+      <thead><tr><th scope="col">Email</th><th scope="col">Subject</th><th scope="col">Captains</th><th scope="col"></th></tr></thead>
       <tbody>
         <tr><th scope="row">League staff</th><td>${esc(p.staff.subject)}</td><td>${(byTeam.get('All') || []).length} staff</td>
           <td><button type="button" class="aces-btn is-sm is-ghost" data-cdg-view="All">Preview</button>
               <button type="button" class="aces-btn is-sm is-ghost" data-cdg-test="">Send me a test</button></td></tr>
         ${p.teams.map((t) => `<tr${t.quiet ? ' class="is-quiet"' : ''}><th scope="row">${esc(t.team)}</th>
           <td>${t.quiet ? '<span class="cdg-dim">Nothing to report; not sent</span>' : esc(t.subject)}</td>
-          <td>${t.quiet ? '-' : `${(byTeam.get(t.team) || []).length} captain${(byTeam.get(t.team) || []).length === 1 ? '' : 's'}`}</td>
+          <td>${who(t)}</td>
           <td><button type="button" class="aces-btn is-sm is-ghost" data-cdg-view="${esc(t.team)}">Preview</button>
               <button type="button" class="aces-btn is-sm is-ghost" data-cdg-test="${esc(t.team)}">Send me a test</button></td></tr>`).join('')}
       </tbody>
     </table></div>
-    <p class="cdg-note">Captains with no email on their profile (users/{id}) or who turned it off aren't listed. It sends Tuesdays at 8:52 AM ET.</p>`;
+    <p class="cdg-note">Captains come from the roster's captain flag and team roles. League staff who captain get the staff email, which includes their team. Anyone with no email on their profile (users/{id}) or who turned it off isn't listed. It sends Tuesdays at 8:52 AM ET.</p>`;
 }
 
 async function view(team) {

@@ -14,8 +14,10 @@
 //   "Within reach" is adaptive: gap <= the player's per-game rate x the team's
 //                games this week (this season's rate once they have 3 games,
 //                else career). Games played: gap <= games this week.
-//   Recipients   captains from the roster doc (captain: true) and users with
-//                isCaptain + linkedTeam; league staff and admins. The email
+//   Recipients   captains from the roster doc (captain: true), active
+//                teamRoles captains, and legacy isCaptain + linkedTeam; league
+//                staff and admins (staff who captain get only the staff
+//                email, which includes their team). The email
 //                comes from users/{authId} or users/{legacyId} (legacy
 //                profiles carry an email too). Opt out:
 //                users/{id}.emailPreferences.captainDigest === false.
@@ -299,48 +301,58 @@ function composeEmails(digest) {
 // Recipients
 // ---------------------------------------------------------------------------
 
-async function userDocs(ids) {
-  const refs = [...new Set(ids.filter(Boolean))].map((id) => db().collection('users').doc(id));
-  if (!refs.length) return [];
-  const snaps = await db().getAll(...refs);
-  return snaps.filter((s) => s.exists).map((s) => ({ id: s.id, ...s.data() }));
-}
-
 const optedOut = (u) => u?.emailPreferences?.captainDigest === false;
 const validEmail = (e) => typeof e === 'string' && /.+@.+\..+/.test(e);
 
+const isStaffUser = (u) => ['league-staff', 'admin'].includes(u.userRole) || u.isAdmin === true || u.userType === 'league-staff';
+
+/** Team keys (lowercase) this user captains: active teamRoles, else isCaptain + linkedTeam. */
+function captainKeys(u) {
+  const keys = Object.entries(u.teamRoles || {})
+    .filter(([, tr]) => tr && tr.role === 'captain' && tr.status === 'active')
+    .map(([team]) => lower(team));
+  if (!keys.length && u.isCaptain === true && u.linkedTeam) keys.push(lower(u.linkedTeam));
+  return keys;
+}
+
+/**
+ * Who gets what. Captains come from three places: the season roster doc
+ * (captain: true, emailed through users/{authId} or users/{legacyId}), active
+ * teamRoles captains (what admin roles sets), and the legacy isCaptain +
+ * linkedTeam. League staff and admins get the combined email; a staff member
+ * who also captains gets only that one (it already has their team), and is
+ * listed on their team as covered by it.
+ */
 async function recipients(perTeam) {
-  const toTeam = new Map();   // email -> Set(team keys)
-  const add = (u, key) => {
-    if (!u || optedOut(u) || !validEmail(u.email)) return;
-    const e = u.email.trim().toLowerCase();
-    if (!toTeam.has(e)) toTeam.set(e, { name: u.displayName || u.linkedPlayer || u.name || '', teams: new Set() });
-    toTeam.get(e).teams.add(key);
-  };
-  const capSnap = await db().collection('users').where('isCaptain', '==', true).get().catch(() => ({ docs: [] }));
-  const flagged = capSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  for (const t of perTeam) {
-    const fromRoster = await userDocs(t.captains.flatMap((c) => c.ids));
-    fromRoster.forEach((u) => add(u, t.key));
-    flagged.filter((u) => lower(u.linkedTeam) === t.key).forEach((u) => add(u, t.key));
-  }
+  const all = (await db().collection('users').get()).docs.map((d) => ({ id: d.id, ...d.data() }));
+  const byId = new Map(all.map((u) => [u.id, u]));
+  const usable = (u) => u && !optedOut(u) && validEmail(u.email);
+  const addr = (u) => u.email.trim().toLowerCase();
+  const nameOf = (u) => u.displayName || u.linkedPlayer || u.name || '';
 
   const staff = new Map();
-  const staffQueries = [
-    db().collection('users').where('userRole', 'in', ['league-staff', 'admin']).get(),
-    db().collection('users').where('isAdmin', '==', true).get(),
-    db().collection('users').where('userType', '==', 'league-staff').get()
-  ];
-  for (const snap of await Promise.all(staffQueries.map((q) => q.catch(() => ({ docs: [] }))))) {
-    snap.docs.forEach((d) => {
-      const u = d.data();
-      if (optedOut(u) || !validEmail(u.email)) return;
-      staff.set(u.email.trim().toLowerCase(), u.displayName || u.linkedPlayer || '');
-    });
+  all.filter((u) => isStaffUser(u) && usable(u)).forEach((u) => staff.set(addr(u), nameOf(u)));
+
+  const captains = new Map();   // email -> { name, teams: Set(team keys) }
+  const byTeam = new Map();     // team key -> Map(email -> { name, via })
+  const add = (u, key) => {
+    if (!usable(u)) return;
+    const e = addr(u);
+    if (!byTeam.has(key)) byTeam.set(key, new Map());
+    byTeam.get(key).set(e, { name: nameOf(u), via: staff.has(e) ? 'staff' : 'team' });
+    if (staff.has(e)) return;
+    if (!captains.has(e)) captains.set(e, { name: nameOf(u), teams: new Set() });
+    captains.get(e).teams.add(key);
+  };
+  const keys = new Set(perTeam.map((t) => t.key));
+  for (const t of perTeam) {
+    t.captains.forEach((c) => { const u = c.ids.map((id) => byId.get(id)).find(usable); if (u) add(u, t.key); });
   }
-  // League staff who also captain get the combined email only.
-  for (const e of staff.keys()) toTeam.delete(e);
-  return { captains: toTeam, staff };
+  all.forEach((u) => captainKeys(u).filter((k) => keys.has(k)).forEach((k) => add(u, k)));
+
+  const teamCaptains = {};
+  for (const t of perTeam) teamCaptains[t.team] = [...(byTeam.get(t.key) || new Map())].map(([to, v]) => ({ to, ...v }));
+  return { captains, staff, teamCaptains };
 }
 
 // ---------------------------------------------------------------------------
@@ -363,7 +375,7 @@ async function runCaptainDigest({ dryRun = false, force = false, team = '', test
   const digest = await buildDigest({ onlyTeam: team });
   if (!digest.seasonId) return { success: true, message: 'No season in progress', sent: 0 };
   const { perTeam, staff } = composeEmails(digest);
-  const { captains, staff: staffTo } = await recipients(perTeam);
+  const { captains, staff: staffTo, teamCaptains } = await recipients(perTeam);
 
   // Messages: each captain gets each of their teams that has something to say.
   const messages = [];
@@ -383,7 +395,7 @@ async function runCaptainDigest({ dryRun = false, force = false, team = '', test
     return {
       success: true, dryRun: true, seasonId: digest.seasonId,
       recipients: messages.map((m) => ({ to: m.to, kind: m.kind, team: m.team, subject: m.subject })),
-      teams: perTeam.map((m) => ({ team: m.team, subject: m.subject, quiet: m.quiet, html: m.html, text: m.text })),
+      teams: perTeam.map((m) => ({ team: m.team, subject: m.subject, quiet: m.quiet, html: m.html, text: m.text, captains: teamCaptains[m.team] || [] })),
       staff: { subject: staff.subject, html: staff.html, text: staff.text }
     };
   }
