@@ -225,7 +225,7 @@ function renderSeasons() {
         : s.inProgress ? '<span class="aces-badge is-outline">In progress</span>' : '';
     const href = s.sid === S.current
       ? `current-season-team.html?${new URLSearchParams({ team: S.team })}`
-      : `season.html?${new URLSearchParams({ season: s.sid })}`;
+      : `season.html?${new URLSearchParams({ seasonId: s.sid })}`;
     return `<tr${s.result === 'champion' ? ' class="is-champ"' : ''}>
       <th scope="row"><a href="${esc(href)}">${esc(seasonLabel(s.sid))}</a></th>
       <td>${esc(rec)}</td><td>${pct}</td><td class="tp-finish">${finish}</td>
