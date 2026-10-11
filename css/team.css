@@ -1,0 +1,106 @@
+/* ==========================================================================
+   css/team.css - team.html (js/pages/team.js): one team, every season
+   ========================================================================== */
+
+.tp { padding-bottom: var(--space-12); }
+.tp-head { gap: var(--space-3); }
+.tp-id { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.tp-logo img { display: block; width: 56px; height: 56px; object-fit: contain; }
+.tp-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.tp-actions .aces-icon { width: 16px; height: 16px; margin-right: 6px; }
+
+/* Hero: all-time record */
+.tp-hero {
+  display: grid; gap: var(--space-3); margin-top: var(--space-4);
+  background: color-mix(in srgb, var(--team, var(--color-brand)) 7%, var(--color-surface));
+}
+.tp-record { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); }
+.tp-record strong { font: 400 clamp(2.75rem, 8vw, 3.75rem) / 1 var(--font-display); letter-spacing: var(--tracking-display); font-variant-numeric: tabular-nums; }
+.tp-record > span { color: var(--color-text-muted); font-weight: var(--fw-semibold); }
+.tp-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); margin: 0; padding: var(--space-2) 0 0; border-top: 1px solid var(--color-border); }
+@media (max-width: 560px) { .tp-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tp-facts div { display: grid; gap: 2px; }
+.tp-facts dt { color: var(--color-text-muted); font-size: 10px; font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.tp-facts dd { margin: 0; font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
+.tp-facts dd small { color: var(--color-text-muted); font-weight: var(--fw-regular, 400); }
+.tp-facts dd.is-up, .tp .is-up { color: var(--color-win); }
+.tp-facts dd.is-down, .tp .is-down { color: var(--color-loss); }
+.tp-ribbons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.tp-ribbon { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: var(--radius-pill); font-size: var(--fs-xs); font-weight: var(--fw-semibold); white-space: nowrap; }
+.tp-ribbon .aces-icon { width: 14px; height: 14px; }
+.tp-ribbon.is-gold { background: var(--color-accent-soft); color: var(--color-accent-ink); }
+.tp-ribbon.is-silver { background: var(--color-surface-2); color: var(--color-text-muted); }
+
+.tp-summary { margin: var(--space-4) 0; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 720px) { .tp-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .tp-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tp-tabs { margin-bottom: var(--space-4); }
+.tp-tabs .aces-tab .aces-icon { width: 16px; height: 16px; }
+
+/* Cards and tables */
+.tp-card + .tp-card { margin-top: var(--space-4); }
+.tp-card .aces-card-title { display: inline-flex; align-items: center; gap: 6px; }
+.tp-card .aces-card-title .aces-icon { width: 18px; height: 18px; color: var(--color-text-muted); }
+.tp-note { margin: var(--space-3) 0 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.tp-dim { color: var(--color-text-faint); font-size: var(--fs-sm); }
+.tp .aces-table thead th { position: static; }   /* sticky header painted mid-table on first load */
+.tp-table th[scope="row"] { white-space: nowrap; text-align: left; }
+.tp-table td { font-variant-numeric: tabular-nums; }
+.tp-table tr.is-champ > * { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+.tp-finish small { color: var(--color-text-muted); }
+.tp-result { white-space: nowrap; }
+.tp-team { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text); font-weight: var(--fw-semibold); text-decoration: none; }
+.tp-team:hover { color: var(--color-link); text-decoration: underline; }
+@media (max-width: 720px) { .tp-table .is-opt { display: none; } }
+
+/* Stats */
+.tp-stats { padding: var(--space-3); }
+.tp-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); margin-bottom: var(--space-3); }
+.tp-filter { display: grid; gap: 4px; }
+
+/* Leaders */
+.tp-leaders { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+.tp-leader { padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.tp-leader h3 { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); margin: 0 0 var(--space-2); font-size: var(--fs-sm); }
+.tp-leader h3 small { color: var(--color-text-faint); font-size: 10px; font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.tp-leader ol { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; }
+.tp-leader li { display: flex; align-items: center; gap: var(--space-2); font-size: var(--fs-sm); }
+.tp-lrank { min-width: 1.3em; color: var(--color-text-faint); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.tp-leader li:first-child .tp-lrank { color: var(--color-accent-ink, var(--color-text)); font-weight: var(--fw-bold); }
+.tp-lname { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tp-lval { font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Photos */
+.tp-photos { display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr)); margin: 0; padding: 0; list-style: none; }
+.tp-photo {
+  position: relative; display: block; width: 100%; aspect-ratio: 4 / 3; padding: 0; overflow: hidden;
+  border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-2); cursor: pointer;
+}
+.tp-photo img, .tp-photo video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tp-photo:hover img, .tp-photo:hover video { opacity: 0.9; }
+.tp-play { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; }
+.tp-play .aces-icon { width: 36px; height: 36px; padding: 8px; border-radius: 50%; background: rgba(0, 0, 0, 0.45); }
+.tp-photo-cap {
+  position: absolute; right: 0; bottom: 0; left: 0; padding: 14px 8px 6px; overflow: hidden;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent); color: #fff; font-size: var(--fs-xs); text-align: left; white-space: nowrap; text-overflow: ellipsis;
+}
+
+/* Viewer */
+.tp-viewer { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; padding: 0; border: 0; background: rgba(8, 10, 8, 0.94); color: #fff; }
+.tp-viewer::backdrop { background: rgba(0, 0, 0, 0.6); }
+.tp-viewer[open] { display: grid; grid-template-rows: minmax(0, 1fr) auto; place-items: center; }
+.tp-viewer-stage { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 56px 64px 8px; }
+.tp-viewer-stage img, .tp-viewer-stage video { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; }
+.tp-viewer-info { display: grid; gap: 2px; margin: 0; padding: var(--space-3) var(--space-4) var(--space-5); text-align: center; font-size: var(--fs-sm); }
+.tp-viewer-info span { opacity: 0.75; font-size: var(--fs-xs); }
+.tp-viewer-btn { position: absolute; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.12); color: #fff; cursor: pointer; }
+.tp-viewer-btn:hover { background: rgba(255, 255, 255, 0.22); }
+.tp-viewer-btn .aces-icon { width: 22px; height: 22px; }
+.tp-viewer-btn.is-close { top: 10px; right: 10px; }
+.tp-viewer-btn.is-prev { left: 10px; top: 50%; transform: translateY(-50%); }
+.tp-viewer-btn.is-next { right: 10px; top: 50%; transform: translateY(-50%); }
+@media (max-width: 560px) {
+  .tp-viewer-stage { padding: 56px 8px 8px; }
+  .tp-viewer-btn.is-prev, .tp-viewer-btn.is-next { top: auto; bottom: 12px; transform: none; }
+  .tp-logo img { width: 44px; height: 44px; }
+}
