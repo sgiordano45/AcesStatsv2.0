@@ -298,7 +298,7 @@ async function loadActivity() {
   }
 }
 
-const ACTIVITY_ICONS = { game: 'softball', milestone: 'target', badge: 'medal', careerHigh: 'trending-up', streak: 'flame', photo: 'image', standings: 'list' };
+const ACTIVITY_ICONS = { game: 'softball', milestone: 'target', badge: 'medal', careerHigh: 'trending-up', career_high: 'trending-up', streak: 'flame', photo: 'image', standings: 'list' };
 
 async function renderNews() {
   const [notes, feed] = await Promise.all([loadAnnouncements(), loadActivity()]);

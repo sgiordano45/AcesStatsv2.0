@@ -1,0 +1,47 @@
+/* ==========================================================================
+   css/activity.css - activity.html (js/pages/activity.js)
+   ========================================================================== */
+
+.ac { max-width: 860px; padding-bottom: var(--space-12); }
+.ac-head { gap: var(--space-3); }
+.ac-lede { margin: var(--space-1) 0 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.ac-actions .aces-icon { width: 16px; height: 16px; margin-right: 6px; }
+
+.ac-filters { display: grid; gap: var(--space-2); margin: var(--space-4) 0; }
+.ac-types .aces-icon { width: 14px; height: 14px; }
+.ac-types .aces-chip[aria-pressed="true"] { border-color: var(--color-brand); background: var(--color-brand-soft); color: var(--color-text); }
+
+.ac-day + .ac-day { margin-top: var(--space-5); }
+.ac-day-head { margin: 0 0 var(--space-2); color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.ac-list { margin: 0; padding: 0; list-style: none; }
+.ac-item { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
+.ac-item + .ac-item { border-top: 1px solid var(--color-border); }
+.ac-icon { display: inline-grid; flex: none; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--color-brand-soft); color: var(--color-brand); }
+:root[data-theme="dark"] .ac-icon { color: var(--color-link); }
+.ac-icon .aces-icon { width: 18px; height: 18px; }
+.ac-item.is-milestone .ac-icon, .ac-item.is-career_high .ac-icon { background: var(--color-accent-soft); color: var(--color-accent-ink, var(--color-text)); }
+.ac-item.is-streak .ac-icon { background: var(--color-loss-soft); color: var(--color-loss); }
+.ac-body { flex: 1; min-width: 0; }
+.ac-title { margin: 0; font-weight: var(--fw-semibold); }
+.ac-title a { color: var(--color-text); }
+.ac-title a:hover { color: var(--color-link); }
+.ac-desc { margin: 2px 0 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.ac-meta { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 4px 0 0; color: var(--color-text-faint); font-size: var(--fs-xs); }
+.ac-type { font-weight: var(--fw-semibold); }
+.ac-share { flex: none; color: var(--color-text-muted); }
+.ac-share .aces-icon { width: 16px; height: 16px; }
+.ac-more { display: flex; justify-content: center; margin-top: var(--space-4); }
+.ac-more[hidden] { display: none; }
+
+/* Dialogs (outside .ac) */
+.ac-share-img { display: block; width: 100%; max-width: 360px; height: auto; margin: 0 auto; border-radius: 8px; }
+.ac-share-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px; }
+.ac-share-btns .aces-icon { width: 16px; height: 16px; margin-right: 6px; }
+.ac-digest { display: grid; gap: 12px; }
+.ac-digest-range { display: grid; gap: 4px; max-width: 200px; }
+.ac-digest-body { max-height: 50vh; overflow-y: auto; padding: 8px 12px; border: 1px solid var(--color-border, #e2e8f0); border-radius: 8px; }
+.ac-digest-body h3 { margin: 10px 0 4px; font-size: 14px; }
+.ac-digest-body h3:first-child { margin-top: 0; }
+.ac-digest-body ul { margin: 0; padding-left: 18px; font-size: 14px; }
+.ac-digest .aces-btn .aces-icon { width: 16px; height: 16px; margin-right: 6px; }
+.ac-dim { color: var(--color-text-muted, #64748b); }
