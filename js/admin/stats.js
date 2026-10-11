@@ -23,6 +23,7 @@ import { seasonLabel, seasonSortKey } from '../domain/season-ids.js';
 import { escapeHtml as esc } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 import { mountAdminShell } from './shell.js';
+import { mountCaptainDigest } from './captain-digest.js';
 
 const $ = (id) => document.getElementById(id);
 const GAME_LENGTH_MS = 2 * 60 * 60 * 1000;
@@ -279,6 +280,7 @@ async function main() {
   }));
   $('stpRefresh').addEventListener('click', () => show(sel.value));
 
+  mountCaptainDigest($('stpDigest'));
   pageReady();
   if (start) await show(start);
 }

@@ -138,3 +138,16 @@
 
 .stp-enter { text-decoration: none; }
 .stp-enter:hover { text-decoration: underline; }
+
+/* Tuesday milestone email (js/admin/captain-digest.js) */
+.stp-digest { margin-top: var(--space-8); }
+.cdg-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.cdg-head .adm-heading { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
+.cdg-head .aces-icon, .cdg .aces-btn .aces-icon { width: 16px; height: 16px; margin-right: 4px; }
+.cdg-note { margin: var(--space-2) 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.cdg-table thead th { position: static; }
+.cdg-table th[scope="row"] { text-align: left; white-space: nowrap; }
+.cdg-table tr.is-quiet { color: var(--color-text-muted); }
+.cdg-dim { color: var(--color-text-faint); }
+.cdg-meta { margin: 0 0 8px; font-size: 14px; }
+.cdg-frame { width: 100%; height: 60vh; border: 1px solid var(--color-border, #e2e8f0); border-radius: 8px; background: #fff; }

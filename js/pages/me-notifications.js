@@ -8,7 +8,7 @@
 //     lineupChanges, announcements, scoreUpdates, finalScoreOnly, milestones,
 //     captainRsvpAlerts, quietHours: { enabled, start, end } }   (booleans)
 //   emailPreferences: { gameReminders, scheduleChanges, finalScore,
-//     rsvpReminders, milestones, pickemReminders, captainRsvpAlert }
+//     rsvpReminders, milestones, pickemReminders, captainRsvpAlert, captainDigest }
 // Older docs store some push preferences as { enabled }; both shapes read here.
 
 import { db, doc, getDoc, updateDoc } from '../core/firebase.js';
@@ -45,6 +45,7 @@ const EMAIL = [
   ['finalScore', 'Final score', "A recap when your team's game is done", false],
   ['rsvpReminders', 'RSVP reminder', "If you haven't answered for an upcoming game", false],
   ['captainRsvpAlert', 'Low RSVP alert', 'A day before a game if fewer than 9 are in', false, 'captain'],
+  ['captainDigest', 'Milestone watch', 'Tuesdays: players close to a career milestone, and games missing stats', true, 'captain'],
   ['pickemReminders', "Pick'em", "Monday recap and preview, plus a reminder before picks lock", true],
   ['milestones', 'Milestones', 'When you hit a career milestone', false]
 ];
@@ -232,7 +233,8 @@ async function onSubmit(e) {
         rsvpReminders: on('rsvpReminders'),
         milestones: on('milestones'),
         pickemReminders: on('pickemReminders'),
-        captainRsvpAlert: f.captainRsvpAlert ? on('captainRsvpAlert') : prev.captainRsvpAlert === true
+        captainRsvpAlert: f.captainRsvpAlert ? on('captainRsvpAlert') : prev.captainRsvpAlert === true,
+        captainDigest: f.captainDigest ? on('captainDigest') : prev.captainDigest !== false
       };
       await updateDoc(doc(db, 'users', ctx.uid), { emailPreferences: prefs });
       data.emailPreferences = prefs;

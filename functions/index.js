@@ -4431,3 +4431,6 @@ exports.triggerPickemDigest = functions
 // summaryOnGameWrite, summaryRefresh, rebuildSeasonSummary
 // ============================================================================
 Object.assign(exports, require('./summary'));
+
+// Tuesday milestone watch email for captains and league staff (functions/captain-digest.js)
+Object.assign(exports, require('./captain-digest'));
