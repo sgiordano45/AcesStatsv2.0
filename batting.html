@@ -5,510 +5,73 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Batting Statistics - Mountainside Aces</title>
 <meta name="theme-color" content="#2d5016">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Batting stats for every Mountainside Aces player, by season, team or all-time.">
+<title>Batting - Mountainside Aces</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="mobile-enhancements.css">
-<link rel="stylesheet" href="nav-styles.css">
-<link rel="stylesheet" href="dark-mode.css">
-<style>
-:root {
-  --primary-color: #2d5016;
-  --secondary-color: #1a6b4a;
-  --accent-color: #ffd700;
-  --card-bg: #ffffff;
-  --text-dark: #2d3748;
-  --text-light: #718096;
-  --border-color: #e2e8f0;
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
-  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-  min-height: 100vh;
-  color: var(--text-dark);
-}
-
-/* Loading Overlay */
-.loading-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(255,255,255,0.95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  transition: opacity 0.3s ease;
-}
-
-.loading-overlay.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.softball-spinner::before {
-  content: '⚾';
-  font-size: 80px;
-  animation: spin 1.5s ease-in-out infinite;
-}
-
-@keyframes spin {
-  0%, 100% { transform: rotate(0deg) scale(1); }
-  50% { transform: rotate(180deg) scale(1.1); }
-}
-
-/* Header */
-.page-header {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-  padding: 4rem 2rem;
-  box-shadow: var(--shadow-lg);
-  position: relative;
-  overflow: hidden;
-  color: white;
-  text-align: center;
-}
-
-.page-header::before {
-  content: '';
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-  border-radius: 50%;
-}
-
-.page-header::after {
-  content: '⚾';
-  position: absolute;
-  bottom: -30px;
-  left: -30px;
-  font-size: 200px;
-  opacity: 0.05;
-}
-
-.page-header h1 {
-  font-size: 3.5rem;
-  font-weight: 800;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-  position: relative;
-  z-index: 1;
-}
-
-.page-header p {
-  font-size: 1.3rem;
-  font-weight: 300;
-  opacity: 0.9;
-  position: relative;
-  z-index: 1;
-}
-
-/* Dashboard Container */
-.page-container {
-  max-width: 1400px;
-  margin: 3rem auto;
-  padding: 0 2rem;
-}
-
-/* Summary Section */
-.summary {
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-  position: relative;
-}
-
-.summary::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-  border-radius: 16px 16px 0 0;
-}
-
-.summary p {
-  margin: 0 0 1rem 0;
-  color: var(--text-dark);
-  font-size: 1rem;
-  line-height: 1.6;
-}
-
-.summary p:last-child {
-  margin-bottom: 0;
-}
-
-#loadingIndicator {
-  text-align: center;
-  padding: 2rem;
-}
-
-#loadingIndicator p:first-child {
-  font-size: 1.2rem;
-  color: var(--primary-color);
-  font-weight: 600;
-}
-
-#loadingIndicator p:last-child {
-  color: var(--text-light);
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-}
-
-/* Filters and Navigation Section */
-.filters-nav {
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-  position: relative;
-}
-
-.filters-nav::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-  border-radius: 16px 16px 0 0;
-}
-
-.filters-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.filters-section > div {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.filters-section label {
-  font-weight: 600;
-  color: var(--text-dark);
-}
-
-.filters-section select {
-  padding: 0.6rem 1.2rem;
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
-  background: white;
-  color: var(--text-dark);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.filters-section select:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(45,80,22,0.1);
-}
-
-/* Navigation Buttons */
-.nav-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.nav-link {
-  padding: 0.8rem 1.5rem;
-  border: 2px solid var(--primary-color);
-  background: white;
-  color: var(--primary-color);
-  text-decoration: none;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.nav-link::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--primary-color);
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
-  z-index: -1;
-}
-
-.nav-link:hover::before {
-  transform: translateX(0);
-}
-
-.nav-link:hover {
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.nav-link.pitching {
-  border-color: #11998e;
-  color: #11998e;
-}
-
-.nav-link.pitching::before {
-  background: #11998e;
-}
-
-.nav-link.active {
-  background: var(--primary-color);
-  color: white;
-}
-
-.nav-link.batting.active {
-  background: var(--primary-color);
-}
-
-@media (max-width: 768px) {
-  .page-header h1 {
-    font-size: 2.5rem;
-  }
-  
-  .page-header p {
-    font-size: 1.1rem;
-  }
-  
-  .page-container {
-    padding: 0 1rem;
-    margin: 2rem auto;
-  }
-  
-  .summary, .filters-nav {
-    padding: 1.5rem;
-  }
-  
-  .filters-section {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-  
-  .filters-section > div {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .filters-section select {
-    width: 100%;
-  }
-  
-  .nav-container {
-    flex-direction: column;
-  }
-  
-  .nav-link {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .mobile-nav-container {
-    display: block;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-header {
-    padding: 3rem 1rem;
-  }
-  
-  .page-header h1 {
-    font-size: 2rem;
-  }
-  
-}
-
-/* The stat table sits in a card like the summary and filters. */
-.batting-table {
-  margin-top: 1.5rem;
-}
-</style>
+<link rel="stylesheet" href="css/stat-page.css">
 </head>
-<body>
-<!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay" data-page-loading>
-  <div class="softball-spinner"></div>
-</div>
+<body class="aces-v2" data-kind="batting">
 
+<!-- batting.html: every player's batting stats (js/pages/stat-page.js, shared with pitching.html). -->
 
-<!-- Header -->
-<div class="page-header">
-  <h1>Mountainside Aces Batting Stats</h1>
-  <p>Complete batting statistics and performance metrics for all players</p>
-</div>
+<main class="sp aces-container" id="main">
+  <header class="aces-page-head sp-head">
+    <div>
+      <span class="aces-page-kicker">Stats</span>
+      <h1 class="aces-page-title">Batting</h1>
+    </div>
+    <div class="sp-links">
+      <a class="aces-btn is-sm is-ghost" href="leaders.html"><svg class="aces-icon" aria-hidden="true"><use href="icons.svg#icon-trophy"></use></svg>Leaders</a>
+      <a class="aces-btn is-sm is-ghost" href="explore.html"><svg class="aces-icon" aria-hidden="true"><use href="icons.svg#icon-search"></use></svg>Explore</a>
+    </div>
+  </header>
 
-<!-- Main Content -->
-<div class="page-container">
-  <!-- Summary Section -->
-  <div id="summary" class="summary">
-    <div id="loadingIndicator" data-page-loading>
-      <p style="font-size: 1.2rem; color: var(--primary-color);">⏳ Loading batting statistics...</p>
-      <p style="color: var(--text-light); margin-top: 0.5rem;">Using optimized aggregated collection (fast!)</p>
+  <nav class="aces-tabs sp-tabs" aria-label="Stats">
+    <a class="aces-tab" href="batting.html" aria-current="page"><svg class="aces-icon" aria-hidden="true"><use href="icons.svg#icon-bat"></use></svg><span>Batting</span></a>
+    <a class="aces-tab" href="pitching.html"><svg class="aces-icon" aria-hidden="true"><use href="icons.svg#icon-softball"></use></svg><span>Pitching</span></a>
+  </nav>
+
+  <section class="aces-card sp-filters" aria-label="Filters">
+    <label class="sp-filter"><span class="aces-label">Season</span>
+      <span class="aces-select-wrap"><select class="aces-select" id="seasonFilter"><option value="all">All seasons</option></select></span></label>
+    <label class="sp-filter"><span class="aces-label">Team</span>
+      <span class="aces-select-wrap"><select class="aces-select" id="teamFilter"><option value="all">All teams</option></select></span></label>
+    <label class="sp-filter"><span class="aces-label">Subs</span>
+      <span class="aces-select-wrap"><select class="aces-select" id="subsFilter">
+        <option value="include">Include sub games</option>
+        <option value="exclude">Exclude sub games</option>
+        <option value="only">Sub games only</option>
+      </select></span></label>
+  </section>
+
+  <div id="spBody">
+    <div data-page-loading>
+      <div class="aces-stats sp-totals">
+        <div class="aces-stat"><span class="aces-skeleton is-title"></span></div>
+        <div class="aces-stat"><span class="aces-skeleton is-title"></span></div>
+        <div class="aces-stat"><span class="aces-skeleton is-title"></span></div>
+        <div class="aces-stat"><span class="aces-skeleton is-title"></span></div>
+      </div>
+      <div class="aces-card"><span class="aces-skeleton is-title"></span><span class="aces-skeleton is-row"></span><span class="aces-skeleton is-row"></span><span class="aces-skeleton is-row"></span></div>
     </div>
     <div data-page-content hidden>
-      <p id="totalsText"></p>
-      <p id="leadersText"></p>
+      <div class="aces-stats sp-totals" id="spTotals" aria-live="polite"></div>
+      <section class="aces-card sp-card sp-table-card"><div id="spTable"></div></section>
+      <div id="spRecords"></div>
     </div>
   </div>
+</main>
 
-  <!-- Filters -->
-  <div class="filters-nav">
-    <div class="filters-section">
-      <div>
-        <label for="seasonFilter">Season:</label>
-        <select id="seasonFilter">
-          <option value="all">All seasons</option>
-        </select>
-      </div>
-      <div>
-        <label for="teamFilter">Team:</label>
-        <select id="teamFilter">
-          <option value="all">All teams</option>
-        </select>
-      </div>
-      <div>
-        <label for="subsFilter">Subs:</label>
-        <select id="subsFilter">
-          <option value="include">Include sub games</option>
-          <option value="exclude">Exclude sub games</option>
-          <option value="only">Sub games only</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- Statistics Table (js/ui/table.js) -->
-  <div id="battingTable" class="batting-table"></div>
-</div>
-
-<script src="team-colors.js"></script>
-<script type="module">
-  // firebase-data.js first: its firebase-config.js creates the Firebase app,
-  // and js/core/firebase.js (loaded through app.js) reuses it.
-  import { getAllPlayerStatsOptimized } from './firebase-data.js';
-  import { initPage, pageReady, showPageState, showPageError } from './js/core/app.js';
-  import { fmtAvg, fmtRate } from './js/ui/format.js';
-  import { battingLine, QUALIFIERS } from './js/domain/stats.js';
-  import { applyTeamGames } from './js/data/team-games.js';
-  import { mountStatTable } from './js/ui/table.js';
-  import { mountStatFilters, pickDefaultSeason } from './js/ui/stat-filters.js';
-  import { buildBattingRows, battingTableConfig } from './js/ui/batting-stats.js';
-
-  const $ = (id) => document.getElementById(id);
-  const line = (r) => battingLine(r);
-  let allRows = [];   // one row per player-season; the page filters apply on top
-
-  // ---- summary ---------------------------------------------------------------
-
-  function updateSummary(rows) {
-    const totalsText = $('totalsText');
-    const leadersText = $('leadersText');
-    if (!rows.length) { totalsText.textContent = 'No stats for this selection'; leadersText.textContent = ''; return; }
-    const n = (v) => v.toLocaleString('en-US');
-    const sum = (f) => rows.reduce((s, r) => s + r[f], 0);
-    const players = new Set(rows.map(r => r.id || r.name)).size;
-    totalsText.textContent = `${n(players)} players | ${n(sum('games'))} games | ${n(sum('atBats'))} at bats | ${n(sum('hits'))} hits | ${n(sum('runs'))} runs | ${n(sum('walks'))} walks`;
-
-    // All-time single-season leaders (every season, not just the selection).
-    const best = (list, f) => list.reduce((m, r) => (f(r) > f(m) ? r : m), list[0]);
-    const rated = allRows.filter(r => r.atBats >= QUALIFIERS.ALL_TIME_MIN_AB);
-    const bpi = allRows.filter(r => r.acesBPI !== null);
-    const parts = [
-      ['Games', best(allRows, r => r.games), r => r.games],
-      ['At Bats', best(allRows, r => r.atBats), r => r.atBats],
-      ['Hits', best(allRows, r => r.hits), r => r.hits],
-      ['Runs', best(allRows, r => r.runs), r => r.runs],
-      ['Walks', best(allRows, r => r.walks), r => r.walks],
-      rated.length && ['BA', best(rated, r => r.hits / r.atBats), r => fmtAvg(r.hits / r.atBats)],
-      rated.length && ['OBP', best(rated, r => line(r).obp), r => fmtAvg(line(r).obp)],
-      bpi.length && ['AcesBPI', best(bpi, r => r.acesBPI), r => fmtRate(r.acesBPI)]
-    ].filter(Boolean);
-    leadersText.textContent = 'All-Time Single Season Leaders — ' +
-      parts.map(([label, r, val]) => `${label}: ${r.name} (${val(r)}, ${r.seasonLabel})`).join(' | ');
-  }
-
-  // ---- start -------------------------------------------------------------------
-
-  async function main() {
-    const ctx = await initPage({ title: 'Batting Statistics' });
-    // The signed-in player's rows get the gold "you" highlight (View As aware).
-    const me = new Set([ctx?.profile?.linkedPlayer, ctx?.profile?.playerId, ctx?.user?.uid].filter(Boolean));
-
-    const table = mountStatTable($('battingTable'), battingTableConfig(), {
-      emptyMessage: 'No batting stats for this selection.',
-      exportName: 'aces-batting',
-      exportTitle: 'Aces batting',
-      rowClass: r => (me.size && r.ids.some(id => me.has(id)) ? 'is-me' : '')
-    });
-
-    const players = await getAllPlayerStatsOptimized();
-    allRows = buildBattingRows(players);
-    if (!allRows.length) {
-      showPageState({ title: 'No batting stats yet', message: 'Stats show up here once games have been entered.', container: '#summary' });
-      return;
-    }
-
-    const filters = mountStatFilters({
-      season: $('seasonFilter'), team: $('teamFilter'), subs: $('subsFilter'),
-      rows: allRows,
-      defaultSeason: pickDefaultSeason(allRows.map(r => r.seasonId), ctx?.config),
-      onChange: (rows) => { table.setRows(rows); updateSummary(rows); }
-    });
-    filters.apply();
-    pageReady();
-
-    // Team games (for Qualified) load after the table is up.
-    try {
-      await applyTeamGames(allRows, { fallbackToPlayerGames: true });
-      table.refresh();
-    } catch (err) {
-      console.warn('[batting] team games unavailable; Qualified shows no one', err);
-    }
-  }
-
-  main().catch((err) => showPageError(err, { container: '#summary' }));
-</script>
-
-
+<script type="module" src="js/pages/stat-page.js"></script>
 <script src="mobile-enhancements.js"></script>
 <script src="stat-tooltips.js"></script>
 </body>

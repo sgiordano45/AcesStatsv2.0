@@ -1,0 +1,29 @@
+/* ==========================================================================
+   css/stat-page.css - batting.html and pitching.html (js/pages/stat-page.js)
+   ========================================================================== */
+
+.sp { padding-bottom: var(--space-12); }
+.sp-head { gap: var(--space-3); }
+.sp-links { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.sp-links .aces-icon { width: 16px; height: 16px; margin-right: 6px; }
+.sp-tabs { margin: var(--space-3) 0 var(--space-4); }
+.sp-tabs .aces-tab .aces-icon { width: 16px; height: 16px; }
+
+.sp-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
+.sp-filter { display: grid; flex: 1 1 160px; gap: 4px; max-width: 260px; }
+@media (max-width: 560px) { .sp-filter { max-width: none; } }
+
+.sp-totals { margin: var(--space-4) 0; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+.sp-card + .sp-card, .sp-table-card + #spRecords { margin-top: var(--space-4); }
+.sp-table-card { padding: var(--space-3); }
+.sp-card .aces-card-title { display: inline-flex; align-items: center; gap: 6px; }
+.sp-card .aces-card-title .aces-icon { width: 18px; height: 18px; color: var(--color-text-muted); }
+
+.sp-records { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); margin: 0; padding: 0; list-style: none; }
+.sp-record { display: grid; gap: 2px; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.sp-record-label { color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.sp-record-label small { color: var(--color-text-faint); font-weight: var(--fw-semibold); text-transform: none; letter-spacing: 0; }
+.sp-record-value { font: 400 var(--fs-2xl, 2rem) / 1.1 var(--font-display); letter-spacing: var(--tracking-display); font-variant-numeric: tabular-nums; }
+.sp-record-who { font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.sp-record-who small { display: block; color: var(--color-text-muted); font-weight: var(--fw-regular, 400); }
+.sp-note { margin: var(--space-3) 0 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
