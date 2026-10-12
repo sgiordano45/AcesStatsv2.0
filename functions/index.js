@@ -3915,7 +3915,31 @@ function pickemFormatLock(ms) {
   return new Date(ms).toLocaleString('en-US', { timeZone: PICKEM_TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' });
 }
 
-function pickemBuildEmail(name, games) {
+// Pick'em entry fee. Who has paid lives in pickem/{seasonId}/private/payments
+// ({ paid: { uid: { paid, name, at } } }), marked by an admin on pickem.html.
+// Anyone not marked paid gets a short note in the digest and pick reminders.
+// No payments doc yet means fees aren't being tracked: no notes.
+const PICKEM_PAY_NOTE = 'Please settle up with Stephen when you can.';
+
+async function pickemPaidSet(seasonId) {
+  try {
+    const snap = await db.collection('pickem').doc(seasonId).collection('private').doc('payments').get();
+    if (!snap.exists) return null;
+    const paid = snap.data().paid || {};
+    return new Set(Object.keys(paid).filter(uid => paid[uid] && paid[uid].paid));
+  } catch (err) {
+    console.warn("Pick'em payments unavailable:", err.message);
+    return null;
+  }
+}
+
+function pickemPayHtml() {
+  return `<div style="margin:0 0 18px;padding:12px 14px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;font-size:0.875rem;color:#92400e;">
+          <strong>Entry fee reminder:</strong> our records show you haven't paid for Pick'em yet. ${pickemEscape(PICKEM_PAY_NOTE)}
+        </div>`;
+}
+
+function pickemBuildEmail(name, games, unpaid = false) {
   const n = games.length;
   const rows = games.map(g => `
     <tr>
@@ -3934,6 +3958,7 @@ function pickemBuildEmail(name, games) {
         <p style="margin:0 0 16px;color:#2d3748;font-size:0.95rem;">
           Hey ${pickemEscape(name)}, you haven't picked ${n === 1 ? 'this game' : 'these games'} yet. Each game locks at first pitch.
         </p>
+        ${unpaid ? pickemPayHtml() : ''}
         <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">${rows}</table>
         <div style="margin:24px 0 8px;text-align:center;">
           <a href="${PICKEM_URL}" style="display:inline-block;background:#2d5016;color:#fff;text-decoration:none;font-weight:700;padding:12px 28px;border-radius:8px;">Make my picks</a>
@@ -3994,6 +4019,8 @@ async function runPickemReminders({ dryRun = false, force = false, hoursAhead = 
     return { success: true, message: 'Everyone is caught up', sent: 0 };
   }
 
+  const paidSet = await pickemPaidSet(season.id);
+
   // Resolve emails + opt-outs
   const userRefs = targets.map(t => db.collection('users').doc(t.uid));
   const userDocs = [];
@@ -4011,14 +4038,14 @@ async function runPickemReminders({ dryRun = false, force = false, hoursAhead = 
     }
     if (!email) continue;
     const name = u.preferredDisplayName || u.displayName || t.fallbackName || 'there';
-    emails.push({ uid: t.uid, email, name, missing: t.missing });
+    emails.push({ uid: t.uid, email, name, missing: t.missing, unpaid: !!paidSet && !paidSet.has(t.uid) });
   }
 
   console.log(`🎯 Pick'em: ${windowGames.length} games in window, ${targets.length} entrants missing picks, ${emails.length} to email${dryRun ? ' (DRY RUN)' : ''}`);
   if (dryRun) {
     return {
       success: true, dryRun: true, gamesInWindow: windowGames.length, wouldSend: emails.length,
-      recipients: emails.map(e => ({ name: e.name, email: e.email, missing: e.missing.length }))
+      recipients: emails.map(e => ({ name: e.name, email: e.email, missing: e.missing.length, unpaid: e.unpaid }))
     };
   }
 
@@ -4030,7 +4057,7 @@ async function runPickemReminders({ dryRun = false, force = false, hoursAhead = 
     if (i > 0) await sleep(1000);
     const chunk = emails.slice(i, i + CHUNK);
     const payload = chunk.map(e => {
-      const { subject, html } = pickemBuildEmail(e.name, e.missing);
+      const { subject, html } = pickemBuildEmail(e.name, e.missing, e.unpaid);
       return { from: 'Mountainside Aces <noreply@acessoftballreference.com>', to: [e.email], subject, html };
     });
     try {
@@ -4211,7 +4238,7 @@ function pickemScore(entries, gameList) {
   return rows;
 }
 
-function pickemBuildDigestEmail({ name, uid, top5, ytdRows, upsets, lastWeekLabel, weekGames, weekLabel, picked }) {
+function pickemBuildDigestEmail({ name, uid, top5, ytdRows, upsets, lastWeekLabel, weekGames, weekLabel, picked, unpaid = false }) {
   const me = ytdRows.find(r => r.uid === uid);
   const rowsHtml = top5.map(r => `
     <tr${r.uid === uid ? ' style="background:#fef9c3;"' : ''}>
@@ -4271,6 +4298,7 @@ function pickemBuildDigestEmail({ name, uid, top5, ytdRows, upsets, lastWeekLabe
       </div>
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;padding:24px;">
         <p style="margin:0 0 18px;color:#2d3748;font-size:0.95rem;">Hey ${pickemEscape(name)}, here's where things stand heading into the week.</p>
+        ${unpaid ? pickemPayHtml() : ''}
         ${standingsHtml}
         ${upsetsHtml}
         ${previewHtml}
@@ -4343,6 +4371,8 @@ async function runPickemDigest({ dryRun = false, force = false } = {}) {
   const logSnap = await logRef.get();
   const alreadySent = new Set(force ? [] : (logSnap.exists ? (logSnap.data().sent || []) : []));
 
+  const paidSet = await pickemPaidSet(season.id);
+
   // Resolve emails + opt-outs
   const targets = entries.filter(e => !alreadySent.has(e.uid));
   const userDocs = [];
@@ -4361,7 +4391,7 @@ async function runPickemDigest({ dryRun = false, force = false } = {}) {
     if (!email) continue;
     const name = u.preferredDisplayName || u.displayName || e.displayName || 'there';
     const picked = new Set(weekGames.filter(g => pickemValidPick(e, g)).map(g => g.id));
-    recipients.push({ uid: e.uid, email, name, picked });
+    recipients.push({ uid: e.uid, email, name, picked, unpaid: !!paidSet && !paidSet.has(e.uid) });
   }
 
   const common = {
@@ -4379,7 +4409,7 @@ async function runPickemDigest({ dryRun = false, force = false } = {}) {
       top5: top5.map(r => ({ rank: r.rank, name: r.name, pts: r.pts, record: `${r.correct}-${r.wrong}` })),
       upsets: upsets.map(u => `${u.winnerName} over ${u.loserName} (${u.winnerPicks}/${u.total})`),
       wouldSend: recipients.length,
-      recipients: recipients.map(r => ({ name: r.name, email: r.email, picked: r.picked.size })),
+      recipients: recipients.map(r => ({ name: r.name, email: r.email, picked: r.picked.size, unpaid: r.unpaid })),
       sampleSubject: sample && sample.subject,
       sampleHtml: sample && sample.html
     };
