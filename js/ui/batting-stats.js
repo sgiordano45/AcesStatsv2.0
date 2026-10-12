@@ -45,7 +45,7 @@ export function buildBattingRows(players, { team = null } = {}) {
         sub,
         hasHitTypes: 'doubles' in s && hasCompleteHitTypes(sid.id, teamName),
         acesBPI: sub ? null : numOrNull(s.acesBPI),   // subs get no acesBPI
-        bwar: numOrNull(s.bwarSimp),
+        bwar: numOrNull(s.bwar ?? s.bwarSimp),   // full bWAR where written, else simplified
         teamGames: 0
       };
       for (const f of BATTING_COUNT_FIELDS) row[f] = Number(s[f]) || 0;

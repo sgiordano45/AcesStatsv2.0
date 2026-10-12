@@ -94,7 +94,7 @@
         <div class="agg-tool-head">
           <div>
             <h3 class="tr-h">bWAR for <span data-season-name></span></h3>
-            <p class="sse-sub">Writes <code>bwarSimp</code> on each player's season in <code>aggregatedPlayerStats</code>. Weights: BB 0.30, 1B/2B/3B 0.70, HR 1.40; replacement 50% of league average; at least 20 PA; RPW 0.5 x R/G.</p>
+            <p class="sse-sub">Writes <code>bwar</code> (with <code>bwarMethod</code>) and <code>bwarSimp</code> on each player's season in <code>aggregatedPlayerStats</code>. Weights: BB 0.30, 1B 0.46, 2B 0.75, 3B 1.02, HR 1.40. From 2026 Fall on, real 2B and 3B (any team missing them has its non-HR hits split at the other teams' rates). Earlier seasons stay simplified: 0.70 for every non-HR hit. Replacement 50% of league average; at least 20 PA; RPW 0.5 x R/G.</p>
           </div>
           <div class="sse-actions">
             <button class="aces-btn" id="bwarPreviewBtn" type="button" data-run="runBWARCalculator" data-arg="true">Preview</button>

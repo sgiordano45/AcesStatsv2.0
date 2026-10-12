@@ -4572,7 +4572,7 @@ All recipients will be BCC'd.`)) return;
               '3B': s.triples ?? '',
               'HR': s.homeRuns ?? '',
               'RBI': s.rbi ?? '',
-              'bWAR': s.bwarSimp != null ? Number(s.bwarSimp).toFixed(2) : ''
+              'bWAR': (s.bwar ?? s.bwarSimp) != null ? Number(s.bwar ?? s.bwarSimp).toFixed(2) : ''
             });
           });
         });
@@ -4610,7 +4610,7 @@ All recipients will be BCC'd.`)) return;
               '3B': s.triples ?? '',
               'HR': s.homeRuns ?? '',
               'RBI': s.rbi ?? '',
-              'bWAR': s.bwarSimp != null ? Number(s.bwarSimp).toFixed(2) : ''
+              'bWAR': (s.bwar ?? s.bwarSimp) != null ? Number(s.bwar ?? s.bwarSimp).toFixed(2) : ''
             });
           });
         });

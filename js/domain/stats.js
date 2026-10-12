@@ -230,21 +230,31 @@ export function acesBPIForSeason(records) {
 }
 
 // ---------------------------------------------------------------------------
-// bWAR (simplified)
+// bWAR
 // ---------------------------------------------------------------------------
-// wOBA = (0.30 BB + 0.70 non-HR hits + 1.40 HR) / PA
+// wOBA weights: BB 0.30, 1B 0.46, 2B 0.75, 3B 1.02, HR 1.40.
+//   Full: a record with complete hit types uses its real 2B and 3B.
+//   Imputed: a record without them, in a season where some teams have them,
+//     splits its non-HR hits into 1B/2B/3B at the typed teams' rates.
+//   Simplified (seasons with no hit types at all): every non-HR hit is 0.70.
+// HR is real in every season.
 // Replacement = 50% of the season's PA-weighted league wOBA.
 // bWAR = (wOBA - replacement) x PA / RPW, RPW = 0.5 x league runs per game.
 // Below 20 PA, or negative, bWAR is 0.
 
 export const BWAR_WEIGHTS = Object.freeze({
   wBB: 0.3,
-  wFlat: 0.7,      // 1B, 2B and 3B alike (hit types aren't in every season)
+  w1B: 0.46,
+  w2B: 0.75,
+  w3B: 1.02,
   wHR: 1.4,
+  wFlat: 0.7,      // simplified: 1B, 2B and 3B alike
   replPct: 50,
   minPA: QUALIFIERS.BWAR_MIN_PA,
   rpwMul: 0.5,
-  defaultRunsPerGame: 14
+  defaultRunsPerGame: 14,
+  default2BRate: 0.22,   // share of non-HR hits, when no team has hit types
+  default3BRate: 0.05
 });
 
 /** Total runs per completed game (both teams), from game docs. */
@@ -259,6 +269,7 @@ export function leagueRunsPerGame(games) {
   return count > 0 ? runs / count : null;
 }
 
+/** Simplified wOBA: non-HR hits at the flat weight. */
 export function wOBA(record, weights = BWAR_WEIGHTS) {
   const c = battingCounts(record);
   const pa = c.atBats + c.walks;
@@ -267,16 +278,69 @@ export function wOBA(record, weights = BWAR_WEIGHTS) {
   return (weights.wBB * c.walks + weights.wFlat * nonHR + weights.wHR * c.homeRuns) / pa;
 }
 
+/** 2B and 3B as shares of non-HR hits across the typed records. */
+export function hitTypeRates(records, weights = BWAR_WEIGHTS) {
+  let nonHR = 0, dbl = 0, tri = 0;
+  for (const r of records) {
+    const c = battingCounts(r);
+    nonHR += Math.max(0, c.hits - c.homeRuns);
+    dbl += c.doubles;
+    tri += c.triples;
+  }
+  return nonHR > 0
+    ? { double: dbl / nonHR, triple: tri / nonHR }
+    : { double: weights.default2BRate, triple: weights.default3BRate };
+}
+
+/** 1B/2B/3B/HR for a record: real when `typed`, else non-HR hits split at `rates`. */
+export function hitMix(record, typed, rates) {
+  const c = battingCounts(record);
+  const nonHR = Math.max(0, c.hits - c.homeRuns);
+  let dbl, tri;
+  if (typed) {
+    dbl = Math.min(c.doubles, nonHR);
+    tri = Math.min(c.triples, nonHR - dbl);
+  } else {
+    dbl = Math.round(nonHR * rates.double);
+    tri = Math.round(nonHR * rates.triple);
+    if (dbl + tri > nonHR) {
+      const scale = nonHR / (dbl + tri);
+      dbl = Math.round(dbl * scale);
+      tri = Math.min(Math.round(tri * scale), nonHR - dbl);
+    }
+  }
+  return { single: nonHR - dbl - tri, double: dbl, triple: tri, homeRun: c.homeRuns };
+}
+
+/** Full wOBA from a hit mix (hitMix). */
+export function wOBAFull(record, mix, weights = BWAR_WEIGHTS) {
+  const c = battingCounts(record);
+  const pa = c.atBats + c.walks;
+  if (pa <= 0) return 0;
+  return (weights.wBB * c.walks + weights.w1B * mix.single + weights.w2B * mix.double
+    + weights.w3B * mix.triple + weights.wHR * mix.homeRun) / pa;
+}
+
 /**
  * bWAR for every record of a season, in the same order.
- * @param {object[]} records          season stat records
- * @param {{ runsPerGame?: number }}   league runs per game (leagueRunsPerGame); default 14
- * @returns {{ values: number[], leagueWOBA: number, replacementWOBA: number, runsPerWin: number }}
+ * @param {object[]} records  season stat records
+ * @param {object}   [opts]
+ * @param {number}   [opts.runsPerGame]  league runs per game (leagueRunsPerGame); default 14
+ * @param {(record: object) => boolean} [opts.typed]  true when a record has
+ *        complete hit types. Given: full bWAR (imputed for the records it
+ *        rejects). Left out: simplified bWAR.
+ * @returns {{ values: number[], methods: string[], wobas: number[], leagueWOBA: number,
+ *   replacementWOBA: number, runsPerWin: number, rates: ?{double: number, triple: number} }}
  */
-export function bwarForSeason(records, { runsPerGame = null, weights = BWAR_WEIGHTS } = {}) {
-  const rows = records.map((r) => {
+export function bwarForSeason(records, { runsPerGame = null, weights = BWAR_WEIGHTS, typed = null } = {}) {
+  const full = typeof typed === 'function';
+  const isTyped = full ? records.map((r) => !!typed(r)) : records.map(() => false);
+  const rates = full ? hitTypeRates(records.filter((r, i) => isTyped[i]), weights) : null;
+  const rows = records.map((r, i) => {
     const c = battingCounts(r);
-    return { pa: c.atBats + c.walks, woba: wOBA(r, weights) };
+    const pa = c.atBats + c.walks;
+    if (!full) return { pa, woba: wOBA(r, weights), method: 'simplified' };
+    return { pa, woba: wOBAFull(r, hitMix(r, isTyped[i], rates), weights), method: isTyped[i] ? 'full' : 'imputed' };
   });
   const counted = rows.filter((r) => r.pa > 0);
   const totalPA = counted.reduce((s, r) => s + r.pa, 0);
@@ -288,7 +352,7 @@ export function bwarForSeason(records, { runsPerGame = null, weights = BWAR_WEIG
     const raw = runsPerWin > 0 ? ((r.woba - replacementWOBA) * r.pa) / runsPerWin : 0;
     return Math.max(0, raw);
   });
-  return { values, leagueWOBA, replacementWOBA, runsPerWin };
+  return { values, methods: rows.map((r) => r.method), wobas: rows.map((r) => r.woba), leagueWOBA, replacementWOBA, runsPerWin, rates };
 }
 
 // ---------------------------------------------------------------------------

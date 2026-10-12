@@ -17,7 +17,8 @@ import {
   deleteField, query, where, documentId
 } from '../core/firebase.js';
 import { getAllSeasons } from '../data/seasons.js';
-import { seasonLabel, seasonSortKey } from '../domain/season-ids.js';
+import { seasonLabel, seasonSortKey, hasCompleteHitTypes, HIT_TYPES_FROM } from '../domain/season-ids.js';
+import { bwarForSeason, BWAR_WEIGHTS } from '../domain/stats.js';
 import { escapeHtml as esc } from '../ui/format.js';
 import { showToast } from '../ui/toast.js';
 import { confirmModal } from '../ui/modal.js';
@@ -1752,16 +1753,13 @@ window.runBWARCalculator = async function(previewOnly = true) {
   log('\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550', 'header');
 
   // \u2500\u2500 Calibrated weights \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  const W = {
-    wBB:     0.30,
-    wFlat:   0.70,   // flat weight for 1B/2B/3B (non-HR hits)
-    wHR:     1.40,
-    replPct: 50,     // replacement level as % of league avg wOBA
-    minPA:   20,
-    rpwMul:  0.5,    // RPW = R/G \u00d7 rpwMul
-  };
-
-  log(`Weights: wBB=${W.wBB} wFlat=${W.wFlat} wHR=${W.wHR} | Replacement=${W.replPct}% | Min PA=${W.minPA} | RPW=${W.rpwMul}\u00d7R/G`);
+  // Weights and the method live in js/domain/stats.js (bwarForSeason).
+  const W = BWAR_WEIGHTS;
+  // Full bWAR from 2026 Fall on (every team has hit types). Earlier seasons,
+  // 2026 Summer included, stay simplified.
+  const useFull = seasonSortKey(seasonId) >= seasonSortKey(HIT_TYPES_FROM);
+  log(`Method: ${useFull ? 'full (real 2B/3B where tracked, imputed for other teams)' : 'simplified (before 2026 Fall)'}`);
+  log(`Weights: BB ${W.wBB} | 1B ${W.w1B} 2B ${W.w2B} 3B ${W.w3B} | flat ${W.wFlat} | HR ${W.wHR} | Replacement ${W.replPct}% | Min PA ${W.minPA} | RPW ${W.rpwMul} x R/G`);
 
   try {
     // \u2500\u2500 Step 1: Load all season player stats \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -1789,6 +1787,7 @@ window.runBWARCalculator = async function(previewOnly = true) {
         h:         Number(s.hits)     || 0,
         bb,
         hr:        Number(s.homeRuns) || 0,
+        record:    s,
       });
     });
     log(`  Found ${players.length} players with PA > 0 for ${seasonId}`, 'success');
@@ -1863,38 +1862,32 @@ window.runBWARCalculator = async function(previewOnly = true) {
 
     // \u2500\u2500 Step 3: Compute wOBA per player \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     log('Step 3: Computing wOBA and bWAR...', 'game');
-    const withWOBA = players.map(p => {
-      const nonHR = Math.max(0, p.h - p.hr);
-      const woba = (W.wBB * p.bb + W.wFlat * nonHR + W.wHR * p.hr) / p.pa;
-      return { ...p, woba };
+    const full = bwarForSeason(players.map(p => p.record), {
+      runsPerGame: leagueRPG,
+      typed: useFull ? (r) => hasCompleteHitTypes(seasonId, r.team) : null
     });
+    const simp = bwarForSeason(players.map(p => p.record), { runsPerGame: leagueRPG });
+    const leagueWOBA = full.leagueWOBA;
+    log(`  League avg wOBA: ${leagueWOBA.toFixed(3)} \u00b7 Replacement: ${full.replacementWOBA.toFixed(3)}`);
+    if (full.rates) log(`  Hit mix for imputed teams: 2B ${(full.rates.double * 100).toFixed(1)}% \u00b7 3B ${(full.rates.triple * 100).toFixed(1)}% of non-HR hits`);
+    const counts = full.methods.reduce((m, k) => ({ ...m, [k]: (m[k] || 0) + 1 }), {});
+    log(`  Players by method: ${Object.entries(counts).map(([k, n]) => `${k} ${n}`).join(' \u00b7 ')}`);
 
-    // PA-weighted league average
-    const totalPA     = withWOBA.reduce((s, p) => s + p.pa, 0);
-    const leagueWOBA  = totalPA > 0
-      ? withWOBA.reduce((s, p) => s + p.woba * p.pa, 0) / totalPA : 0;
-    const replWOBA    = leagueWOBA * (W.replPct / 100);
-
-    log(`  League avg wOBA: ${leagueWOBA.toFixed(3)} \u00b7 Replacement: ${replWOBA.toFixed(3)}`);
-
-    // \u2500\u2500 Step 4: Compute final bWAR \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-    const results = withWOBA.map(p => {
-      const rar     = (p.woba - replWOBA) * p.pa;
-      const bwarRaw = RPW > 0 ? rar / RPW : 0;
-      const bwarSimp = p.pa >= W.minPA ? Math.max(0, bwarRaw) : 0;
-      return { ...p, bwarSimp };
-    });
+    // \u2500\u2500 Step 4: bWAR (bwar = the value shown; bwarSimp kept for comparison) \u2500\u2500
+    const results = players.map((p, i) => ({
+      ...p, woba: full.wobas[i], bwar: full.values[i], bwarSimp: simp.values[i], method: full.methods[i]
+    }));
 
     const qualified = results.filter(p => p.pa >= W.minPA);
-    const topPlayer = [...results].sort((a, b) => b.bwarSimp - a.bwarSimp)[0];
+    const topPlayer = [...results].sort((a, b) => b.bwar - a.bwar)[0];
 
-    log(`  ${qualified.length} qualified players (\u2265${W.minPA} PA) \u00b7 Top: ${topPlayer?.name} ${topPlayer?.bwarSimp?.toFixed(2)}`);
+    log(`  ${qualified.length} qualified players (\u2265${W.minPA} PA) \u00b7 Top: ${topPlayer?.name} ${topPlayer?.bwar?.toFixed(2)}`);
 
     // Update stat cards
     document.getElementById('bwarPlayersCalc').textContent      = results.length;
     document.getElementById('bwarQualified').textContent        = qualified.length;
     document.getElementById('bwarLeagueAvgDisplay').textContent = leagueWOBA.toFixed(3);
-    document.getElementById('bwarRPWDisplay').textContent       = RPW.toFixed(2);
+    document.getElementById('bwarRPWDisplay').textContent       = full.runsPerWin.toFixed(2);
     document.getElementById('bwarRPWSource').textContent        = rpwSource;
 
     // \u2500\u2500 Step 5: Preview or Write \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -1902,11 +1895,11 @@ window.runBWARCalculator = async function(previewOnly = true) {
       log('');
       log('\u2500\u2500 Preview (top 20 by bWAR) \u2500\u2500', 'header');
       [...results]
-        .sort((a, b) => b.bwarSimp - a.bwarSimp)
+        .sort((a, b) => b.bwar - a.bwar)
         .slice(0, 20)
         .forEach((p, i) => {
           const qual = p.pa >= W.minPA ? '' : ' unqualified';
-          log(`  ${String(i+1).padStart(2)}. ${p.name} (${p.team}) \u2014 PA:${p.pa} H:${p.h} HR:${p.hr} BB:${p.bb} | wOBA:${p.woba.toFixed(3)} \u2192 bWAR:${p.bwarSimp.toFixed(2)}${qual}`, 'success');
+          log(`  ${String(i+1).padStart(2)}. ${p.name} (${p.team}) \u2014 PA:${p.pa} H:${p.h} HR:${p.hr} BB:${p.bb} | wOBA:${p.woba.toFixed(3)} \u2192 bWAR:${p.bwar.toFixed(2)} (${p.method}; simplified ${p.bwarSimp.toFixed(2)})${qual}`, 'success');
         });
       log('');
       log('Preview complete \u2014 no data written.', 'success');
@@ -1919,7 +1912,7 @@ window.runBWARCalculator = async function(previewOnly = true) {
         try {
           const docRef = doc(db, getAggregatedCollection(), p.docId);
           await setDoc(docRef, {
-            seasons: { [p.seasonKey]: { bwarSimp: p.bwarSimp } }
+            seasons: { [p.seasonKey]: { bwar: p.bwar, bwarMethod: p.method, bwarSimp: p.bwarSimp } }
           }, { merge: true });
           writtenCount++;
         } catch (err) {
