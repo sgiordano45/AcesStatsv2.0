@@ -15,7 +15,7 @@ export const TOOL_GROUPS = [
     ['game-tracker.html', 'Game tracker', 'Score a game live, play by play', 'clipboard-check'],
     ['manage-team.html', 'Team staff', 'Add or remove co-captains and staff', 'shield'],
     ['captain-roster-edit.html', 'Edit roster info', 'Names, numbers and positions', 'edit'],
-    ['team-scouting-report.html', 'Scouting report', 'Your next opponent at a glance', 'binoculars'],
+    ['scouting-report.html?tab=team', 'Scouting report', 'Your next opponent at a glance', 'binoculars'],
     ['media.html#upload', 'Team photos', 'Upload photos from games', 'camera']
   ] },
   { role: 'league-staff', title: 'League staff', icon: 'settings', guide: 'help.html#league-staff', tools: [

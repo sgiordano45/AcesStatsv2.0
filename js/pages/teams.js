@@ -9,6 +9,8 @@
 //                win %, run differential, playoff record, titles, runner-ups
 //                and players, former teams included.
 //
+// Team stats tab (?tab=stats&season=): js/pages/teams-stats.js (it replaced team-stats.html).
+//
 // Teams are the ones in aggregatedPlayerStats (Aces teams; outside teams on
 // early schedules are left out, as is the old Kings guest team). Records are
 // from game docs: regular-season games with a winner count toward W-L-T,
@@ -26,7 +28,8 @@ import { teamChipHtml, TEAM_COLORS } from '../ui/stat-columns.js';
 import { escapeHtml as esc, fmtAvg } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 import { normalizeGames, buildRecords, computeStandings, isDecided, winPct } from '../domain/standings.js';
-import { seasonLabel, seasonSortKey } from '../domain/season-ids.js';
+import { seasonLabel, seasonSortKey, parseStatSeasonId } from '../domain/season-ids.js';
+import { renderTeamStats } from './teams-stats.js';
 
 const $ = (id) => document.getElementById(id);
 const EXCLUDED_TEAMS = new Set(['kings']);
@@ -252,7 +255,41 @@ async function main() {
   renderCurrent(standings, allTime, captains, titles, seasonId, offseason);
   renderAllTime(allTime, new Set(standings.map(r => String(r.team).toLowerCase())));
   document.addEventListener('error', (e) => { if (e.target.matches?.('[data-logo]')) e.target.remove(); }, true);
+
+  // Tabs: Teams | Team stats (drawn the first time it's opened).
+  const q = new URLSearchParams(location.search);
+  let statsDrawn = false;
+  const show = (tab, { push = false } = {}) => {
+    const stats = tab === 'stats';
+    $('tmTabs').innerHTML = [['teams', 'Teams', 'shield'], ['stats', 'Team stats', 'table']].map(([id, label, ic]) =>
+      `<a class="aces-tab" href="?tab=${id}" data-tm-tab="${id}"${(id === 'stats') === stats ? ' aria-current="page"' : ''}>${icon(ic)}<span>${label}</span></a>`).join('');
+    $('tmTeams').hidden = stats;
+    $('tmTeamStats').hidden = !stats;
+    if (push) {
+      const u = new URL(location.href);
+      u.searchParams.set('tab', tab);
+      if (!stats) u.searchParams.delete('season');
+      history.replaceState(null, '', u);
+    }
+    if (stats && !statsDrawn) {
+      statsDrawn = true;
+      const want = q.get('season') === 'all' ? 'all' : parseStatSeasonId(q.get('season') || '').id;
+      renderTeamStats($('tmTeamStats'), {
+        players: players || [], gamesBySeason,
+        seasonIds: seasons.map(s => s.id).sort((a, b) => seasonSortKey(b) - seasonSortKey(a)),
+        season: want || seasonId
+      });
+      if (location.hash === '#tsTable') requestAnimationFrame(() => $('tsTable')?.scrollIntoView({ block: 'start' }));
+    }
+  };
+  $('tmTabs').addEventListener('click', (e) => {
+    const a = e.target.closest('[data-tm-tab]');
+    if (!a || e.metaKey || e.ctrlKey) return;
+    e.preventDefault();
+    show(a.dataset.tmTab, { push: true });
+  });
   pageReady();
+  show(q.get('tab') === 'stats' ? 'stats' : 'teams');
 }
 
 main().catch((err) => { pageReady(); showPageError(err); });

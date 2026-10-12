@@ -184,7 +184,7 @@ function renderStandings() {
     <p class="cs-note">${icon('lock')} seed clinched. SOS is the win percentage of the teams played (green easier, red harder); Pyth is the record runs scored and allowed point to.</p>`;
   $('csStandings').innerHTML = card('Standings', table, {
     iconName: 'list',
-    extra: `<div class="cs-head-actions"><a class="aces-btn is-sm is-ghost" href="projections.html">${icon('trending-up')}Seed odds</a><button class="aces-btn is-sm" type="button" data-share>${icon('share')}Share</button></div>`
+    extra: `<div class="cs-head-actions"><a class="aces-btn is-sm is-ghost" href="teams.html?${esc(new URLSearchParams({ tab: 'stats', season: S.id }).toString())}#tsTable">${icon('table')}Team stats</a><a class="aces-btn is-sm is-ghost" href="projections.html">${icon('trending-up')}Seed odds</a><button class="aces-btn is-sm" type="button" data-share>${icon('share')}Share</button></div>`
   });
 }
 

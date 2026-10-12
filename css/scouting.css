@@ -1,0 +1,87 @@
+/* ==========================================================================
+   css/scouting.css - scouting-report.html (js/pages/scouting.js)
+   ========================================================================== */
+
+.sc { padding-bottom: var(--space-12); }
+.sc-desc { margin: var(--space-1) 0 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.sc-tabs { margin: var(--space-4) 0; }
+.sc-panel { display: grid; gap: var(--space-4); }
+.sc .aces-card { margin: 0; }
+.sc .aces-btn .aces-icon { width: 16px; height: 16px; margin-right: 6px; }
+.sc thead th { position: static; }
+
+/* Controls */
+.sc-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); }
+.sc-field { display: grid; gap: 4px; }
+.sc-field .aces-label { margin: 0; }
+.sc-field.is-grow { flex: 1 1 220px; }
+.sc-next small { margin-left: 6px; opacity: 0.8; font-weight: 400; }
+.sc-empty { display: grid; justify-items: center; gap: var(--space-2); padding: var(--space-8) var(--space-4); text-align: center; }
+.sc-empty .aces-icon { width: 36px; height: 36px; color: var(--color-text-faint); }
+.sc-note { margin: var(--space-3) 0 0; color: var(--color-text-faint); font-size: var(--fs-xs); }
+.sc-sub { margin: var(--space-4) 0 var(--space-2); color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+
+/* Team report */
+.sc-report { border-top: 4px solid var(--team, var(--color-brand)); }
+.sc-report-head { display: flex; align-items: center; gap: var(--space-3); padding-bottom: var(--space-3); margin-bottom: var(--space-3); border-bottom: 1px solid var(--color-border); }
+.sc-logo { width: 52px; height: 52px; object-fit: contain; }
+.sc-report-head h2 { margin: 0; font: 400 2rem / 1 var(--font-display); letter-spacing: var(--tracking-display); }
+.sc-report-head p { margin: 2px 0 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.sc-report-meta { display: grid; margin-left: auto; text-align: right; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.sc-report-meta b { color: var(--color-text); font-size: var(--fs-sm); }
+
+.sc-cards { display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); margin: 0; padding: 0; list-style: none; }
+.sc-card { display: grid; gap: 6px; align-content: start; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md, 10px); background: var(--color-surface); break-inside: avoid; }
+.sc-card.is-captain { border-color: var(--color-accent); box-shadow: inset 0 3px 0 var(--color-accent); }
+.sc-card.is-sub { opacity: 0.8; }
+.sc-card-head { display: flex; align-items: center; gap: 6px; }
+.sc-name { overflow: hidden; color: var(--color-text); font-weight: var(--fw-semibold); text-overflow: ellipsis; white-space: nowrap; }
+.sc-num { margin-left: auto; color: var(--color-text-faint); font: 400 1.1rem / 1 var(--font-display); }
+.sc-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.sc-row-label { flex: 0 0 100%; color: var(--color-text-faint); font-size: 10px; font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.sc-stat { display: inline-grid; justify-items: start; }
+.sc-stat small { color: var(--color-text-muted); font-size: 10px; }
+.sc-stat b { font: 400 1.35rem / 1 var(--font-display); font-variant-numeric: tabular-nums; }
+.sc-stat.is-sm b { font-size: 1rem; color: var(--color-text-muted); }
+.sc-row.is-career .sc-stat b { font-size: 1.05rem; color: var(--color-text-muted); }
+.sc-none { color: var(--color-text-faint); font-size: var(--fs-xs); }
+.sc-spray { display: grid; justify-items: center; gap: 2px; }
+.sc-spray svg { width: 100%; max-width: 180px; height: auto; }
+.sc-spray small { color: var(--color-text-faint); font-size: 10px; }
+.sc-totals { margin-top: var(--space-3); padding-top: var(--space-2); border-top: 1px solid var(--color-border); color: var(--color-text-muted); font-size: var(--fs-sm); }
+.sc-totals b { color: var(--color-text); }
+
+/* Spray field (same look as player.html's Spray tab) */
+.pl-spray-of { fill: color-mix(in srgb, var(--color-win) 12%, var(--color-surface)); stroke: color-mix(in srgb, var(--color-win) 35%, var(--color-surface)); stroke-width: 1.5; }
+.pl-spray-if { fill: color-mix(in srgb, #b08954 22%, var(--color-surface)); stroke: color-mix(in srgb, #b08954 45%, var(--color-surface)); stroke-width: 1; }
+.pl-spray-bases { fill: none; stroke: color-mix(in srgb, #b08954 60%, var(--color-surface)); stroke-width: 1.2; }
+.pl-spray-line { stroke: color-mix(in srgb, var(--color-win) 35%, var(--color-surface)); stroke-width: 1.2; }
+.pl-spray-mound { fill: color-mix(in srgb, #b08954 30%, var(--color-surface)); stroke: color-mix(in srgb, #b08954 60%, var(--color-surface)); }
+.pl-spray-plate { fill: var(--color-surface); stroke: var(--color-text-faint); }
+.pl-spray-dot { stroke: var(--color-surface); stroke-width: 1.5; fill-opacity: 0.85; }
+.pl-spray-dot.is-precise { stroke-width: 1; fill-opacity: 0.75; }
+.pl-spray-dot.is-hit { fill: var(--color-win); }
+.pl-spray-dot.is-out { fill: var(--color-loss); }
+
+/* Matchup */
+.sc-match-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-3); }
+.sc-kicker { color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.sc-match-head h2 { margin: 2px 0 0; font: 400 2rem / 1 var(--font-display); letter-spacing: var(--tracking-display); }
+.sc-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; }
+@media (max-width: 560px) { .sc-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.sc-cmp.is-up .aces-stat-value { color: var(--color-win); }
+.sc-cmp.is-down .aces-stat-value { color: var(--color-loss); }
+.sc-split-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+.sc-split-grid .sc-sub { margin-top: var(--space-4); }
+.pl-better { font-weight: var(--fw-semibold); color: var(--color-win); }
+
+/* Print: just the team report, on one sheet */
+@media print {
+  @page { size: letter portrait; margin: 0.4in; }
+  .aces-header, .aces-header-spacer, .aces-bottom, .aces-sheet, .aces-page-head, .sc-tabs, .sc-controls, footer { display: none !important; }
+  body, .sc { background: #fff !important; padding: 0 !important; }
+  .sc-report { border: 0; box-shadow: none; padding: 0; }
+  .sc-cards { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .sc-card { padding: 6px 8px; }
+  .sc-spray svg { max-width: 120px; }
+}

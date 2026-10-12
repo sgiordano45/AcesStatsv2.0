@@ -18,10 +18,11 @@
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="mobile-enhancements.css">
 <link rel="stylesheet" href="css/teams.css">
+<link rel="stylesheet" href="css/teams-stats.css">
 </head>
 <body class="aces-v2">
 
-<!-- teams.html: this season's teams in standings order, then every team's all-time line (js/pages/teams.js). -->
+<!-- teams.html: Teams tab (this season's teams in standings order, then every team's all-time line) and Team stats tab (js/pages/teams.js, js/pages/teams-stats.js). ?tab=stats&season=2026-fall -->
 
 <main class="teams aces-container" id="main">
   <header class="aces-page-head">
@@ -46,9 +47,13 @@
   </div>
 
   <div data-page-content hidden>
-    <div class="aces-stats tm-summary" id="tmStats"></div>
-    <section id="tmCurrent"></section>
-    <section id="tmAllTime"></section>
+    <nav class="aces-tabs tm-tabs" id="tmTabs" aria-label="Teams views"></nav>
+    <div id="tmTeams">
+      <div class="aces-stats tm-summary" id="tmStats"></div>
+      <section id="tmCurrent"></section>
+      <section id="tmAllTime"></section>
+    </div>
+    <section class="ts" id="tmTeamStats" hidden></section>
   </div>
 </main>
 

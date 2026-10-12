@@ -33,14 +33,15 @@ function field() {
 
 const dot = (x, y, hit, label, precise) => `<circle class="pl-spray-dot ${hit ? 'is-hit' : 'is-out'}${precise ? ' is-precise' : ''}" cx="${f(x)}" cy="${f(y)}" r="${precise ? 5.5 : 7}"><title>${esc(label)}</title></circle>`;
 
-export async function render(el, ctx) {
-  const data = await ctx.spray();
+/**
+ * A spray chart from a sprayChartData doc: { svg (inner markup for a
+ * 0 0 300 270 viewBox), precise, zoned, total, hits }, or null with no plays.
+ * Also used by the team scouting report (js/pages/scouting.js).
+ */
+export function sprayPlot(data) {
   const precise = (data?.csvPlays || []).filter(p => p.angle_deg != null && p.distance_ft != null);
   const zoned = Object.values(data?.gamePlays || {}).flatMap(a => (a || []).filter(p => p.zone && ZONES[p.zone]));
-  if (!precise.length && !zoned.length) {
-    el.innerHTML = emptyCard('No spray data yet', 'Batted-ball locations show up once games are tracked.', 'target');
-    return;
-  }
+  if (!precise.length && !zoned.length) return null;
 
   const dots = [];
   for (const p of precise) {
@@ -59,8 +60,18 @@ export async function render(el, ctx) {
     dots.push(dot(x, y, p.result === 'Hit', `${p.zone}: ${p.playType || p.result}`, false));
   }
 
-  const all = [...precise, ...zoned];
-  const hits = all.filter(p => p.result === 'Hit').length;
+  const total = precise.length + zoned.length;
+  const hits = [...precise, ...zoned].filter(p => p.result === 'Hit').length;
+  return { svg: field() + dots.join(''), precise, zoned, total, hits };
+}
+
+export async function render(el, ctx) {
+  const plot = sprayPlot(await ctx.spray());
+  if (!plot) {
+    el.innerHTML = emptyCard('No spray data yet', 'Batted-ball locations show up once games are tracked.', 'target');
+    return;
+  }
+  const { precise, zoned, hits } = plot;
   // Where the ball went, by zone, for the table under the chart.
   const byZone = {};
   zoned.forEach(p => { const z = (byZone[p.zone] ||= { n: 0, h: 0 }); z.n++; if (p.result === 'Hit') z.h++; });
@@ -70,8 +81,8 @@ export async function render(el, ctx) {
     <div class="pl-spray">
       <div class="pl-spray-plot">
         <div class="pl-spray-legend"><span><i class="pl-spray-key is-hit"></i>Hit</span><span><i class="pl-spray-key is-out"></i>Out</span></div>
-        <svg viewBox="0 0 300 270" role="img" aria-label="Spray chart: ${all.length} batted balls, ${hits} hits">${field()}${dots.join('')}</svg>
-        <p class="pl-note">${all.length} tracked batted ball${all.length === 1 ? '' : 's'}: ${hits} hit${hits === 1 ? '' : 's'}, ${all.length - hits} out${all.length - hits === 1 ? '' : 's'}${precise.length ? ` (${precise.length} with exact location)` : ''}.</p>
+        <svg viewBox="0 0 300 270" role="img" aria-label="Spray chart: ${plot.total} batted balls, ${hits} hits">${plot.svg}</svg>
+        <p class="pl-note">${plot.total} tracked batted ball${plot.total === 1 ? '' : 's'}: ${hits} hit${hits === 1 ? '' : 's'}, ${plot.total - hits} out${plot.total - hits === 1 ? '' : 's'}${precise.length ? ` (${precise.length} with exact location)` : ''}.</p>
       </div>
       ${order.length ? `<div class="aces-table-wrap"><table class="aces-table is-compact pl-split-table">
         <thead><tr><th scope="col">Zone</th><th scope="col" class="is-num">Balls</th><th scope="col" class="is-num">Hits</th><th scope="col" class="is-num">Share</th></tr></thead>
