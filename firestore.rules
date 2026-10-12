@@ -284,7 +284,7 @@ match /bench/{teamId} {
 
     match /mediaChannels/{channelId} {
       allow read: if true;
-      allow create, update, delete: if canManageContent();
+      allow create, update, delete: if canManageContent() || hasSpecialRole('mediaManager');
     }
 
     // ========================================
@@ -418,7 +418,7 @@ match /gameBoxScores/{gameId} {
 
     match /eulogies/{eulogyId} {
       allow read: if true;
-      allow create, update, delete: if canManageContent();
+      allow create, update, delete: if canManageContent() || hasSpecialRole('eulogist');
     }
 
     // ========================================
@@ -439,6 +439,11 @@ match /gameBoxScores/{gameId} {
      'statsSubmittedAt', 'statsSubmittedForTeam',
      'statsSubmittedViaBulkUpload',
      'lineScore'
+   ])) ||
+  // Oddsmakers write Peter's odds and preview (contributor.html).
+  (hasSpecialRole('oddsmaker') &&
+   request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+     'homeOdds', 'awayOdds', 'preview', 'previewStatus', 'previewUpdatedAt', 'previewUpdatedBy'
    ]));
         allow create: if canManageContent();
         allow delete: if canManageContent();
@@ -597,7 +602,9 @@ match /gameBoxScores/{gameId} {
 
     match /featureSubmissions/{submissionId} {
       allow create: if true;
-      allow read: if canManageContent();
+      // Content managers read them all; a member reads their own (feature-submit.html).
+      allow read: if canManageContent() ||
+        (isSignedIn() && resource.data.submittedBy != null && resource.data.submittedBy.uid == request.auth.uid);
       allow update: if canManageContent();
       allow delete: if canManageContent();
     }
