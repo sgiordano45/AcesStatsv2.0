@@ -107,8 +107,16 @@ async function getUserDoc(id) {
  * player with no stats yet, or null.
  */
 async function resolvePlayer(idParam, nameParam) {
+  // Merged legacy docs stay behind with migrated: true; follow them to the live
+  // (usually Auth UID) doc, by migratedTo when it's set, else by name.
+  const live = async () => (await allPlayers()).filter(p => !p.migrated);
   if (idParam) {
     const direct = await getPlayerStatsOptimized(idParam);
+    if (direct && direct.migrated) {
+      const moved = direct.migratedTo ? await getPlayerStatsOptimized(direct.migratedTo).catch(() => null) : null;
+      const p = (moved && !moved.migrated ? moved : null) || matchName(await live(), direct.name || direct.displayName || idParam);
+      if (p) return { player: p };
+    }
     if (direct) return { player: direct };
     const user = await getUserDoc(idParam);
     if (user) {
@@ -119,10 +127,10 @@ async function resolvePlayer(idParam, nameParam) {
       return { user, placeholder: true };
     }
     // A legacy ID that was merged into a UID doc: john_doe matches "John Doe".
-    const p = matchName(await allPlayers(), idParam);
+    const p = matchName(await live(), idParam);
     return p ? { player: p } : null;
   }
-  const p = matchName(await allPlayers(), nameParam);
+  const p = matchName(await live(), nameParam);
   return p ? { player: p } : null;
 }
 
@@ -449,7 +457,8 @@ async function main() {
   const player = found.player || null;
   const name = formatPlayerName(player ? (player.name || player.displayName) : (found.user.displayName || found.user.preferredDisplayName || found.user.linkedPlayer || 'New player'));
   const id = player ? player.id : found.user.id;
-  if (nameParam && !idParam && player) {
+  // Point the address at the doc actually shown (a name, or a merged legacy ID).
+  if (player && idParam !== id) {
     params.delete('name');
     params.set('id', id);
     history.replaceState({}, '', `${location.pathname}?${params}`);
