@@ -28,7 +28,7 @@
     .page-header { background: linear-gradient(135deg, #1e1a16, #2a2218); border-bottom: 1px solid var(--border); padding: 1.5rem 2rem; }
     .page-header h1 { margin: 0; font-size: 1.5rem; color: var(--gold); }
     .page-header p { margin: 0.25rem 0 0; opacity: 0.7; font-size: 0.875rem; }
-    .container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    .container { max-width: 900px; margin: 2rem auto; padding: 0 1rem 7rem; }
     .card { background: var(--dark2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
     .card h2 { margin: 0 0 1.25rem; font-size: 1rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
     .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; }
@@ -183,6 +183,23 @@
       </div>
     </div>
 
+    <!-- Publish to Player Profiles -->
+    <div class="card" id="publishCard">
+      <h2 style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+        <span>Publish to player profiles</span>
+        <span style="display:flex;gap:0.5rem;">
+          <button class="btn btn-secondary btn-sm" onclick="previewPublish()">Preview</button>
+          <button class="btn btn-gold btn-sm" id="publishBtn" onclick="publishToProfiles()" disabled>Publish</button>
+        </span>
+      </h2>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin:0 0 1rem;">
+        Copies every active award with a winner into the <code>awards</code> collection (season <strong>2026-summer</strong>) so it shows on player profiles and the Awards page.
+        Doc IDs follow the existing convention (<code>2026-summer_award_name_player_name</code>), so re-publishing overwrites rather than duplicates.
+        Docs from an earlier publish that no longer match a winner are removed.
+      </p>
+      <div id="publishPreview"></div>
+    </div>
+
   </div><!-- /container -->
 </div>
 
@@ -316,7 +333,8 @@ import { auth } from './js/core/auth.js';
 import { db } from './js/core/firebase.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import {
-  collection, getDocs, doc, getDoc, setDoc, updateDoc, onSnapshot, serverTimestamp
+  collection, getDocs, doc, getDoc, setDoc, updateDoc, onSnapshot, serverTimestamp,
+  writeBatch, query, where
 } from './js/core/firebase.js';
 
 // ── Auth (mirrors league-staff-admin.html pattern) ───────────────────────────
@@ -809,7 +827,203 @@ function showToast(msg, isError = false) {
   setTimeout(() => t.remove(), 3000);
 }
 
+// ── Publish to player profiles (aceyAwards -> awards) ────────────────────────
+const PUBLISH_SEASON_ID = '2026-summer';
+
+// aceyAwards id -> category label used in the awards collection.
+// Labels must match the icon maps in player.html / awards.html (including the
+// historical "Perservenance" spelling) so 2026 groups with prior years.
+const PUBLISH_CATEGORY = {
+  '2026_mvp':           'MVP',
+  '2026_pitcher':       'Pitcher of the Year',
+  '2026_rookie':        'Rookie of the Year',
+  '2026_comeback':      'Comeback Player of the Year',
+  '2026_slugger':       'Slugger of the Year',
+  '2026_most-improved': 'Most Improved Ace',
+  '2026_iron-man':      'Iron Man Award',
+  '2026_captain':       'Captain of the Year',
+  '2026_sub':           'Sub of the Year',
+  '2026_good-guy':      'Al Pineda Good Guy Award',
+  '2026_lund':          'Erik Lund Perservenance Award',
+  '2026_streaman':      'Mr. Streaman Award for Excellence',
+  '2026_boner':         'Andrew Streaman Boner Award',
+  '2026_all-aces':      'All Aces',
+  '2026_gold-glove':    'Gold Glove',
+};
+
+// Matches existing IDs: every non-alphanumeric char -> "_" (e.g. "Mr. Streaman" -> "mr__streaman")
+function awardSlug(str) {
+  return String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '_');
+}
+
+let _publishRows = null;
+
+function buildPublishRows() {
+  const rows = [];
+  const playerByName = new Map(allPlayers.map(p => [p.displayName.toLowerCase(), p]));
+
+  Object.entries(awardsCache).forEach(([awardId, data]) => {
+    if (!awardId.startsWith('2026_')) return;
+    if (data.active === false) return;
+
+    let category = PUBLISH_CATEGORY[awardId] || null;
+    let team = '';
+    if (awardId.startsWith('2026_team-mvp_')) {
+      category = 'Team MVP';
+      const teamId = awardId.replace('2026_team-mvp_', '');
+      team = (TEAMS.find(t => t.id === teamId) || {}).name || '';
+    } else if (data.source === 'write-in') {
+      category = (data.label || '').trim();
+      if (/^team of the year$/i.test(category)) category = 'Team of the Year';
+    }
+    if (!category) return;
+
+    // Collect winners (multi-winner awards store free-text names in playerNames)
+    let winners = [];
+    if (Array.isArray(data.playerNames) && data.playerNames.length) {
+      winners = data.playerNames.map(n => ({ name: n, playerId: null, legacyId: null }));
+    } else if (Array.isArray(data.players) && data.players.length) {
+      winners = data.players.map(p => ({ name: p.name, playerId: p.playerId || null, legacyId: p.legacyId || null }));
+    } else if (data.playerName) {
+      winners = [{ name: data.playerName, playerId: data.playerId || null, legacyId: data.legacyId || null }];
+    }
+
+    winners.forEach(w => {
+      // Multi-winner entries are typed as "POS - Name (Team)" — split those apart
+      let name = (w.name || '').replace(/\s+/g, ' ').trim();
+      let position = '';
+      let parsedTeam = '';
+      const posMatch = name.match(/^([A-Za-z0-9\/]{1,4})\s*[-–—:]\s*(.+)$/);
+      if (posMatch) { position = posMatch[1].toUpperCase(); name = posMatch[2].trim(); }
+      const teamMatch = name.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+      if (teamMatch) { name = teamMatch[1].trim(); parsedTeam = teamMatch[2].trim(); }
+      if (!name) return;
+
+      // Team of the Year: winner is a team, not a player. Matches prior docs:
+      // ID "<season>_team_of_the_year_" (blank player slug), team = winner, no playerName.
+      if (category === 'Team of the Year') {
+        rows.push({
+          docId: `${PUBLISH_SEASON_ID}_${awardSlug(category)}_`,
+          aceyAwardId: awardId,
+          category,
+          playerName: '',
+          playerId: null,
+          legacyId: null,
+          team: parsedTeam || name,
+          position: '',
+          revealed: !!data.revealed,
+          matched: true,
+        });
+        return;
+      }
+
+      const match = playerByName.get(name.toLowerCase());
+      rows.push({
+        docId: `${PUBLISH_SEASON_ID}_${awardSlug(category)}_${awardSlug(name)}`,
+        aceyAwardId: awardId,
+        category,
+        playerName: match ? match.displayName : name,
+        playerId: w.playerId || match?.id || null,
+        legacyId: w.legacyId || match?.legacyId || null,
+        team: team || parsedTeam || match?.currentTeam || '',
+        position,
+        revealed: !!data.revealed,
+        matched: !!match,
+      });
+    });
+  });
+
+  rows.sort((a, b) => a.category.localeCompare(b.category) || a.playerName.localeCompare(b.playerName));
+  return rows;
+}
+
+async function previewPublish() {
+  const el = document.getElementById('publishPreview');
+  if (!allPlayers.length) await loadPlayers();
+  _publishRows = buildPublishRows();
+
+  if (!_publishRows.length) {
+    el.innerHTML = '<div style="color:var(--text-dim);font-size:0.9rem;">No active awards with winners found.</div>';
+    document.getElementById('publishBtn').disabled = true;
+    return;
+  }
+
+  // Existing docs from a previous publish that would be removed
+  let stale = [];
+  try {
+    const snap = await getDocs(query(collection(db, 'awards'), where('seasonId', '==', PUBLISH_SEASON_ID)));
+    const newIds = new Set(_publishRows.map(r => r.docId));
+    stale = snap.docs.filter(d => d.data().source === 'aceys' && !newIds.has(d.id)).map(d => d.id);
+  } catch (e) { console.error('Stale check failed', e); }
+  _publishRows.stale = stale;
+
+  const unmatched = _publishRows.filter(r => !r.matched).length;
+  const unrevealed = _publishRows.filter(r => !r.revealed).length;
+  const cell = 'padding:0.4rem 0.6rem;border-bottom:1px solid var(--border);text-align:left;';
+  el.innerHTML = `
+    <div style="font-size:0.85rem;margin-bottom:0.75rem;color:var(--text);">
+      <strong>${_publishRows.length}</strong> award docs will be written.
+      ${unmatched ? `<span style="color:#e07a5f;"> ${unmatched} name(s) don't match a player account &mdash; they'll still be written, but check the spelling matches their profile name or they won't show on it.</span>` : ''}
+      ${unrevealed ? `<span style="color:var(--text-dim);"> (${unrevealed} not yet revealed)</span>` : ''}
+      ${stale.length ? `<div style="color:#e07a5f;margin-top:0.35rem;">${stale.length} old doc(s) will be removed: ${stale.join(', ')}</div>` : ''}
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:0.8rem;color:var(--text);">
+        <thead><tr style="color:var(--gold);">
+          <th style="${cell}">Category</th><th style="${cell}">Player</th><th style="${cell}">Team</th><th style="${cell}">Doc ID</th>
+        </tr></thead>
+        <tbody>
+          ${_publishRows.map(r => `
+            <tr style="${r.matched ? '' : 'background:rgba(224,122,95,0.12);'}">
+              <td style="${cell}">${r.category}</td>
+              <td style="${cell}">${r.position ? `<span style="color:var(--text-dim);">${r.position}</span> ` : ''}${r.playerName}${r.matched ? '' : ' (no match)'}</td>
+              <td style="${cell}">${r.team || '&mdash;'}</td>
+              <td style="${cell}font-family:monospace;color:var(--text-dim);">${r.docId}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  document.getElementById('publishBtn').disabled = false;
+}
+
+async function publishToProfiles() {
+  if (!_publishRows || !_publishRows.length) { showToast('Run Preview first', true); return; }
+  const stale = _publishRows.stale || [];
+  if (!confirm(`Write ${_publishRows.length} award docs to player profiles${stale.length ? ` and remove ${stale.length} old doc(s)` : ''}?`)) return;
+
+  const btn = document.getElementById('publishBtn');
+  btn.disabled = true;
+  try {
+    const batch = writeBatch(db);
+    _publishRows.forEach(r => {
+      batch.set(doc(db, 'awards', r.docId), {
+        category: r.category,
+        playerName: r.playerName,
+        playerId: r.playerId,
+        legacyId: r.legacyId,
+        team: r.team,
+        position: r.position || null,
+        seasonId: PUBLISH_SEASON_ID,
+        value: null,
+        source: 'aceys',
+        aceyAwardId: r.aceyAwardId,
+        createdAt: serverTimestamp(),
+      }, { merge: true });
+    });
+    stale.forEach(id => batch.delete(doc(db, 'awards', id)));
+    await batch.commit();
+    showToast(`Published ${_publishRows.length} awards to profiles`);
+  } catch (e) {
+    console.error(e);
+    showToast('Publish failed: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 // Expose globals
+window.previewPublish = previewPublish;
+window.publishToProfiles = publishToProfiles;
 window.openEdit = openEdit;
 window.closeModal = closeModal;
 window.saveAward = saveAward;

@@ -38,7 +38,7 @@ const SKIP_YEARS = new Set([2019, 2021]);
 const OLD_CHAMPIONS = { '2023-summer': 'Sofa Kings', '2022-summer': 'Master Batters' };
 const GAMES_STEP = 50;   // games-played milestones every 50, as in the Tuesday email
 const AWARD_ART = {
-  'Team MVP': 'team_mvp.png', 'All Aces': 'all_aces.png', 'Gold Glove': 'gold_glove.png',
+  'MVP': 'mvp.png', 'Team MVP': 'team_mvp.png', 'All Aces': 'all_aces.png', 'Gold Glove': 'gold_glove.png',
   'Team of the Year': 'team_of_the_year.png', 'Rookie of the Year': 'rookie_of_the_year.png',
   'Most Improved Ace': 'most_improved_ace.png', 'Comeback Player of the Year': 'comeback_player.png',
   'Slugger of the Year': 'slugger_of_the_year.png', 'Pitcher of the Year': 'pitcher_of_the_year.png',

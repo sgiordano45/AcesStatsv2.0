@@ -11,6 +11,7 @@ import { esc, icon, card, empty, fmtAvg, fmtRate, seasonLabel } from './player-s
 
 // Award art in awards/ (category -> file). Anything else gets the sprite icon.
 const AWARD_ART = {
+  'MVP': 'mvp.png',
   'Team MVP': 'team_mvp.png',
   'All Aces': 'all_aces.png',
   'Gold Glove': 'gold_glove.png',

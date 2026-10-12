@@ -33,7 +33,7 @@ const TABS = [
 
 // The order awards are listed in; anything else follows alphabetically.
 const AWARD_ORDER = [
-  'Team MVP', 'All Aces', 'Gold Glove', 'Team of the Year',
+  'MVP', 'Team MVP', 'All Aces', 'Gold Glove', 'Team of the Year',
   'Rookie of the Year', 'Most Improved Ace', 'Comeback Player of the Year',
   'Slugger of the Year', 'Pitcher of the Year', 'Captain of the Year',
   'Al Pineda Good Guy Award', 'Iron Man Award', 'Sub of the Year',
@@ -42,7 +42,7 @@ const AWARD_ORDER = [
 ];
 // Award artwork in awards/ (an award without one shows the award icon).
 const AWARD_ART = {
-  'Team MVP': 'team_mvp.png', 'All Aces': 'all_aces.png', 'Gold Glove': 'gold_glove.png',
+  'MVP': 'mvp.png', 'Team MVP': 'team_mvp.png', 'All Aces': 'all_aces.png', 'Gold Glove': 'gold_glove.png',
   'Team of the Year': 'team_of_the_year.png', 'Rookie of the Year': 'rookie_of_the_year.png',
   'Most Improved Ace': 'most_improved_ace.png', 'Comeback Player of the Year': 'comeback_player.png',
   'Slugger of the Year': 'slugger_of_the_year.png', 'Pitcher of the Year': 'pitcher_of_the_year.png',

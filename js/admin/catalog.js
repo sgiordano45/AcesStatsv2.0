@@ -42,6 +42,7 @@ export const ADMIN_GROUPS = [
     ['admin/rosters.html', 'Rosters', 'Edit season rosters, import a CSV, copy from the offseason board, fix links', 'league-staff'],
     ['admin/captain-roster-edit.html', 'Edit any roster', 'Roster info for any team', 'admin'],
     ['admin/player-import.html', 'Player import', 'Add players in bulk', 'admin'],
+    ['admin/team-audit.html', 'Team audit', 'Check every player\u2019s currentTeam against this season\u2019s rosters', 'league-staff'],
     ['admin/move-player-docs.html', 'Move player docs', 'Merge or move a player’s records', 'admin'],
     ['admin/signup-card-export.html', 'Signup cards', 'Export signup cards', 'league-staff'],
     ['admin/card-export.html', 'Card export', 'Export player trading cards', 'league-staff']
