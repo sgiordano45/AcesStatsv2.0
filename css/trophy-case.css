@@ -1,0 +1,102 @@
+/* ==========================================================================
+   css/trophy-case.css - trophy-case.html (js/pages/trophy-case.js)
+   ========================================================================== */
+
+.tc { padding-bottom: var(--space-12); }
+.tc-head { gap: var(--space-3); }
+.tc-desc { margin: var(--space-1) 0 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.tc-pick { display: flex; align-items: center; gap: var(--space-2); }
+.tc-pick .aces-label { margin: 0; }
+.tc-pick .aces-select { min-width: 200px; }
+
+.tc-body { display: grid; gap: var(--space-4); margin-top: var(--space-4); }
+.tc-body .aces-card { margin: 0; }
+.tc-h { display: flex; align-items: center; gap: 8px; margin: 0 0 var(--space-3); font: 400 var(--fs-lg, 1.4rem) / 1.1 var(--font-display); letter-spacing: var(--tracking-display); }
+.tc-h .aces-icon { width: 18px; height: 18px; color: var(--color-accent-ink); }
+.tc-note { margin: var(--space-2) 0 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.tc-partial { margin: 0; }
+.tc-empty { display: grid; justify-items: center; gap: var(--space-2); padding: var(--space-8) var(--space-4); text-align: center; }
+.tc-empty .aces-icon { width: 40px; height: 40px; color: var(--color-text-faint); }
+
+/* Tier colors */
+[data-tier="gold"] { --tier: #d4a800; }
+[data-tier="silver"] { --tier: #9aa3ad; }
+[data-tier="bronze"] { --tier: #b87333; }
+.tc-dot { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--tier, var(--color-text-faint)); }
+.tc-tier { display: inline-flex; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--tier) 20%, transparent); color: var(--color-text); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+
+/* Tiles */
+.tc-tiles { grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0; }
+.tc-tile .aces-stat-label { display: inline-flex; align-items: center; gap: 6px; }
+.tc-tile[data-tier] { box-shadow: inset 0 3px 0 var(--tier); }
+@media (max-width: 640px) { .tc-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tc-tiles > :first-child { grid-column: 1 / -1; } }
+
+/* Leaderboard + side column */
+.tc-two { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: start; }
+.tc-stack { display: grid; gap: var(--space-4); }
+@media (max-width: 860px) { .tc-two { grid-template-columns: minmax(0, 1fr); } }
+
+.tc-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+.tc-filters .aces-input { flex: 1 1 180px; }
+.tc-leaders { display: grid; margin: 0; padding: 0; list-style: none; }
+.tc-leaders li { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto 32px; align-items: center; gap: var(--space-2); padding: 8px 0; border-top: 1px solid var(--color-border); font-size: var(--fs-sm); }
+.tc-leaders li:first-child { border-top: 0; }
+.tc-leaders li.tc-none { display: block; color: var(--color-text-muted); }
+.tc-rank { color: var(--color-text-faint); font: 400 1.1rem / 1 var(--font-display); text-align: center; }
+.tc-rank.is-top { color: var(--color-accent-ink); }
+.tc-who { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.tc-who > a { font-weight: var(--fw-semibold); }
+.tc-medals { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 8px; }
+.tc-medal { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.tc-medal.is-hidden { color: var(--color-text-muted); }
+.tc-medal .aces-icon { width: 12px; height: 12px; }
+.tc-total { font: 400 1.2rem / 1 var(--font-display); text-align: right; }
+.tc-more { margin-top: var(--space-2); }
+@media (max-width: 480px) { .tc-leaders li { grid-template-columns: 24px minmax(0, 1fr) 28px; } .tc-medals { grid-column: 2; justify-content: flex-start; } .tc-total { grid-row: 1; grid-column: 3; } }
+
+/* Team medal table */
+.tc-table thead th { position: static; }
+.tc-table th[scope="row"] { text-align: left; }
+.tc-table td { text-align: right; font-variant-numeric: tabular-nums; }
+.tc-table thead th[data-tier] { text-align: right; }
+
+/* Recently earned */
+.tc-recent { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.tc-recent li { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: start; gap: var(--space-2); font-size: var(--fs-sm); }
+.tc-recent small { display: block; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.tc-recent time { color: var(--color-text-faint); font-size: var(--fs-xs); white-space: nowrap; }
+
+/* Badge art */
+.tc-art { display: inline-grid; place-items: center; flex: none; width: 56px; height: 56px; }
+.tc-art img { width: 100%; height: 100%; object-fit: contain; }
+.tc-art .aces-icon { width: 60%; height: 60%; color: var(--tier, var(--color-text-muted)); }
+.tc-art.is-sm { width: 36px; height: 36px; }
+.tc-art.is-lg { width: 88px; height: 88px; }
+
+/* Every badge */
+.tc-group + .tc-group { margin-top: var(--space-5); }
+.tc-group h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 var(--space-3); font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.tc-group h3 .aces-icon { width: 16px; height: 16px; color: var(--color-text-muted); }
+.tc-group h3 span { color: var(--color-text-faint); font-weight: 400; }
+.tc-badges { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); }
+.tc-badge { display: grid; justify-items: center; gap: 4px; padding: var(--space-3) var(--space-2); border: 1px solid var(--color-border); border-top: 3px solid var(--tier, var(--color-accent)); border-radius: var(--radius-md, 10px); background: var(--color-surface); color: var(--color-text); font: inherit; text-align: center; cursor: pointer; }
+.tc-badge:hover { box-shadow: var(--elev-2); }
+.tc-badge:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.tc-badge.is-none { opacity: 0.55; }
+.tc-badge-name { font-size: var(--fs-sm); font-weight: var(--fw-semibold); line-height: 1.25; }
+.tc-badge-sub { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.tc-hidden { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.tc-slot { display: grid; place-items: center; width: 64px; height: 64px; border: 2px dashed var(--color-border-strong); border-radius: 50%; background: var(--color-surface-2); color: var(--color-text-faint); }
+.tc-slot .aces-icon { width: 22px; height: 22px; }
+.tc-slot.is-found { border-style: solid; border-color: var(--color-accent); background: var(--color-surface); cursor: pointer; padding: 0; }
+.tc-slot.is-found .tc-art { width: 48px; height: 48px; }
+
+/* Badge dialog */
+.tc-detail-head { display: flex; align-items: flex-start; gap: var(--space-4); }
+.tc-detail-head p { margin: var(--space-2) 0 0; }
+.tc-detail h3 { margin: var(--space-4) 0 var(--space-2); font-size: var(--fs-sm); }
+.tc-earners { display: grid; gap: 6px; max-height: 40vh; overflow: auto; margin: 0; padding: 0; list-style: none; }
+.tc-earners li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: var(--fs-sm); }
+.tc-earners small { margin-left: auto; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.tc-other { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.tc-other .tc-dot { margin-right: 6px; }
