@@ -1004,19 +1004,22 @@
   }
 }
   </style>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+<link rel="stylesheet" href="css/page-head.css">
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <div class="header-left">
-        <h1>🔗 Link Player Account</h1>
-        <p>Connect your Google account to your player profile</p>
+    <header class="v2-head">
+      <div class="v2-head-main">
+        <span class="v2-head-kicker">Me</span>
+        <h1 class="v2-head-title">Link your player account</h1>
+        <p class="v2-head-desc">Connect your sign-in to your player profile.</p>
       </div>
-      <div class="header-buttons">
-        <a href="index.html" class="home-btn">← Home</a>
-        <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
+      <div class="v2-head-aside">
+        <button class="v2-head-btn" onclick="handleLogout()">Sign out</button>
       </div>
-    </div>
+    </header>
     
     <div id="loadingState" class="card">
       <div class="loading">

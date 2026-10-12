@@ -613,22 +613,23 @@
       flex: 1;
     }
   </style>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+<link rel="stylesheet" href="css/page-head.css">
 </head>
 <body>
   <div class="container">
     <!-- Header -->
-    <div class="header">
-      <div class="header-content">
-        <div class="header-left">
-          <h1>🔐 Approve Player Links</h1>
-          <p id="roleDescription">Review and approve player account linking requests</p>
-          <span class="role-badge" id="roleBadge">Loading...</span>
-        </div>
-        <div class="header-buttons">
-          <a href="index.html" class="btn btn-secondary">← Back Home</a>
-        </div>
+    <header class="v2-head">
+      <div class="v2-head-main">
+        <span class="v2-head-kicker">My team</span>
+        <h1 class="v2-head-title">Approve player links</h1>
+        <p class="v2-head-desc" id="roleDescription">Review and approve player account linking requests.</p>
       </div>
-    </div>
+      <div class="v2-head-aside">
+        <div class="v2-head-chips"><span class="role-badge" id="roleBadge">Loading...</span></div>
+      </div>
+    </header>
     
     <!-- Loading State -->
     <div id="loadingState" class="card">

@@ -546,6 +546,9 @@
         }
     </style>
     <link rel="stylesheet" href="mobile-enhancements.css">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+<link rel="stylesheet" href="css/page-head.css">
 </head>
 <body>
     <!-- Loading Overlay -->
@@ -564,12 +567,16 @@
         <!-- Shown once initPage confirms league staff -->
         <div data-page-content hidden>
         <!-- Header -->
-        <div class="header">
-            <a href="index.html" class="back-button">Back Home</a>
-            <a href="offseason-guide.html" class="back-button" style="left: auto; right: 2rem;">📖 Guide</a>
-            <h1>🎣 Offseason Management Hub</h1>
-            <p>Manage your league's roster movements and schedule planning for the upcoming season</p>
-        </div>
+        <header class="v2-head">
+          <div class="v2-head-main">
+            <span class="v2-head-kicker">League staff</span>
+            <h1 class="v2-head-title">Offseason hub</h1>
+            <p class="v2-head-desc">Roster moves and schedule planning for the coming season.</p>
+          </div>
+          <div class="v2-head-aside">
+            <a class="v2-head-btn" href="offseason-guide.html">Guide</a>
+          </div>
+        </header>
 
         <!-- Main Content -->
         <div class="container">

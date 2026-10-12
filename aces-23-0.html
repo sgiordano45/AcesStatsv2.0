@@ -704,6 +704,9 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
 ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 </style>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+<link rel="stylesheet" href="css/page-head.css">
 </head>
 <body>
 
@@ -716,13 +719,14 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
 <canvas id="confettiCanvas"></canvas>
 
 
-<header class="page-header">
-  <div class="game-badge">Aces Fantasy Game</div>
-  <h1>23-0</h1>
-  <p>Draft your dream team. Go undefeated.</p>
-  <div class="mode-toggle">
-    <button class="mode-btn active" id="btnClassic">Classic</button>
-    <button class="mode-btn" id="btnIQ">AcesIQ 🧠</button>
+<header class="v2-head is-on-dark">
+  <div class="v2-head-main">
+    <span class="v2-head-kicker">Play</span>
+    <h1 class="v2-head-title">23-0</h1>
+    <p class="v2-head-desc">Draft your dream team. Go undefeated.</p>
+  </div>
+  <div class="v2-head-aside">
+    <div class="v2-seg-row" role="group" aria-label="Mode"><button class="v2-seg active" id="btnClassic">Classic</button><button class="v2-seg" id="btnIQ">AcesIQ</button></div>
   </div>
 </header>
 

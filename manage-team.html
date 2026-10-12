@@ -333,28 +333,22 @@
       }
     }
   </style>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+<link rel="stylesheet" href="css/page-head.css">
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <div class="header-content">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <h1>Team Management</h1>
-            <p>Manage team staff roles and permissions</p>
-            <span class="role-badge" id="userRoleBadge">Loading...</span>
-          </div>
-          <div style="display: flex; gap: 1rem;">
-            <a href="index.html" class="btn btn-secondary" style="background: white; color: var(--primary-color); text-decoration: none;">
-              🏠 Home
-            </a>
-            <a href="profile.html" class="btn btn-secondary" style="background: white; color: var(--primary-color); text-decoration: none;">
-              👤 My Profile
-            </a>
-          </div>
-        </div>
+    <header class="v2-head">
+      <div class="v2-head-main">
+        <span class="v2-head-kicker">My team</span>
+        <h1 class="v2-head-title">Team management</h1>
+        <p class="v2-head-desc">Manage team staff roles and permissions.</p>
       </div>
-    </div>
+      <div class="v2-head-aside">
+        <div class="v2-head-chips"><span class="role-badge" id="userRoleBadge">Loading...</span></div>
+      </div>
+    </header>
 
     <div id="loadingState" class="loading">
       <div class="spinner"></div>

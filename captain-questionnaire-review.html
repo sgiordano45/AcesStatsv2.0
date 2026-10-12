@@ -195,6 +195,9 @@
 
     .divider { border: none; border-top: 1px solid var(--border-color); margin: 0.25rem 0; }
   </style>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+<link rel="stylesheet" href="css/page-head.css">
 </head>
 <body>
 
@@ -210,14 +213,16 @@
 </div>
 
 <div id="mainContent" style="display:none;">
-  <div class="page-header">
-    <h1>📋 Draft Questionnaire Review</h1>
-    <p class="subtitle">All submitted player questionnaires</p>
-    <div class="header-meta">
-      <span class="header-badge" id="totalBadge">Loading…</span>
-      <span class="header-badge">Captains &amp; Staff Only</span>
+  <header class="v2-head">
+    <div class="v2-head-main">
+      <span class="v2-head-kicker">My team</span>
+      <h1 class="v2-head-title">Draft questionnaires</h1>
+      <p class="v2-head-desc">Every submitted player questionnaire.</p>
     </div>
-  </div>
+    <div class="v2-head-aside">
+      <div class="v2-head-chips"><span class="header-badge" id="totalBadge">Loading...</span><span class="header-badge">Captains and staff only</span></div>
+    </div>
+  </header>
 
   <div class="controls-bar">
     <div class="search-wrap">

@@ -892,6 +892,9 @@
     border-top: 1px solid var(--border-color);
   }
 </style>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+<link rel="stylesheet" href="css/page-head.css">
 </head>
 <body>
 
@@ -911,19 +914,16 @@
 
 <!-- Main Content -->
 <div id="mainContent" style="display: none;">
-  <div class="header">
-    <div class="header-content">
-      <div>
-        <h1>📢 Send Notifications</h1>
-        <p>Send push notifications to league members</p>
-        <span class="role-badge" id="userRoleBadge">Loading...</span>
-      </div>
-      <div class="header-buttons">
-        <a href="index.html" class="nav-btn">🏠 Home</a>
-        <a href="profile.html" class="nav-btn">👤 Profile</a>
-      </div>
+  <header class="v2-head">
+    <div class="v2-head-main">
+      <span class="v2-head-kicker">My team</span>
+      <h1 class="v2-head-title">Send notifications</h1>
+      <p class="v2-head-desc">Send push notifications to league members.</p>
     </div>
-  </div>
+    <div class="v2-head-aside">
+      <div class="v2-head-chips"><span class="role-badge" id="userRoleBadge">Loading...</span></div>
+    </div>
+  </header>
 
   <div class="container">
     <div class="main-grid">

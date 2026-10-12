@@ -650,6 +650,9 @@ body {
   }
 }
 </style>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+<link rel="stylesheet" href="css/page-head.css">
 </head>
 <body>
 
@@ -661,13 +664,17 @@ body {
 <nav id="main-nav"></nav>
 
 <div class="page-container">
-  <div class="page-header">
-    <a href="games.html" class="back-link">← Games</a>
-    <h1>📊 Higher or Lower</h1>
-    <p>Which player has the higher stat?</p>
-    <div class="puzzle-date" id="puzzleDate">Puzzle #1</div>
-    <div class="category-badge" id="categoryBadge">Career Hits</div>
-  </div>
+  <header class="v2-head">
+    <div class="v2-head-main">
+      <span class="v2-head-kicker">Play</span>
+      <h1 class="v2-head-title">Higher or Lower</h1>
+      <p class="v2-head-desc">Which player has the higher stat?</p>
+      <p class="v2-head-meta" id="puzzleDate">Puzzle #1</p>
+    </div>
+    <div class="v2-head-aside">
+      <div class="v2-head-chips"><span id="categoryBadge">Career Hits</span></div>
+    </div>
+  </header>
 
   <div class="game-stats-bar">
     <div class="stat-item">

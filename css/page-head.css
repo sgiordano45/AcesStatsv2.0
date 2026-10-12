@@ -1,0 +1,143 @@
+/* ==========================================================================
+   css/page-head.css - the v2 page title for pages that aren't rebuilt yet.
+
+   Legacy pages swap their old green banner for this block. It needs only
+   css/tokens.css (custom properties) and the Bebas Neue font link, so the
+   rest of the legacy page keeps its own styles. When a page is rebuilt it
+   moves to .aces-page-head in components.css and drops this file.
+
+   <header class="v2-head">
+     <div class="v2-head-main">
+       <span class="v2-head-kicker">Play</span>
+       <h1 class="v2-head-title">Aces Wordle</h1>
+       <p class="v2-head-desc">Guess the player's last name</p>
+       <p class="v2-head-meta" id="puzzleDate"></p>
+     </div>
+     <div class="v2-head-aside"> chips (.v2-head-chips), buttons, toggles </div>
+   </header>
+   ========================================================================== */
+
+.v2-head {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 16px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 24px auto 16px;
+  padding: 0 16px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--color-text, #1a202c);
+  text-align: left;
+  font-family: var(--font-sans, Inter, system-ui, -apple-system, 'Segoe UI', sans-serif);
+}
+.v2-head * { box-sizing: border-box; }
+.v2-head .v2-head-main { display: grid; gap: 4px; min-width: 0; }
+.v2-head .v2-head-kicker {
+  display: block;
+  margin: 0;
+  color: var(--color-text-muted, #5f6b7a);
+  font: 600 0.75rem / 1.2 var(--font-sans, Inter, system-ui, sans-serif);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.v2-head .v2-head-title {
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: var(--color-text, #1a202c);
+  font-family: var(--font-display, 'Bebas Neue', Impact, sans-serif);
+  font-weight: 400;
+  font-size: clamp(2rem, 7vw, 2.75rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-shadow: none;
+  -webkit-text-fill-color: currentColor;
+}
+.v2-head .v2-head-desc,
+.v2-head .v2-head-meta {
+  margin: 0;
+  color: var(--color-text-muted, #5f6b7a);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  opacity: 1;
+}
+.v2-head .v2-head-meta { font-size: 0.8125rem; font-weight: 600; }
+.v2-head .v2-head-meta:empty { display: none; }
+
+.v2-head .v2-head-aside { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* Status chips (role, count, pool state). JS may swap their classes, so the
+   look comes from the wrapper. */
+.v2-head .v2-head-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.v2-head .v2-head-chips > * {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 3px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-surface-2, #edf1f5);
+  color: var(--color-text-muted, #5f6b7a);
+  font: 600 0.75rem / 1.4 var(--font-sans, Inter, system-ui, sans-serif);
+  box-shadow: none;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.v2-head .v2-head-chips > [style*="display: none"],
+.v2-head .v2-head-chips > [style*="display:none"] { display: none; }
+
+/* A two-way switch (23-0's Classic / AcesIQ). The page toggles .active. */
+.v2-head .v2-seg-row { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--color-surface-2, #edf1f5); }
+.v2-head .v2-seg {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--color-text-muted, #5f6b7a);
+  font: 600 0.875rem / 1 var(--font-sans, Inter, system-ui, sans-serif);
+  cursor: pointer;
+}
+.v2-head .v2-seg.active { background: var(--color-surface, #fff); color: var(--color-text, #1a202c); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12); }
+.v2-head .v2-seg:focus-visible { outline: 2px solid var(--color-focus, #2563eb); outline-offset: 1px; }
+
+/* A plain button in the aside (link-player's Sign out). */
+.v2-head .v2-head-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border-strong, #c5ced8);
+  border-radius: 8px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #1a202c);
+  font: 600 0.875rem / 1 var(--font-sans, Inter, system-ui, sans-serif);
+  text-decoration: none;
+  cursor: pointer;
+}
+.v2-head .v2-head-btn:hover { border-color: var(--color-text-muted, #5f6b7a); }
+
+/* On a page with its own dark background (23-0). */
+.v2-head.is-on-dark,
+.v2-head.is-on-dark .v2-head-title { color: #fff; }
+.v2-head.is-on-dark .v2-head-kicker,
+.v2-head.is-on-dark .v2-head-desc,
+.v2-head.is-on-dark .v2-head-meta { color: rgba(255, 255, 255, 0.72); }
+.v2-head.is-on-dark .v2-seg-row { background: rgba(255, 255, 255, 0.1); }
+.v2-head.is-on-dark .v2-seg { color: rgba(255, 255, 255, 0.72); }
+.v2-head.is-on-dark .v2-seg.active { background: #fff; color: #0f1923; }
+
+/* Inside a padded legacy container the page already has side padding. */
+.page-container > .v2-head,
+.container > .v2-head,
+#mainContent > .v2-head,
+[data-page-content] > .v2-head { padding-left: 0; padding-right: 0; }
+
+@media (max-width: 640px) {
+  .v2-head { margin-top: 16px; }
+}

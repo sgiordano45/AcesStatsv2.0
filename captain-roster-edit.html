@@ -290,6 +290,9 @@
       .save-bar { padding: 0.75rem 1rem; }
     }
   </style>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+<link rel="stylesheet" href="css/page-head.css">
 </head>
 <body>
 
@@ -302,11 +305,16 @@
 <!-- Nav component injected here -->
 
 <!-- Page header -->
-<div class="page-header" id="pageHeader" style="display:none;">
-  <h1>✏️ Edit Roster</h1>
-  <p class="subtitle" id="headerSubtitle">Update jersey numbers, positions, and player details</p>
-  <div class="header-meta" id="headerMeta"></div>
-</div>
+<header class="v2-head" id="pageHeader" style="display:none;">
+  <div class="v2-head-main">
+    <span class="v2-head-kicker">My team</span>
+    <h1 class="v2-head-title">Edit roster</h1>
+    <p class="v2-head-desc" id="headerSubtitle">Update jersey numbers, positions and player details.</p>
+  </div>
+  <div class="v2-head-aside">
+    <div class="v2-head-chips" id="headerMeta"></div>
+  </div>
+</header>
 
 <!-- Admin team selector (shown only for admins/league-staff) -->
 <div class="admin-team-selector" id="adminTeamSelector" style="display:none;">
@@ -372,7 +380,9 @@
   import { db }               from './firebase-data.js';
   import { doc, setDoc, serverTimestamp }
     from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-  import './nav-component.js';
+  import { initPage } from './js/core/app.js';
+  // Shared header, theme and sign-in check (signed-out visitors go to sign in).
+  initPage({ title: 'Edit roster', requiresAuth: true });
 
   // ─────────────────────────────────────────
   // State
@@ -397,7 +407,7 @@
   // ─────────────────────────────────────────
   auth.onAuthStateChanged(async (user) => {
     if (!user) {
-      window.location.href = 'login.html';
+      window.location.href = 'signin.html';
       return;
     }
     currentUser = user;

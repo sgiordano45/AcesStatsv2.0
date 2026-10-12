@@ -130,6 +130,9 @@ body {
 
 .empty-state { text-align: center; color: var(--text-light); padding: 2rem 1rem; font-size: 0.9rem; }
 </style>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+<link rel="stylesheet" href="css/page-head.css">
 </head>
 <body>
 
@@ -138,11 +141,16 @@ body {
   <p style="margin-top:1rem;color:var(--text-light);">Loading Week Standings...</p>
 </div>
 
-<div class="header">
-  <a href="dfs.html" class="back-link">&larr; Aces DFS</a>
-  <h1>&#128202; Week Standings</h1>
-  <p>Everyone's lineup, unlocked after that week's lineups lock</p>
-</div>
+<header class="v2-head">
+  <div class="v2-head-main">
+    <span class="v2-head-kicker">Play</span>
+    <h1 class="v2-head-title">DFS week standings</h1>
+    <p class="v2-head-desc">Everyone's lineup, shown once that week's lineups lock.</p>
+  </div>
+  <div class="v2-head-aside">
+    <a class="v2-head-btn" href="dfs.html">Aces DFS</a>
+  </div>
+</header>
 
 <div class="page-container">
 
