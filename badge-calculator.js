@@ -388,11 +388,20 @@ export const BADGE_DEFINITIONS = {
 // BADGE CALCULATOR CLASS
 // ============================================
 
-/** A game's day as 'YYYY-MM-DD' (gameDateFormatted first: bulk imports can have off-by-a-day timestamps). */
+/**
+ * A game's day as 'YYYY-MM-DD'. gameDateFormatted comes first (bulk imports can
+ * have off-by-a-day timestamps), but it is stored both ways, '2026-10-04' and
+ * '10/4/2026', so it is normalized before any comparing.
+ */
 function gameDayKey(g) {
-  if (g.gameDateFormatted) return g.gameDateFormatted;
-  const d = g.gameDate instanceof Date ? g.gameDate : new Date(g.gameDate);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const pad = (n) => String(n).padStart(2, '0');
+  const f = String(g.gameDateFormatted || '').trim();
+  let m = f.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
+  m = f.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (m) return `${m[3].length === 2 ? `20${m[3]}` : m[3]}-${pad(m[1])}-${pad(m[2])}`;
+  const d = g.gameDate instanceof Date ? g.gameDate : new Date(g.gameDate || f);
+  return Number.isNaN(d.getTime()) ? '' : `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 export class BadgeCalculator {
@@ -461,6 +470,7 @@ export class BadgeCalculator {
     Object.values(battingData).forEach(player => {
       player.games.forEach(game => {
         const dateStr = gameDayKey(game);
+        if (!dateStr) return;
         const tid = String(game.teamId || player.teamId || '').toLowerCase().trim();
         if (!leagueOpener || dateStr < leagueOpener) leagueOpener = dateStr;
         if (tid && (!teamOpeners[tid] || dateStr < teamOpeners[tid])) teamOpeners[tid] = dateStr;
