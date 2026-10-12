@@ -58,7 +58,6 @@ export const ADMIN_GROUPS = [
     ['admin/commissioner-hub.html', 'Commissioner hub', 'League announcements', 'league-staff'],
     ['admin/countdown.html', 'Opening Day countdown', 'Countdown graphic for the group chat', 'league-staff'],
     ['admin/aceys.html', 'Aceys', 'Record award winners', 'league-staff'],
-    ['rule-review.html', 'Rule proposals', 'Review proposed rule changes', 'league-staff'],
     ['captain-questionnaire-review.html', 'Captain questionnaires', 'Read captain responses', 'league-staff'],
     ['admin/features.html', 'Feature requests', 'What members have asked for', 'admin']
   ] },

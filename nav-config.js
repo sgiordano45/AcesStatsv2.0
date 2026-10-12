@@ -126,11 +126,8 @@ export const NAV_HUBS = [
       { id: 'weekend-preview', href: 'weekend-preview.html', label: 'Preview', icon: 'binoculars',
         also: ['game-preview.html', 'game-recap.html'] },
       { id: 'stream', href: 'media.html#live', label: 'Live', icon: 'radio' },
-      { key: 'rules', label: 'Rules', icon: 'scale', pages: [
-        { id: 'league-rules', href: 'league-rules.html', label: 'Rules', icon: 'scale' },
-        { id: 'rule-proposal', href: 'rule-proposals.html', label: 'Proposals', icon: 'clipboard' },
-        { id: 'rule-review', href: 'rule-review.html', label: 'Review', icon: 'clipboard-check' },
-      ] },
+      { id: 'league-rules', href: 'league-rules.html', label: 'Rules', icon: 'scale',
+        also: ['rule-proposals.html', 'rule-review.html'] },
       { id: 'activity', href: 'activity.html', label: 'Activity', icon: 'activity' },
       // Offseason planning: admin and league staff only, in any phase, so they
       // can prepare before the offseason starts. Listed whatever
@@ -411,8 +408,6 @@ export const NAV_STRUCTURE = {
     { id: 'scouting-report', href: 'scouting-report.html', label: 'Scouting Report', icon: '🔭', priority: 3 },
     { id: 'pictures', href: 'pictures.html', label: 'Gallery', icon: '📷', priority: 3 },
     { id: 'media', href: 'media.html', label: 'Media Hub', icon: '📺', priority: 3 },
-    { id: 'rule-proposal', href: 'rule-proposals.html', label: 'Rule Proposals', icon: '📋', priority: 3 },
-    { id: 'rule-review', href: 'rule-review.html', label: 'Rule Review', icon: '📝', priority: 3 },
     { id: 'aceys-2026', href: 'aceys-2026.html', label: 'The Aceys 2026', icon: '🏆', priority: 3 },
     { id: 'aces-23-0', href: 'aces-23-0.html', label: '23-0', icon: '🎰', priority: 3 },
     { id: 'champ-preview', href: 'championship-preview.html', label: 'Championship Preview', icon: '🎊', priority: 3 },
@@ -587,14 +582,6 @@ export const PAGE_CONFIGS = {
 
   'championship-preview.html': {
     desktop: ['home', 'current-season', 'playoffs', 'weekend-preview']
-  },
-
-  'rule-proposals.html': {
-    desktop: ['home', 'league-rules', 'rule-review']
-  },
-
-  'rule-review.html': {
-    desktop: ['home', 'league-rules', 'rule-proposal']
   },
 
   'feature-submit.html': {

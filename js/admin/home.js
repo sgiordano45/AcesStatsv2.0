@@ -100,10 +100,9 @@ async function renderTodos(ctx) {
   const seasonId = ctx.config?.currentSeasonId;
   const phase = ctx.config?.phase || 'regular';
 
-  const [games, reqs, rules, features, latest, summary] = await Promise.all([
+  const [games, reqs, features, latest, summary] = await Promise.all([
     seasonId ? gameTodos(seasonId).catch(err => { console.warn('[admin] games unavailable', err); return null; }) : null,
     requestTodos().catch(err => { console.warn('[admin] users unavailable', err); return null; }),
-    countWhere('rule_proposals', 'status', ['pending', 'under-review', 'under_review']),
     admin ? countWhere('featureSubmissions', 'status', ['new']) : Promise.resolve(undefined),
     getDocs(query(collection(db, 'aggregatedPlayerStats'), orderBy('lastUpdated', 'desc'), limit(1))).then(s => toMillis(s.docs[0]?.data()?.lastUpdated)).catch(() => 0),
     seasonId ? getDoc(doc(db, 'siteConfig', 'summaries', 'seasons', seasonId)).then(s => (s.exists() ? toMillis(s.data().storedAt) || Date.parse(s.data().builtAt || '') : 0)).catch(() => 0) : 0
@@ -119,7 +118,6 @@ async function renderTodos(ctx) {
   }
   cards.push(todoCard({ icon: 'user-check', title: 'Player link requests', count: reqs ? reqs.links : null, text: `${reqs?.links} waiting for approval`, href: 'approve-links.html', action: 'Review requests' }));
   cards.push(todoCard({ icon: 'shield', title: 'Team staff requests', count: reqs ? reqs.staff : null, text: `${reqs?.staff} waiting for a captain`, href: 'manage-team.html', action: 'Open team staff' }));
-  cards.push(todoCard({ icon: 'scale', title: 'Rule proposals', count: rules, text: `${rules} pending or under review`, href: 'rule-review.html', action: 'Review proposals' }));
   if (features !== undefined) cards.push(todoCard({ icon: 'message', title: 'New feature requests', count: features, text: `${features} not looked at yet`, href: 'admin/features.html', action: 'Open requests' }));
   $('adminTodos').innerHTML = cards.join('');
 
