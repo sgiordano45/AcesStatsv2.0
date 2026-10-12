@@ -244,8 +244,8 @@ export const BADGE_DEFINITIONS = {
     type: 'single',
     icon: '📅',
     iconPath: 'assets/badges/milestone/opening-day-hero',
-    description: 'Get a hit on the league\'s Opening Day',
-    requirement: 'Hit in the season\'s first game day'
+    description: 'Get a hit in your team\'s first game of the season',
+    requirement: 'Hit in your team\'s opener (its first game played, so rainouts don\'t cost anyone the chance)'
   },
   
   // ----------------------------------------
@@ -388,6 +388,13 @@ export const BADGE_DEFINITIONS = {
 // BADGE CALCULATOR CLASS
 // ============================================
 
+/** A game's day as 'YYYY-MM-DD' (gameDateFormatted first: bulk imports can have off-by-a-day timestamps). */
+function gameDayKey(g) {
+  if (g.gameDateFormatted) return g.gameDateFormatted;
+  const d = g.gameDate instanceof Date ? g.gameDate : new Date(g.gameDate);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export class BadgeCalculator {
   constructor(db, options = {}) {
     this.db = db;
@@ -442,22 +449,25 @@ export class BadgeCalculator {
     
     console.log(`👥 Processing ${allPlayerIds.size} unique players`);
     
-    // Find the actual Opening Day (earliest game date in the season)
-    // Use gameDateFormatted (YYYY-MM-DD string) to avoid UTC timestamp issues
-    // with bulk-imported games whose Firestore timestamps may reflect wrong dates
-    let openingDay = null; // stored as 'YYYY-MM-DD' string
+    // Opening Day: each team's own first game played this season, so a rained-out
+    // league opener doesn't leave most teams without one (2026 Fall: three teams
+    // opened on the Saturday, everyone else on the Sunday, and the scheduled
+    // opening-day games moved to November). The league's earliest date is kept
+    // for the log and as a fallback for games with no team.
+    // Dates use gameDateFormatted (YYYY-MM-DD) to avoid UTC timestamp issues
+    // with bulk-imported games whose Firestore timestamps may reflect wrong dates.
+    let leagueOpener = null;
+    const teamOpeners = {}; // teamId -> 'YYYY-MM-DD'
     Object.values(battingData).forEach(player => {
       player.games.forEach(game => {
-        const dateStr = game.gameDateFormatted || (() => {
-          const d = game.gameDate instanceof Date ? game.gameDate : new Date(game.gameDate);
-          return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        })();
-        if (!openingDay || dateStr < openingDay) {
-          openingDay = dateStr;
-        }
+        const dateStr = gameDayKey(game);
+        const tid = String(game.teamId || player.teamId || '').toLowerCase().trim();
+        if (!leagueOpener || dateStr < leagueOpener) leagueOpener = dateStr;
+        if (tid && (!teamOpeners[tid] || dateStr < teamOpeners[tid])) teamOpeners[tid] = dateStr;
       });
     });
-    console.log(`Opening Day detected: ${openingDay || 'N/A'}`);
+    const openingDay = { league: leagueOpener, byTeam: teamOpeners };
+    console.log(`Opening days: league ${leagueOpener || 'N/A'}; by team`, teamOpeners);
     
     const results = {
       seasonId,
@@ -821,16 +831,15 @@ export class BadgeCalculator {
         };
       }
       
-      // Opening Day Hero - must get a hit in a game on the actual opening day
-      // openingDay is a 'YYYY-MM-DD' string to avoid UTC timestamp issues
+      // Opening Day Hero - a hit in his team's first game of the season.
+      // openingDay is { league, byTeam } (or an old 'YYYY-MM-DD' string).
       if (openingDay) {
-        const openingDayGame = battingData.games.find(g => {
-          const dateStr = g.gameDateFormatted || (() => {
-            const d = g.gameDate instanceof Date ? g.gameDate : new Date(g.gameDate);
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-          })();
-          return dateStr === openingDay;
-        });
+        const openerFor = (g) => {
+          if (typeof openingDay === 'string') return openingDay;
+          const tid = String(g.teamId || battingData.teamId || '').toLowerCase().trim();
+          return (tid && openingDay.byTeam?.[tid]) || openingDay.league;
+        };
+        const openingDayGame = battingData.games.find(g => gameDayKey(g) === openerFor(g));
         
         if (openingDayGame && (openingDayGame.hits || 0) >= 1) {
           earned.openingDayHero = {
