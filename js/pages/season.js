@@ -320,7 +320,7 @@ function renderPitching() {
 }
 
 function renderAwards() {
-  $('snAwards').innerHTML = card('Awards', awardsHtml(), { iconName: 'award', extra: '<a class="aces-section-link" href="awards.html">All seasons</a>' });
+  $('snAwards').innerHTML = card('Awards', awardsHtml(), { iconName: 'award', extra: '<a class="aces-section-link" href="league-history.html?tab=awards">All seasons</a>' });
 }
 
 const RENDER = { overview: renderOverview, standings: renderStandings, schedule: renderSchedule, batting: renderBatting, pitching: renderPitching, awards: renderAwards };

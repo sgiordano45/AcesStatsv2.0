@@ -90,7 +90,7 @@ export async function render(el, ctx) {
           <span class="pl-award-art">${art ? `<img src="awards/${esc(art)}" alt="" loading="lazy" data-award-img>` : icon('award')}</span>
           <div><strong>${esc(a.category || 'Award')}</strong><span>${esc(a.seasonId ? seasonLabel(a.seasonId) : `${a.year} ${a.season}`)}</span></div></li>`;
       }).join('')}</ul>` : empty('No awards yet', 'Season awards are voted on at the end of each season.', 'award'),
-      { iconName: 'award', extra: '<a class="aces-section-link" href="awards.html">All awards</a>' })}
+      { iconName: 'award', extra: '<a class="aces-section-link" href="league-history.html?tab=awards">All awards</a>' })}
     <div id="plRanks">${card('All-time top 10', '<span class="aces-skeleton is-row"></span><span class="aces-skeleton is-row"></span>', { iconName: 'star' })}</div>`;
 
   el.addEventListener('error', (e) => {

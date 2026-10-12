@@ -565,7 +565,7 @@ async function renderOffseason() {
     ['recap.html', 'book', 'Year in review', 'The season in stories and numbers'],
     ['champions.html', 'trophy', 'Champions', 'Every title, every season'],
     ['aceys-2026.html', 'star', 'The Aceys', 'This year’s awards'],
-    ['awards.html', 'award', 'Awards', 'All-time honors']
+    ['league-history.html?tab=awards', 'award', 'Awards', 'All-time honors']
   ].map(([href, ic, name, blurb]) => `
     <a class="home-hub" href="${href}">
       <span class="home-hub-icon">${icon(ic)}</span>

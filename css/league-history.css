@@ -1,0 +1,78 @@
+/* ==========================================================================
+   css/league-history.css - league-history.html (js/pages/league-history.js)
+   ========================================================================== */
+
+.lh { padding-bottom: var(--space-12); }
+.lh-head { gap: var(--space-3); }
+.lh-desc { margin: var(--space-1) 0 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.lh-links { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.lh .aces-btn .aces-icon { width: 16px; height: 16px; margin-right: 6px; }
+.lh-tabs { margin: var(--space-4) 0; }
+.lh-panel { display: grid; gap: var(--space-4); }
+.lh-panel > .aces-card { margin: 0; }
+.lh-h { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 var(--space-3); font: 400 var(--fs-lg, 1.4rem) / 1.1 var(--font-display); letter-spacing: var(--tracking-display); }
+.lh-h > .aces-icon { width: 18px; height: 18px; color: var(--color-accent-ink); }
+.lh-h a { color: var(--color-text); text-decoration: none; }
+.lh-h a:hover { color: var(--color-link); }
+.lh-h small { color: var(--color-text-faint); font: 400 var(--fs-xs) / 1 var(--font-body, inherit); letter-spacing: 0; }
+.lh-note { margin: 0 0 var(--space-3); color: var(--color-text-muted); font-size: var(--fs-xs); }
+
+/* Timeline: tiles */
+.lh-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; }
+@media (max-width: 560px) { .lh-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Timeline: teams by season */
+.lh-chart { overflow-x: auto; padding-bottom: var(--space-1); }
+.lh-cols { display: flex; align-items: flex-end; gap: 6px; min-width: max-content; margin: 0; padding: 0; list-style: none; }
+.lh-col { display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: 64px; }
+.lh-col-n { color: var(--color-text-muted); font: 400 1rem / 1 var(--font-display); text-align: center; }
+.lh-stack { display: flex; flex-direction: column-reverse; gap: 2px; height: calc(var(--n) * 28px); }
+.lh-cell { display: grid; place-items: center; flex: 1; min-height: 0; overflow: hidden; border-radius: 3px; background: var(--team, var(--color-surface-2)); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08); }
+.lh-cell span { max-width: 100%; overflow: hidden; color: var(--team-ink, var(--color-text)); font-size: 10px; font-weight: var(--fw-semibold); text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
+.lh-col-label { color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); line-height: 1.2; text-align: center; text-decoration: none; white-space: pre-line; }
+.lh-col-label:hover { color: var(--color-link); }
+
+/* Timeline: season by season */
+.lh-seasons { display: grid; margin: 0; padding: 0; list-style: none; }
+.lh-season { display: grid; gap: var(--space-2); padding: var(--space-3) 0; border-top: 1px solid var(--color-border); }
+.lh-season:first-child { border-top: 0; padding-top: 0; }
+.lh-season-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+.lh-season-head a { font-weight: var(--fw-semibold); }
+.lh-count { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.lh-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.lh-champ { display: inline-flex; margin-left: 4px; color: var(--color-accent-ink); }
+.lh-champ .aces-icon { width: 13px; height: 13px; }
+.lh-new { margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: var(--color-win-soft); color: var(--color-win); font-size: 10px; font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.lh-gone { margin: 0; color: var(--color-text-faint); font-size: var(--fs-xs); }
+
+/* Awards: filters */
+.lh-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); }
+.lh-field { display: grid; gap: 4px; }
+.lh-field .aces-label { margin: 0; }
+.lh-field.is-grow { flex: 1 1 180px; }
+#lhAwardCount { margin: 0; }
+#lhAwardList { display: grid; gap: var(--space-4); }
+#lhAwardList > .aces-card { margin: 0; }
+
+/* Awards: lists */
+.lh-art { width: 28px; height: 28px; flex: none; object-fit: contain; }
+.lh-art.is-icon { display: inline-grid; place-items: center; color: var(--color-accent-ink); }
+.lh-art.is-icon .aces-icon { width: 20px; height: 20px; }
+.lh-aw-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.lh-aw h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 var(--space-2); font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.lh-aw-cols { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.lh-aw-cols > .aces-card { margin: 0; }
+.lh-winners { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.lh-winners li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: var(--fs-sm); }
+.lh-winners small { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.lh-winners.is-dated li { display: grid; grid-template-columns: 96px minmax(0, 1fr); }
+.lh-winners.is-dated li > :nth-child(n+3) { grid-column: 2; justify-self: start; }
+.lh-w-season { color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+.lh-w-name { font-weight: var(--fw-medium, 500); }
+
+/* Awards: most awards */
+.lh-most ol { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; counter-reset: lh; }
+.lh-most li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: baseline; gap: 2px var(--space-2); counter-increment: lh; font-size: var(--fs-sm); }
+.lh-most li::before { content: counter(lh); color: var(--color-text-faint); font-variant-numeric: tabular-nums; }
+.lh-most b { font: 400 1.2rem / 1 var(--font-display); }
+.lh-most small { grid-column: 2 / -1; color: var(--color-text-muted); font-size: var(--fs-xs); }
