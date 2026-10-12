@@ -17,12 +17,14 @@ import { icon } from '../ui/icons.js';
 
 const $ = (id) => document.getElementById(id);
 
-// The daily puzzles share one day count from launch (the games use the same).
+// The daily puzzles share one day count from launch. This is the games' own
+// getDayNumber, floor and all: across a daylight-saving change the gap is an
+// hour short of whole days, and the puzzles are numbered that way.
 const LAUNCH = [2026, 0, 6];
-function dayNumber(now = new Date()) {
-  const start = new Date(...LAUNCH);
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return Math.max(1, Math.round((today - start) / 86400000) + 1);
+function dayNumber() {
+  const start = new Date(...LAUNCH).setHours(0, 0, 0, 0);
+  const now = new Date().setHours(0, 0, 0, 0);
+  return Math.max(1, Math.floor((now - start) / 86400000) + 1);
 }
 
 const DAILY = [
