@@ -174,14 +174,14 @@ export const NAV_HUBS = [
     id: 'history', label: 'History', icon: 'scroll',
     tabs: [
       { id: 'seasons', href: 'seasons.html', label: 'Seasons', icon: 'calendar' },
-      { id: 'champions', href: 'champions.html', label: 'Champions', icon: 'trophy', phase: 'offseason' },
+      { id: 'champions', href: 'champions.html', label: 'Champions', icon: 'trophy',
+        also: ['playoff-history.html'] },
       { key: 'awards', label: 'Awards', icon: 'award', pages: [
         { id: 'awards', href: 'awards.html', label: 'Awards', icon: 'award' },
         { id: 'aceys-2026', href: 'aceys-2026.html', label: 'Aceys 2026', icon: 'star' },
       ] },
       { id: 'recap', href: 'recap.html', label: 'Year in review', icon: 'book', phase: 'offseason' },
       { id: 'wrapped', href: 'aces-wrapped.html', label: 'Wrapped', icon: 'sparkles', phase: 'offseason', signedIn: true },
-      { id: 'playoff-history', href: 'playoff-history.html', label: 'Playoff history', icon: 'flag' },
       { id: 'trophy-case', href: 'trophy-case.html', label: 'Trophy case', icon: 'medal',
         also: ['badge-weekly.html'] },
       { id: 'history', href: 'league-history.html', label: 'League history', icon: 'scroll' },
@@ -415,7 +415,6 @@ export const NAV_STRUCTURE = {
     { id: 'aceys-2026', href: 'aceys-2026.html', label: 'The Aceys 2026', icon: '🏆', priority: 3 },
     { id: 'aces-23-0', href: 'aces-23-0.html', label: '23-0', icon: '🎰', priority: 3 },
     { id: 'champ-preview', href: 'championship-preview.html', label: 'Championship Preview', icon: '🎊', priority: 3 },
-    { id: 'playoff-history', href: 'playoff-history.html', label: 'Playoff History', icon: '🗂️', priority: 3 },
     { id: 'feature-submit', href: 'feature-submit.html', label: 'Submit Feedback', icon: '💡', priority: 3 },
     { id: 'help', href: 'help.html', label: 'Help Center', icon: '📚', priority: 3 },
     { id: 'roster-tracker', href: 'roster-tracker.html', label: 'Roster Tracker', icon: '📋', priority: 3 },
@@ -587,10 +586,6 @@ export const PAGE_CONFIGS = {
 
   'championship-preview.html': {
     desktop: ['home', 'current-season', 'playoffs', 'weekend-preview']
-  },
-
-  'playoff-history.html': {
-    desktop: ['home', 'playoffs', 'seasons', 'champions']
   },
 
   'rule-proposals.html': {

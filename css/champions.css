@@ -1,0 +1,122 @@
+/* ==========================================================================
+   css/champions.css - champions.html (js/pages/champions.js)
+   ========================================================================== */
+
+.ch { padding-bottom: var(--space-12); }
+.ch-head { gap: var(--space-3); }
+.ch-desc { margin: var(--space-1) 0 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.ch-pick { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.ch-pick .aces-label { margin: 0; }
+.ch-pick .aces-select { min-width: 220px; }
+.ch-pick .aces-icon, .ch .aces-btn .aces-icon { width: 16px; height: 16px; margin-right: 6px; }
+.ch-dim { color: var(--color-text-faint); }
+
+.ch-body { display: grid; gap: var(--space-4); margin-top: var(--space-4); }
+.ch-body > .aces-card, .ch-two > .aces-card { margin: 0; }
+.ch-h { display: flex; align-items: center; gap: 8px; margin: 0 0 var(--space-3); font: 400 var(--fs-lg, 1.4rem) / 1.1 var(--font-display); letter-spacing: var(--tracking-display); }
+.ch-h .aces-icon { width: 18px; height: 18px; color: var(--color-accent-ink); }
+.ch-h-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-3); }
+.ch-h-row .ch-h { margin: 0; }
+.ch-note { margin: var(--space-2) 0 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.ch-run .ch-note { margin: 0 0 var(--space-3); }
+
+/* Hero */
+.ch-hero { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); align-items: center; border-top: 4px solid var(--team, var(--color-accent)); }
+.ch-hero:has(.ch-photo) { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); }
+.ch-hero-kicker { display: inline-flex; align-items: center; gap: 6px; color: var(--color-accent-ink); font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.ch-hero-kicker .aces-icon { width: 16px; height: 16px; }
+.ch-hero-team { margin: var(--space-1) 0 var(--space-3); font: 400 clamp(2.4rem, 7vw, 3.75rem) / 1 var(--font-display); letter-spacing: var(--tracking-display); }
+.ch-hero-team a { color: var(--team-ink, var(--color-text)); text-decoration: none; }
+.ch-hero-team a:hover { text-decoration: underline; }
+.ch-facts { display: grid; gap: var(--space-2); margin: 0; }
+.ch-facts > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-1) var(--space-2); max-width: 380px; }
+.ch-facts dt { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.ch-facts dt .aces-icon { width: 14px; height: 14px; }
+.ch-facts dd { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-variant-numeric: tabular-nums; }
+.ch-facts dd small { color: var(--color-text-muted); }
+.ch-photo { margin: 0; }
+.ch-photo img { display: block; width: 100%; max-height: 360px; object-fit: cover; border-radius: var(--radius-md, 10px); }
+.ch-photo figcaption { margin-top: 6px; color: var(--color-text-muted); font-size: var(--fs-xs); text-align: center; }
+@media (max-width: 720px) { .ch-hero:has(.ch-photo) { grid-template-columns: minmax(0, 1fr); } }
+
+/* The final */
+.ch-final-list { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.ch-f-label { display: block; margin-bottom: 6px; color: var(--color-text-muted); font-size: var(--fs-xs); text-align: center; }
+.ch-f-match { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--space-3); }
+.ch-f-side { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: var(--space-3); border-radius: var(--radius-md, 10px); background: var(--color-surface-2); text-align: center; }
+.ch-f-side.is-won { background: var(--color-accent-soft); box-shadow: inset 0 0 0 1px var(--color-accent); }
+.ch-f-name { font-weight: var(--fw-semibold); }
+.ch-f-score { font: 400 2.25rem / 1 var(--font-display); font-variant-numeric: tabular-nums; }
+.ch-f-side:not(.is-won) .ch-f-score { color: var(--color-text-muted); }
+.ch-f-side .aces-badge .aces-icon { width: 12px; height: 12px; margin-right: 4px; }
+.ch-f-vs { color: var(--color-text-faint); font-size: var(--fs-xs); font-weight: var(--fw-semibold); text-transform: uppercase; }
+
+/* Top hitters / pitching */
+.ch-two { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+.ch-stars, .ch-pitchers { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.ch-star { display: flex; align-items: center; gap: var(--space-3); }
+.ch-star-rank { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--color-surface-2); font: 400 1.2rem / 1 var(--font-display); }
+.ch-star:first-child .ch-star-rank { background: var(--color-accent); color: var(--color-on-accent, #1a1a1a); }
+.ch-star-body { min-width: 0; }
+.ch-star-name { font-weight: var(--fw-semibold); }
+.ch-star-line { display: block; color: var(--color-text-muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.ch-star-line b, .ch-pitchers b { color: var(--color-text); }
+.ch-pitchers li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px var(--space-2); padding-bottom: var(--space-2); border-bottom: 1px solid var(--color-border); font-size: var(--fs-sm); }
+.ch-pitchers li:last-child { border-bottom: 0; padding-bottom: 0; }
+.ch-pitchers span { color: var(--color-text-muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+
+/* Playoff run */
+.ch-rounds { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.ch-round h3 { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); margin: 0 0 var(--space-2); font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.ch-round h3 small { color: var(--color-text-faint); font-weight: 400; }
+.ch-round.is-final h3 { color: var(--color-accent-ink); }
+.ch-games { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ch-g { display: grid; gap: 2px; padding: 6px var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-sm, 6px); font-size: var(--fs-sm); }
+.ch-g.is-champ { border-color: var(--color-accent); background: var(--color-accent-soft); }
+.ch-g-date { color: var(--color-text-faint); font-size: var(--fs-xs); }
+.ch-g-team { display: flex; justify-content: space-between; gap: var(--space-2); color: var(--color-text-muted); }
+.ch-g-team b { font-variant-numeric: tabular-nums; }
+.ch-g-team.is-won { color: var(--color-text); font-weight: var(--fw-semibold); }
+
+/* Roster */
+.ch-table thead th { position: static; }
+.ch-table th[scope="row"] { text-align: left; white-space: nowrap; }
+.ch-table td { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Badges */
+.ch-tiers { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--space-3); }
+.ch-tier, .ch-badge { display: inline-flex; align-items: center; gap: 6px; text-transform: capitalize; }
+.ch-tier-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--tier, var(--color-text-faint)); flex: none; }
+[data-tier="platinum"] { --tier: #8fa3b8; }
+[data-tier="gold"] { --tier: #d4a017; }
+[data-tier="silver"] { --tier: #a8a9ad; }
+[data-tier="bronze"] { --tier: #b06f35; }
+.ch-badge-players { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.ch-badge-players li { display: grid; grid-template-columns: minmax(120px, 180px) minmax(0, 1fr); gap: var(--space-2); padding-bottom: var(--space-2); border-bottom: 1px solid var(--color-border); }
+.ch-badge-players li:last-child { border-bottom: 0; padding-bottom: 0; }
+.ch-bp-name { font-weight: var(--fw-semibold); font-size: var(--fs-sm); }
+.ch-bp-list { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.ch-badge { font-size: var(--fs-xs); text-transform: none; }
+@media (max-width: 560px) { .ch-badge-players li { grid-template-columns: minmax(0, 1fr); } }
+
+/* Regular season, game by game */
+.ch-js { display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); margin: 0; padding: 0; list-style: none; }
+.ch-j { display: grid; justify-items: center; gap: 1px; padding: 6px 4px; border-radius: var(--radius-sm, 6px); background: var(--color-surface-2); font-size: var(--fs-xs); text-align: center; }
+.ch-j-res { font: 400 1.1rem / 1 var(--font-display); }
+.ch-j.is-w .ch-j-res { color: var(--color-win); }
+.ch-j.is-l .ch-j-res { color: var(--color-loss); }
+.ch-j-score { font-variant-numeric: tabular-nums; }
+.ch-j-opp { max-width: 100%; overflow: hidden; color: var(--color-text-muted); text-overflow: ellipsis; white-space: nowrap; }
+
+/* All champions */
+.ch-alltime { margin-top: var(--space-6); }
+.ch-tally { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin: 0 0 var(--space-4); padding: 0; list-style: none; }
+.ch-tally li { display: inline-flex; align-items: center; gap: 6px; }
+.ch-tally b { font: 400 1.3rem / 1 var(--font-display); }
+.ch-tally small { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.ch-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.ch-list li { display: grid; grid-template-columns: 120px auto minmax(0, 1fr); align-items: center; gap: var(--space-3); padding: 8px 0; border-top: 1px solid var(--color-border); font-size: var(--fs-sm); }
+.ch-list li.is-current { background: var(--color-accent-soft); margin-inline: calc(-1 * var(--space-2)); padding-inline: var(--space-2); border-radius: var(--radius-sm, 6px); }
+.ch-list-season { font-weight: var(--fw-semibold); }
+.ch-list-ru { color: var(--color-text-muted); }
+@media (max-width: 560px) { .ch-list li { grid-template-columns: 96px minmax(0, 1fr); } .ch-list-ru { grid-column: 2; } }
