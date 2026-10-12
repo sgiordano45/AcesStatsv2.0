@@ -182,6 +182,7 @@ export const NAV_HUBS = [
       { id: 'wrapped', href: 'aces-wrapped.html', label: 'Wrapped', icon: 'sparkles', phase: 'offseason', signedIn: true },
       { id: 'trophy-case', href: 'trophy-case.html', label: 'Trophy case', icon: 'medal',
         also: ['badge-weekly.html'] },
+      { id: 'violations', href: 'violations.html', label: 'Wall of Shame', icon: 'flame' },
       { id: 'history', href: 'league-history.html', label: 'League history', icon: 'scroll',
         also: ['awards.html'] },
       { id: 'media', href: 'media.html', label: 'Media', icon: 'images',
@@ -198,7 +199,6 @@ export const NAV_HUBS = [
       { id: 'aces-dfs', href: 'dfs.html', label: 'DFS', icon: 'dice', signedIn: true,
         also: ['dfs-week.html'] },
       { id: 'side-bets', href: 'side-bets.html', label: 'Side bets', icon: 'handshake', signedIn: true },
-      { id: 'violations', href: 'violations.html', label: 'Wall of Shame', icon: 'flame' },
     ],
   },
   {

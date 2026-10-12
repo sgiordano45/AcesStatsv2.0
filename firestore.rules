@@ -809,7 +809,11 @@ match /gameBoxScores/{gameId} {
       allow read: if true;
       allow create: if isCaptain() || isStaffOrAdmin() ||
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.specialRoles.mallCop == true;
+      // League staff edit anything; the reporter can edit their own report
+      // (not who reported it or its reactions); anyone signed in can react.
       allow update: if isStaffOrAdmin() ||
+        (isSignedIn() && resource.data.reporterUid == request.auth.uid &&
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reporterUid', 'reporterName', 'isMallCop', 'reactions', 'createdAt'])) ||
         (isSignedIn() &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']));
       allow delete: if isStaffOrAdmin();

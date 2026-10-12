@@ -1,0 +1,118 @@
+/* ==========================================================================
+   css/violations.css - violations.html, the Wall of Shame (js/pages/violations.js)
+   ========================================================================== */
+
+.vs { padding-bottom: var(--space-12); }
+.vs-desc { margin: var(--space-1) 0 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.vs .aces-btn .aces-icon { width: 16px; height: 16px; margin-right: 6px; }
+.vs .aces-btn.is-icon .aces-icon { margin-right: 0; }
+.vs .aces-badge { display: inline-flex; align-items: center; gap: 4px; }
+.vs .aces-badge .aces-icon { width: 12px; height: 12px; }
+.vs-sub-text { margin: 0 0 var(--space-3); color: var(--color-text-muted); font-size: var(--fs-sm); }
+
+/* Severity colors, 1 (mild) to 5 (Hall of Shame) */
+:root { --sev-1: var(--color-text-faint); --sev-2: var(--color-link); --sev-3: var(--color-alert); --sev-4: var(--color-loss); --sev-5: #7f1d1d; }
+.is-sev-1 { --sev: var(--sev-1); }
+.is-sev-2 { --sev: var(--sev-2); }
+.is-sev-3 { --sev: var(--sev-3); }
+.is-sev-4 { --sev: var(--sev-4); }
+.is-sev-5 { --sev: var(--sev-5); }
+.vs-sev { border: 1px solid var(--sev); background: transparent; color: var(--sev); }
+.vs-sev.is-sev-1 { color: var(--color-text-muted); }
+.vs-sev.is-sev-5 { background: var(--sev); color: #fff; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --sev-5: #ef4444; } }
+:root[data-theme="dark"] { --sev-5: #ef4444; }
+
+/* Season row, stats, tabs */
+.vs-seasons { margin-bottom: var(--space-3); overflow-x: auto; scrollbar-width: none; }
+.vs-seasons::-webkit-scrollbar { display: none; }
+.vs-live { display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--color-loss); vertical-align: middle; }
+.vs-stats { margin-bottom: var(--space-2); }
+.vs-tabs { margin: var(--space-4) 0 var(--space-3); }
+.vs-tabs small { color: var(--color-text-muted); font-size: var(--fs-xs); }
+
+/* Log filters */
+.vs-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.vs-search { position: relative; flex: 1 1 240px; }
+.vs-search .aces-icon { position: absolute; left: 12px; top: 50%; width: 16px; height: 16px; color: var(--color-text-muted); transform: translateY(-50%); pointer-events: none; }
+.vs-search .aces-input { width: 100%; padding-left: 36px; }
+.vs-count { margin: var(--space-2) 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+
+/* Violation cards */
+.vs-feed { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.vs-card { display: grid; gap: var(--space-2); margin: 0; border-left: 4px solid var(--sev); }
+.vs-card-head { display: flex; align-items: flex-start; gap: var(--space-3); }
+.vs-avatar { display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--team, var(--color-surface-2)); color: var(--team-ink, var(--color-text-muted)); font: 400 1.15rem / 1 var(--font-display); letter-spacing: 0.03em; }
+.vs-who { display: grid; gap: 4px; min-width: 0; flex: 1; }
+.vs-name { font-size: var(--fs-md, 1rem); }
+.vs-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.vs-side { display: grid; justify-items: end; gap: 4px; flex: none; }
+.vs-date { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.vs-rule { display: flex; align-items: center; gap: 6px; margin: 0; font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.vs-rule .aces-icon { width: 15px; height: 15px; flex: none; color: var(--sev); }
+.vs-story { margin: 0; padding: var(--space-2) var(--space-3); border-radius: 8px; background: var(--color-surface-2); font-size: var(--fs-sm); font-style: italic; line-height: 1.5; white-space: pre-line; }
+.vs-context { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.vs-context .aces-icon { width: 14px; height: 14px; }
+.vs-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--color-border); }
+.vs-reporter { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-muted); font-size: var(--fs-xs); }
+.vs-reporter .aces-icon { width: 14px; height: 14px; }
+.vs-reactions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.vs-react { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 0 10px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text-muted); font: inherit; font-size: var(--fs-xs); font-weight: var(--fw-semibold); cursor: pointer; }
+.vs-react .aces-icon { width: 14px; height: 14px; }
+.vs-react:hover { border-color: var(--color-border-strong); color: var(--color-text); }
+.vs-react:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.vs-react.is-done { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent-ink); cursor: default; }
+.vs-tools-inline { display: inline-flex; gap: 2px; margin-left: 4px; }
+
+/* Shame board */
+.vs .aces-card { margin: 0 0 var(--space-3); }
+.vs-board thead th { position: static; }
+.vs-board td { vertical-align: middle; }
+.vs-board-last { display: block; color: var(--color-text-muted); font-size: var(--fs-xs); white-space: normal; }
+.vs-board-count { font: 400 1.4rem / 1 var(--font-display); }
+.vs-medal { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; }
+.vs-medal .aces-icon { width: 16px; height: 16px; }
+.vs-medal.is-1 { background: #f5d76e; color: #6b4e00; }
+.vs-medal.is-2 { background: #d9dde3; color: #3f4650; }
+.vs-medal.is-3 { background: #e3b48a; color: #5c3311; }
+
+/* Gallery */
+.vs-gallery-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-3); }
+.vs-gallery-head .vs-sub-text { margin: 0; }
+.vs-gallery { display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr)); margin: 0; padding: 0; list-style: none; }
+.vs-photo { position: relative; overflow: hidden; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface-2); }
+.vs-photo-open { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+.vs-photo-open:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+.vs-photo img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+.vs-photo-cap { position: absolute; inset: auto 0 0; padding: 18px 10px 8px; background: linear-gradient(transparent, rgba(0, 0, 0, 0.72)); color: #fff; font-size: var(--fs-xs); pointer-events: none; }
+.vs-photo-del { position: absolute; top: 6px; right: 6px; display: inline-grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.6); color: #fff; cursor: pointer; }
+.vs-photo-del .aces-icon { width: 14px; height: 14px; }
+.vs-lightbox { margin: 0; text-align: center; }
+.vs-lightbox img { max-width: 100%; max-height: 70vh; border-radius: 8px; }
+.vs-lightbox figcaption { display: grid; gap: 2px; margin-top: var(--space-2); font-size: var(--fs-sm); }
+.vs-lightbox small { color: var(--color-text-muted); }
+
+/* Report form (in the dialog) */
+.vs-form { display: grid; gap: var(--space-3); }
+.vs-form textarea { resize: vertical; min-height: 96px; }
+.vs-form-row { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-items: end; }
+.vs-sev-pick { display: grid; gap: 6px; grid-template-columns: repeat(5, 1fr); margin: 0; padding: 0; border: 0; }
+.vs-sev-pick legend { margin-bottom: 6px; padding: 0; }
+.vs-sev-opt { position: relative; }
+.vs-sev-opt input { position: absolute; opacity: 0; }
+.vs-sev-opt span { display: grid; justify-items: center; gap: 2px; height: 100%; padding: 8px 4px; border: 2px solid var(--color-border); border-radius: 10px; color: var(--color-text-muted); font-size: 0.72rem; line-height: 1.2; text-align: center; cursor: pointer; }
+.vs-sev-opt strong { color: var(--sev); font: 400 1.4rem / 1 var(--font-display); }
+.vs-sev-opt input:checked + span { border-color: var(--sev); background: var(--color-surface-2); color: var(--color-text); }
+.vs-sev-opt input:focus-visible + span { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.vs-check { display: flex; align-items: flex-start; gap: 10px; padding-bottom: 6px; cursor: pointer; }
+.vs-check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--color-brand); }
+.vs-check span { display: grid; gap: 2px; font-size: var(--fs-sm); }
+.vs-check small { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.vs-form-error { margin: 0; color: var(--color-loss); font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+
+@media (max-width: 640px) {
+  .vs-hide-sm { display: none; }
+  .vs-sev-pick { grid-template-columns: repeat(3, 1fr); }
+  .vs-card-head { flex-wrap: wrap; }
+  .vs-side { justify-items: start; grid-auto-flow: column; align-items: center; width: 100%; padding-left: 56px; }
+}
