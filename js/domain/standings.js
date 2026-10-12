@@ -306,7 +306,7 @@ export function remainingStrength(teamName, allGames, records, { asOf = todayKey
  * above, even with every remaining game going the wrong way. Equal best/worst
  * win % counts as locked only when head-to-head (or runs allowed, which can
  * only go up) already settles it. Two-team ties only. current-season's rule;
- * the full scenario engine stays on playoff-clinching for now.
+ * The Clinching tab (js/pages/projections-clinch.js) works out seed ranges.
  */
 export function isSeedLocked(sorted, idx) {
   const team = sorted[idx];

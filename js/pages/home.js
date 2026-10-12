@@ -460,9 +460,9 @@ function renderPlayoffs() {
   const linkRow = links.length ? `<div class="aces-chip-row home-po-links">${links.map(p =>
     `<a class="aces-chip" href="${esc(p.href)}">${icon(p.icon)}${esc(p.label)}</a>`).join('')}</div>` : '';
 
-  // Regular season: just the race links, once Clinching or the Bracket is switched on.
+  // Regular season: just the race links, once Projections or the Bracket is switched on.
   if (state.phase === 'regular') {
-    if (!links.some(p => p.id === 'clinching' || p.id === 'playoffs')) { el.hidden = true; return; }
+    if (!links.some(p => p.id === 'projections' || p.id === 'playoffs')) { el.hidden = true; return; }
     el.hidden = false;
     el.innerHTML = `<div class="aces-section-head"><h2 class="aces-section-title">Playoff race</h2></div>${linkRow}`;
     return;

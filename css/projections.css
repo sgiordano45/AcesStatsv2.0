@@ -46,3 +46,32 @@
 .pj-races { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
 .pj-races li { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--fs-sm); }
 .pj-races .aces-icon { flex: none; width: 18px; height: 18px; margin-top: 1px; color: var(--color-brand); }
+
+/* Tabs and the Clinching tab (js/pages/projections-clinch.js) */
+.pj-tabs { margin: var(--space-4) 0 0; }
+.pj-odds-sub { margin-top: var(--space-3); font-size: var(--fs-sm); }
+#pjClinch { display: grid; gap: var(--space-4); }
+#pjClinch .pj-summary { margin: var(--space-4) 0 0; }
+#pjClinch .aces-card { margin: 0; }
+.pc-table th[scope="row"] { white-space: nowrap; }
+.pc-table tr.is-bye-edge td, .pc-table tr.is-bye-edge th { border-bottom: 2px solid var(--color-brand); }
+.pc-seed { color: var(--color-text-muted); }
+.pc-range { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pc-bar { display: inline-flex; gap: 2px; }
+.pc-bar i { width: 7px; height: 14px; border-radius: 2px; background: var(--color-surface-2); }
+.pc-bar i.is-on { background: var(--color-brand); }
+.pc-bar i.is-now { box-shadow: 0 0 0 1.5px var(--color-accent); }
+.pc-bar i.is-edge { margin-right: 4px; }
+.pc-table .aces-badge { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.pc-table .aces-badge .aces-icon { width: 12px; height: 12px; }
+.pc-need { min-width: 220px; color: var(--color-text-muted); font-size: var(--fs-xs); line-height: 1.45; }
+.pc-games { display: grid; margin: 0; padding: 0; list-style: none; }
+.pc-games li { display: grid; grid-template-columns: 90px minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); padding: 8px 0; border-top: 1px solid var(--color-border); font-size: var(--fs-sm); }
+.pc-games li:first-child { border-top: 0; }
+.pc-date { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.pc-match { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.pc-match b { color: var(--color-text-muted); font-size: var(--fs-xs); }
+.pc-at { color: var(--color-text-faint); font-size: var(--fs-xs); }
+.pc-tag { display: inline-flex; align-items: center; gap: 4px; color: var(--color-text-muted); font-size: var(--fs-xs); white-space: nowrap; }
+.pc-tag .aces-icon { width: 14px; height: 14px; color: var(--color-accent-ink); }
+@media (max-width: 560px) { .pc-games li { grid-template-columns: 70px minmax(0, 1fr); } .pc-tag { grid-column: 2; } }

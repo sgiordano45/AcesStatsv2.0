@@ -95,7 +95,7 @@ export const HELP_SECTIONS = [
     "id": "season-pages",
     "title": "Follow the season",
     "keywords": "standings schedule playoffs clinching weekend preview game preview matchup weather",
-    "body": "<p>Under <strong>Season</strong> you will find:</p><ul><li><strong>Standings:</strong> updated after every game.</li><li><strong>Schedule:</strong> dates, times, opponents, past results and upcoming games.</li><li><strong>Playoffs:</strong> the playoff bracket and <a href=\"playoff-clinching.html\">clinching scenarios</a> showing what each team needs to clinch a spot or seed.</li></ul><p>The <a href=\"weekend-preview.html\">Weekend Preview</a> covers the upcoming games with matchups, team records, players to watch and weather. Each game also has its own preview with head-to-head records, recent form and stat comparisons.</p>"
+    "body": "<p>Under <strong>Season</strong> you will find:</p><ul><li><strong>Standings:</strong> updated after every game.</li><li><strong>Schedule:</strong> dates, times, opponents, past results and upcoming games.</li><li><strong>Playoffs:</strong> the playoff bracket and <a href=\"projections.html?tab=clinching\">clinching scenarios</a> showing what each team needs to clinch a spot or seed.</li></ul><p>The <a href=\"weekend-preview.html\">Weekend Preview</a> covers the upcoming games with matchups, team records, players to watch and weather. Each game also has its own preview with head-to-head records, recent form and stat comparisons.</p>"
    },
    {
     "id": "calendar",

@@ -119,8 +119,8 @@ export const NAV_HUBS = [
       // (late regular season / once the final is set). Projections runs all regular season.
       { key: 'playoffs', label: 'Playoffs', icon: 'trophy', pages: [
         { id: 'playoffs', href: 'playoffs.html', label: 'Bracket', icon: 'trophy', phase: ['regular', 'playoffs'] },
-        { id: 'clinching', href: 'playoff-clinching.html', label: 'Clinching', icon: 'lock', phase: 'regular' },
-        { id: 'projections', href: 'projections.html', label: 'Projections', icon: 'trending-up', phase: 'regular' },
+        { id: 'projections', href: 'projections.html', label: 'Projections', icon: 'trending-up', phase: 'regular',
+          also: ['playoff-clinching.html'] },
         { id: 'champ-preview', href: 'championship-preview.html', label: 'Championship preview', icon: 'crown', phase: 'playoffs' },
       ] },
       { id: 'weekend-preview', href: 'weekend-preview.html', label: 'Preview', icon: 'binoculars',
@@ -390,7 +390,7 @@ export const NAV_STRUCTURE = {
     { id: 'stream', href: 'stream.html', label: 'Live Stream', icon: '📹', priority: 2 },
     { id: 'playoffs', href: 'playoffs.html', label: 'Playoff Bracket', icon: '🥇', priority: 2 },
     { id: 'projections', href: 'projections.html', label: 'Playoff Projections', icon: '🎱', priority: 2 },
-    { id: 'clinching', href: 'playoff-clinching.html', label: 'Playoff Clinching', icon: '🔒', priority: 2 },
+    { id: 'clinching', href: 'projections.html?tab=clinching', label: 'Playoff Clinching', icon: '🔒', priority: 2 },
     { id: 'seasons', href: 'seasons.html', label: 'All Seasons', icon: '📅', priority: 2 },
     { id: 'champions', href: 'champions.html', label: 'Champions', icon: '🏆', priority: 2 },
     { id: 'recap', href: 'recap.html', label: 'Year in Review', icon: '📖', priority: 2 },
@@ -487,10 +487,6 @@ export const PAGE_CONFIGS = {
     desktop: ['home', 'current-season', 'weekend-preview', 'playoffs', 'projections', 'batting', 'pitching', 'teams']
   },
     
-  'playoff-clinching.html': {
-    desktop: ['home', 'current-season', 'weekend-preview', 'playoffs', 'projections']
-  },
-  
   'batting.html': {
     desktop: ['home', 'current-season', 'batting', 'pitching', 'players', 'leaders', 'compare', 'charts']
   },

@@ -18,10 +18,14 @@
 // Bracket (single elimination): with N teams and 8 quarterfinal spots, seeds
 // 1 to (16 - N) get a bye; the rest play in, highest vs lowest. 11 teams:
 // 6v11, 7v10, 8v9; then 4v5, 1 vs 8/9, 2 vs 7/10, 3 vs 6/11.
+//
+// The Clinching tab (?tab=clinching) is js/pages/projections-clinch.js.
 
 import { initPage, pageReady, showPageState, showPageError, siteUrl } from '../core/app.js';
 import { getDisplaySeasonId } from '../core/config.js';
 import { getSeasonGames } from '../data/games.js';
+import { db, doc, getDoc } from '../core/firebase.js';
+import { renderClinching } from './projections-clinch.js';
 import { escapeHtml as esc, fmtAvg, ordinal } from '../ui/format.js';
 import { icon } from '../ui/icons.js';
 import { TEAM_COLORS } from '../ui/stat-columns.js';
@@ -279,6 +283,26 @@ async function main() {
   }
   renderControls();
   wire();
+  // The playoff field from the season's bracket format (playoffs.html), else every team.
+  const fmt = await getDoc(doc(db, 'seasons', P.seasonId, 'playoffs', 'bracket')).then(s => (s.exists() ? s.data().format : null)).catch(() => null);
+  const playoffTeams = Number(fmt?.teams) || P.standings.length;
+  let clinchDrawn = false;
+  const show = (tab, { push = false } = {}) => {
+    const cl = tab === 'clinching';
+    $('pjTabs').innerHTML = [['odds', 'Seed odds', 'chart-bar'], ['clinching', 'Clinching', 'lock']].map(([id, label, ic]) =>
+      `<a class="aces-tab" href="?tab=${id}" data-pj-tab="${id}"${(id === 'clinching') === cl ? ' aria-current="page"' : ''}>${icon(ic)}<span>${label}</span></a>`).join('');
+    $('pjOddsView').hidden = cl;
+    $('pjClinch').hidden = !cl;
+    if (push) { const u = new URL(location.href); u.searchParams.set('tab', tab); history.replaceState(null, '', u); }
+    if (cl && !clinchDrawn) { clinchDrawn = true; renderClinching($('pjClinch'), { standings: P.standings, left: P.left, playoffTeams }); }
+  };
+  $('pjTabs').addEventListener('click', (e) => {
+    const a = e.target.closest('[data-pj-tab]');
+    if (!a || e.metaKey || e.ctrlKey) return;
+    e.preventDefault();
+    show(a.dataset.pjTab, { push: true });
+  });
+  show(new URLSearchParams(location.search).get('tab') === 'clinching' ? 'clinching' : 'odds');
   pageReady();
   if (!P.left.length) {
     $('pjTable').innerHTML = `<section class="aces-card"><div class="aces-empty">${icon('flag')}<p class="aces-empty-title">The regular season is over</p><p>The seeds are set; see the bracket on the Playoffs page.</p><a class="aces-btn is-primary" href="playoffs.html">Playoffs</a></div></section>`;

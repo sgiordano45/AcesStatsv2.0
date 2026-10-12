@@ -21,14 +21,14 @@
 </head>
 <body class="aces-v2">
 
-<!-- projections.html: Monte Carlo seeding projections for the current season (js/pages/projections.js). -->
+<!-- projections.html: Seed odds tab (Monte Carlo, js/pages/projections.js) and Clinching tab (js/pages/projections-clinch.js; replaced playoff-clinching.html). ?tab=clinching -->
 
 <main class="pj aces-container" id="main">
   <header class="aces-page-head">
     <div>
       <span class="aces-page-kicker">Playoffs</span>
       <h1 class="aces-page-title" id="pjTitle">Projections</h1>
-      <p class="pj-sub">Every team makes the playoffs. These simulations play out the rest of the regular season to show where each team is likely to be seeded.</p>
+      <p class="pj-sub">Where each team is likely to be seeded, and what's already settled.</p>
     </div>
   </header>
 
@@ -38,6 +38,10 @@
   </div>
 
   <div data-page-content hidden>
+    <nav class="aces-tabs pj-tabs" id="pjTabs" aria-label="Projection views"></nav>
+    <div id="pjClinch" hidden></div>
+    <div id="pjOddsView">
+    <p class="pj-sub pj-odds-sub">These simulations play out the rest of the regular season many times over to show where each team is likely to be seeded.</p>
     <div id="pjControls"></div>
     <div class="aces-stats pj-summary" id="pjStats"></div>
     <section class="aces-card pj-odds">
@@ -47,6 +51,7 @@
     <div class="pj-two">
       <div id="pjBracket"></div>
       <div id="pjRaces"></div>
+    </div>
     </div>
   </div>
 </main>
