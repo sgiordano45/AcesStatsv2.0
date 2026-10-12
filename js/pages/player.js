@@ -107,28 +107,35 @@ async function getUserDoc(id) {
  * player with no stats yet, or null.
  */
 async function resolvePlayer(idParam, nameParam) {
-  // Merged legacy docs stay behind with migrated: true; follow them to the live
-  // (usually Auth UID) doc, by migratedTo when it's set, else by name.
+  // getPlayerStatsOptimized skips merged legacy docs (migrated: true), and a
+  // legacy ID usually also has a users/{legacyId} doc (the email on file), so a
+  // legacy link has to be followed to the live, usually Auth UID, stats doc:
+  // by the users doc's migratedTo, else by name, before falling back to the
+  // users doc itself (a signed-up player with no stats yet).
   const live = async () => (await allPlayers()).filter(p => !p.migrated);
   if (idParam) {
     const direct = await getPlayerStatsOptimized(idParam);
-    if (direct && direct.migrated) {
-      const moved = direct.migratedTo ? await getPlayerStatsOptimized(direct.migratedTo).catch(() => null) : null;
-      const p = (moved && !moved.migrated ? moved : null) || matchName(await live(), direct.name || direct.displayName || idParam);
-      if (p) return { player: p };
-    }
     if (direct) return { player: direct };
     const user = await getUserDoc(idParam);
+    if (user?.migratedTo) {
+      const moved = await getPlayerStatsOptimized(user.migratedTo);
+      if (moved) return { player: moved, user: await getUserDoc(user.migratedTo) };
+    }
+    const looksUid = idParam.length > 20 && /[A-Z]/.test(idParam);
+    if (!looksUid) {
+      // john_doe matches "John Doe".
+      const list = await live();
+      const p = matchName(list, idParam) || (user ? matchName(list, user.linkedPlayer || user.displayName) : null);
+      if (p) return { player: p };
+    }
     if (user) {
       if (user.linkedPlayer) {
-        const p = matchName(await allPlayers(), user.linkedPlayer);
+        const p = matchName(await live(), user.linkedPlayer);
         if (p) return { player: p, user };
       }
       return { user, placeholder: true };
     }
-    // A legacy ID that was merged into a UID doc: john_doe matches "John Doe".
-    const p = matchName(await live(), idParam);
-    return p ? { player: p } : null;
+    return null;
   }
   const p = matchName(await live(), nameParam);
   return p ? { player: p } : null;
