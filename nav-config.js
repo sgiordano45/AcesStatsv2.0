@@ -193,7 +193,7 @@ export const NAV_HUBS = [
   {
     id: 'play', label: 'Play', icon: 'gamepad',
     tabs: [
-      { id: 'games', href: 'games.html', label: 'Daily games', icon: 'puzzle',
+      { id: 'games', href: 'games.html', label: 'Games', icon: 'puzzle',
         also: ['aces-wordle.html', 'immaculate-grid.html', 'higher-lower.html', 'who-am-i.html',
                'aces-connections.html', 'roster-recall.html', 'aces-23-0.html'] },
       { id: 'pickem', href: 'pickem.html', label: "Pick'em", icon: 'check-circle', signedIn: true },
