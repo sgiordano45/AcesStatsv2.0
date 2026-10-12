@@ -1,12 +1,27 @@
 // js/pages/player-spray.js
 // player.html Spray tab: where the player's batted balls went.
 //
-// Data: sprayChartData/{legacyId}
+// Data: sprayChartData/{id}: the game tracker writes a linked player's plays
+// under his Auth UID and everyone else's under the legacy ID, and imported
+// plays may sit under either, so loadSpray() reads both and merges them.
 //   csvPlays   [{ angle_deg, distance_ft, result: 'Hit'|'Out', zone }]  precise (imported)
 //   gamePlays  { gameId: [{ zone, result, playType }] }               by fielding zone (tracker)
 // Field geometry mirrors scouting-report.html.
 
+import { db, doc, getDoc } from '../core/firebase.js';
 import { esc, card, emptyCard } from './player-shared.js';
+
+/** sprayChartData for every ID a player goes by, merged (null when there's none). */
+export async function loadSpray(ids) {
+  const list = [...new Set((ids || []).filter(Boolean))];
+  const snaps = await Promise.all(list.map((id) => getDoc(doc(db, 'sprayChartData', id)).catch(() => null)));
+  const docs = snaps.filter((s) => s?.exists()).map((s) => s.data());
+  if (!docs.length) return null;
+  return {
+    csvPlays: docs.flatMap((d) => d.csvPlays || []),
+    gamePlays: Object.assign({}, ...docs.map((d) => d.gamePlays || {}))
+  };
+}
 
 const HOME = { x: 150, y: 248 };
 const OF_R = 210, IF_R = 105, BASE = 88, SCALE = 1.05;

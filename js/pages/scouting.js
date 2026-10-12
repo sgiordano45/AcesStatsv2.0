@@ -13,7 +13,7 @@
 //      ?tab=matchup&player=joe_smith&vs=team:Red | vs=pitcher:mike_jones
 //
 // Data: aggregatedPlayerStats (season rows, vsOpponent, pitchers), rosters/
-// {season}-{team} (numbers, captains), sprayChartData/{legacyId},
+// {season}-{team} (numbers, captains), sprayChartData/{authUid and legacyId},
 // aggregatedPlayerStats2025Splits/{nameId} (2025 vs-opponent totals),
 // playerStats/{nameId}/games and pitchingStats/{legacyId}/games (game logs,
 // matched on the game doc ID and teamId), the season's games (next opponent).
@@ -34,7 +34,7 @@ import { battingLine } from '../domain/stats.js';
 import { seasonLabel, seasonSortKey, parseStatSeasonId } from '../domain/season-ids.js';
 import { todayKey, formatGameDate } from '../domain/dates.js';
 import { ZERO_BAT, addBat, batSplitTable, gameLogRows, battingLogConfig, isPlayoffGame } from './player-shared.js';
-import { sprayPlot } from './player-spray.js';
+import { sprayPlot, loadSpray } from './player-spray.js';
 
 const $ = (id) => document.getElementById(id);
 const cap = (s) => { const t = String(s || '').replace(/_/g, ' ').trim(); return /[A-Z]/.test(t) ? t : t.replace(/(^|\s)[a-z]/g, (c) => c.toUpperCase()); };
@@ -54,7 +54,7 @@ const S = {
   team: { season: '', team: '' },
   match: { player: '', kind: 'team', vs: '' },
   next: null,           // { team, opp, dateKey } for the signed-in player's team
-  spray: new Map(),     // legacyId -> plot | null
+  spray: new Map(),     // ID list -> plot | null
   log: null
 };
 
@@ -192,7 +192,7 @@ async function renderTeamReport() {
       <div class="sc-row is-career"><span class="sc-row-label">Career</span>
         ${c.career.pa ? `${stat('AVG', avgText(c.career.avg))}${stat('OBP', avgText(c.career.obp))}${stat('H', c.career.hits, 'is-sm')}${stat('G', c.career.games, 'is-sm')}` : '<span class="sc-none">First season</span>'}
       </div>
-      <div class="sc-spray" data-spray="${i}" data-legacy="${esc(c.legacy)}" hidden></div>
+      <div class="sc-spray" data-spray="${esc([...new Set([...c.ids, c.legacy])].join(','))}" hidden></div>
     </li>`).join('')}</ul>` : '<p class="aces-empty">No players found for this team and season.</p>'}
     <footer class="sc-totals">Team: <b>${esc(avgText(tl.avg))}</b> AVG &middot; <b>${esc(avgText(tl.obp))}</b> OBP &middot; ${tot.hits} H in ${tot.atBats} AB &middot; ${tot.runs} R &middot; ${tot.walks} BB</footer>
   </section>`;
@@ -202,13 +202,12 @@ async function renderTeamReport() {
 async function loadSprays(box) {
   const slots = [...box.querySelectorAll('[data-spray]')];
   await Promise.all(slots.map(async (el) => {
-    const id = el.dataset.legacy;
+    // The tracker writes a linked player's plays under his Auth UID, others under the legacy ID.
+    const id = el.dataset.spray;
     if (!id) return;
     if (!S.spray.has(id)) {
-      try {
-        const snap = await getDoc(doc(db, 'sprayChartData', id));
-        S.spray.set(id, snap.exists() ? sprayPlot(snap.data()) : null);
-      } catch { S.spray.set(id, null); }
+      const data = await loadSpray(id.split(',')).catch(() => null);
+      S.spray.set(id, data ? sprayPlot(data) : null);
     }
     const plot = S.spray.get(id);
     if (!plot || !el.isConnected) return;

@@ -476,7 +476,8 @@ async function main() {
     nameId: nameToLegacyId(name),
     battingGames: gameDocs('playerStats', nameToLegacyId(name)),
     pitchingGames: gameDocs('pitchingStats', legacyId),
-    spray: once(async () => { const s = await getDoc(doc(db, 'sprayChartData', legacyId)); return s.exists() ? s.data() : null; }),
+    // Tracker plays for a linked player are under his Auth UID; older plays under the legacy ID.
+    spray: once(() => import('./player-spray.js').then((m) => m.loadSpray([isUid ? id : null, user?.linked ? user.id : null, legacyId]))),
     goto: (tab) => show(tab, { push: true })
   };
 
