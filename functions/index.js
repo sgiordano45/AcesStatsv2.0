@@ -4102,6 +4102,10 @@ exports.triggerPickemReminders = functions
 
 const PICKEM_UPSET_SHARE = 1 / 3;
 const PICKEM_UPSET_MIN_PICKS = 3;
+// Tie picks (js/domain/pickem.js): games on or after this day; a correct tie is 2 points.
+const PICKEM_TIE_FROM = '2026-10-18';
+const PICKEM_TIE = 'tie';
+const PICKEM_TIE_POINTS = 2;
 
 function pickemNormalizeGame(g) {
   const dp = pickemDateParts(g);
@@ -4125,9 +4129,13 @@ function pickemNormalizeGame(g) {
     if (winnerRaw === homeKey || winnerRaw === homeName.toLowerCase()) winnerKey = homeKey;
     else if (winnerRaw === awayKey || winnerRaw === awayName.toLowerCase()) winnerKey = awayKey;
   }
+  const tiesAllowed = pickemDpKey(dp) >= PICKEM_TIE_FROM;
+  const isTie = isFinal && !winnerKey && (winnerRaw === 'tie'
+    || (homeScore !== null && awayScore !== null && homeScore !== '' && Number(homeScore) === Number(awayScore)));
+  if (isTie && tiesAllowed && !g.forfeit) winnerKey = PICKEM_TIE;
   const isVoid = cancelled || (isFinal && (!winnerKey || !!g.forfeit));
   return {
-    id: g.id, dp, dayKey: pickemDpKey(dp), time: g.time || '', lockAt,
+    id: g.id, dp, dayKey: pickemDpKey(dp), time: g.time || '', lockAt, tiesAllowed,
     homeName, awayName, homeKey, awayKey, homeScore, awayScore,
     isFinal, isTBD, cancelled, isVoid, winnerKey,
     isGraded: isFinal && !isVoid
@@ -4147,22 +4155,23 @@ function pickemValidPick(entry, g) {
   const p = entry.picks[g.id];
   if (!p || !p.team) return null;
   if (p.atMs && p.atMs > g.lockAt) return null;
-  if (p.team !== g.homeKey && p.team !== g.awayKey) return null;
+  if (p.team !== g.homeKey && p.team !== g.awayKey && !(p.team === PICKEM_TIE && g.tiesAllowed)) return null;
   return p.team;
 }
 
 function pickemSplit(entries, g) {
-  let home = 0, away = 0;
+  let home = 0, away = 0, tie = 0;
   entries.forEach(e => {
     const t = pickemValidPick(e, g);
     if (t === g.homeKey) home++;
     else if (t === g.awayKey) away++;
+    else if (t === PICKEM_TIE) tie++;
   });
-  return { home, away, total: home + away };
+  return { home, away, tie, total: home + away + tie };
 }
 
 function pickemUpsetInfo(entries, g) {
-  if (!g.isGraded) return null;
+  if (!g.isGraded || g.winnerKey === PICKEM_TIE) return null;   // a tie has its own bonus
   const s = pickemSplit(entries, g);
   if (s.total < PICKEM_UPSET_MIN_PICKS) return null;
   const winnerPicks = g.winnerKey === g.homeKey ? s.home : s.away;
@@ -4184,7 +4193,9 @@ function pickemScore(entries, gameList) {
       if (!t) return;
       row.picks++;
       if (!g.isGraded) return;
-      if (t === g.winnerKey) {
+      if (t === g.winnerKey && t === PICKEM_TIE) {
+        row.correct++; row.pts += PICKEM_TIE_POINTS; row.upsets++;
+      } else if (t === g.winnerKey) {
         row.correct++; row.pts += 1;
         if (upsetById[g.id]) { row.pts += 1; row.upsets++; }
       } else row.wrong++;

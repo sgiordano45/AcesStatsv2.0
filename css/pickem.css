@@ -1,0 +1,101 @@
+/* ==========================================================================
+   css/pickem.css - pickem.html (js/pages/pickem.js)
+   ========================================================================== */
+
+.pk { padding-bottom: var(--space-12); }
+.pk-desc { margin: var(--space-1) 0 0; color: var(--color-text-muted); font-size: var(--fs-sm); }
+.pk-tabs { margin: var(--space-4) 0 var(--space-3); }
+.pk .aces-card { margin: 0 0 var(--space-3); }
+.pk .aces-badge { display: inline-flex; align-items: center; gap: 4px; }
+.pk .aces-badge .aces-icon { width: 12px; height: 12px; }
+.pk-sub { margin: 0 0 var(--space-3); color: var(--color-text-muted); font-size: var(--fs-sm); }
+
+/* Week nav */
+.pk-week { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-3); padding: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-md, 12px); background: var(--color-surface); }
+.pk-week .aces-btn .aces-icon { width: 18px; height: 18px; }
+.pk-week-title { display: grid; justify-items: center; gap: 2px; text-align: center; }
+.pk-week-title strong { display: inline-flex; align-items: center; gap: 6px; font: 400 1.4rem / 1 var(--font-display); letter-spacing: 0.02em; }
+.pk-week-title span { color: var(--color-text-muted); font-size: var(--fs-xs); }
+
+/* Summary */
+.pk-summary { margin-bottom: var(--space-3); }
+.pk-open { margin: 0 0 var(--space-3); }
+.pk-day { margin: var(--space-4) 0 var(--space-2); color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: 0.06em; text-transform: uppercase; }
+.pk-games { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); align-items: start; }
+.pk-games .aces-card { margin: 0; }
+
+/* Game card */
+.pk-game { display: grid; gap: var(--space-3); }
+.pk-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+.pk-matchup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: var(--space-2); }
+.pk-matchup.has-tie { grid-template-columns: 1fr minmax(64px, auto) 1fr; }
+.pk-at { align-self: center; color: var(--color-text-faint); font-weight: var(--fw-semibold); }
+
+.pk-pick {
+  position: relative; display: grid; justify-items: center; align-content: center; gap: 2px;
+  min-height: 72px; padding: var(--space-2) var(--space-2); border: 2px solid var(--color-border);
+  border-radius: var(--radius-md, 12px); background: var(--color-surface); color: var(--color-text);
+  font: inherit; cursor: pointer; transition: border-color 0.15s, background 0.15s, opacity 0.15s;
+}
+.pk-pick:hover:not(:disabled) { border-color: var(--team, var(--color-brand)); }
+.pk-pick:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.pk-pick:disabled { cursor: default; }
+.pk-pick .aces-team-dot { background: var(--team, var(--color-text-faint)); }
+.pk-side { color: var(--color-text-muted); font-size: 0.68rem; font-weight: var(--fw-semibold); letter-spacing: 0.06em; text-transform: uppercase; }
+.pk-team { display: inline-flex; align-items: center; gap: 6px; font-weight: var(--fw-semibold); }
+.pk-score { font: 400 1.5rem / 1 var(--font-display); color: var(--color-text-muted); }
+.pk-score.is-won { color: var(--color-text); }
+
+.pk-pick.is-picked { border-color: var(--team, var(--color-brand)); background: var(--team, var(--color-brand)); color: var(--team-ink, var(--color-on-brand)); }
+.pk-pick.is-picked .pk-side,
+.pk-pick.is-picked .pk-score { color: inherit; opacity: 0.85; }
+.pk-pick.is-picked .aces-team-dot { background: currentColor; }
+.pk-pick.is-tie { min-height: 0; padding-inline: var(--space-3); border-style: dashed; }
+.pk-pick.is-tie.is-picked { border-style: solid; border-color: var(--color-accent); background: var(--color-accent); color: var(--color-on-accent); }
+.pk-pick.is-dim { opacity: 0.45; }
+
+.pk-mark { position: absolute; top: 6px; right: 6px; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--color-surface); }
+.pk-mark .aces-icon { width: 13px; height: 13px; }
+.pk-mark.is-win { color: var(--color-win); }
+.pk-mark.is-loss { color: var(--color-loss); }
+
+/* Pick split */
+.pk-split { display: grid; gap: 6px; }
+.pk-bar { display: flex; height: 8px; overflow: hidden; border-radius: 999px; background: var(--color-surface-2); }
+.pk-seg { display: block; height: 100%; background: var(--team, var(--color-text-faint)); }
+.pk-seg + .pk-seg { box-shadow: inset 2px 0 0 var(--color-surface); }
+.pk-seg.is-tie { background: repeating-linear-gradient(45deg, var(--color-text-faint) 0 4px, var(--color-surface-2) 4px 8px); }
+.pk-split-labels { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px var(--space-2); color: var(--color-text-muted); font-size: var(--fs-xs); }
+
+.pk-result { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; color: var(--color-text-muted); font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.pk-result > .aces-icon { width: 16px; height: 16px; }
+.pk-result.is-win { color: var(--color-win); }
+.pk-result.is-loss { color: var(--color-loss); }
+
+/* Tables (sticky headers off: they can paint mid-table on first load) */
+.pk-table thead th { position: static; }
+.pk-table .pk-pts { font-weight: var(--fw-semibold); }
+.pk-paid { width: 18px; height: 18px; accent-color: var(--color-brand); cursor: pointer; }
+.pk-paid-note { margin: 0 0 var(--space-3); }
+
+/* Pick counts */
+.pk-counts { display: grid; margin: 0; padding: 0; list-style: none; }
+.pk-count-row { display: grid; gap: 6px; padding: var(--space-3) 0; border-top: 1px solid var(--color-border); }
+.pk-count-row:first-child { padding-top: 0; border-top: 0; }
+.pk-count-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--color-text-muted); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+.pk-count-sides { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--space-2); }
+.pk-count-sides.has-tie { grid-template-columns: 1fr minmax(64px, auto) 1fr; }
+.pk-count { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 8px 10px; border-radius: 10px; background: var(--color-surface-2); }
+.pk-count .aces-team-dot { background: var(--team, var(--color-text-faint)); }
+.pk-count .aces-icon { width: 14px; height: 14px; color: var(--color-win); }
+.pk-count strong { font: 400 1.3rem / 1 var(--font-display); }
+.pk-count.is-tie { justify-content: center; gap: 8px; }
+.pk-count.is-lost { opacity: 0.5; }
+
+.pk-rules { display: grid; gap: var(--space-2); margin: 0; padding-left: 1.2rem; font-size: var(--fs-sm); line-height: 1.55; }
+
+@media (max-width: 640px) {
+  .pk-hide-sm { display: none; }
+  .pk-pick { min-height: 64px; padding-inline: 6px; }
+  .pk-team { font-size: var(--fs-sm); }
+}

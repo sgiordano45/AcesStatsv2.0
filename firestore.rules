@@ -636,6 +636,15 @@ match /gameBoxScores/{gameId} {
       allow delete: if isStaffOrAdmin();
     }
 
+    // Admin-only Pick'em notes (who has paid): pickem/{seasonId}/private/payments.
+    // Admins only, not league staff: nobody else can read it.
+    match /pickem/{seasonId}/private/{docId} {
+      allow read, write: if isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+            || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userRole == 'admin');
+    }
+
     // ========================================
     // ACES GRID GAMES
     // ========================================
