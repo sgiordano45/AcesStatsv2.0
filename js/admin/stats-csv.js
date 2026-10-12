@@ -7,6 +7,7 @@
 import { db, doc, setDoc, serverTimestamp } from '../core/firebase.js';
 import { getSeasonPlayerStatsOptimized } from '../data/player-stats.js';
 import { escapeHtml as esc } from '../ui/format.js';
+import { toDateKey } from '../domain/dates.js';
 import { icon } from '../ui/icons.js';
 import { showToast } from '../ui/toast.js';
 
@@ -177,7 +178,9 @@ async function save() {
         const bb = parseInt(row.bb) || 0;
         const common = {
           gameId, gameDocId, playerId: legacyId, playerName: row.player, seasonId, teamId: teamName,
-          gameDate: new Date(game.date), gameDateFormatted: game.date, opponent: oppDisplay,
+          // Local midnight from the date parts (new Date('2026-10-04') is UTC, the evening before in ET),
+          // and gameDateFormatted always YYYY-MM-DD, whichever way the CSV wrote the date.
+          gameDate: new Date(parseInt(y), parseInt(m) - 1, parseInt(d)), gameDateFormatted: toDateKey(game.date), opponent: oppDisplay,
           isHome: game.isHome, gameType: game.isPlayoff ? 'Playoff' : 'Regular', isPlayoff: game.isPlayoff,
           submittedBy: user.uid, submittedByName: user.displayName || user.email,
           submittedAt: serverTimestamp(), lastModified: serverTimestamp(), dataVersion: 1, bulkImport: true

@@ -2576,6 +2576,8 @@ window.submitBulkStats = async function() {
       const csvDate = new Date(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd));
       const gameDateTimestamp = Timestamp.fromDate(csvDate);
       const dateStr = `${parseInt(mm)}-${parseInt(dd)}-${yyyy}`;
+      // gameDateFormatted is always YYYY-MM-DD, whichever way the CSV wrote the date.
+      const isoDate = `${yyyy}-${String(parseInt(mm)).padStart(2, '0')}-${String(parseInt(dd)).padStart(2, '0')}`;
       // Convention: home_vs_away. If isHome=true, selectedTeam is home so listed first.
       // Normalize opponent using known game data to handle "Aces Silver"→"silver", "TEAL"→"teal" etc.
       const normOpp = (() => {
@@ -2667,7 +2669,7 @@ window.submitBulkStats = async function() {
                 playerName: validation.matchedPlayer?.name || row.player,
                 seasonId: seasonId,
                 teamId: selectedTeamName || selectedTeam,
-                gameDateFormatted: game.date,
+                gameDateFormatted: isoDate,
                 gameDate: gameDateTimestamp,
                 opponent: opponentDisplay,
                 isHome: game.isHome,
@@ -2704,7 +2706,7 @@ window.submitBulkStats = async function() {
                 playerName: validation.matchedPlayer?.name || row.player,
                 seasonId: seasonId,
                 teamId: selectedTeamName || selectedTeam,
-                gameDateFormatted: game.date,
+                gameDateFormatted: isoDate,
                 gameDate: gameDateTimestamp,
                 opponent: opponentDisplay,
                 isHome: game.isHome,
